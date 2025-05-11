@@ -26,10 +26,36 @@
       <h1 class="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">
         Trader CRM
       </h1>
+
+      <!-- Live Time Display -->
+      <div
+        class="hidden md:flex items-center ml-6 text-gray-600 dark:text-gray-300"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span class="text-sm font-medium">{{ currentTime }}</span>
+      </div>
     </div>
 
     <!-- Right side: User profile & Theme toggle -->
     <div class="flex items-center space-x-4">
+      <!-- Mobile Time Display -->
+      <div class="md:hidden flex items-center text-gray-600 dark:text-gray-300">
+        <span class="text-sm font-medium">{{ currentTime }}</span>
+      </div>
+
       <app-theme-toggle></app-theme-toggle>
 
       <div class="relative">
