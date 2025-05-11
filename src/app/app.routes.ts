@@ -22,15 +22,27 @@ export const routes: Routes = [
       ),
     canActivate: [authGuard],
   },
+
+  // Auth With Layout
   {
-    path: 'dashboard',
+    path: '',
     loadComponent: () =>
-      import('./features/dashboard/dashboard.component').then(
-        (m) => m.DashboardComponent
+      import('../app/shared/components/layout/layout.component').then(
+        (m) => m.LayoutComponent
       ),
-    canActivate: [authGuard],
+    canActivate: [publicGuard],
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/dashboard.component').then(
+            (m) => m.DashboardComponent
+          ),
+      },
+    ],
   },
 
+  // Default
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: '/dashboard' },
 ];
