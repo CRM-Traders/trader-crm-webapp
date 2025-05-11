@@ -1,0 +1,113 @@
+// Enhanced styling for the settings component
+
+// Improve form field focus states
+input:focus,
+select:focus,
+textarea:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease;
+}
+
+// Add depth to cards
+.bg-white.dark\:bg-gray-800 {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+}
+
+// Improve sidebar navigation button active states
+button.border-l-4 {
+  position: relative;
+  transition: all 0.2s ease;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: currentColor;
+    opacity: 0.05;
+    pointer-events: none;
+  }
+}
+
+// Enhance toggle switches
+.peer:checked ~ .peer-checked\:bg-blue-600 {
+  transition: all 0.3s ease;
+
+  &::after {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+}
+
+// Improved form validation visual feedback
+.border-red-500 {
+  animation: shake 0.4s 1;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+// Section transitions
+.container {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+
+  &.loading {
+    opacity: 0.7;
+  }
+}
+
+// Responsive improvements
+@media (max-width: 768px) {
+  .md\:flex-row {
+    flex-direction: column;
+  }
+
+  .md\:w-1\/4,
+  .md\:w-3\/4 {
+    width: 100%;
+  }
+
+  // Add spacing between sidebar and content on mobile
+  .md\:w-1\/4 {
+    margin-bottom: 1.5rem;
+  }
+}
+
+// Improve button loading state appearance
+button:disabled {
+  cursor: not-allowed;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.15);
+    pointer-events: none;
+  }
+}
+
+// Password strength indicator improvements
+.bg-blue-50.dark\:bg-blue-900\/20 {
+  border-left: 3px solid #3b82f6;
+}

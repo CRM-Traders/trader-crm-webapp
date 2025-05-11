@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.user-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.rounded-full {
+  position: relative;
+  overflow: hidden;
+  width: 40px;
+  height: 40px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.2),
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+}
+
+button:hover .rounded-full {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes dropdown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-dropdown {
+  animation: dropdown 0.2s ease-out forwards;
+}
+
+a,
+button {
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+}

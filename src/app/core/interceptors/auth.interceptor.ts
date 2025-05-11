@@ -82,7 +82,7 @@ function handle401Error(
         isRefreshing = false;
 
         authService.logout();
-        router.navigate(['/login'], {
+        router.navigate(['/auth/login'], {
           queryParams: {
             returnUrl: router.url,
             sessionExpired: 'true',
