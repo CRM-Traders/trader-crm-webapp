@@ -1,43 +1,106 @@
 @use "tailwindcss" as *;
 
-html {
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-*, *::before, *::after {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+body {
+  &.dark {
+    background-color: #1f2937;
+    color: white;
+  }
+}
+
+*,
+*::before,
+*::after {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .dark {
-  // Base styles
-  background-color: #1f2937 !important;
-  color: white !important;
-  
+  // Global backgrounds
+  .bg-white.dark\:bg-gray-900 {
+    background-color: #111827 !important; // Darker background for main page
+  }
+
   // Card components
   .bg-white.dark\:bg-gray-800 {
-    background-color: #1f2937 !important;
+    background-color: #1f2937 !important; // Slightly lighter for the card
   }
-  
+
   // Text elements
   .text-gray-900.dark\:text-white {
     color: white !important;
   }
-  
-  .text-gray-600.dark\:text-gray-400 {
+
+  .text-gray-700.dark\:text-gray-300,
+  .text-gray-600.dark\:text-gray-300,
+  .text-gray-800.dark\:text-gray-300 {
+    color: #d1d5db !important;
+  }
+
+  .text-gray-600.dark\:text-gray-400,
+  .text-gray-500.dark\:text-gray-400 {
     color: #9ca3af !important;
   }
-  
+
+  // Form elements
+  input.dark\:bg-gray-700 {
+    background-color: #374151 !important;
+    color: white !important;
+  }
+
+  input.dark\:border-gray-600 {
+    border-color: #4b5563 !important;
+  }
+
+  input::placeholder.dark\:placeholder-gray-500 {
+    color: #6b7280 !important;
+  }
+
+  // Checkbox styling
+  input[type="checkbox"].dark\:bg-gray-700 {
+    background-color: #374151 !important;
+  }
+
+  input[type="checkbox"].dark\:checked\:bg-blue-600:checked {
+    background-color: #2563eb !important;
+  }
+
   // Borders
   .border-gray-200.dark\:border-gray-700 {
     border-color: #374151 !important;
   }
-  
+
   // Buttons
   .bg-blue-600.dark\:bg-blue-500 {
     background-color: #3b82f6 !important;
   }
-  
+
+  .hover\:bg-blue-700.dark\:hover\:bg-blue-600:hover {
+    background-color: #2563eb !important;
+  }
+
   .bg-gray-200.dark\:bg-gray-700 {
     background-color: #374151 !important;
   }
+}
+
+// Ensure dark mode is applied to the entire app
+.dark body {
+  background-color: #111827;
+  color: white;
+}
+
+// Force HTML and body to take up full height
+html,
+body,
+app-root {
+  display: block;
+  min-height: 100vh;
 }
