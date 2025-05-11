@@ -5,7 +5,7 @@ import { authGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   // Publics
   {
-    path: 'login',
+    path: 'auth/login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then(
         (m) => m.LoginComponent
@@ -15,7 +15,7 @@ export const routes: Routes = [
 
   // Auth
   {
-    path: 'unauthorized',
+    path: 'auth/unauthorized',
     loadComponent: () =>
       import('./features/auth/unauthorized/unauthorized.component').then(
         (m) => m.UnauthorizedComponent
@@ -37,6 +37,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent
+          ),
+      },
+
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/user/settings/settings.component').then(
+            (m) => m.SettingsComponent
           ),
       },
     ],

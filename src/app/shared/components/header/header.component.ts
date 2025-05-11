@@ -5,10 +5,11 @@ import { NavigationService } from '../../../core/services/navigation.service';
 import { CommonModule } from '@angular/common';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { Subject, interval, takeUntil } from 'rxjs';
+import { UserMenuComponent } from '../user-menu/user-menu.component';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, ThemeToggleComponent],
+  imports: [CommonModule, ThemeToggleComponent, UserMenuComponent],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
 })
