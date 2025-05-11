@@ -1,0 +1,33 @@
+<div [class]="getContainerClass()">
+  <div *ngFor="let alert of alerts" class="alert-transition mb-3">
+    <div [class]="cssClass(alert)" class="p-4 rounded-md shadow-md relative">
+      <div class="flex items-center">
+        <div
+          class="flex-shrink-0 mr-3"
+          [innerHTML]="getAlertIcon(alert.type)"
+        ></div>
+        <div class="flex-grow text-sm font-medium">{{ alert.message }}</div>
+        <button
+          (click)="removeAlert(alert)"
+          class="ml-4 flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full text-current hover:bg-opacity-20 hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+          aria-label="Close"
+        >
+          <svg
+            class="h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

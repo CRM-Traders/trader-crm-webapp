@@ -1,0 +1,47 @@
+.alert-transition {
+  transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Increase the z-index to ensure alerts appear above other elements */
+.z-50 {
+  z-index: 50;
+}
+
+/* Ensure the alerts have proper spacing between them */
+.mb-3 {
+  margin-bottom: 0.75rem;
+}
+
+/* Add a subtle scale effect on hover */
+.alert-dismissible:hover {
+  transform: scale(1.01);
+  transition: transform 0.2s ease;
+}
+
+/* Enhanced contrast for dark mode alerts */
+:host-context(.dark) {
+  .alert-dismissible {
+    font-weight: 500; /* Slightly bolder text for better readability */
+  }
+
+  /* Info alert specific improvements */
+  .bg-blue-900 {
+    background-color: #1e3a8a !important; /* Ensure proper contrast */
+  }
+
+  .text-white {
+    color: #ffffff !important; /* Pure white for maximum contrast */
+  }
+}
