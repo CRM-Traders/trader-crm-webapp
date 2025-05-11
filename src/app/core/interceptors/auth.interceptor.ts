@@ -1,6 +1,21 @@
 // ./core/interceptors/auth.interceptor.ts
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject, catchError, switchMap, filter, take, finalize } from 'rxjs';
+import {
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpHandlerFn,
+  HttpEvent,
+  HttpErrorResponse,
+} from '@angular/common/http';
+import {
+  Observable,
+  throwError,
+  BehaviorSubject,
+  catchError,
+  switchMap,
+  filter,
+  take,
+  finalize,
+} from 'rxjs';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
@@ -15,7 +30,7 @@ export const authInterceptor: HttpInterceptorFn = (
 ): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  
+
   if (shouldSkipAuth(request)) {
     return next(request);
   }
@@ -26,7 +41,7 @@ export const authInterceptor: HttpInterceptorFn = (
   }
 
   return next(request).pipe(
-    catchError(error => {
+    catchError((error) => {
       if (error instanceof HttpErrorResponse && error.status === 401) {
         return handle401Error(request, next, authService, router);
       }
@@ -35,17 +50,19 @@ export const authInterceptor: HttpInterceptorFn = (
   );
 };
 
-function addTokenToRequest(request: HttpRequest<any>, token: string): HttpRequest<any> {
+function addTokenToRequest(
+  request: HttpRequest<any>,
+  token: string
+): HttpRequest<any> {
   return request.clone({
     setHeaders: {
-      Authorization: `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   });
 }
 
-
 function handle401Error(
-  request: HttpRequest<unknown>, 
+  request: HttpRequest<unknown>,
   next: HttpHandlerFn,
   authService: AuthService,
   router: Router
@@ -58,20 +75,20 @@ function handle401Error(
       switchMap((response) => {
         isRefreshing = false;
         refreshTokenSubject.next(response.accessToken);
-        
+
         return next(addTokenToRequest(request, response.accessToken));
       }),
       catchError((error) => {
         isRefreshing = false;
-        
+
         authService.logout();
-        router.navigate(['/login'], { 
-          queryParams: { 
+        router.navigate(['/login'], {
+          queryParams: {
             returnUrl: router.url,
-            sessionExpired: 'true' 
-          }
+            sessionExpired: 'true',
+          },
         });
-        
+
         return throwError(() => error);
       }),
       finalize(() => {
@@ -80,24 +97,21 @@ function handle401Error(
     );
   } else {
     return refreshTokenSubject.pipe(
-      filter(token => token !== null),
+      filter((token) => token !== null),
       take(1),
-      switchMap(token => next(addTokenToRequest(request, token as string)))
+      switchMap((token) => next(addTokenToRequest(request, token as string)))
     );
   }
 }
 
 function shouldSkipAuth(request: HttpRequest<unknown>): boolean {
   const apiUrl = environment.gatewayDomain;
-  
+
   if (!request.url.includes(apiUrl)) {
     return true;
   }
-  
-  const authEndpoints = [
-    'auth/login',
-    'auth/refresh'
-  ];
-  
-  return authEndpoints.some(endpoint => request.url.includes(endpoint));
+
+  const authEndpoints = ['auth/login', 'auth/refresh'];
+
+  return authEndpoints.some((endpoint) => request.url.includes(endpoint));
 }

@@ -10,7 +10,7 @@ export const publicGuard: CanActivateFn = (): Observable<boolean | UrlTree> => {
 
   return authService.isAuthenticated$.pipe(
     take(1),
-    map(isAuthenticated => {
+    map((isAuthenticated) => {
       if (!isAuthenticated) {
         return true;
       }

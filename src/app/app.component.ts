@@ -8,9 +8,8 @@ import { ThemeSelectorComponent } from './shared/components/theme-selector/theme
   selector: 'app-root',
   imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  title= ''
+  title = '';
 }
-

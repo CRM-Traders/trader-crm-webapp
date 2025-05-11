@@ -10,13 +10,13 @@ export const authGuard: CanActivateFn = (): Observable<boolean | UrlTree> => {
 
   return authService.isAuthenticated$.pipe(
     take(1),
-    map(isAuthenticated => {
+    map((isAuthenticated) => {
       if (isAuthenticated) {
         return true;
       }
 
       return router.createUrlTree(['/login'], {
-        queryParams: { returnUrl: router.url }
+        queryParams: { returnUrl: router.url },
       });
     })
   );
@@ -29,7 +29,7 @@ export const roleGuard = (requiredRole: string): CanActivateFn => {
 
     return authService.userRole$.pipe(
       take(1),
-      map(role => {
+      map((role) => {
         if (role === requiredRole) {
           return true;
         }
