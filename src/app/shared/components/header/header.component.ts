@@ -6,10 +6,16 @@ import { CommonModule } from '@angular/common';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { UserMenuComponent } from '../user-menu/user-menu.component';
+import { NotificationsComponent } from '../notifications/notifications.component';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, ThemeToggleComponent, UserMenuComponent],
+  imports: [
+    CommonModule,
+    ThemeToggleComponent,
+    UserMenuComponent,
+    NotificationsComponent,
+  ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
 })
