@@ -26,6 +26,7 @@ export class HasRoleDirective implements OnDestroy {
     this.authService.userRole$
       .pipe(takeUntil(this.destroy$))
       .subscribe((userRole) => {
+        console.log(userRole);
         const hasRole = userRole && requiredRoles.includes(userRole);
 
         if (hasRole && !this.hasView) {

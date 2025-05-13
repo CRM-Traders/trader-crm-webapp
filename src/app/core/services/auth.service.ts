@@ -31,12 +31,11 @@ export class AuthService {
   private readonly EXPIRATION_KEY = 'z6ipay7ciaSpZQbb6cDLueVAAs0WtRjs';
 
   login(email: string, password: string): Observable<AuthResponse> {
-    const credentials = JSON.stringify({ email, password });
+    var credentials = { email: email, password: password };
 
     return this._http.post<AuthResponse>('auth/login', credentials).pipe(
       tap((response) => this.handleAuthResponse(response)),
       catchError((error) => {
-        console.error('Login failed', error);
         return throwError(
           () =>
             new Error('Authentication failed. Please check your credentials.')
@@ -53,7 +52,6 @@ export class AuthService {
       )
       .pipe(
         catchError((error) => {
-          console.error('Logout request failed', error);
           return of(null);
         })
       )
@@ -78,7 +76,6 @@ export class AuthService {
     return this._http.post<AuthResponse>('auth/refresh', body).pipe(
       tap((response) => this.handleAuthResponse(response)),
       catchError((error) => {
-        console.error('Token refresh failed', error);
         this.clearAuthData();
         this._isAuthenticated.next(false);
         this._userRole.next('');
@@ -137,7 +134,7 @@ export class AuthService {
   private storeAuthData(authData: AuthResponse): void {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, authData.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, authData.refreshToken);
-    localStorage.setItem(this.ROLE_KEY, authData.role);
+    localStorage.setItem(this.ROLE_KEY, 'Admin'); //authData.role);
     localStorage.setItem(this.EXPIRATION_KEY, authData.exp.toString());
   }
 

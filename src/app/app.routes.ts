@@ -30,7 +30,7 @@ export const routes: Routes = [
       import('../app/shared/components/layout/layout.component').then(
         (m) => m.LayoutComponent
       ),
-    canActivate: [publicGuard],
+    canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',

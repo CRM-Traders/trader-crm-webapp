@@ -26,7 +26,7 @@
       <ul class="space-y-1 px-2">
         <li *ngFor="let item of navItems">
           <ng-container
-            *hasRole="item.requiredRoles || ['user', 'manager', 'admin']"
+            *hasRole="item.requiredRoles || ['User', 'Manager', 'Admin']"
           >
             <a
               [routerLink]="item.route"
