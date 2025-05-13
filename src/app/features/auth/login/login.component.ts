@@ -9,7 +9,6 @@ import {
 import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -22,6 +21,7 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -33,14 +33,14 @@ export class LoginComponent {
   returnUrl = '/dashboard';
   sessionExpired = false;
 
-  createForm(): void {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-    });
+  ngOnInit(): void {
+    this.returnUrl =
+      this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    this.sessionExpired =
+      this.route.snapshot.queryParams['sessionExpired'] === 'true';
   }
 
-  onSubmit(): void {
+  onSubmit() {
     if (this.loginForm.invalid) {
       this.markFormGroupTouched(this.loginForm);
       return;
@@ -50,19 +50,18 @@ export class LoginComponent {
     this.errorMessage = '';
 
     const { email, password } = this.loginForm.value;
-
-    this.authService
-      .login(email, password)
-      .pipe(finalize(() => (this.isLoading = false)))
-      .subscribe({
-        next: () => {
+    this.authService.login(email, password).subscribe(
+      (result: any) => {
+        if (result) {
           this.router.navigateByUrl(this.returnUrl);
-        },
-        error: (error) => {
-          this.errorMessage =
-            error?.message || 'Invalid credentials. Please try again.';
-        },
-      });
+        }
+        this.isLoading = false;
+      },
+      (error: any) => {
+        this.errorMessage = 'Invalid credentials. Please try again.';
+        this.isLoading = false;
+      }
+    );
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

@@ -1,41 +1,29 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { map, take } from 'rxjs/operators';
-import { Observable } from 'rxjs';
 
-export const authGuard: CanActivateFn = (): Observable<boolean | UrlTree> => {
+export const authGuard: CanActivateFn = (): boolean | UrlTree => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  return authService.isAuthenticated$.pipe(
-    take(1),
-    map((isAuthenticated) => {
-      if (isAuthenticated) {
-        return true;
-      }
+  if (authService.isAuthenticated()) {
+    return true;
+  }
 
-      return router.createUrlTree(['/auth/login'], {
-        queryParams: { returnUrl: router.url },
-      });
-    })
-  );
+  return router.createUrlTree(['/auth/login'], {
+    queryParams: { returnUrl: router.url },
+  });
 };
 
 export const roleGuard = (requiredRole: string): CanActivateFn => {
-  return (): Observable<boolean | UrlTree> => {
+  return (): boolean | UrlTree => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    return authService.userRole$.pipe(
-      take(1),
-      map((role) => {
-        if (role === requiredRole) {
-          return true;
-        }
+    if (authService.userRole() === requiredRole) {
+      return true;
+    }
 
-        return router.createUrlTree(['/auth/unauthorized']);
-      })
-    );
+    return router.createUrlTree(['/auth/unauthorized']);
   };
 };

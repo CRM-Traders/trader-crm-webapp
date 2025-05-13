@@ -4,6 +4,7 @@ import {
   OnInit,
   OnDestroy,
   HostListener,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
@@ -22,14 +23,18 @@ export class UserMenuComponent implements OnInit, OnDestroy {
   userRole = '';
   userInitials = 'U';
 
-  ngOnInit(): void {
-    this.authService.userRole$.subscribe((role) => {
-      this.userRole = role;
-      this.userInitials = this.generateInitials(role);
-    });
-  }
+  // Effect to update user initials when role changes
+  private roleEffect = effect(() => {
+    const role = this.authService.userRole();
+    this.userRole = role;
+    this.userInitials = this.generateInitials(role);
+  });
 
-  ngOnDestroy(): void {}
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    // The effect is automatically cleaned up when component is destroyed
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {

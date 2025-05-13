@@ -10,7 +10,6 @@ import {
 import { RouterModule } from '@angular/router';
 import { ThemeSelectorComponent } from '../../../shared/components/theme-selector/theme-selector.component';
 import { AlertService } from '../../../core/services/alert.service';
-import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService, ThemeMode } from '../../../core/services/theme.service';
 
 @Component({
@@ -29,7 +28,6 @@ import { ThemeService, ThemeMode } from '../../../core/services/theme.service';
 export class SettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private themeService = inject(ThemeService);
-  private authService = inject(AuthService);
   private alertService = inject(AlertService);
 
   profileForm!: FormGroup;

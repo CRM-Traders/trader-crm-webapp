@@ -5,8 +5,8 @@ import {
   TemplateRef,
   ViewContainerRef,
   inject,
+  effect,
 } from '@angular/core';
-import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 @Directive({
@@ -17,30 +17,29 @@ export class HasRoleDirective implements OnDestroy {
   private authService = inject(AuthService);
   private templateRef = inject(TemplateRef<any>);
   private viewContainer = inject(ViewContainerRef);
-  private destroy$ = new Subject<void>();
   private hasView = false;
+  private requiredRoles: string[] = [];
+
+  // Effect to react to userRole signal changes
+  private roleEffect = effect(() => {
+    const userRole = this.authService.userRole();
+    const hasRole = userRole && this.requiredRoles.includes(userRole);
+
+    if (hasRole && !this.hasView) {
+      this.viewContainer.createEmbeddedView(this.templateRef);
+      this.hasView = true;
+    } else if (!hasRole && this.hasView) {
+      this.viewContainer.clear();
+      this.hasView = false;
+    }
+  });
 
   @Input() set hasRole(roles: string | string[]) {
-    const requiredRoles = Array.isArray(roles) ? roles : [roles];
-
-    this.authService.userRole$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((userRole) => {
-        console.log(userRole);
-        const hasRole = userRole && requiredRoles.includes(userRole);
-
-        if (hasRole && !this.hasView) {
-          this.viewContainer.createEmbeddedView(this.templateRef);
-          this.hasView = true;
-        } else if (!hasRole && this.hasView) {
-          this.viewContainer.clear();
-          this.hasView = false;
-        }
-      });
+    this.requiredRoles = Array.isArray(roles) ? roles : [roles];
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    // Clean up the effect
+    this.roleEffect.destroy();
   }
 }
