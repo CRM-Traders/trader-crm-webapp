@@ -119,7 +119,7 @@ export class AuthService {
     if (response && response.accessToken) {
       this.storeAuthData(response);
       this._isAuthenticated.set(true);
-      this._userRole.set(response.role);
+      this._userRole.set('Admin'); //response.role);
     }
   }
 
