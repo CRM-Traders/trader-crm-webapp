@@ -1,102 +1,156 @@
 <aside
-  [ngClass]="expanded ? 'w-64' : 'w-20'"
-  class="bg-white dark:bg-gray-800 shadow-md transition-all duration-300 ease-in-out h-screen z-20"
+  [ngClass]="expanded ? 'w-64' : 'w-16'"
+  class="bg-white dark:bg-gray-800 shadow-lg transition-all duration-300 ease-in-out h-screen z-20 flex flex-col overflow-hidden"
 >
-  <div class="flex flex-col h-full">
-    <!-- Sidebar header/logo -->
+  <div
+    class="h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-700"
+  >
     <div
-      class="h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-700"
+      *ngIf="expanded"
+      class="flex items-center space-x-2 text-lg font-bold text-gray-800 dark:text-gray-100"
     >
-      <div
-        *ngIf="expanded"
-        class="text-lg font-bold text-gray-800 dark:text-gray-100"
-      >
-        Trader CRM
+      <div class="text-blue-600 dark:text-blue-400 flex-shrink-0">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-7 w-7"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+          />
+        </svg>
       </div>
-      <div
-        *ngIf="!expanded"
-        class="text-lg font-bold text-gray-800 dark:text-gray-100 mx-auto"
-      >
-        TC
-      </div>
+      <span class="truncate">OSYS v1.6</span>
     </div>
+    <div
+      *ngIf="!expanded"
+      class="text-blue-600 dark:text-blue-400 mx-auto flex-shrink-0"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-7 w-7"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+        />
+      </svg>
+    </div>
+  </div>
 
-    <!-- Navigation items -->
-    <nav class="flex-1 py-4 overflow-y-auto">
-      <ul class="space-y-1 px-2">
-        <li *ngFor="let item of navItems">
-          <ng-container
-            *hasRole="item.requiredRoles || ['User', 'Manager', 'Admin']"
+  <nav class="flex-1 py-2 overflow-y-auto overflow-x-hidden">
+    <ul class="space-y-1 px-1">
+      <li *ngFor="let item of navItems">
+        <ng-container
+          *hasRole="item.requiredRoles || ['User', 'Manager', 'Admin']"
+        >
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active-nav-item"
+            [routerLinkActiveOptions]="{ exact: false }"
+            class="flex items-center px-3 py-3 rounded-md transition-colors relative nav-item"
+            [class.collapsed]="!expanded"
           >
-            <a
-              [routerLink]="item.route"
-              routerLinkActive="bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200"
-              [routerLinkActiveOptions]="{ exact: false }"
-              class="flex items-center px-3 py-2 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+            <div
+              class="icon-container"
+              [class.mr-3]="expanded"
+              [class.mx-auto]="!expanded"
             >
-              <!-- Icon -->
-              <div
-                [class.mr-3]="expanded"
-                [class.mx-auto]="!expanded"
-                [innerHTML]="item.icon"
-                class="text-gray-600 dark:text-gray-300"
-              ></div>
+              <img
+                [src]="'/icons/' + item.icon + '.svg'"
+                class="h-5 w-5 icon-img"
+                [alt]="item.label + ' icon'"
+              />
+            </div>
 
-              <!-- Label (only shown when expanded) -->
-              <span *ngIf="expanded" class="flex-1 whitespace-nowrap">{{
-                item.label
-              }}</span>
+            <span *ngIf="expanded" class="flex-1 whitespace-nowrap label">{{
+              item.label
+            }}</span>
 
-              <!-- Tooltip for collapsed state -->
-              <div
-                *ngIf="!expanded"
-                class="absolute left-20 bg-gray-800 text-white px-2 py-1 ml-6 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap text-sm pointer-events-none z-50 transition-opacity duration-300"
+            <span
+              *ngIf="expanded && item.label === 'Tickets'"
+              class="badge ticket-badge"
+            >
+              22
+            </span>
+
+            <span
+              *ngIf="expanded && item.label === 'Calendar'"
+              class="badge calendar-badge"
+            >
+              Today 0
+            </span>
+
+            <div *ngIf="!expanded" class="tooltip">
+              <div class="tooltip-arrow"></div>
+              {{ item.label }}
+
+              <span
+                *ngIf="item.label === 'Tickets'"
+                class="tooltip-badge ticket-tooltip-badge"
               >
-                {{ item.label }}
-              </div>
-            </a>
-          </ng-container>
-        </li>
-      </ul>
-    </nav>
+                22
+              </span>
 
-    <!-- Toggle sidebar button at bottom -->
-    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-      <button
-        (click)="toggleSidebar()"
-        class="w-full flex items-center justify-center p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              <span
+                *ngIf="item.label === 'Calendar'"
+                class="tooltip-badge calendar-tooltip-badge"
+              >
+                Today 0
+              </span>
+            </div>
+          </a>
+        </ng-container>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+    <button
+      (click)="toggleSidebar()"
+      class="w-full flex items-center justify-center p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      aria-label="Toggle sidebar"
+    >
+      <svg
+        *ngIf="expanded"
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
       >
-        <svg
-          *ngIf="expanded"
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-          />
-        </svg>
-        <svg
-          *ngIf="!expanded"
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13 5l7 7-7 7M5 5l7 7-7 7"
-          />
-        </svg>
-      </button>
-    </div>
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+        />
+      </svg>
+      <svg
+        *ngIf="!expanded"
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 5l7 7-7 7M5 5l7 7-7 7"
+        />
+      </svg>
+    </button>
   </div>
 </aside>
