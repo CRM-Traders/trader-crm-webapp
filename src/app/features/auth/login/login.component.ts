@@ -22,12 +22,10 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    rememberMe: [false],
   });
 
   isLoading = false;

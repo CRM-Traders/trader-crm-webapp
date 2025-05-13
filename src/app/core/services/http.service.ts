@@ -23,7 +23,7 @@ export class HttpService {
 
   post<T>(
     endpoint: string,
-    body: string,
+    body: any,
     params?: HttpParams,
     headers?: HttpHeaders
   ): Observable<T> {
