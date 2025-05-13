@@ -1,16 +1,8 @@
-import { inject, Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpService } from './http.service';
-import {
-  BehaviorSubject,
-  Observable,
-  catchError,
-  of,
-  throwError,
-  tap,
-} from 'rxjs';
-import { HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthResponse } from '../models/auth-response.model';
+import { Observable, catchError, tap, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -19,47 +11,43 @@ export class AuthService {
   private _http = inject(HttpService);
   private _router = inject(Router);
 
-  private _isAuthenticated = new BehaviorSubject<boolean>(this.hasValidToken());
-  isAuthenticated$ = this._isAuthenticated.asObservable();
-
-  private _userRole = new BehaviorSubject<string>(this.getRole());
-  userRole$ = this._userRole.asObservable();
-
   private readonly ACCESS_TOKEN_KEY = 'iFC03fkUWhcdYGciaclPyeqySdQE6qCd';
   private readonly REFRESH_TOKEN_KEY = 'LXP6usaZ340gDciGr69MQpPwpEdvPj9M';
   private readonly ROLE_KEY = '9JeQyQTsI03hbuMtl9tR1TjbOFGWf54p';
   private readonly EXPIRATION_KEY = 'z6ipay7ciaSpZQbb6cDLueVAAs0WtRjs';
 
+  private readonly _isAuthenticated = signal<boolean>(this.hasValidToken());
+  private readonly _userRole = signal<string>(this.getRole());
+
+  readonly isAuthenticated = this._isAuthenticated.asReadonly();
+  readonly userRole = this._userRole.asReadonly();
+
   login(email: string, password: string): Observable<AuthResponse> {
-    var credentials = { email: email, password: password };
+    const credentials = { email, password };
 
     return this._http.post<AuthResponse>('auth/login', credentials).pipe(
-      tap((response) => this.handleAuthResponse(response)),
-      catchError((error) => {
-        return throwError(
+      tap((response) => {
+        this.handleAuthResponse(response);
+      }),
+      catchError((error) =>
+        throwError(
           () =>
             new Error('Authentication failed. Please check your credentials.')
-        );
-      })
+        )
+      )
     );
   }
 
   logout(): void {
-    this._http
-      .post<void>(
-        'auth/logout',
-        JSON.stringify({ refreshToken: this.getRefreshToken() })
-      )
-      .pipe(
-        catchError((error) => {
-          return of(null);
-        })
-      )
-      .subscribe();
+    if (this.getRefreshToken()) {
+      this._http.post<void>('auth/logout', {}).subscribe({
+        error: () => {},
+      });
+    }
 
     this.clearAuthData();
-    this._isAuthenticated.next(false);
-    this._userRole.next('');
+    this._isAuthenticated.set(false);
+    this._userRole.set('');
 
     this._router.navigate(['/auth/login']);
   }
@@ -71,14 +59,14 @@ export class AuthService {
       return throwError(() => new Error('No refresh token available'));
     }
 
-    const body = JSON.stringify({ refreshToken });
+    const body = { refreshToken: refreshToken };
 
     return this._http.post<AuthResponse>('auth/refresh', body).pipe(
       tap((response) => this.handleAuthResponse(response)),
       catchError((error) => {
         this.clearAuthData();
-        this._isAuthenticated.next(false);
-        this._userRole.next('');
+        this._isAuthenticated.set(false);
+        this._userRole.set('');
         return throwError(
           () => new Error('Session expired. Please log in again.')
         );
@@ -95,12 +83,19 @@ export class AuthService {
     return localStorage.getItem(this.ACCESS_TOKEN_KEY);
   }
 
+  getRefreshToken(): string | null {
+    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+  }
+
   getRole(): string {
     return localStorage.getItem(this.ROLE_KEY) || '';
   }
 
   getTokenExpiration(): number {
     const expString = localStorage.getItem(this.EXPIRATION_KEY);
+    if (!expString) {
+      console.warn('No expiration found in localStorage');
+    }
     return expString ? parseInt(expString, 10) : 0;
   }
 
@@ -108,38 +103,33 @@ export class AuthService {
     const token = this.getAccessToken();
     const expiration = this.getTokenExpiration();
 
-    if (!token || !expiration) {
+    if (!token) {
       return false;
     }
 
-    return Date.now() < expiration * 1000 - 10000;
-  }
+    if (!expiration) {
+      return false;
+    }
 
-  createAuthHeaders(): HttpHeaders {
-    const token = this.getAccessToken();
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    });
+    const isValid = Date.now() < expiration * 1000 - 10000;
+    return isValid;
   }
 
   private handleAuthResponse(response: AuthResponse): void {
     if (response && response.accessToken) {
       this.storeAuthData(response);
-      this._isAuthenticated.next(true);
-      this._userRole.next(response.role);
+      this._isAuthenticated.set(true);
+      this._userRole.set(response.role);
     }
   }
 
   private storeAuthData(authData: AuthResponse): void {
+    const expirationTime = Math.floor((Date.now() + 60000) / 1000);
+
     localStorage.setItem(this.ACCESS_TOKEN_KEY, authData.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, authData.refreshToken);
-    localStorage.setItem(this.ROLE_KEY, 'Admin'); //authData.role);
-    localStorage.setItem(this.EXPIRATION_KEY, authData.exp.toString());
-  }
-
-  private getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    localStorage.setItem(this.ROLE_KEY, 'Admin'); // Using hardcoded value for now
+    localStorage.setItem(this.EXPIRATION_KEY, `${expirationTime}`); // Using hardcoded expiration
   }
 
   private clearAuthData(): void {

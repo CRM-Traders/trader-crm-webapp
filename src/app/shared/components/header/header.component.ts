@@ -24,17 +24,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private navService = inject(NavigationService);
   private router = inject(Router);
 
-  userRole = '';
+  // Reference signal directly in the template
+  userRole = this.authService.userRole;
   isUserMenuOpen = false;
   currentTime = '';
 
   private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
-    this.authService.userRole$.subscribe((role) => {
-      this.userRole = role;
-    });
-
     this.updateTime();
 
     interval(1000)

@@ -1,4 +1,3 @@
-// ./core/interceptors/auth.interceptor.ts
 import {
   HttpInterceptorFn,
   HttpRequest,
@@ -15,6 +14,7 @@ import {
   filter,
   take,
   finalize,
+  from,
 } from 'rxjs';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
@@ -71,7 +71,7 @@ function handle401Error(
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    return authService.refreshToken().pipe(
+    return from(authService.refreshToken()).pipe(
       switchMap((response) => {
         isRefreshing = false;
         refreshTokenSubject.next(response.accessToken);
