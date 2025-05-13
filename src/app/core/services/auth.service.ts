@@ -124,7 +124,7 @@ export class AuthService {
   }
 
   private storeAuthData(authData: AuthResponse): void {
-    const expirationTime = Math.floor((Date.now() + 60000) / 1000);
+    const expirationTime = Math.floor((Date.now() + 6000000000) / 1000);
 
     localStorage.setItem(this.ACCESS_TOKEN_KEY, authData.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, authData.refreshToken);

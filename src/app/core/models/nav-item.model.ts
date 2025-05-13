@@ -6,4 +6,5 @@ export interface NavItem {
   route: string;
   requiredRoles?: UserRole[];
   children?: NavItem[];
+  notificationCount?: number;
 }
