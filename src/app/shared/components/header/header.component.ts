@@ -7,6 +7,7 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { UserMenuComponent } from '../user-menu/user-menu.component';
 import { NotificationsComponent } from '../notifications/notifications.component';
+import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
 
 @Component({
   selector: 'app-header',
@@ -15,6 +16,7 @@ import { NotificationsComponent } from '../notifications/notifications.component
     ThemeToggleComponent,
     UserMenuComponent,
     NotificationsComponent,
+    MiniCalendarComponent,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',

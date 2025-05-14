@@ -1,0 +1,72 @@
+/* src/app/shared/components/mini-calendar/mini-calendar.component.scss */
+.mini-calendar {
+  position: relative;
+  display: inline-block;
+}
+
+@keyframes dropdown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-dropdown {
+  animation: dropdown 0.2s ease-out forwards;
+}
+
+.grid-cols-7 {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+/* Ensure each day button has good touch target size */
+button.w-7.h-7 {
+  min-width: 28px;
+  min-height: 28px;
+}
+
+/* Style for focus states */
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* Transition for theme switching */
+.bg-white,
+.bg-gray-100,
+.bg-gray-200,
+.bg-gray-500,
+.bg-gray-600,
+.bg-gray-700,
+.text-gray-400,
+.text-gray-500,
+.text-gray-700,
+.text-gray-900,
+.text-white,
+.text-blue-600,
+.text-blue-400,
+.text-blue-800,
+.text-blue-300,
+.border-gray-200,
+.border-gray-600 {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Today button effects */
+.bg-blue-600 {
+  transition: all 0.2s ease;
+}
+
+/* Hover effects */
+button.hover\:bg-gray-200:hover,
+button.hover\:bg-gray-500:hover,
+button.hover\:text-blue-800:hover,
+button.hover\:text-blue-300:hover {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

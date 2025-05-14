@@ -40,12 +40,19 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
-
       {
         path: 'settings',
         loadComponent: () =>
           import('./features/user/settings/settings.component').then(
             (m) => m.SettingsComponent
+          ),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'calendar',
+        loadComponent: () =>
+          import('./features/calendar-page/calendar-page.component').then(
+            (m) => m.CalendarPageComponent
           ),
         canActivate: [authGuard],
       },
