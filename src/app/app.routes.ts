@@ -56,6 +56,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
+      {
+        path: 'traders',
+        loadComponent: () =>
+          import('./features/traders/traders.component').then(
+            (m) => m.TradersComponent
+          ),
+        canActivate: [authGuard],
+      },
     ],
   },
 
