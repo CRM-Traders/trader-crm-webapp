@@ -1,0 +1,140 @@
+<!-- src/app/shared/components/mini-calendar/mini-calendar.component.html -->
+<div class="relative mini-calendar">
+  <!-- Calendar Toggle Button -->
+  <button
+    (click)="toggleCalendar($event)"
+    class="flex items-center p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    aria-haspopup="true"
+    [attr.aria-expanded]="isOpen"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-5 w-5 mr-1"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+      />
+    </svg>
+    <span *ngIf="showCurrentDate" class="text-sm font-medium">{{
+      formatCurrentDate()
+    }}</span>
+  </button>
+
+  <!-- Dropdown Calendar -->
+  <div
+    *ngIf="isOpen"
+    class="absolute right-0 mt-2 w-64 origin-top-right rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-50 animate-dropdown"
+  >
+    <div class="p-2">
+      <!-- Calendar Header -->
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+          {{ formatDate(displayDate) }}
+        </h3>
+        <div class="flex">
+          <button
+            (click)="goToPreviousMonth()"
+            class="p-1 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+            aria-label="Previous month"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          <button
+            (click)="goToNextMonth()"
+            class="p-1 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+            aria-label="Next month"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Days of Week -->
+      <div class="grid grid-cols-7 mb-1">
+        <div
+          *ngFor="let day of weekDays"
+          class="text-center text-xs font-medium text-gray-500 dark:text-gray-400"
+        >
+          {{ day }}
+        </div>
+      </div>
+
+      <!-- Calendar Days -->
+      <div class="grid grid-cols-7 gap-1">
+        <button
+          *ngFor="let day of calendarDays"
+          (click)="selectDate(day)"
+          class="rounded-full w-7 h-7 flex items-center justify-center text-xs focus:outline-none"
+          [class.bg-gray-100]="
+            !day.isCurrentMonth && !day.isToday && !isDarkMode
+          "
+          [class.bg-gray-600]="
+            !day.isCurrentMonth && !day.isToday && isDarkMode
+          "
+          [class.text-gray-400]="
+            !day.isCurrentMonth && !day.isToday && !isDarkMode
+          "
+          [class.text-gray-500]="
+            !day.isCurrentMonth && !day.isToday && isDarkMode
+          "
+          [class.bg-blue-600]="day.isToday"
+          [class.text-white]="day.isToday"
+          [class.hover:bg-gray-200]="!day.isToday && !isDarkMode"
+          [class.hover:bg-gray-500]="!day.isToday && isDarkMode"
+        >
+          {{ day.day }}
+        </button>
+      </div>
+
+      <!-- Today and Calendar Page Links -->
+      <div
+        class="flex justify-between mt-2 pt-2 border-t border-gray-200 dark:border-gray-600"
+      >
+        <button
+          (click)="goToToday()"
+          class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus:outline-none"
+        >
+          Today
+        </button>
+        <button
+          (click)="navigateToCalendar()"
+          class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 focus:outline-none"
+        >
+          View Calendar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

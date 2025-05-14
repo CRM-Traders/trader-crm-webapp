@@ -1,0 +1,313 @@
+<div
+  class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+>
+  <div
+    class="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-3"
+  >
+    <div class="flex items-center">
+      <button
+        (click)="view === 'month' ? goToPreviousMonth() : goToPreviousWeek()"
+        class="p-2 rounded-md text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        aria-label="Previous"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
+      <button
+        (click)="view === 'month' ? goToNextMonth() : goToNextWeek()"
+        class="p-2 rounded-md text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        aria-label="Next"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </button>
+
+      <button
+        (click)="goToToday()"
+        class="ml-2 px-3 py-1 text-sm rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        Today
+      </button>
+
+      <h2 class="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">
+        <ng-container *ngIf="view === 'month'">{{
+          formatDate(displayDate)
+        }}</ng-container>
+        <ng-container *ngIf="view === 'week'">{{
+          formatWeekRange()
+        }}</ng-container>
+        <ng-container *ngIf="view === 'list'">Upcoming Events</ng-container>
+      </h2>
+    </div>
+
+    <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md">
+      <button
+        (click)="changeView('month')"
+        class="px-3 py-1 text-sm rounded-l-md"
+        [class.bg-white]="view === 'month' && !isDarkMode"
+        [class.bg-gray-800]="view === 'month' && isDarkMode"
+        [class.text-blue-600]="view === 'month'"
+        [class.shadow]="view === 'month'"
+      >
+        Month
+      </button>
+      <button
+        (click)="changeView('week')"
+        class="px-3 py-1 text-sm"
+        [class.bg-white]="view === 'week' && !isDarkMode"
+        [class.bg-gray-800]="view === 'week' && isDarkMode"
+        [class.text-blue-600]="view === 'week'"
+        [class.shadow]="view === 'week'"
+      >
+        Week
+      </button>
+      <button
+        (click)="changeView('list')"
+        class="px-3 py-1 text-sm rounded-r-md"
+        [class.bg-white]="view === 'list' && !isDarkMode"
+        [class.bg-gray-800]="view === 'list' && isDarkMode"
+        [class.text-blue-600]="view === 'list'"
+        [class.shadow]="view === 'list'"
+      >
+        List
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="view === 'month'" class="calendar-grid">
+    <div class="grid grid-cols-7 bg-gray-50 dark:bg-gray-700">
+      <div
+        *ngFor="let day of weekDays"
+        class="p-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300"
+      >
+        {{ day }}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-7 border-t border-gray-200 dark:border-gray-700">
+      <div
+        *ngFor="let day of calendarDays"
+        class="min-h-[100px] border-b border-r border-gray-200 dark:border-gray-700 p-1 relative"
+        [class.bg-white]="day.isCurrentMonth && !isDarkMode"
+        [class.bg-gray-800]="day.isCurrentMonth && isDarkMode"
+        [class.bg-gray-50]="!day.isCurrentMonth && !isDarkMode"
+        [class.bg-gray-900]="!day.isCurrentMonth && isDarkMode"
+        [class.text-gray-600]="!day.isCurrentMonth && !isDarkMode"
+        [class.text-gray-500]="!day.isCurrentMonth && isDarkMode"
+        [class.font-bold]="day.isToday"
+        (click)="selectDate(day)"
+      >
+        <div class="flex justify-between items-start">
+          <div
+            class="h-7 w-7 flex items-center justify-center rounded-full text-sm"
+            [class.bg-blue-600]="day.isToday"
+            [class.text-white]="day.isToday"
+          >
+            {{ day.day }}
+          </div>
+        </div>
+
+        <div
+          *ngIf="day.hasEvents"
+          class="mt-1 space-y-1 overflow-y-auto max-h-[70px]"
+        >
+          <div
+            *ngFor="let event of day.events"
+            class="text-xs px-2 py-1 rounded truncate border-l-4"
+            [class]="getEventStyles(event.color)"
+          >
+            {{ event.title }}
+          </div>
+
+          <div
+            *ngIf="day.events.length > 3"
+            class="text-xs text-center text-gray-500 dark:text-gray-400 mt-1"
+          >
+            +{{ day.events.length - 3 }} more
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="view === 'week'" class="week-view">
+    <div
+      class="grid grid-cols-8 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700"
+    >
+      <div
+        class="p-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700"
+      >
+        Time
+      </div>
+
+      <div
+        *ngFor="let dateItem of weekDates; let i = index"
+        class="p-2 text-center"
+        [class.bg-blue-50]="isToday(dateItem) && !isDarkMode"
+        [class.bg-blue-900]="isToday(dateItem) && isDarkMode"
+        [class.bg-opacity-20]="isToday(dateItem) && isDarkMode"
+        [class.font-bold]="isToday(dateItem)"
+      >
+        <div class="text-sm font-medium text-gray-600 dark:text-gray-300">
+          {{ weekDays[i] }}
+        </div>
+        <div
+          class="text-lg mt-1"
+          [class.text-blue-600]="isToday(dateItem) && !isDarkMode"
+          [class.text-blue-400]="isToday(dateItem) && isDarkMode"
+        >
+          {{ dateItem.getDate() }}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-8 overflow-y-auto max-h-[600px]">
+      <div class="border-r border-gray-200 dark:border-gray-700">
+        <div
+          *ngFor="let hour of weekHours"
+          class="h-[60px] px-2 py-1 text-xs text-right text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700"
+        >
+          {{ hour }}
+        </div>
+      </div>
+
+      <div
+        *ngFor="let date of weekDates; let dayIndex = index"
+        class="relative border-r border-gray-200 dark:border-gray-700"
+      >
+        <div
+          *ngFor="let hour of weekHours"
+          class="h-[60px] border-b border-gray-200 dark:border-gray-700"
+        ></div>
+
+        <div
+          *ngFor="let event of weekEvents['day_' + dayIndex]"
+          class="absolute w-[95%] px-2 py-1 text-xs rounded overflow-hidden border-l-4 z-10"
+          [class]="getEventStyles(event.color)"
+          [style.top]="calculateEventPosition(event, dayIndex).top"
+          [style.height]="calculateEventPosition(event, dayIndex).height"
+        >
+          <div class="font-semibold truncate">{{ event.title }}</div>
+          <div *ngIf="!event.allDay" class="truncate">
+            {{ formatTimeString(event.start) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="view === 'list'" class="list-view">
+    <div
+      *ngIf="allEvents.length === 0"
+      class="p-6 text-center text-gray-500 dark:text-gray-400"
+    >
+      No upcoming events
+    </div>
+
+    <div
+      *ngIf="allEvents.length > 0"
+      class="divide-y divide-gray-200 dark:divide-gray-700"
+    >
+      <ng-container *ngFor="let group of groupEventsByDay(allEvents)">
+        <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
+          <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {{ formatListEventDate(getDateFromString(group.date)) }}
+          </h3>
+        </div>
+
+        <div
+          *ngFor="let event of group.events"
+          class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700"
+        >
+          <div class="flex items-start">
+            <div class="w-24 flex-shrink-0">
+              <div class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ event.allDay ? "All Day" : formatTimeString(event.start) }}
+              </div>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center">
+                <div
+                  class="h-2 w-2 rounded-full mr-2"
+                  [class]="getDotColor(event.color)"
+                ></div>
+                <h4
+                  class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                >
+                  {{ event.title }}
+                </h4>
+              </div>
+
+              <div
+                *ngIf="event.location"
+                class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3 w-3 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                {{ event.location }}
+              </div>
+
+              <div
+                *ngIf="event.description"
+                class="mt-1 text-xs text-gray-600 dark:text-gray-300"
+              >
+                {{ event.description }}
+              </div>
+            </div>
+
+            <div
+              *ngIf="!event.allDay"
+              class="ml-4 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
+            >
+              {{ formatTimeString(event.end) }}
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,150 @@
+/* src/app/shared/components/calendar/calendar.component.scss */
+.calendar-grid {
+  min-height: 700px;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-cols-7 {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.grid-cols-8 {
+  display: grid;
+  grid-template-columns: 80px repeat(7, 1fr);
+}
+
+/* Style for the current day highlight */
+.calendar-day.today {
+  position: relative;
+}
+
+.calendar-day.today .day-number {
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 9999px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Week view styles */
+.week-view {
+  height: 700px;
+  display: flex;
+  flex-direction: column;
+}
+
+.week-view .max-h-\[600px\] {
+  height: 660px;
+}
+
+/* List view styles */
+.list-view {
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+/* Transitions for theme switching */
+.bg-white,
+.bg-gray-50,
+.bg-gray-100,
+.bg-gray-800,
+.bg-gray-900,
+.text-gray-600,
+.text-gray-500,
+.text-white,
+.text-blue-600,
+.border-gray-200,
+.border-gray-700 {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Event styling */
+.calendar-event {
+  margin-top: 2px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .min-h-\[100px\] {
+    min-height: 80px;
+  }
+
+  .calendar-grid {
+    min-height: 500px;
+  }
+
+  .week-view {
+    height: 500px;
+  }
+
+  .week-view .max-h-\[600px\] {
+    height: 460px;
+  }
+
+  .list-view {
+    max-height: 500px;
+  }
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+}
+
+/* Ensure event tooltips display correctly */
+.event-tooltip {
+  position: absolute;
+  z-index: 10;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  max-width: 16rem;
+  font-size: 0.875rem;
+}
+
+.dark .event-tooltip {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: white;
+}
+
+/* Month view event styling */
+.max-h-\[70px\] {
+  max-height: 70px;
+}
+
+/* List view date headers */
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
