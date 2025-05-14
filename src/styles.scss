@@ -23,17 +23,14 @@ body {
 }
 
 .dark {
-  // Global backgrounds
   .bg-white.dark\:bg-gray-900 {
-    background-color: #111827 !important; // Darker background for main page
+    background-color: #111827 !important;
   }
 
-  // Card components
   .bg-white.dark\:bg-gray-800 {
-    background-color: #1f2937 !important; // Slightly lighter for the card
+    background-color: #1f2937 !important;
   }
 
-  // Text elements
   .text-gray-900.dark\:text-white {
     color: white !important;
   }
@@ -49,7 +46,6 @@ body {
     color: #9ca3af !important;
   }
 
-  // Form elements
   input.dark\:bg-gray-700 {
     background-color: #374151 !important;
     color: white !important;
@@ -63,7 +59,6 @@ body {
     color: #6b7280 !important;
   }
 
-  // Checkbox styling
   input[type="checkbox"].dark\:bg-gray-700 {
     background-color: #374151 !important;
   }
@@ -72,12 +67,10 @@ body {
     background-color: #2563eb !important;
   }
 
-  // Borders
   .border-gray-200.dark\:border-gray-700 {
     border-color: #374151 !important;
   }
 
-  // Buttons
   .bg-blue-600.dark\:bg-blue-500 {
     background-color: #3b82f6 !important;
   }
@@ -91,13 +84,11 @@ body {
   }
 }
 
-// Ensure dark mode is applied to the entire app
 .dark body {
   background-color: #111827;
   color: white;
 }
 
-// Force HTML and body to take up full height
 html,
 body,
 app-root {
@@ -106,77 +97,70 @@ app-root {
 }
 
 .dark {
-  // Overall page background
   body,
   .bg-gray-100.dark\:bg-gray-900 {
-    background-color: #1a202c !important; // Darker shade for better contrast
+    background-color: #1a202c !important;
   }
 
-  // Card backgrounds
   .bg-white.dark\:bg-gray-800 {
-    background-color: #2d3748 !important; // More visible contrast
+    background-color: #2d3748 !important;
   }
 
-  // Text colors with improved visibility
   .text-gray-900.dark\:text-gray-100,
   .text-gray-800.dark\:text-gray-100 {
-    color: #f7fafc !important; // Brighter white for better readability
+    color: #f7fafc !important;
   }
 
   .text-gray-700.dark\:text-gray-200,
   .text-gray-600.dark\:text-gray-200 {
-    color: #e2e8f0 !important; // Lighter gray for secondary text
+    color: #e2e8f0 !important;
   }
 
   .text-gray-500.dark\:text-gray-300,
   .text-gray-600.dark\:text-gray-300 {
-    color: #cbd5e0 !important; // Medium gray for better visibility
+    color: #cbd5e0 !important;
   }
 
-  // Form elements with improved contrast
   input.dark\:bg-gray-700 {
-    background-color: #4a5568 !important; // Lighter input background
+    background-color: #4a5568 !important;
     color: #fff !important;
   }
 
   input.dark\:border-gray-600 {
-    border-color: #718096 !important; // More visible borders
+    border-color: #718096 !important;
   }
 
-  // Better dropdown contrast
   .dark\:bg-gray-700 {
-    background-color: #4a5568 !important; // Lighter dropdown background
+    background-color: #4a5568 !important;
   }
 
-  // Button hover states
   .dark\:hover\:bg-gray-600:hover {
-    background-color: #4a5568 !important; // More noticeable hover state
+    background-color: #4a5568 !important;
   }
 
-  // Card hover states
   .dark\:hover\:bg-gray-700:hover {
-    background-color: #4a5568 !important; // More visible hover effect
+    background-color: #4a5568 !important;
   }
 
-  // Active navigation items
   .dark\:bg-blue-800 {
-    background-color: #2c5282 !important; // More visible active state
+    background-color: #2c5282 !important;
   }
 
-  // Ensure all nested content gets dark mode applied
   .bg-white.dark\:bg-gray-800 * {
     color-scheme: dark;
   }
 }
 
-// Force dark mode to propagate to all elements
 .dark * {
   color-scheme: dark;
 }
 
-// Add transitions for smoother theme toggling
 .transition-colors,
 .transition-all,
 .transition {
   transition-duration: 300ms;
+}
+
+button {
+  cursor: pointer;
 }

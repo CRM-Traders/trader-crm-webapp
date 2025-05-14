@@ -1,4 +1,3 @@
-// src/app/shared/components/mini-calendar/mini-calendar.component.ts
 import { CommonModule } from '@angular/common';
 import {
   Component,
@@ -45,31 +44,26 @@ export class MiniCalendarComponent implements OnInit {
   generateCalendarDays(): void {
     this.calendarDays = [];
 
-    // Get the first day of the month
     const firstDayOfMonth = new Date(
       this.displayDate.getFullYear(),
       this.displayDate.getMonth(),
       1
     );
 
-    // Get the last day of the month
     const lastDayOfMonth = new Date(
       this.displayDate.getFullYear(),
       this.displayDate.getMonth() + 1,
       0
     );
 
-    // Get the day of the week for the first day (0 = Sunday, 6 = Saturday)
     const firstDayOfWeek = firstDayOfMonth.getDay();
 
-    // Get the previous month's days to display
     const prevMonthLastDay = new Date(
       this.displayDate.getFullYear(),
       this.displayDate.getMonth(),
       0
     ).getDate();
 
-    // Add previous month days
     for (let i = 0; i < firstDayOfWeek; i++) {
       const day = prevMonthLastDay - firstDayOfWeek + i + 1;
       const date = new Date(
@@ -85,7 +79,6 @@ export class MiniCalendarComponent implements OnInit {
       });
     }
 
-    // Add current month days
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       const date = new Date(
         this.displayDate.getFullYear(),
@@ -100,8 +93,7 @@ export class MiniCalendarComponent implements OnInit {
       });
     }
 
-    // Add next month days to fill the grid
-    const remainingDays = 42 - this.calendarDays.length; // 6 weeks × 7 days = 42
+    const remainingDays = 42 - this.calendarDays.length;
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(
         this.displayDate.getFullYear(),
