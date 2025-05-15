@@ -13,6 +13,10 @@ import { AlertService } from '../../../core/services/alert.service';
 import { ThemeService, ThemeMode } from '../../../core/services/theme.service';
 import { LocalizationService } from '../../../core/services/localization.service';
 import { TimezoneOption } from '../../../core/models/timezone.model';
+import { TwoFactorService } from '../../../core/services/two-factor.service';
+import { TwoFactorComponent } from '../../../features/auth/two-factor/two-factor.component';
+import { QrCodeComponent } from '../../../shared/components/qr-code/qr-code.component';
+import { TwoFactorSetupResponse } from '../../../core/models/two-f.model';
 
 @Component({
   selector: 'app-settings',
@@ -23,6 +27,8 @@ import { TimezoneOption } from '../../../core/models/timezone.model';
     FormsModule,
     ReactiveFormsModule,
     ThemeSelectorComponent,
+    TwoFactorComponent,
+    QrCodeComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -32,23 +38,32 @@ export class SettingsComponent implements OnInit {
   private themeService = inject(ThemeService);
   private alertService = inject(AlertService);
   private localizationService = inject(LocalizationService);
+  private twoFactorService = inject(TwoFactorService);
 
   profileForm!: FormGroup;
   passwordForm!: FormGroup;
   notificationForm!: FormGroup;
   localizationForm!: FormGroup;
+  twoFactorForm!: FormGroup;
 
   activeSection = 'profile';
   isProfileSaving = false;
   isPasswordSaving = false;
   isNotificationSaving = false;
   isLocalizationSaving = false;
+  isTwoFactorVerifying = false;
+  isDisabling2FA = false;
 
   currentTheme: ThemeMode = 'system';
   isDarkMode = false;
 
   timezones: TimezoneOption[] = [];
   timezonesByRegion: Record<string, TimezoneOption[]> = {};
+
+  twoFactorSetupData: TwoFactorSetupResponse | null = null;
+  isTwoFactorEnabled = false;
+  isQrCodeVisible = false;
+  recoveryCodes: string[] = [];
 
   ngOnInit(): void {
     this.initForms();
@@ -68,6 +83,8 @@ export class SettingsComponent implements OnInit {
     this.localizationForm
       .get('timezone')
       ?.setValue(this.localizationService.currentTimezone());
+
+    this.check2FAStatus();
   }
 
   initForms(): void {
@@ -114,6 +131,10 @@ export class SettingsComponent implements OnInit {
       timeFormat: ['h:mm a'],
     });
 
+    this.twoFactorForm = this.fb.group({
+      code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+    });
+
     this.loadUserData();
   }
 
@@ -132,6 +153,18 @@ export class SettingsComponent implements OnInit {
 
   setActiveSection(section: string): void {
     this.activeSection = section;
+
+    if (section !== 'security') {
+      this.resetTwoFactorSetupState();
+    }
+  }
+
+  resetTwoFactorSetupState(): void {
+    this.twoFactorSetupData = null;
+    this.isQrCodeVisible = false;
+    if (!this.isTwoFactorEnabled) {
+      this.recoveryCodes = [];
+    }
   }
 
   saveProfileSettings(): void {
@@ -216,6 +249,98 @@ export class SettingsComponent implements OnInit {
     return `${sign}${hours.toString().padStart(2, '0')}:${minutes
       .toString()
       .padStart(2, '0')}`;
+  }
+
+  check2FAStatus(): void {
+    this.twoFactorService.getStatus().subscribe({
+      next: (response) => {
+        this.isTwoFactorEnabled = response.enabled;
+      },
+      error: (error) => {
+        console.error('Failed to check 2FA status:', error);
+        this.isTwoFactorEnabled = false;
+      },
+    });
+  }
+
+  setup2FA(): void {
+    this.alertService.info('Initiating 2FA setup...');
+
+    this.twoFactorService.setup().subscribe({
+      next: (response) => {
+        this.twoFactorSetupData = response;
+
+        if (!this.twoFactorSetupData.qrCodeSetupUri) {
+          const email =
+            this.profileForm.get('email')?.value || 'user@example.com';
+          this.twoFactorSetupData.qrCodeSetupUri =
+            this.twoFactorService.generateOtpauthUrl(
+              email,
+              this.twoFactorSetupData.secretKey,
+              'Trader CRM'
+            );
+        }
+
+        this.isQrCodeVisible = true;
+      },
+      error: (error) => {
+        console.error('2FA setup error:', error);
+        this.alertService.error('Failed to set up 2FA. Please try again.');
+      },
+    });
+  }
+
+  verify2FA(code: string): void {
+    this.isTwoFactorVerifying = true;
+
+    this.twoFactorService.verify(code).subscribe({
+      next: (response) => {
+        this.isTwoFactorEnabled = true;
+
+        if (response.recoveryCodes && Array.isArray(response.recoveryCodes)) {
+          this.recoveryCodes = response.recoveryCodes;
+        }
+
+        this.alertService.success(
+          'Two-factor authentication enabled successfully.'
+        );
+        this.isTwoFactorVerifying = false;
+      },
+      error: (error) => {
+        console.error('2FA verification error:', error);
+        this.alertService.error('Invalid verification code. Please try again.');
+        this.isTwoFactorVerifying = false;
+      },
+    });
+  }
+
+  disable2FA(code: string): void {
+    this.isDisabling2FA = true;
+
+    this.twoFactorService.disable(code).subscribe({
+      next: (response) => {
+        this.isTwoFactorEnabled = false;
+        this.isQrCodeVisible = false;
+        this.recoveryCodes = [];
+        this.alertService.success(
+          'Two-factor authentication disabled successfully.'
+        );
+        this.isDisabling2FA = false;
+      },
+      error: (error) => {
+        console.error('2FA disable error:', error);
+        this.alertService.error('Invalid verification code. Please try again.');
+        this.isDisabling2FA = false;
+      },
+    });
+  }
+
+  onTwoFactorComplete(code: string): void {
+    if (this.isQrCodeVisible && this.twoFactorSetupData) {
+      this.verify2FA(code);
+    } else if (this.isTwoFactorEnabled && this.isQrCodeVisible) {
+      this.disable2FA(code);
+    }
   }
 
   private passwordMatchValidator(
