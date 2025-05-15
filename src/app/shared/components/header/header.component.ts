@@ -8,6 +8,7 @@ import { Subject, interval, takeUntil } from 'rxjs';
 import { UserMenuComponent } from '../user-menu/user-menu.component';
 import { NotificationsComponent } from '../notifications/notifications.component';
 import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
+import { LocalizationService } from '../../../core/services/localization.service';
 
 @Component({
   selector: 'app-header',
@@ -24,7 +25,7 @@ import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component'
 export class HeaderComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private navService = inject(NavigationService);
-  private router = inject(Router);
+  private localizationService = inject(LocalizationService);
 
   // Reference signal directly in the template
   userRole = this.authService.userRole;
@@ -74,7 +75,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private updateTime(): void {
-    const now = new Date();
+    const now = this.localizationService.getCurrentLocalTime();
+
     const hours = this.padZero(now.getHours());
     const minutes = this.padZero(now.getMinutes());
     const seconds = this.padZero(now.getSeconds());
