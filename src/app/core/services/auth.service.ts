@@ -38,6 +38,22 @@ export class AuthService {
     );
   }
 
+  recovery(email: string, password: string): Observable<AuthResponse> {
+    const credentials = { email, password };
+
+    return this._http.post<AuthResponse>('auth/login', credentials).pipe(
+      tap((response) => {
+        this.handleAuthResponse(response);
+      }),
+      catchError((error) =>
+        throwError(
+          () =>
+            new Error('Authentication failed. Please check your credentials.')
+        )
+      )
+    );
+  }
+
   logout(): void {
     if (this.getRefreshToken()) {
       this._http.post<void>('auth/logout', {}).subscribe({

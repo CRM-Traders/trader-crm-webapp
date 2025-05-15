@@ -3,4 +3,5 @@ export interface AuthResponse {
   refreshToken: string;
   role: string;
   exp: number;
+  requiresTwoFactor?: boolean;
 }
