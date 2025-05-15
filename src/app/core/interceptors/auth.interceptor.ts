@@ -18,6 +18,7 @@ import {
 } from 'rxjs';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { UserContextService } from '../services/user-context.service';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
@@ -29,34 +30,41 @@ export const authInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
+  const userContextService = inject(UserContextService);
   const router = inject(Router);
 
   if (shouldSkipAuth(request)) {
     return next(request);
   }
 
+  const userContext = userContextService.userContext();
+
   const authToken = authService.getAccessToken();
   if (authToken) {
-    request = addTokenToRequest(request, authToken);
+    request = addTokenAndContextToRequest(request, authToken, userContext);
   }
 
   return next(request).pipe(
     catchError((error) => {
       if (error instanceof HttpErrorResponse && error.status === 401) {
-        return handle401Error(request, next, authService, router);
+        return handle401Error(request, next, authService, router, userContext);
       }
       return throwError(() => error);
     })
   );
 };
 
-function addTokenToRequest(
+function addTokenAndContextToRequest(
   request: HttpRequest<any>,
-  token: string
+  token: string,
+  userContext: any
 ): HttpRequest<any> {
   return request.clone({
     setHeaders: {
       Authorization: `Bearer ${token}`,
+      'X-Client-Device': userContext.device || 'unknown',
+      'X-Client-OS': userContext.os || 'unknown',
+      'X-Client-Browser': userContext.browser || 'unknown',
     },
   });
 }
@@ -65,7 +73,8 @@ function handle401Error(
   request: HttpRequest<unknown>,
   next: HttpHandlerFn,
   authService: AuthService,
-  router: Router
+  router: Router,
+  userContext: any
 ): Observable<HttpEvent<unknown>> {
   if (!isRefreshing) {
     isRefreshing = true;
@@ -76,7 +85,13 @@ function handle401Error(
         isRefreshing = false;
         refreshTokenSubject.next(response.accessToken);
 
-        return next(addTokenToRequest(request, response.accessToken));
+        return next(
+          addTokenAndContextToRequest(
+            request,
+            response.accessToken,
+            userContext
+          )
+        );
       }),
       catchError((error) => {
         isRefreshing = false;
@@ -99,7 +114,9 @@ function handle401Error(
     return refreshTokenSubject.pipe(
       filter((token) => token !== null),
       take(1),
-      switchMap((token) => next(addTokenToRequest(request, token as string)))
+      switchMap((token) =>
+        next(addTokenAndContextToRequest(request, token as string, userContext))
+      )
     );
   }
 }
