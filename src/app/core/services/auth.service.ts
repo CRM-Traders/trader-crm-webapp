@@ -22,12 +22,24 @@ export class AuthService {
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly userRole = this._userRole.asReadonly();
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    const credentials = { email, password };
+  login(
+    email: string,
+    password: string,
+    twoFactorCode: string | null = null,
+    rememberMe: boolean = false
+  ): Observable<AuthResponse> {
+    const credentials = {
+      email,
+      password,
+      twoFactorCode,
+      rememberMe,
+    };
 
     return this._http.post<AuthResponse>('auth/login', credentials).pipe(
       tap((response) => {
-        this.handleAuthResponse(response);
+        if (!response.requiresTwoFactor) {
+          this.handleAuthResponse(response);
+        }
       }),
       catchError((error) =>
         throwError(

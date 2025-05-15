@@ -9,10 +9,16 @@ import {
 import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { TwoFactorComponent } from '../two-factor/two-factor.component';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, ReactiveFormsModule, ThemeToggleComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ThemeToggleComponent,
+    TwoFactorComponent,
+  ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   standalone: true,
@@ -26,12 +32,17 @@ export class LoginComponent {
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
+    rememberMe: [false],
   });
 
   isLoading = false;
   errorMessage = '';
   returnUrl = '/dashboard';
   sessionExpired = false;
+
+  // 2FA related properties
+  requiresTwoFactor = false;
+  userId: string | null = null;
 
   ngOnInit(): void {
     this.returnUrl =
@@ -49,10 +60,15 @@ export class LoginComponent {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const { email, password } = this.loginForm.value;
-    this.authService.login(email, password).subscribe(
+    const { email, password, rememberMe } = this.loginForm.value;
+    this.authService.login(email, password, null, rememberMe).subscribe(
       (result: any) => {
-        if (result) {
+        if (result.requiresTwoFactor) {
+          // Handle 2FA required
+          this.requiresTwoFactor = true;
+          this.userId = result.userId;
+        } else if (result.accessToken) {
+          // Login successful
           this.router.navigateByUrl(this.returnUrl);
         }
         this.isLoading = false;
@@ -62,6 +78,36 @@ export class LoginComponent {
         this.isLoading = false;
       }
     );
+  }
+
+  onTwoFactorComplete(twoFactorCode: any) {
+    if (!twoFactorCode) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const { email, password, rememberMe } = this.loginForm.value;
+    this.authService
+      .login(email, password, twoFactorCode, rememberMe)
+      .subscribe(
+        (result: any) => {
+          if (result.accessToken) {
+            // 2FA verification successful
+            this.router.navigateByUrl(this.returnUrl);
+          } else {
+            this.errorMessage =
+              'Two-factor authentication failed. Please try again.';
+          }
+          this.isLoading = false;
+        },
+        (error: any) => {
+          this.errorMessage =
+            'Two-factor authentication failed. Please try again.';
+          this.isLoading = false;
+        }
+      );
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
