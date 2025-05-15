@@ -6,6 +6,9 @@ import {
   QueryList,
   ElementRef,
   inject,
+  Input,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -14,12 +17,11 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'app-two-factor',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ThemeToggleComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './two-factor.component.html',
   styleUrl: './two-factor.component.scss',
 })
@@ -27,6 +29,10 @@ export class TwoFactorComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+
+  @Input() userId: string | null = null;
+  @Input() errorMessage: string = '';
+  @Output() codeComplete = new EventEmitter<string>();
 
   @ViewChildren('codeInput') codeInputs!: QueryList<ElementRef>;
 
@@ -40,13 +46,8 @@ export class TwoFactorComponent implements OnInit {
   });
 
   isLoading = false;
-  errorMessage = '';
-  returnUrl = '/dashboard';
 
   ngOnInit(): void {
-    this.returnUrl =
-      this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-
     this.twoFactorForm.valueChanges.subscribe((value) => {
       const allFieldsFilled = Object.values(value).every((val) => val !== '');
 
@@ -55,7 +56,6 @@ export class TwoFactorComponent implements OnInit {
       }
     });
   }
-
   onDigitInput(event: any, index: number) {
     const input = event.target as HTMLInputElement;
     const value = input.value;
@@ -99,10 +99,8 @@ export class TwoFactorComponent implements OnInit {
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
-
     const code = Object.values(this.twoFactorForm.value).join('');
+    this.codeComplete.emit(code);
   }
 
   resetForm(): void {

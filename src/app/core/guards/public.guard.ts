@@ -6,7 +6,6 @@ export const publicGuard: CanActivateFn = (): boolean | UrlTree => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Direct access to signal value
   if (!authService.isAuthenticated()) {
     return true;
   }
