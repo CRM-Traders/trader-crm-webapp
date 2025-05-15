@@ -12,6 +12,14 @@ export const routes: Routes = [
       ),
     canActivate: [publicGuard],
   },
+  {
+    path: 'auth/2f',
+    loadComponent: () =>
+      import('./features/auth/two-factor/two-factor.component').then(
+        (m) => m.TwoFactorComponent
+      ),
+    canActivate: [publicGuard],
+  },
 
   // Auth
   {

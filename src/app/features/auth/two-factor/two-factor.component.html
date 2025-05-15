@@ -1,0 +1,112 @@
+<div
+  class="min-h-screen bg-white dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors"
+>
+  <div class="absolute top-4 right-4">
+    <app-theme-toggle></app-theme-toggle>
+  </div>
+
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2
+      class="text-center text-3xl font-extrabold text-gray-900 dark:text-white mb-6"
+    >
+      Trader CRM
+    </h2>
+    <div
+      class="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10"
+    >
+      <div class="mb-6">
+        <h1 class="text-xl font-bold text-center text-gray-900 dark:text-white">
+          Two-Factor Authentication
+        </h1>
+        <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+          Please enter the verification code from your authenticator app
+        </p>
+      </div>
+
+      <!-- Error message -->
+      <div
+        *ngIf="errorMessage"
+        class="mb-4 p-3 bg-red-100 border border-red-400 text-red-800 dark:bg-red-900 dark:text-red-300 rounded"
+      >
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <form
+        [formGroup]="twoFactorForm"
+        (ngSubmit)="onSubmit()"
+        class="space-y-6"
+      >
+        <!-- Modern 6-digit code input -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Verification Code
+          </label>
+
+          <div class="flex gap-2 justify-center" (paste)="onPaste($event)">
+            <div
+              *ngFor="let digit of [1, 2, 3, 4, 5, 6]; let i = index"
+              class="flex-1"
+            >
+              <input
+                #codeInput
+                type="text"
+                inputmode="numeric"
+                [formControlName]="'digit' + digit"
+                class="w-full h-14 text-center text-xl font-semibold rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-all"
+                maxlength="1"
+                autocomplete="one-time-code"
+                (input)="onDigitInput($event, i)"
+                (keydown)="onDigitInput($event, i)"
+                [ngClass]="{
+                  'border-red-500 dark:border-red-500':
+                    twoFactorForm.get('digit' + digit)?.invalid &&
+                    twoFactorForm.get('digit' + digit)?.touched
+                }"
+              />
+            </div>
+          </div>
+
+          <div
+            *ngIf="
+              twoFactorForm.invalid &&
+              (twoFactorForm.dirty || twoFactorForm.touched)
+            "
+            class="mt-2 text-center text-sm text-red-600 dark:text-red-400"
+          >
+            Please enter a valid 6-digit code
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="flex justify-center">
+          <div
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md"
+          >
+            <svg
+              class="animate-spin h-5 w-5 mr-2"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Verifying...
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
