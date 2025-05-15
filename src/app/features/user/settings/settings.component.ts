@@ -11,6 +11,8 @@ import { RouterModule } from '@angular/router';
 import { ThemeSelectorComponent } from '../../../shared/components/theme-selector/theme-selector.component';
 import { AlertService } from '../../../core/services/alert.service';
 import { ThemeService, ThemeMode } from '../../../core/services/theme.service';
+import { LocalizationService } from '../../../core/services/localization.service';
+import { TimezoneOption } from '../../../core/models/timezone.model';
 
 @Component({
   selector: 'app-settings',
@@ -29,18 +31,24 @@ export class SettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private themeService = inject(ThemeService);
   private alertService = inject(AlertService);
+  private localizationService = inject(LocalizationService);
 
   profileForm!: FormGroup;
   passwordForm!: FormGroup;
   notificationForm!: FormGroup;
+  localizationForm!: FormGroup;
 
   activeSection = 'profile';
   isProfileSaving = false;
   isPasswordSaving = false;
   isNotificationSaving = false;
+  isLocalizationSaving = false;
 
   currentTheme: ThemeMode = 'system';
   isDarkMode = false;
+
+  timezones: TimezoneOption[] = [];
+  timezonesByRegion: Record<string, TimezoneOption[]> = {};
 
   ngOnInit(): void {
     this.initForms();
@@ -52,6 +60,14 @@ export class SettingsComponent implements OnInit {
     this.themeService.isDarkMode$.subscribe((isDark) => {
       this.isDarkMode = isDark;
     });
+
+    this.timezones = this.localizationService.getTimezoneOptions();
+    this.timezonesByRegion =
+      this.localizationService.getTimezoneOptionsByRegion();
+
+    this.localizationForm
+      .get('timezone')
+      ?.setValue(this.localizationService.currentTimezone());
   }
 
   initForms(): void {
@@ -90,6 +106,12 @@ export class SettingsComponent implements OnInit {
       marketUpdates: [false],
       weeklyReports: [true],
       systemAnnouncements: [true],
+    });
+
+    this.localizationForm = this.fb.group({
+      timezone: ['', [Validators.required]],
+      dateFormat: ['MMM d, yyyy'],
+      timeFormat: ['h:mm a'],
     });
 
     this.loadUserData();
@@ -157,8 +179,43 @@ export class SettingsComponent implements OnInit {
     }, 1000);
   }
 
+  saveLocalizationSettings(): void {
+    if (this.localizationForm.invalid) {
+      this.markFormGroupTouched(this.localizationForm);
+      return;
+    }
+
+    this.isLocalizationSaving = true;
+
+    const timezone = this.localizationForm.get('timezone')?.value;
+    this.localizationService.setTimezone(timezone);
+
+    setTimeout(() => {
+      this.isLocalizationSaving = false;
+      this.alertService.success('Localization settings updated successfully.');
+    }, 1000);
+  }
+
   setTheme(theme: ThemeMode): void {
     this.themeService.setTheme(theme);
+  }
+
+  getCurrentFormattedTime(): string {
+    return this.localizationService.formatDate(new Date());
+  }
+
+  getObjectKeys(obj: any): string[] {
+    return Object.keys(obj);
+  }
+
+  formatOffset(offset: number): string {
+    const sign = offset >= 0 ? '+' : '-';
+    const absOffset = Math.abs(offset);
+    const hours = Math.floor(absOffset / 60);
+    const minutes = absOffset % 60;
+    return `${sign}${hours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')}`;
   }
 
   private passwordMatchValidator(
