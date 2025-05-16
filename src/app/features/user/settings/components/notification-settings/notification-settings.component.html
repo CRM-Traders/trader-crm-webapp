@@ -1,0 +1,156 @@
+<h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+  Notification Preferences
+</h2>
+<p class="text-gray-600 dark:text-gray-300 mb-6">
+  Manage how you receive notifications and alerts.
+</p>
+
+<form
+  [formGroup]="notificationForm"
+  (ngSubmit)="saveNotificationSettings()"
+  class="space-y-6"
+>
+  <div class="space-y-4">
+    <div
+      class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700"
+    >
+      <div>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Email Notifications
+        </h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Receive notifications via email
+        </p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          formControlName="emailNotifications"
+          class="sr-only peer"
+        />
+        <div
+          class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+        ></div>
+      </label>
+    </div>
+
+    <div
+      class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700"
+    >
+      <div>
+        <h4 class="font-medium text-gray-900 dark:text-white">Trade Alerts</h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Get notified about important trade updates
+        </p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          formControlName="tradeAlerts"
+          class="sr-only peer"
+        />
+        <div
+          class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+        ></div>
+      </label>
+    </div>
+
+    <div
+      class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700"
+    >
+      <div>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Market Updates
+        </h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Regular updates about market conditions
+        </p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          formControlName="marketUpdates"
+          class="sr-only peer"
+        />
+        <div
+          class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+        ></div>
+      </label>
+    </div>
+
+    <div
+      class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700"
+    >
+      <div>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          Weekly Reports
+        </h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Receive weekly performance summaries
+        </p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          formControlName="weeklyReports"
+          class="sr-only peer"
+        />
+        <div
+          class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+        ></div>
+      </label>
+    </div>
+
+    <div class="flex items-center justify-between py-3">
+      <div>
+        <h4 class="font-medium text-gray-900 dark:text-white">
+          System Announcements
+        </h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Important system updates and announcements
+        </p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          formControlName="systemAnnouncements"
+          class="sr-only peer"
+        />
+        <div
+          class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
+        ></div>
+      </label>
+    </div>
+  </div>
+
+  <div class="flex justify-end">
+    <button
+      type="submit"
+      [disabled]="isNotificationSaving || notificationForm.invalid"
+      class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 flex items-center"
+    >
+      <svg
+        *ngIf="isNotificationSaving"
+        class="animate-spin h-4 w-4 mr-2 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <span>{{ isNotificationSaving ? "Saving..." : "Save Preferences" }}</span>
+    </button>
+  </div>
+</form>

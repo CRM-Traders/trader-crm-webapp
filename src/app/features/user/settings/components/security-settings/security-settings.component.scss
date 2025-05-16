@@ -1,0 +1,22 @@
+// QR Code styling improvements
+.qr-code-container {
+  background-color: white;
+  padding: 12px;
+  border-radius: 8px;
+  width: fit-content;
+  margin: 16px auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  // Ensure QR code remains visible in dark mode
+  .dark & {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  // Style for the QR code itself
+  qr-code {
+    display: block;
+    // Optional: add a subtle border around the QR code itself
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+}
