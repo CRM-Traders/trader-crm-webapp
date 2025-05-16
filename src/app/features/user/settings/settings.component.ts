@@ -15,8 +15,8 @@ import { LocalizationService } from '../../../core/services/localization.service
 import { TimezoneOption } from '../../../core/models/timezone.model';
 import { TwoFactorService } from '../../../core/services/two-factor.service';
 import { TwoFactorComponent } from '../../../features/auth/two-factor/two-factor.component';
-import { QrCodeComponent } from '../../../shared/components/qr-code/qr-code.component';
 import { TwoFactorSetupResponse } from '../../../core/models/two-f.model';
+import { QrCodeModule } from 'ng-qrcode';
 
 @Component({
   selector: 'app-settings',
@@ -28,7 +28,7 @@ import { TwoFactorSetupResponse } from '../../../core/models/two-f.model';
     ReactiveFormsModule,
     ThemeSelectorComponent,
     TwoFactorComponent,
-    QrCodeComponent,
+    QrCodeModule,
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
@@ -269,11 +269,11 @@ export class SettingsComponent implements OnInit {
     this.twoFactorService.setup().subscribe({
       next: (response) => {
         this.twoFactorSetupData = response;
-
-        if (!this.twoFactorSetupData.qrCodeSetupUri) {
+        console.log(this.twoFactorSetupData.qrCodeUri);
+        if (!this.twoFactorSetupData.qrCodeUri) {
           const email =
             this.profileForm.get('email')?.value || 'user@example.com';
-          this.twoFactorSetupData.qrCodeSetupUri =
+          this.twoFactorSetupData.qrCodeUri =
             this.twoFactorService.generateOtpauthUrl(
               email,
               this.twoFactorSetupData.secretKey,
