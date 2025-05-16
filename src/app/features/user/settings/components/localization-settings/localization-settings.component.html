@@ -1,0 +1,86 @@
+<h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+  Localization Settings
+</h2>
+<p class="text-gray-600 dark:text-gray-300 mb-6">
+  Configure your timezone and date/time format preferences.
+</p>
+
+<form
+  [formGroup]="localizationForm"
+  (ngSubmit)="saveLocalizationSettings()"
+  class="space-y-6"
+>
+  <div class="space-y-4">
+    <label
+      for="timezone"
+      class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >Timezone</label
+    >
+    <div class="relative">
+      <select
+        id="timezone"
+        formControlName="timezone"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        [ngClass]="{
+          'border-red-500 dark:border-red-500':
+            localizationForm.get('timezone')?.invalid &&
+            localizationForm.get('timezone')?.touched
+        }"
+      >
+        <option value="" disabled>Select a timezone</option>
+        <optgroup
+          *ngFor="let region of getObjectKeys(timezonesByRegion)"
+          [label]="region"
+        >
+          <option
+            *ngFor="let tz of timezonesByRegion[region]"
+            [value]="tz.value"
+          >
+            {{ tz.name }} ({{ tz.abbr }}, GMT{{ formatOffset(tz.offset) }})
+          </option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+
+  <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md mt-4">
+    <h3 class="font-medium text-blue-800 dark:text-blue-300 mb-2">
+      Time Preview:
+    </h3>
+    <p class="text-blue-700 dark:text-blue-200">
+      Current time with selected timezone: <br />
+      <span class="font-bold">{{ getCurrentFormattedTime() }}</span>
+    </p>
+  </div>
+
+  <div class="flex justify-end">
+    <button
+      type="submit"
+      [disabled]="isLocalizationSaving || localizationForm.invalid"
+      class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:opacity-50 flex items-center"
+    >
+      <svg
+        *ngIf="isLocalizationSaving"
+        class="animate-spin h-4 w-4 mr-2 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <span>{{ isLocalizationSaving ? "Saving..." : "Save Settings" }}</span>
+    </button>
+  </div>
+</form>
