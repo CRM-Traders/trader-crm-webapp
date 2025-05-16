@@ -1,7 +1,7 @@
 export interface TwoFactorSetupResponse {
   secretKey: string;
   manualEntryKey: string;
-  qrCodeSetupUri: string;
+  qrCodeUri: string;
 }
 
 export interface TwoFactorStatusResponse {
