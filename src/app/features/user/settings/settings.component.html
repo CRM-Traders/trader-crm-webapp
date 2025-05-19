@@ -207,6 +207,7 @@
       >
         <app-profile-settings
           *ngIf="activeSection === 'profile'"
+          [settings]="userSettings"
         ></app-profile-settings>
         <app-appearance-settings
           *ngIf="activeSection === 'appearance'"
@@ -216,6 +217,7 @@
         ></app-password-settings>
         <app-security-settings
           *ngIf="activeSection === 'security'"
+          [settings]="userSettings"
         ></app-security-settings>
         <app-notification-settings
           *ngIf="activeSection === 'notifications'"

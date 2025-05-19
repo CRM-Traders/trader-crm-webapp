@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -11,6 +11,7 @@ import { TwoFactorService } from '../../../../../core/services/two-factor.servic
 import { TwoFactorSetupResponse } from '../../../../../core/models/two-f.model';
 import { AlertService } from '../../../../../core/services/alert.service';
 import { QrCodeModule } from 'ng-qrcode';
+import { Settings } from '../../models/settings.model';
 
 @Component({
   selector: 'app-security-settings',
@@ -25,6 +26,8 @@ import { QrCodeModule } from 'ng-qrcode';
   styleUrls: ['./security-settings.component.scss'],
 })
 export class SecuritySettingsComponent implements OnInit {
+  @Input() settings: Settings | null = null;
+
   private twoFactorService = inject(TwoFactorService);
   private alertService = inject(AlertService);
   private fb = inject(FormBuilder);
@@ -52,17 +55,8 @@ export class SecuritySettingsComponent implements OnInit {
   }
 
   check2FAStatus(): void {
-    this.twoFactorService.getStatus().subscribe({
-      next: (response) => {
-        this.isTwoFactorEnabled = response.enabled;
-        this.currentStep = response.enabled ? '2fa-enabled' : '2fa-disabled';
-      },
-      error: (error) => {
-        console.error('Failed to check 2FA status:', error);
-        this.isTwoFactorEnabled = false;
-        this.currentStep = '2fa-disabled';
-      },
-    });
+    this.isTwoFactorEnabled = this.settings?.isTwoFactorenabled ?? false;
+    console.log(this.isTwoFactorEnabled);
   }
 
   startSetup(): void {

@@ -30,18 +30,32 @@ import { Settings } from './models/settings.model';
 })
 export class SettingsComponent implements OnInit {
   private themeService = inject(ThemeService);
-  private _service = inject(SettingsService);
+  private settingsService = inject(SettingsService);
 
   activeSection = 'profile';
   isDarkMode = false;
+  userSettings: Settings | null = null;
+  isLoading = true;
 
   ngOnInit(): void {
     this.themeService.isDarkMode$.subscribe((isDark) => {
       this.isDarkMode = isDark;
     });
 
-    this._service.getUserSettings().subscribe((result: Settings) => {
-      console.log(result);
+    this.loadUserSettings();
+  }
+
+  loadUserSettings(): void {
+    this.isLoading = true;
+    this.settingsService.getUserSettings().subscribe({
+      next: (settings: Settings) => {
+        this.userSettings = settings;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Failed to load user settings:', error);
+        this.isLoading = false;
+      },
     });
   }
 
