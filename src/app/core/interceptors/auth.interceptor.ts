@@ -5,120 +5,95 @@ import {
   HttpEvent,
   HttpErrorResponse,
 } from '@angular/common/http';
-import {
-  Observable,
-  throwError,
-  BehaviorSubject,
-  catchError,
-  switchMap,
-  filter,
-  take,
-  finalize,
-  from,
-} from 'rxjs';
+import { Observable, throwError, catchError, switchMap, of } from 'rxjs';
 import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
-import { UserContextService } from '../services/user-context.service';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
-let isRefreshing = false;
-const refreshTokenSubject = new BehaviorSubject<string | null>(null);
+const getTokenFromStorage = (key: string): string | null => {
+  return localStorage.getItem(key);
+};
 
 export const authInterceptor: HttpInterceptorFn = (
   request: HttpRequest<unknown>,
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> => {
-  const authService = inject(AuthService);
-  const userContextService = inject(UserContextService);
   const router = inject(Router);
+
+  const userAgent = window.navigator.userAgent;
 
   if (shouldSkipAuth(request)) {
     return next(request);
   }
 
-  const userContext = userContextService.userContext();
+  const authToken = getTokenFromStorage('iFC03fkUWhcdYGciaclPyeqySdQE6qCd');
 
-  const authToken = authService.getAccessToken();
   if (authToken) {
-    request = addTokenAndContextToRequest(request, authToken, userContext);
+    request = addTokenToRequest(request, authToken, userAgent);
   }
 
   return next(request).pipe(
     catchError((error) => {
       if (error instanceof HttpErrorResponse && error.status === 401) {
-        return handle401Error(request, next, authService, router, userContext);
-      }
-      return throwError(() => error);
-    })
-  );
-};
-
-function addTokenAndContextToRequest(
-  request: HttpRequest<any>,
-  token: string,
-  userContext: any
-): HttpRequest<any> {
-  return request.clone({
-    setHeaders: {
-      Authorization: `Bearer ${token}`,
-      'X-Client-Device': userContext.device || 'unknown',
-      'X-Client-OS': userContext.os || 'unknown',
-      'X-Client-Browser': userContext.browser || 'unknown',
-    },
-  });
-}
-
-function handle401Error(
-  request: HttpRequest<unknown>,
-  next: HttpHandlerFn,
-  authService: AuthService,
-  router: Router,
-  userContext: any
-): Observable<HttpEvent<unknown>> {
-  if (!isRefreshing) {
-    isRefreshing = true;
-    refreshTokenSubject.next(null);
-
-    return from(authService.refreshToken()).pipe(
-      switchMap((response) => {
-        isRefreshing = false;
-        refreshTokenSubject.next(response.accessToken);
-
-        return next(
-          addTokenAndContextToRequest(
-            request,
-            response.accessToken,
-            userContext
-          )
-        );
-      }),
-      catchError((error) => {
-        isRefreshing = false;
-
-        authService.logout();
         router.navigate(['/auth/login'], {
           queryParams: {
             returnUrl: router.url,
             sessionExpired: 'true',
           },
         });
+      }
+      return throwError(() => error);
+    })
+  );
+};
 
-        return throwError(() => error);
-      }),
-      finalize(() => {
-        isRefreshing = false;
-      })
-    );
-  } else {
-    return refreshTokenSubject.pipe(
-      filter((token) => token !== null),
-      take(1),
-      switchMap((token) =>
-        next(addTokenAndContextToRequest(request, token as string, userContext))
-      )
-    );
-  }
+function addTokenToRequest(
+  request: HttpRequest<any>,
+  token: string,
+  userAgent: string
+): HttpRequest<any> {
+  const browser = detectBrowser(userAgent);
+  const os = detectOS(userAgent);
+  const device = detectDevice(userAgent);
+
+  return request.clone({
+    setHeaders: {
+      Authorization: `Bearer ${token}`,
+      'X-Client-Device': device || 'unknown',
+      'X-Client-OS': os || 'unknown',
+      'X-Client-Browser': browser || 'unknown',
+    },
+  });
+}
+
+function detectBrowser(ua: string): string {
+  if (ua.indexOf('Chrome') > -1) return 'Chrome';
+  if (ua.indexOf('Firefox') > -1) return 'Firefox';
+  if (ua.indexOf('Safari') > -1) return 'Safari';
+  if (ua.indexOf('Edge') > -1) return 'Edge';
+  if (ua.indexOf('MSIE') > -1 || ua.indexOf('Trident/') > -1)
+    return 'Internet Explorer';
+  return 'Unknown';
+}
+
+function detectOS(ua: string): string {
+  if (ua.indexOf('Windows') > -1) return 'Windows';
+  if (ua.indexOf('Mac') > -1) return 'MacOS';
+  if (ua.indexOf('Linux') > -1) return 'Linux';
+  if (ua.indexOf('Android') > -1) return 'Android';
+  if (
+    ua.indexOf('iOS') > -1 ||
+    ua.indexOf('iPhone') > -1 ||
+    ua.indexOf('iPad') > -1
+  )
+    return 'iOS';
+  return 'Unknown';
+}
+
+function detectDevice(ua: string): string {
+  if (ua.indexOf('Mobile') > -1) return 'Mobile';
+  if (ua.indexOf('Tablet') > -1) return 'Tablet';
+  return 'Desktop';
 }
 
 function shouldSkipAuth(request: HttpRequest<unknown>): boolean {
@@ -128,7 +103,6 @@ function shouldSkipAuth(request: HttpRequest<unknown>): boolean {
     return true;
   }
 
-  const authEndpoints = ['auth/login'];
-
+  const authEndpoints = ['auth/login', 'auth/refresh-token'];
   return authEndpoints.some((endpoint) => request.url.includes(endpoint));
 }

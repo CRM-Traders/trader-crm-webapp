@@ -56,7 +56,6 @@ export class SecuritySettingsComponent implements OnInit {
 
   check2FAStatus(): void {
     this.isTwoFactorEnabled = this.settings?.isTwoFactorenabled ?? false;
-    console.log(this.isTwoFactorEnabled);
   }
 
   startSetup(): void {
@@ -88,7 +87,6 @@ export class SecuritySettingsComponent implements OnInit {
         this.isQrCodeVisible = true;
       },
       error: (error) => {
-        console.error('2FA setup error:', error);
         this.alertService.error('Failed to set up 2FA. Please try again.');
         this.currentStep = '2fa-disabled';
       },
@@ -114,7 +112,6 @@ export class SecuritySettingsComponent implements OnInit {
         this.currentStep = '2fa-enabled';
       },
       error: (error) => {
-        console.error('2FA verification error:', error);
         this.errorMessage = 'Invalid verification code. Please try again.';
         this.alertService.error(this.errorMessage);
         this.isTwoFactorVerifying = false;
@@ -138,7 +135,6 @@ export class SecuritySettingsComponent implements OnInit {
         this.currentStep = '2fa-disabled';
       },
       error: (error) => {
-        console.error('2FA disable error:', error);
         this.errorMessage = 'Invalid verification code. Please try again.';
         this.alertService.error(this.errorMessage);
         this.isDisabling2FA = false;
@@ -176,7 +172,6 @@ export class SecuritySettingsComponent implements OnInit {
       },
       (err) => {
         this.alertService.error('Could not copy recovery codes');
-        console.error('Could not copy text: ', err);
       }
     );
   }

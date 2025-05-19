@@ -60,9 +60,7 @@ export class LocalizationService {
       if (detectedZone) {
         this.setTimezone(detectedZone);
       }
-    } catch (e) {
-      console.warn('Could not auto-detect timezone');
-    }
+    } catch (e) {}
   }
 
   formatDate(date: Date, options: Intl.DateTimeFormatOptions = {}): string {
