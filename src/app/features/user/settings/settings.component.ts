@@ -9,6 +9,8 @@ import { PasswordSettingsComponent } from './components/password-settings/passwo
 import { SecuritySettingsComponent } from './components/security-settings/security-settings.component';
 import { NotificationSettingsComponent } from './components/notification-settings/notification-settings.component';
 import { LocalizationSettingsComponent } from './components/localization-settings/localization-settings.component';
+import { SettingsService } from './services/settings.service';
+import { Settings } from './models/settings.model';
 
 @Component({
   selector: 'app-settings',
@@ -28,6 +30,7 @@ import { LocalizationSettingsComponent } from './components/localization-setting
 })
 export class SettingsComponent implements OnInit {
   private themeService = inject(ThemeService);
+  private _service = inject(SettingsService);
 
   activeSection = 'profile';
   isDarkMode = false;
@@ -35,6 +38,10 @@ export class SettingsComponent implements OnInit {
   ngOnInit(): void {
     this.themeService.isDarkMode$.subscribe((isDark) => {
       this.isDarkMode = isDark;
+    });
+
+    this._service.getUserSettings().subscribe((result: Settings) => {
+      console.log(result);
     });
   }
 
