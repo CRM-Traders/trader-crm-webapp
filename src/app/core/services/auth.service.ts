@@ -131,17 +131,15 @@ export class AuthService {
     if (response && response.accessToken) {
       this.storeAuthData(response);
       this._isAuthenticated.set(true);
-      this._userRole.set('Admin'); //response.role);
+      this._userRole.set(response.role);
     }
   }
 
   private storeAuthData(authData: AuthResponse): void {
-    const expirationTime = Math.floor((Date.now() + 6000000000) / 1000);
-
     localStorage.setItem(this.ACCESS_TOKEN_KEY, authData.accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, authData.refreshToken);
-    localStorage.setItem(this.ROLE_KEY, 'Admin'); // Using hardcoded value for now
-    localStorage.setItem(this.EXPIRATION_KEY, `${expirationTime}`); // Using hardcoded expiration
+    localStorage.setItem(this.ROLE_KEY, authData.role);
+    localStorage.setItem(this.EXPIRATION_KEY, `${authData.exp}`);
   }
 
   private clearAuthData(): void {
