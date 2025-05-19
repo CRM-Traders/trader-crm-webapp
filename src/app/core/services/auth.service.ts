@@ -111,20 +111,8 @@ export class AuthService {
     return expString ? parseInt(expString, 10) : 0;
   }
 
-  hasValidToken(): boolean {
-    const token = this.getAccessToken();
-    const expiration = this.getTokenExpiration();
-
-    if (!token) {
-      return false;
-    }
-
-    if (!expiration) {
-      return false;
-    }
-
-    const isValid = Date.now() < expiration * 1000 - 10000;
-    return isValid;
+  isAuthorized(){
+    return this._http.get('users/is-authorized').pipe(())
   }
 
   private handleAuthResponse(response: AuthResponse): void {
