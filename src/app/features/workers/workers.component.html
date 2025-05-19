@@ -1,1 +1,19 @@
-<p>workers works!</p>
+<div class="container mx-auto px-4 py-6">
+  <h1 class="text-2xl font-bold mb-6">Workers Management</h1>
+
+  <app-grid
+    [gridId]="gridId"
+    [data]="workers"
+    [columns]="columns"
+    [loading]="loading"
+    [showFilters]="true"
+    [showColumnSelector]="true"
+    [exportable]="true"
+    (refresh)="onRefresh()"
+    (sortChange)="onSortChange($event)"
+    (filterChange)="onFilterChange($event)"
+    (pageChange)="onPageChange($event)"
+    (rowClick)="onRowClick($event)"
+  >
+  </app-grid>
+</div>

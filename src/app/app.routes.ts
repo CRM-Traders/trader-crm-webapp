@@ -64,6 +64,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
+      {
+        path: 'workers',
+        loadComponent: () =>
+          import('./features/workers/workers.component').then(
+            (m) => m.WorkersComponent
+          ),
+        canActivate: [authGuard],
+      },
     ],
   },
 
