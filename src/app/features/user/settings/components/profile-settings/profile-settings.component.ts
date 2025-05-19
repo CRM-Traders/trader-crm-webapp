@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, input } from '@angular/core';
+import { Component, Input, OnInit, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -7,6 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { AlertService } from '../../../../../core/services/alert.service';
+import { Settings } from '../../models/settings.model';
 
 @Component({
   selector: 'app-profile-settings',
@@ -16,6 +17,8 @@ import { AlertService } from '../../../../../core/services/alert.service';
   styleUrls: ['./profile-settings.component.scss'],
 })
 export class ProfileSettingsComponent implements OnInit {
+  @Input() settings: Settings | null = null;
+
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
 
@@ -24,7 +27,7 @@ export class ProfileSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadUserData();
+    this.populateFormWithSettings();
   }
 
   initForm(): void {
@@ -33,22 +36,18 @@ export class ProfileSettingsComponent implements OnInit {
       lastName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern(/^\+?[0-9\s\-\(\)]+$/)]],
-      jobTitle: [''],
-      company: [''],
     });
   }
 
-  loadUserData(): void {
-    const mockUserData = {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      phone: '+1 (555) 123-4567',
-      jobTitle: 'Trader',
-      company: 'Acme Trading Co.',
-    };
+  populateFormWithSettings(): void {
+    if (!this.settings) return;
 
-    this.profileForm.patchValue(mockUserData);
+    this.profileForm.patchValue({
+      firstName: this.settings.firstName,
+      lastName: this.settings.lastName,
+      email: this.settings.email,
+      phone: this.settings.phoneNumber,
+    });
   }
 
   saveProfileSettings(): void {

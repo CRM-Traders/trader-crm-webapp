@@ -4,10 +4,6 @@ export interface TwoFactorSetupResponse {
   qrCodeUri: string;
 }
 
-export interface TwoFactorStatusResponse {
-  enabled: boolean;
-}
-
 export interface TwoFactorVerifyRequest {
   code: string;
 }
