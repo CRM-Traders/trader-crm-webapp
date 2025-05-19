@@ -128,7 +128,7 @@ function shouldSkipAuth(request: HttpRequest<unknown>): boolean {
     return true;
   }
 
-  const authEndpoints = ['auth/login', 'auth/refresh'];
+  const authEndpoints = ['auth/login'];
 
   return authEndpoints.some((endpoint) => request.url.includes(endpoint));
 }
