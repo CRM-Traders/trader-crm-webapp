@@ -53,7 +53,6 @@ export class SettingsComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Failed to load user settings:', error);
         this.isLoading = false;
       },
     });
