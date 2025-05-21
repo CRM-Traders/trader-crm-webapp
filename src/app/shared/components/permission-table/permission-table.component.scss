@@ -1,0 +1,106 @@
+:host {
+  display: block;
+}
+
+/* We'll simplify the styles to ensure consistency in dark mode */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+/* Remove inconsistent styling and let the HTML classes handle it */
+th,
+td {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Improve checkbox interaction area */
+input[type="checkbox"] {
+  cursor: pointer;
+
+  &:checked {
+    background-color: #2563eb;
+    border-color: #2563eb;
+  }
+
+  &:focus {
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+/* Dark mode adjustments */
+:host-context(.dark) {
+  input[type="checkbox"]:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+  }
+}
+
+/* Checkbox label styles */
+label {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Role button transitions */
+button {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+/* Scrollbar styling */
+.overflow-x-auto {
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+}
+
+/* Empty state styling for cells with no permissions */
+td .space-y-2:empty::after {
+  content: "-";
+  color: #9ca3af;
+  display: block;
+  text-align: center;
+  font-size: 14px;
+}
+
+.dark td .space-y-2:empty::after {
+  color: #6b7280;
+}
+
+/* Permission item styling */
+.space-y-2 > div {
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+
+.dark .space-y-2 > div {
+  border-color: #4b5563;
+}
+
+.space-y-2 > div:last-child {
+  border-bottom: none;
+}
