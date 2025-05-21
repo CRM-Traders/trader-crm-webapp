@@ -161,10 +161,14 @@ export class GridService {
   }
 
   setVisibleColumns(gridId: string, columns: string[]): void {
-    const currentState = this.gridStateMap.get(gridId)?.value || {
-      ...this.defaultState,
-    };
+    if (!this.gridStateMap.has(gridId)) {
+      this.gridStateMap.set(
+        gridId,
+        new BehaviorSubject<GridState>({ ...this.defaultState })
+      );
+    }
 
+    const currentState = this.gridStateMap.get(gridId)!.value;
     const newState = {
       ...currentState,
       visibleColumns: columns,
@@ -172,7 +176,6 @@ export class GridService {
 
     this.gridStateMap.get(gridId)!.next(newState);
   }
-
   buildQueryParams(state: GridState): HttpParams {
     let params = new HttpParams();
 
