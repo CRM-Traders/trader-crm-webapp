@@ -2,18 +2,12 @@
   <h1 class="text-2xl font-bold mb-6">Workers Management</h1>
 
   <app-grid
-    [gridId]="gridId"
-    [data]="workers"
+    gridId="users-grid"
     [columns]="columns"
-    [loading]="loading"
+    endpoint="workers/grid"
     [showFilters]="true"
     [showColumnSelector]="true"
-    [exportable]="true"
-    (refresh)="onRefresh()"
-    (sortChange)="onSortChange($event)"
-    (filterChange)="onFilterChange($event)"
-    (pageChange)="onPageChange($event)"
-    (rowClick)="onRowClick($event)"
+    [showPagination]="true"
   >
   </app-grid>
 </div>

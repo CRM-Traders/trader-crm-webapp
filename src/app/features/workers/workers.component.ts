@@ -94,48 +94,5 @@ export class WorkersComponent implements OnInit {
 
   gridId = 'workers-grid';
 
-  ngOnInit(): void {
-    this.loadWorkers();
-  }
-
-  loadWorkers(
-    filters?: GridFilterState,
-    sort?: GridSort,
-    pagination?: GridPagination
-  ): void {
-    this.loading = true;
-
-    this.workersService.getWorkersGrid(filters, sort, pagination).subscribe({
-      next: (response) => {
-        this.workers = response.items;
-        this.totalCount = response.totalCount;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading workers', error);
-        this.loading = false;
-      },
-    });
-  }
-
-  onRefresh(): void {
-    this.loadWorkers();
-  }
-
-  onSortChange(sort: GridSort): void {
-    this.loadWorkers(undefined, sort);
-  }
-
-  onFilterChange(filters: GridFilterState): void {
-    this.loadWorkers(filters);
-  }
-
-  onPageChange(pagination: GridPagination): void {
-    this.loadWorkers(undefined, undefined, pagination);
-  }
-
-  onRowClick(worker: any): void {
-    console.log('Worker clicked:', worker);
-    // Add your row click handling logic here
-  }
+  ngOnInit(): void {}
 }

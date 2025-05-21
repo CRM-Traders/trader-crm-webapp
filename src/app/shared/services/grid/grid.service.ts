@@ -43,6 +43,16 @@ export class GridService {
     return this.gridStateMap.get(gridId)!.asObservable();
   }
 
+  getCurrentState(gridId: string): GridState {
+    if (!this.gridStateMap.has(gridId)) {
+      this.gridStateMap.set(
+        gridId,
+        new BehaviorSubject<GridState>({ ...this.defaultState })
+      );
+    }
+    return this.gridStateMap.get(gridId)!.value;
+  }
+
   updateState(gridId: string, state: Partial<GridState>): void {
     if (!this.gridStateMap.has(gridId)) {
       this.gridStateMap.set(
@@ -53,14 +63,18 @@ export class GridService {
 
     const currentState = this.gridStateMap.get(gridId)!.value;
     const newState = { ...currentState, ...state };
-    this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    this.gridStateMap.get(gridId)!.next(newState);
   }
 
   resetState(gridId: string): void {
-    this.gridStateMap.set(
-      gridId,
-      new BehaviorSubject<GridState>({ ...this.defaultState })
-    );
+    if (this.gridStateMap.has(gridId)) {
+      this.gridStateMap.get(gridId)!.next({ ...this.defaultState });
+    } else {
+      this.gridStateMap.set(
+        gridId,
+        new BehaviorSubject<GridState>({ ...this.defaultState })
+      );
+    }
   }
 
   setFilter(gridId: string, filter: GridFilter): void {
@@ -80,7 +94,7 @@ export class GridService {
       },
     };
 
-    this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    this.gridStateMap.get(gridId)!.next(newState);
   }
 
   removeFilter(gridId: string, field: string): void {
@@ -98,7 +112,7 @@ export class GridService {
       },
     };
 
-    this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    this.gridStateMap.get(gridId)!.next(newState);
   }
 
   setGlobalFilter(gridId: string, value: string): void {
@@ -114,7 +128,7 @@ export class GridService {
       },
     };
 
-    this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    this.gridStateMap.get(gridId)!.next(newState);
   }
 
   setSort(gridId: string, sort: GridSort): void {
@@ -127,7 +141,7 @@ export class GridService {
       sort,
     };
 
-    this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    this.gridStateMap.get(gridId)!.next(newState);
   }
 
   setPagination(gridId: string, pagination: Partial<GridPagination>): void {
@@ -143,7 +157,7 @@ export class GridService {
       },
     };
 
-    this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    this.gridStateMap.get(gridId)!.next(newState);
   }
 
   setVisibleColumns(gridId: string, columns: string[]): void {
@@ -156,7 +170,7 @@ export class GridService {
       visibleColumns: columns,
     };
 
-    this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    this.gridStateMap.get(gridId)!.next(newState);
   }
 
   buildQueryParams(state: GridState): HttpParams {
@@ -171,7 +185,7 @@ export class GridService {
     }
 
     if (state.filters.globalFilter) {
-      params = params.set('filter', state.filters.globalFilter);
+      params = params.set('globalFilter', state.filters.globalFilter);
     }
 
     const filters = state.filters.filters;
@@ -192,10 +206,18 @@ export class GridService {
             });
           }
           break;
+        case FilterOperator.IS_NULL:
+          params = params.set(`${key}_isnull`, 'true');
+          break;
+        case FilterOperator.IS_NOT_NULL:
+          params = params.set(`${key}_isnotnull`, 'true');
+          break;
         default:
           params = params.set(
             `${key}${this.getOperatorSuffix(filter.operator)}`,
-            filter.value
+            filter.value !== null && filter.value !== undefined
+              ? filter.value.toString()
+              : ''
           );
           break;
       }
@@ -224,22 +246,44 @@ export class GridService {
         return '_startswith';
       case FilterOperator.ENDS_WITH:
         return '_endswith';
-      case FilterOperator.IS_NULL:
-        return '_isnull';
-      case FilterOperator.IS_NOT_NULL:
-        return '_isnotnull';
       default:
         return '';
     }
   }
 
-  fetchData<T>(endpoint: string, gridId: string): Observable<any> {
-    const state = this.gridStateMap.get(gridId)?.value || {
-      ...this.defaultState,
-    };
-    const params = this.buildQueryParams(state);
+  // src/app/shared/services/grid/grid.service.ts
 
-    return this.httpService.get<any>(endpoint, params);
+  fetchData<T>(endpoint: string, gridId: string): Observable<T> {
+    const state = this.getCurrentState(gridId);
+    const requestBody = this.buildRequestBody(state);
+
+    return this.httpService.post<T>(endpoint, requestBody);
+  }
+
+  private buildRequestBody(state: GridState): any {
+    const transformedFilters: Record<string, any> = {};
+    if (state.filters && state.filters.filters) {
+      Object.entries(state.filters.filters).forEach(([field, filter]) => {
+        transformedFilters[field] = {
+          field: filter.field,
+          operator: filter.operator,
+          value: filter.value,
+          values: Array.isArray(filter.value) ? filter.value : null,
+        };
+      });
+    }
+
+    return {
+      pageIndex: state.pagination.pageIndex,
+      pageSize: state.pagination.pageSize,
+      sortField: state.sort?.field || null,
+      sortDirection: state.sort?.direction || null,
+      visibleColumns:
+        state.visibleColumns.length > 0 ? state.visibleColumns : null,
+      globalFilter: state.filters.globalFilter || null,
+      filters:
+        Object.keys(transformedFilters).length > 0 ? transformedFilters : null,
+    };
   }
 
   exportData(data: any[], options: GridExportOptions): void {

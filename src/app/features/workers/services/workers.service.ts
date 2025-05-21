@@ -1,9 +1,6 @@
-// src/app/features/workers/workers.service.ts
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { HttpService } from '../../../core/services/http.service';
-import { GridService } from '../../../shared/services/grid/grid.service';
 import { GridFilterState } from '../../../shared/models/grid/grid-filter-state.model';
 import { GridPagination } from '../../../shared/models/grid/grid-pagination.model';
 import { GridSort } from '../../../shared/models/grid/grid-sort.model';

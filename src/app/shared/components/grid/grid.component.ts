@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, finalize } from 'rxjs';
 import { GridColumn } from '../../models/grid/grid-column.model';
 import { GridPagination } from '../../models/grid/grid-pagination.model';
 import { GridSort } from '../../models/grid/grid-sort.model';
@@ -22,6 +22,7 @@ import { GridFilterState } from '../../models/grid/grid-filter-state.model';
 import { GridService } from '../../services/grid/grid.service';
 import { GridColumnSelectorComponent } from '../grid-column-selector/grid-column-selector.component';
 import { GridFilterComponent } from '../grid-filter/grid-filter.component';
+import { GridDataResponse } from '../../models/grid/grid-state.model';
 
 @Component({
   selector: 'app-grid',
@@ -44,7 +45,7 @@ export class GridComponent implements OnInit, OnDestroy {
   @Input() gridId: string = 'default-grid';
   @Input() data: any[] = [];
   @Input() columns: GridColumn[] = [];
-  @Input() loading: boolean = false;
+  @Input() endpoint: string = '';
   @Input() emptyMessage: string = 'No records found';
   @Input() showFilters: boolean = true;
   @Input() showColumnSelector: boolean = true;
@@ -63,6 +64,8 @@ export class GridComponent implements OnInit, OnDestroy {
   @Output() filterChange = new EventEmitter<GridFilterState>();
   @Output() export = new EventEmitter<GridExportOptions>();
   @Output() refresh = new EventEmitter<void>();
+  @Output() dataLoaded = new EventEmitter<any[]>();
+  @Output() error = new EventEmitter<any>();
 
   @ContentChild('rowTemplate') rowTemplate?: TemplateRef<any>;
   @ContentChild('headerTemplate') headerTemplate?: TemplateRef<any>;
@@ -79,6 +82,7 @@ export class GridComponent implements OnInit, OnDestroy {
   isColumnSelectorVisible: boolean = false;
   isExportOpen: boolean = false;
   isDarkMode: boolean = false;
+  loading: boolean = false;
 
   pagination: GridPagination = {
     pageIndex: 0,
@@ -106,6 +110,13 @@ export class GridComponent implements OnInit, OnDestroy {
 
     this.updateVisibleColumns();
 
+    // Set up initial visible columns in the grid state
+    this.gridService.setVisibleColumns(
+      this.gridId,
+      this.visibleColumns.map((col) => col.field)
+    );
+
+    // Monitor state for UI updates, but don't fetch data automatically
     this.gridService
       .getState(this.gridId)
       .pipe(takeUntil(this.destroy$))
@@ -120,15 +131,13 @@ export class GridComponent implements OnInit, OnDestroy {
         }
       });
 
-    this.pagination.totalItems = this.data.length;
-    this.pagination.totalPages = Math.ceil(
-      this.data.length / this.pagination.pageSize
-    );
-
-    this.gridService.setVisibleColumns(
-      this.gridId,
-      this.visibleColumns.map((col) => col.field)
-    );
+    // Initial data load if endpoint is provided
+    if (this.endpoint) {
+      this.fetchData();
+    } else {
+      // Use local data if no endpoint provided
+      this.processLocalData();
+    }
   }
 
   ngOnDestroy(): void {
@@ -144,12 +153,67 @@ export class GridComponent implements OnInit, OnDestroy {
     this.visibleColumns = this.columns.filter((col) => !col.hidden);
   }
 
+  fetchData(showLoading: boolean = true): void {
+    if (!this.endpoint) {
+      return;
+    }
+
+    if (showLoading) {
+      this.loading = true;
+    }
+
+    this.gridService
+      .fetchData<GridDataResponse<any>>(this.endpoint, this.gridId)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: (response) => {
+          // Update with the server response data
+          this.data = response.items || [];
+
+          // Update pagination with server values
+          const newPagination = {
+            pageIndex: response.pageIndex,
+            pageSize: response.pageSize,
+            totalItems: response.totalCount,
+            totalPages: response.totalPages,
+          };
+
+          this.gridService.setPagination(this.gridId, newPagination);
+          this.pagination = newPagination;
+
+          this.dataLoaded.emit(this.data);
+        },
+        error: (err) => {
+          console.error('Error fetching grid data:', err);
+          this.error.emit(err);
+        },
+      });
+  }
+
+  private processLocalData(): void {
+    // Handle pagination, sorting, and filtering locally
+    this.pagination.totalItems = this.data.length;
+    this.pagination.totalPages = Math.ceil(
+      this.data.length / this.pagination.pageSize
+    );
+
+    this.gridService.setPagination(this.gridId, {
+      totalItems: this.pagination.totalItems,
+      totalPages: this.pagination.totalPages,
+    });
+  }
+
   onRowClick(row: any, event: MouseEvent): void {
     this.rowClick.emit(row);
   }
 
   onSelectionChange(item: any, event: Event): void {
-    const checked = event.target as HTMLInputElement;
+    const checked = (event.target as HTMLInputElement).checked;
 
     if (checked) {
       this.selectedItems.push(item);
@@ -279,6 +343,7 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   refreshGrid(): void {
+    this.fetchData();
     this.refresh.emit();
   }
 
@@ -345,6 +410,12 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   get pagedData(): any[] {
+    if (this.endpoint) {
+      // For server-side pagination, the data is already paged
+      return this.data;
+    }
+
+    // For client-side pagination, slice the data
     const start = this.pagination.pageIndex * this.pagination.pageSize;
     const end = start + this.pagination.pageSize;
     return this.data.slice(start, end);
