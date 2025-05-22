@@ -4,16 +4,8 @@
   display: block;
 }
 
-/* Animation classes */
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out forwards;
-}
-
-@keyframes fadeIn {
+/* Animation classes with modern spring animations */
+@keyframes modalFadeIn {
   from {
     opacity: 0;
   }
@@ -22,10 +14,10 @@
   }
 }
 
-@keyframes slideIn {
+@keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: translateY(1rem) scale(0.96);
   }
   to {
     opacity: 1;
@@ -33,108 +25,250 @@
   }
 }
 
-/* Backdrop styles */
-.fixed.inset-0.bg-black {
-  backdrop-filter: blur(2px);
-  transition: backdrop-filter 0.3s ease;
+/* Smooth entrance animations */
+.fixed.inset-0.z-50 {
+  animation: modalFadeIn 0.2s ease-out;
 }
 
-/* Modal content styles */
 .relative.transform {
-  max-height: calc(100vh - 4rem);
-
-  @media (min-width: 640px) {
-    max-height: calc(100vh - 8rem);
-  }
+  animation: modalSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Scrollable content */
-.max-h-96.overflow-y-auto {
+/* Enhanced backdrop with blur effect */
+.backdrop-blur-xs {
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* Custom backdrop overlay class */
+.backdrop-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Enhanced modal shadow for depth */
+.shadow-3xl {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+.dark .shadow-3xl {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* Custom scrollbar styling */
+.custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.5);
-    border-radius: 3px;
-  }
+  scrollbar-color: rgba(203, 213, 225, 0.5) transparent;
 }
 
-.dark .max-h-96.overflow-y-auto {
-  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
-
-  &::-webkit-scrollbar-thumb {
-    background-color: rgba(75, 85, 99, 0.5);
-  }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* Close button hover effects */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(203, 213, 225, 0.5);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.8);
+}
+
+/* Dark mode scrollbar */
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.5);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.8);
+}
+
+/* Modal shadow and elevation */
+.shadow-2xl {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark .shadow-2xl {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Close button enhancements */
 button[aria-label="Close modal"] {
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
-
-  &:focus {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark button[aria-label="Close modal"] {
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-
-  &:focus {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
+button[aria-label="Close modal"]:hover {
+  transform: rotate(90deg);
 }
 
-/* Responsive adjustments */
+/* Focus ring offset for better accessibility */
+.focus\:ring-offset-2 {
+  --tw-ring-offset-width: 2px;
+}
+
+/* Modal size responsive adjustments */
 @media (max-width: 640px) {
   .relative.transform {
-    margin: 1rem;
-    max-height: calc(100vh - 2rem);
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
   }
 
   .px-6 {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+
+  .py-5 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .py-6 {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
   }
 }
 
 /* Z-index layering for multiple modals */
-.fixed.inset-0.z-50 {
-  z-index: 1000;
+.fixed.inset-0.z-50:nth-child(1) {
+  z-index: 40;
+}
 
-  &:nth-child(2) {
-    z-index: 1010;
-  }
+.fixed.inset-0.z-50:nth-child(2) {
+  z-index: 50;
+}
 
-  &:nth-child(3) {
-    z-index: 1020;
-  }
+.fixed.inset-0.z-50:nth-child(3) {
+  z-index: 60;
+}
 
-  &:nth-child(4) {
-    z-index: 1030;
-  }
+.fixed.inset-0.z-50:nth-child(4) {
+  z-index: 70;
 }
 
 /* Smooth transitions for all interactive elements */
-.bg-white,
-.dark\:bg-gray-800,
-.border-gray-200,
-.dark\:border-gray-700,
-.text-gray-400,
-.dark\:text-gray-500 {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease;
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modal content max dimensions */
+.max-w-sm {
+  max-width: 28rem;
+}
+
+.max-w-md {
+  max-width: 36rem;
+}
+
+.max-w-lg {
+  max-width: 48rem;
+}
+
+.max-w-xl {
+  max-width: 64rem;
+}
+
+.max-w-full {
+  max-width: calc(100vw - 4rem);
+}
+
+/* Better modal positioning */
+.items-center {
+  align-items: center;
+}
+
+.items-start {
+  align-items: flex-start;
+  padding-top: 4vh;
+}
+
+/* Ensure modal doesn't go under the fold */
+@media (min-width: 640px) {
+  .items-start {
+    padding-top: 2vh;
+  }
+}
+
+/* Header and footer background enhancements */
+.bg-gray-50 {
+  background-color: rgba(249, 250, 251, 0.5);
+}
+
+.dark .dark\:bg-gray-900 {
+  background-color: rgba(17, 24, 39, 0.5);
+}
+
+/* Subtle border styling */
+.border-gray-200 {
+  border-color: rgba(229, 231, 235, 0.8);
+}
+
+.dark .dark\:border-gray-700 {
+  border-color: rgba(55, 65, 81, 0.6);
+}
+
+/* Ring styles for focus states */
+.ring-1 {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0
+    var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0
+    calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
+    var(--tw-shadow, 0 0 #0000);
+}
+
+.ring-black\/5 {
+  --tw-ring-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .dark\:ring-white\/10 {
+  --tw-ring-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 0);
+}
+
+/* Modal scale animation for smooth entrance */
+.scale-100 {
+  transform: scale(1);
+}
+
+.opacity-100 {
+  opacity: 1;
+}
+
+/* Loading state for dynamic content */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
