@@ -1,0 +1,177 @@
+<!-- src/app/shared/components/modal/modal.component.html -->
+<div
+  *ngFor="let modal of modals; trackBy: trackByModalId"
+  class="fixed inset-0 z-50 overflow-y-auto"
+  [class.animate-fadeIn]="modal.config.animation"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-labelledby]="modal.id + '-title'"
+>
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 bg-black transition-opacity"
+    [class.bg-opacity-50]="modal.config.backdrop"
+    [class.bg-opacity-0]="!modal.config.backdrop"
+    (click)="onBackdropClick(modal.id)"
+  ></div>
+
+  <!-- Modal Container -->
+  <div
+    class="flex min-h-full justify-center p-4 text-center sm:p-0"
+    [class]="getModalPositionClass(modal.config.centered || false)"
+  >
+    <!-- Modal Content -->
+    <div
+      class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all w-full"
+      [class]="getModalSizeClass(modal.config.size || 'md')"
+      [class.animate-slideIn]="modal.config.animation"
+      [ngClass]="modal.config.customClass"
+      (click)="stopPropagation($event)"
+    >
+      <!-- Close Button -->
+      <button
+        *ngIf="modal.config.closable"
+        (click)="closeModal(modal.id)"
+        class="absolute top-3 right-3 z-10 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        aria-label="Close modal"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <!-- Modal Header -->
+      <div
+        *ngIf="headerTemplate"
+        class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+      >
+        <ng-container [ngTemplateOutlet]="headerTemplate"></ng-container>
+      </div>
+
+      <!-- Modal Body -->
+      <div
+        class="px-6 py-4"
+        [class.max-h-96]="modal.config.scrollable"
+        [class.overflow-y-auto]="modal.config.scrollable"
+      >
+        <!-- Content from template projection -->
+        <div *ngIf="bodyTemplate">
+          <ng-container [ngTemplateOutlet]="bodyTemplate"></ng-container>
+        </div>
+
+        <!-- Dynamic component content -->
+        <div #dynamicContent></div>
+
+        <!-- Default slot content -->
+        <ng-content></ng-content>
+      </div>
+
+      <!-- Modal Footer -->
+      <div
+        *ngIf="footerTemplate"
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+      >
+        <ng-container [ngTemplateOutlet]="footerTemplate"></ng-container>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- No modals overlay when using content projection -->
+<div
+  *ngIf="
+    modals.length === 0 && (headerTemplate || bodyTemplate || footerTemplate)
+  "
+  class="fixed inset-0 z-50 overflow-y-auto"
+  [class.animate-fadeIn]="animation"
+  role="dialog"
+  aria-modal="true"
+>
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 bg-black transition-opacity"
+    [class.bg-opacity-50]="backdrop"
+    [class.bg-opacity-0]="!backdrop"
+    (click)="backdrop && closable ? closed.emit() : null"
+  ></div>
+
+  <!-- Modal Container -->
+  <div
+    class="flex min-h-full justify-center p-4 text-center sm:p-0"
+    [class]="getModalPositionClass(centered)"
+  >
+    <!-- Modal Content -->
+    <div
+      class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all w-full"
+      [class]="getModalSizeClass(size)"
+      [class.animate-slideIn]="animation"
+      [ngClass]="customClass"
+      (click)="stopPropagation($event)"
+    >
+      <!-- Close Button -->
+      <button
+        *ngIf="closable"
+        (click)="closed.emit()"
+        class="absolute top-3 right-3 z-10 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        aria-label="Close modal"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <!-- Modal Header -->
+      <div
+        *ngIf="headerTemplate"
+        class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+      >
+        <ng-container [ngTemplateOutlet]="headerTemplate"></ng-container>
+      </div>
+
+      <!-- Modal Body -->
+      <div
+        class="px-6 py-4"
+        [class.max-h-96]="scrollable"
+        [class.overflow-y-auto]="scrollable"
+      >
+        <!-- Content from template projection -->
+        <div *ngIf="bodyTemplate">
+          <ng-container [ngTemplateOutlet]="bodyTemplate"></ng-container>
+        </div>
+
+        <!-- Default slot content -->
+        <ng-content></ng-content>
+      </div>
+
+      <!-- Modal Footer -->
+      <div
+        *ngIf="footerTemplate"
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+      >
+        <ng-container [ngTemplateOutlet]="footerTemplate"></ng-container>
+      </div>
+    </div>
+  </div>
+</div>

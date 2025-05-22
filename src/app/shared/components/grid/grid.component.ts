@@ -1,3 +1,4 @@
+// src/app/shared/components/grid/grid.component.ts
 import {
   Component,
   OnInit,
@@ -8,11 +9,18 @@ import {
   OnDestroy,
   ContentChild,
   TemplateRef,
+  ViewChild,
+  ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, finalize } from 'rxjs';
-import { GridColumn } from '../../models/grid/grid-column.model';
+import {
+  GridAction,
+  GridColumn,
+  GridContextMenuEvent,
+} from '../../models/grid/grid-column.model';
 import { GridPagination } from '../../models/grid/grid-pagination.model';
 import { GridSort } from '../../models/grid/grid-sort.model';
 import { GridExportOptions } from '../../models/grid/grid-export.model';
@@ -21,6 +29,8 @@ import { GridFilterState } from '../../models/grid/grid-filter-state.model';
 import { GridService } from '../../services/grid/grid.service';
 import { GridColumnSelectorComponent } from '../grid-column-selector/grid-column-selector.component';
 import { GridFilterComponent } from '../grid-filter/grid-filter.component';
+import { GridActionButtonsComponent } from '../grid-action-buttons/grid-action-buttons.component';
+import { ContextMenuComponent } from '../context-menu/context-menu.component';
 import { GridDataResponse } from '../../models/grid/grid-state.model';
 
 @Component({
@@ -32,6 +42,8 @@ import { GridDataResponse } from '../../models/grid/grid-state.model';
     ReactiveFormsModule,
     GridFilterComponent,
     GridColumnSelectorComponent,
+    GridActionButtonsComponent,
+    ContextMenuComponent,
   ],
   templateUrl: './grid.component.html',
   styleUrls: ['./grid.component.scss'],
@@ -41,22 +53,33 @@ export class GridComponent implements OnInit, OnDestroy {
   private themeService = inject(ThemeService);
   private destroy$ = new Subject<void>();
 
+  @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
+
   @Input() gridId: string = 'default-grid';
   @Input() data: any[] = [];
   @Input() columns: GridColumn[] = [];
+  @Input() actions: GridAction[] = [];
   @Input() endpoint: string = '';
   @Input() emptyMessage: string = 'No records found';
   @Input() showFilters: boolean = true;
   @Input() showColumnSelector: boolean = true;
   @Input() showPagination: boolean = true;
+  @Input() showActions: boolean = true;
   @Input() exportable: boolean = true;
   @Input() selectable: boolean = false;
   @Input() sortable: boolean = true;
   @Input() resizable: boolean = true;
   @Input() height: string = 'auto';
   @Input() responsive: boolean = true;
+  @Input() enableContextMenu: boolean = true;
+  @Input() maxPrimaryActions: number = 2;
 
   @Output() rowClick = new EventEmitter<any>();
+  @Output() actionExecuted = new EventEmitter<{
+    action: GridAction;
+    item: any;
+  }>();
+  @Output() contextMenuOpened = new EventEmitter<GridContextMenuEvent>();
   @Output() selectionChange = new EventEmitter<any[]>();
   @Output() sortChange = new EventEmitter<GridSort>();
   @Output() pageChange = new EventEmitter<GridPagination>();
@@ -71,6 +94,7 @@ export class GridComponent implements OnInit, OnDestroy {
   @ContentChild('emptyTemplate') emptyTemplate?: TemplateRef<any>;
   @ContentChild('loadingTemplate') loadingTemplate?: TemplateRef<any>;
   @ContentChild('footerTemplate') footerTemplate?: TemplateRef<any>;
+  @ContentChild('actionTemplate') actionTemplate?: TemplateRef<any>;
 
   Math = Math;
 
@@ -82,6 +106,12 @@ export class GridComponent implements OnInit, OnDestroy {
   isExportOpen: boolean = false;
   isDarkMode: boolean = false;
   loading: boolean = false;
+
+  // Context menu properties
+  contextMenuVisible: boolean = false;
+  contextMenuPosition = { x: 0, y: 0 };
+  contextMenuActions: GridAction[] = [];
+  contextMenuItem: any = null;
 
   pagination: GridPagination = {
     pageIndex: 0,
@@ -99,6 +129,19 @@ export class GridComponent implements OnInit, OnDestroy {
   ];
 
   pageOptions: number[] = [5, 10, 25, 50, 100];
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    this.contextMenuVisible = false;
+  }
+
+  @HostListener('document:contextmenu', ['$event'])
+  onDocumentRightClick(event: Event): void {
+    // Only prevent default if not over our grid
+    if (!this.gridContainer?.nativeElement.contains(event.target as Node)) {
+      return;
+    }
+  }
 
   ngOnInit(): void {
     this.themeService.isDarkMode$
@@ -144,6 +187,10 @@ export class GridComponent implements OnInit, OnDestroy {
 
   get filterableColumns(): GridColumn[] {
     return this.columns.filter((col) => col.filterable !== false);
+  }
+
+  get hasActionsColumn(): boolean {
+    return this.showActions && this.actions.length > 0;
   }
 
   updateVisibleColumns(): void {
@@ -204,6 +251,49 @@ export class GridComponent implements OnInit, OnDestroy {
 
   onRowClick(row: any, event: MouseEvent): void {
     this.rowClick.emit(row);
+  }
+
+  onRowRightClick(row: any, event: MouseEvent): void {
+    if (!this.enableContextMenu || this.actions.length === 0) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.contextMenuItem = row;
+    this.contextMenuActions = this.actions;
+    this.contextMenuPosition = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+    this.contextMenuVisible = true;
+
+    const contextMenuEvent: GridContextMenuEvent = {
+      event,
+      item: row,
+      actions: this.actions,
+    };
+
+    this.contextMenuOpened.emit(contextMenuEvent);
+  }
+
+  onActionExecuted(action: GridAction, item?: any): void {
+    const targetItem = item || this.contextMenuItem;
+
+    this.actionExecuted.emit({ action, item: targetItem });
+
+    // Execute the action
+    if (action.action) {
+      action.action(targetItem, action);
+    }
+
+    // Close context menu if open
+    this.contextMenuVisible = false;
+  }
+
+  onContextMenuActionExecuted(action: GridAction): void {
+    this.onActionExecuted(action, this.contextMenuItem);
   }
 
   onSelectionChange(item: any, event: Event): void {
@@ -313,7 +403,6 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   handlePageSizeChange(event: Event): void {
-    console.log(event);
     const pageSize = parseInt((event.target as HTMLSelectElement).value, 10);
 
     this.pagination.pageSize = pageSize;
@@ -348,6 +437,7 @@ export class GridComponent implements OnInit, OnDestroy {
       this.fetchData();
     }
   }
+
   toggleColumnSelector(): void {
     this.isColumnSelectorVisible = !this.isColumnSelectorVisible;
   }
