@@ -15,4 +15,12 @@ export class PermissionTableService {
   userPermissions(userId: string) {
     return this._http.get<string[]>(`permissions/user/${userId}/ids`);
   }
+
+  addUserPermission(data: any) {
+    return this._http.post(`permissions/grant`, data);
+  }
+
+  removeUserPermission(data: any) {
+    return this._http.post(`permissions/revoke`, data);
+  }
 }

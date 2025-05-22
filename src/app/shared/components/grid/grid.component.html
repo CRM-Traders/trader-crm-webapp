@@ -1,5 +1,6 @@
 <!-- src/app/shared/components/grid/grid.component.html -->
 <div
+  #gridContainer
   class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
 >
   <!-- Grid Header -->
@@ -191,7 +192,7 @@
       <!-- Table Header -->
       <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
-          <!-- Checkbox Column -->
+          <!-- Checkbox Column (optional) -->
           <th *ngIf="selectable" scope="col" class="px-6 py-3 w-10">
             <div class="flex items-center justify-center">
               <input
@@ -271,6 +272,15 @@
               </button>
             </div>
           </th>
+
+          <!-- Actions Column -->
+          <th
+            *ngIf="hasActionsColumn"
+            scope="col"
+            class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32"
+          >
+            Actions
+          </th>
         </tr>
       </thead>
 
@@ -282,7 +292,9 @@
         <tr *ngIf="loading">
           <td
             [attr.colspan]="
-              selectable ? visibleColumns.length + 1 : visibleColumns.length
+              (selectable ? 1 : 0) +
+              visibleColumns.length +
+              (hasActionsColumn ? 1 : 0)
             "
             class="px-6 py-4"
           >
@@ -323,7 +335,9 @@
         <tr *ngIf="!loading && pagedData.length === 0">
           <td
             [attr.colspan]="
-              selectable ? visibleColumns.length + 1 : visibleColumns.length
+              (selectable ? 1 : 0) +
+              visibleColumns.length +
+              (hasActionsColumn ? 1 : 0)
             "
             class="px-6 py-4"
           >
@@ -359,6 +373,7 @@
           <tr
             *ngFor="let item of pagedData"
             (click)="onRowClick(item, $event)"
+            (contextmenu)="onRowRightClick(item, $event)"
             class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
           >
             <!-- Checkbox Column -->
@@ -440,6 +455,31 @@
                 </ng-template>
               </td>
             </ng-template>
+
+            <!-- Actions Column -->
+            <td
+              *ngIf="hasActionsColumn"
+              class="px-6 py-4 whitespace-nowrap text-center"
+            >
+              <ng-container *ngIf="actionTemplate; else defaultActions">
+                <ng-container
+                  [ngTemplateOutlet]="actionTemplate"
+                  [ngTemplateOutletContext]="{
+                    $implicit: item,
+                    actions: actions
+                  }"
+                ></ng-container>
+              </ng-container>
+
+              <ng-template #defaultActions>
+                <app-grid-action-buttons
+                  [actions]="actions"
+                  [item]="item"
+                  [maxPrimaryActions]="maxPrimaryActions"
+                  (actionExecuted)="onActionExecuted($event, item)"
+                ></app-grid-action-buttons>
+              </ng-template>
+            </td>
           </tr>
         </ng-container>
       </tbody>
@@ -613,4 +653,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Context Menu -->
+  <app-context-menu
+    [visible]="contextMenuVisible"
+    [position]="contextMenuPosition"
+    [actions]="contextMenuActions"
+    [item]="contextMenuItem"
+    (actionExecuted)="onContextMenuActionExecuted($event)"
+    (menuClosed)="contextMenuVisible = false"
+  ></app-context-menu>
 </div>

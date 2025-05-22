@@ -17,3 +17,26 @@ export interface GridColumn<T = any> {
   exportable?: boolean;
   selector?: (item: T) => any;
 }
+
+export interface GridAction<T = any> {
+  id: string;
+  label: string;
+  icon?: string;
+  type?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
+  disabled?: boolean | ((item: T) => boolean);
+  visible?: boolean | ((item: T) => boolean);
+  permission?: string;
+  separator?: boolean; // For context menu separators
+  action: (item: T, action: GridAction<T>) => void;
+}
+
+export interface GridActionGroup<T = any> {
+  label: string;
+  actions: GridAction<T>[];
+}
+
+export interface GridContextMenuEvent {
+  event: MouseEvent;
+  item: any;
+  actions: GridAction[];
+}
