@@ -36,7 +36,7 @@ export class ModalComponent implements OnInit, OnDestroy {
   private themeService = inject(ThemeService);
   private destroy$ = new Subject<void>();
 
-  @ViewChild('dynamicContent', { read: ViewContainerRef, static: true })
+  @ViewChild('dynamicContent', { read: ViewContainerRef, static: false })
   dynamicContent!: ViewContainerRef;
 
   @ContentChild('modalHeader') headerTemplate?: TemplateRef<any>;
@@ -74,10 +74,12 @@ export class ModalComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((modals) => {
         this.modals = modals;
-        this.renderDynamicComponents();
+        // Delay rendering to ensure ViewChild is available
+        setTimeout(() => {
+          this.renderDynamicComponents();
+        }, 100);
       });
 
-    // If component and data are provided via inputs, create a modal
     if (this.component) {
       this.openComponentModal();
     }
@@ -167,7 +169,12 @@ export class ModalComponent implements OnInit, OnDestroy {
   private renderDynamicComponents(): void {
     this.clearDynamicComponents();
 
-    this.modals.forEach((modal) => {
+    if (!this.dynamicContent || this.modals.length === 0) {
+      return;
+    }
+
+    // Create components for each modal
+    this.modals.forEach((modal, index) => {
       if (modal.component) {
         const componentRef = this.dynamicContent.createComponent(
           modal.component
@@ -187,7 +194,7 @@ export class ModalComponent implements OnInit, OnDestroy {
           });
         }
 
-        // Pass modal reference to the component if it has a modalRef property
+        // Pass modal reference to the component
         if (componentRef.instance) {
           const instance = componentRef.instance as Record<string, any>;
           if (
@@ -199,6 +206,8 @@ export class ModalComponent implements OnInit, OnDestroy {
           }
         }
 
+        // Trigger change detection
+        componentRef.changeDetectorRef.detectChanges();
         this.componentRefs.push(componentRef);
       }
     });
@@ -207,7 +216,10 @@ export class ModalComponent implements OnInit, OnDestroy {
   private clearDynamicComponents(): void {
     this.componentRefs.forEach((ref) => ref.destroy());
     this.componentRefs = [];
-    this.dynamicContent.clear();
+
+    if (this.dynamicContent) {
+      this.dynamicContent.clear();
+    }
   }
 
   trackByModalId(index: number, modal: ModalRef): string {

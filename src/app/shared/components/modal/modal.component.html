@@ -60,6 +60,7 @@
       </div>
 
       <!-- Modal Body -->
+      <!-- Modal Body -->
       <div
         class="px-6 py-4"
         [class.max-h-96]="modal.config.scrollable"
@@ -71,7 +72,9 @@
         </div>
 
         <!-- Dynamic component content -->
-        <div #dynamicContent></div>
+        <ng-container *ngFor="let modal of modals">
+          <div #dynamicContent></div>
+        </ng-container>
 
         <!-- Default slot content -->
         <ng-content></ng-content>

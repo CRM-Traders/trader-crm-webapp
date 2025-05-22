@@ -5,6 +5,7 @@ import { NavigationService } from '../../../core/services/navigation.service';
 import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { AlertComponent } from '../alert/alert.component';
+import { ModalComponent } from '../modal/modal.component';
 
 @Component({
   selector: 'app-layout',
@@ -15,6 +16,7 @@ import { AlertComponent } from '../alert/alert.component';
     HeaderComponent,
     SidebarComponent,
     AlertComponent,
+    ModalComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
