@@ -374,7 +374,6 @@
             *ngFor="let item of pagedData"
             (click)="onRowClick(item, $event)"
             (contextmenu)="onRowRightClick(item, $event)"
-            class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
           >
             <!-- Checkbox Column -->
             <td *ngIf="selectable" class="px-6 py-4 whitespace-nowrap">
