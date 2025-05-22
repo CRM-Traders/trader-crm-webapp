@@ -9,9 +9,13 @@
 >
   <!-- Backdrop -->
   <div
-    class="fixed inset-0 bg-black transition-opacity"
-    [class.bg-opacity-50]="modal.config.backdrop"
-    [class.bg-opacity-0]="!modal.config.backdrop"
+    class="fixed inset-0 transition-all duration-300 ease-out"
+    [class.bg-gray-100]="modal.config.backdrop && !isDarkMode"
+    [class.bg-opacity-20]="modal.config.backdrop && !isDarkMode"
+    [class.bg-gray-900]="modal.config.backdrop && isDarkMode"
+    [class.bg-opacity-10]="modal.config.backdrop && isDarkMode"
+    [class.backdrop-blur-xs]="modal.config.backdrop"
+    [class.bg-transparent]="!modal.config.backdrop"
     (click)="onBackdropClick(modal.id)"
   ></div>
 
@@ -22,9 +26,10 @@
   >
     <!-- Modal Content -->
     <div
-      class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all w-full"
-      [class]="getModalSizeClass(modal.config.size || 'md')"
-      [class.animate-slideIn]="modal.config.animation"
+      class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left shadow-3xl transition-all duration-300 ease-out w-full ring-1 ring-gray-200 dark:ring-gray-700"
+      [class]="getModalSizeClass(modal.config.size || 'xl')"
+      [class.scale-100]="modal.config.animation"
+      [class.opacity-100]="modal.config.animation"
       [ngClass]="modal.config.customClass"
       (click)="stopPropagation($event)"
     >
@@ -32,20 +37,20 @@
       <button
         *ngIf="modal.config.closable"
         (click)="closeModal(modal.id)"
-        class="absolute top-3 right-3 z-10 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="absolute top-4 right-4 z-10 p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         aria-label="Close modal"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          stroke-width="2"
         >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
-            stroke-width="2"
             d="M6 18L18 6M6 6l12 12"
           />
         </svg>
@@ -54,7 +59,7 @@
       <!-- Modal Header -->
       <div
         *ngIf="headerTemplate"
-        class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+        class="px-6 py-5 border-b border-gray-200 dark:border-gray-700"
       >
         <ng-container [ngTemplateOutlet]="headerTemplate"></ng-container>
       </div>
@@ -62,9 +67,10 @@
       <!-- Modal Body -->
       <!-- Modal Body -->
       <div
-        class="px-6 py-4"
-        [class.max-h-96]="modal.config.scrollable"
+        class="px-6 py-6"
+        [class.max-h-[calc(100vh-12rem)]]="modal.config.scrollable"
         [class.overflow-y-auto]="modal.config.scrollable"
+        [class.custom-scrollbar]="modal.config.scrollable"
       >
         <!-- Content from template projection -->
         <div *ngIf="bodyTemplate">
@@ -103,9 +109,13 @@
 >
   <!-- Backdrop -->
   <div
-    class="fixed inset-0 bg-black transition-opacity"
-    [class.bg-opacity-50]="backdrop"
-    [class.bg-opacity-0]="!backdrop"
+    class="fixed inset-0 transition-all duration-300 ease-out"
+    [class.bg-gray-100]="backdrop && !isDarkMode"
+    [class.bg-opacity-20]="backdrop && !isDarkMode"
+    [class.bg-gray-900]="backdrop && isDarkMode"
+    [class.bg-opacity-10]="backdrop && isDarkMode"
+    [class.backdrop-blur-xs]="backdrop"
+    [class.bg-transparent]="!backdrop"
     (click)="backdrop && closable ? closed.emit() : null"
   ></div>
 
@@ -116,9 +126,10 @@
   >
     <!-- Modal Content -->
     <div
-      class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all w-full"
+      class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-left shadow-3xl transition-all duration-300 ease-out w-full ring-1 ring-gray-200 dark:ring-gray-700"
       [class]="getModalSizeClass(size)"
-      [class.animate-slideIn]="animation"
+      [class.scale-100]="animation"
+      [class.opacity-100]="animation"
       [ngClass]="customClass"
       (click)="stopPropagation($event)"
     >
@@ -126,20 +137,20 @@
       <button
         *ngIf="closable"
         (click)="closed.emit()"
-        class="absolute top-3 right-3 z-10 p-1 rounded-md text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="absolute top-4 right-4 z-10 p-2 rounded-lg text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
         aria-label="Close modal"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
+          stroke-width="2"
         >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
-            stroke-width="2"
             d="M6 18L18 6M6 6l12 12"
           />
         </svg>
@@ -148,16 +159,17 @@
       <!-- Modal Header -->
       <div
         *ngIf="headerTemplate"
-        class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+        class="px-6 py-5 border-b border-gray-200 dark:border-gray-700"
       >
         <ng-container [ngTemplateOutlet]="headerTemplate"></ng-container>
       </div>
 
       <!-- Modal Body -->
       <div
-        class="px-6 py-4"
-        [class.max-h-96]="scrollable"
+        class="px-6 py-6"
+        [class.max-h-[calc(100vh-16rem)]]="scrollable"
         [class.overflow-y-auto]="scrollable"
+        [class.custom-scrollbar]="scrollable"
       >
         <!-- Content from template projection -->
         <div *ngIf="bodyTemplate">

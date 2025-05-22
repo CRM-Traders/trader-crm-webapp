@@ -147,4 +147,24 @@ export class PermissionTableComponent implements OnInit {
   getSections(): string[] {
     return this.permissionSections.map((section) => section.section);
   }
+
+  getPermissionCountBySection(section: string): number {
+    const sectionData = this.permissionSections.find(
+      (s) => s.section === section
+    );
+    return sectionData ? sectionData.permissions.length : 0;
+  }
+
+  resetPermissions(): void {
+    this.loadPermissions();
+  }
+
+  savePermissions(): void {
+    if (this.modalRef) {
+      this.modalRef.close({
+        userId: this.userId,
+        permissions: this.selectedPermissions,
+      });
+    }
+  }
 }
