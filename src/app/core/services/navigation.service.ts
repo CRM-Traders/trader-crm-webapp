@@ -57,6 +57,11 @@ export class NavigationService {
       route: '/documents',
     },
     {
+      label: 'API Docs',
+      icon: 'api',
+      route: '/api-docs',
+    },
+    {
       label: 'Calendar',
       icon: 'calendar',
       route: '/calendar',
