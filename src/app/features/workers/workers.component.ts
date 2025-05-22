@@ -114,7 +114,7 @@ export class WorkersComponent implements OnInit {
     this.modalService.open(
       PermissionTableComponent,
       {
-        size: 'xl',
+        size: 'full',
         centered: true,
         closable: true,
         customClass: 'max-h-screen',

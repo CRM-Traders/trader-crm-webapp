@@ -14,7 +14,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
           [disabled]="isActionDisabled(action)"
           (click)="executeAction(action, $event)"
           [title]="action.label"
-          class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-600 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           [ngClass]="{
             'text-gray-700 dark:text-gray-200':
               !isActionDisabled(action) && action.type !== 'danger',
