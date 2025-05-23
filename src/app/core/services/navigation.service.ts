@@ -15,17 +15,14 @@ export class NavigationService {
   expanded$ = this.expandedSubject.asObservable();
 
   private navigationItems: NavItem[] = [
+    // Overview
     {
       label: 'Dashboard',
       icon: 'dashboard',
       route: '/dashboard',
-      requiredRoles: [UserRole.ADMIN],
     },
-    {
-      label: 'Traders',
-      icon: 'traders',
-      route: '/traders',
-    },
+
+    // Core Trading Operations
     {
       label: 'Trading Live',
       icon: 'traiding-live',
@@ -37,20 +34,57 @@ export class NavigationService {
       route: '/trading-groups',
     },
     {
-      label: 'Tickets',
-      icon: 'tickets',
-      route: '/tickets',
+      label: 'Trading Server Positions',
+      icon: 'trading-server-positions',
+      route: '/trading-server-positions',
+    },
+    {
+      label: 'Assets',
+      icon: 'assets',
+      route: '/assets',
+    },
+
+    // User Management
+    {
+      label: 'Traders',
+      icon: 'traders',
+      route: '/traders',
+    },
+    {
+      label: 'Affiliates',
+      icon: 'affiliates',
+      route: '/affiliates',
     },
     {
       label: 'Workers',
       icon: 'workers',
       route: '/workers',
     },
+
+    // Analytics & Reporting
     {
       label: 'Analytics',
       icon: 'analytics',
       route: '/analytics',
     },
+
+    // Communication & Support
+    {
+      label: 'Communications',
+      icon: 'communications',
+      route: '/communications',
+    },
+    {
+      label: 'Tickets',
+      icon: 'tickets',
+      route: '/tickets',
+    },
+    {
+      label: 'Calendar',
+      icon: 'calendar',
+      route: '/calendar',
+    },
+
     {
       label: 'Documents',
       icon: 'documents',
@@ -60,26 +94,6 @@ export class NavigationService {
       label: 'API Docs',
       icon: 'api',
       route: '/api-docs',
-    },
-    {
-      label: 'Calendar',
-      icon: 'calendar',
-      route: '/calendar',
-    },
-    {
-      label: 'Communications',
-      icon: 'communications',
-      route: '/communications',
-    },
-    {
-      label: 'Trading Server Positions',
-      icon: 'trading-server-positions',
-      route: '/trading-server-positions',
-    },
-    {
-      label: 'Assets',
-      icon: 'assets',
-      route: '/assets',
     },
   ];
 
