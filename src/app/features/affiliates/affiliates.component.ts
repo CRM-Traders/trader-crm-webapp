@@ -1,11 +1,348 @@
-import { Component } from '@angular/core';
+// src/app/features/affiliates/affiliates.component.ts
+
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  TemplateRef,
+  inject,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
+import { AffiliatesService } from './services/affiliates.service';
+import { Affiliate, AffiliateUpdateRequest } from './models/affiliates.model';
+import { GridComponent } from '../../shared/components/grid/grid.component';
+import { AlertService } from '../../core/services/alert.service';
+import {
+  GridColumn,
+  GridAction,
+} from '../../shared/models/grid/grid-column.model';
 
 @Component({
   selector: 'app-affiliates',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
   templateUrl: './affiliates.component.html',
-  styleUrl: './affiliates.component.scss'
+  styleUrls: ['./affiliates.component.scss'],
 })
-export class AffiliatesComponent {
+export class AffiliatesComponent implements OnInit {
+  private affiliatesService = inject(AffiliatesService);
+  private alertService = inject(AlertService);
+  private fb = inject(FormBuilder);
+  private destroy$ = new Subject<void>();
 
+  @ViewChild('statusCell', { static: true })
+  statusCellTemplate!: TemplateRef<any>;
+  @ViewChild('websiteCell', { static: true })
+  websiteCellTemplate!: TemplateRef<any>;
+
+  selectedAffiliate: Affiliate | null = null;
+  editForm: FormGroup;
+  isEditing = false;
+  loading = false;
+  importLoading = false;
+  showDeleteModal = false;
+  affiliateToDelete: Affiliate | null = null;
+
+  gridColumns: GridColumn[] = [
+    {
+      field: 'name',
+      header: 'Name',
+      sortable: true,
+      filterable: true,
+      cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
+    },
+    {
+      field: 'email',
+      header: 'Email',
+      sortable: true,
+      filterable: true,
+    },
+    {
+      field: 'phone',
+      header: 'Phone',
+      sortable: true,
+      filterable: true,
+      selector: (row: Affiliate) => row.phone || '-',
+    },
+    {
+      field: 'website',
+      header: 'Website',
+      sortable: true,
+      filterable: true,
+      cellTemplate: null, // Will be set in ngOnInit
+      hidden: false,
+    },
+    {
+      field: 'clientsCount',
+      header: 'Clients',
+      sortable: true,
+      filterable: true,
+      type: 'number',
+    },
+    {
+      field: 'isActive',
+      header: 'Status',
+      sortable: true,
+      filterable: true,
+      cellTemplate: null,
+    },
+    {
+      field: 'createdAt',
+      header: 'Created',
+      sortable: true,
+      filterable: true,
+      type: 'date',
+      format: 'short',
+    },
+  ];
+
+  gridActions: GridAction[] = [
+    {
+      id: 'view',
+      label: 'View Details',
+      icon: 'view',
+      action: (item: Affiliate) => this.viewAffiliate(item),
+    },
+    {
+      id: 'edit',
+      label: 'Edit',
+      icon: 'edit',
+      action: (item: Affiliate) => this.startEdit(item),
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      disabled: (item: Affiliate) => item.clientsCount > 0,
+      action: (item: Affiliate) => this.confirmDelete(item),
+    },
+  ];
+
+  constructor() {
+    this.editForm = this.fb.group({
+      phone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
+      website: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+    });
+  }
+
+  ngOnInit(): void {
+    // Set cell templates after view initialization
+    const websiteColumn = this.gridColumns.find(
+      (col) => col.field === 'website'
+    );
+    if (websiteColumn) {
+      websiteColumn.cellTemplate = this.websiteCellTemplate;
+    }
+
+    const statusColumn = this.gridColumns.find(
+      (col) => col.field === 'isActive'
+    );
+    if (statusColumn) {
+      statusColumn.cellTemplate = this.statusCellTemplate;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onRowClick(affiliate: Affiliate): void {
+    this.viewAffiliate(affiliate);
+  }
+
+  viewAffiliate(affiliate: Affiliate): void {
+    this.selectedAffiliate = affiliate;
+    this.isEditing = false;
+    this.editForm.patchValue({
+      phone: affiliate.phone || '',
+      website: affiliate.website || '',
+    });
+  }
+
+  startEdit(affiliate?: Affiliate): void {
+    if (affiliate) {
+      this.viewAffiliate(affiliate);
+    }
+    this.isEditing = true;
+  }
+
+  cancelEdit(): void {
+    this.isEditing = false;
+    if (this.selectedAffiliate) {
+      this.editForm.patchValue({
+        phone: this.selectedAffiliate.phone || '',
+        website: this.selectedAffiliate.website || '',
+      });
+    }
+  }
+
+  saveAffiliate(): void {
+    if (this.editForm.invalid || !this.selectedAffiliate) return;
+
+    const updateRequest: AffiliateUpdateRequest = {
+      id: this.selectedAffiliate.id,
+      phone: this.editForm.value.phone || null,
+      website: this.editForm.value.website || null,
+    };
+
+    this.loading = true;
+    this.affiliatesService
+      .updateAffiliate(updateRequest)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to update affiliate');
+          console.error('Error updating affiliate:', error);
+          return of(null);
+        }),
+        finalize(() => (this.loading = false))
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          this.alertService.success('Affiliate updated successfully');
+          this.isEditing = false;
+          this.refreshSelectedAffiliate();
+        }
+      });
+  }
+
+  confirmDelete(affiliate: Affiliate): void {
+    this.affiliateToDelete = affiliate;
+    this.showDeleteModal = true;
+  }
+
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.affiliateToDelete = null;
+  }
+
+  deleteAffiliate(): void {
+    if (!this.affiliateToDelete) return;
+
+    this.loading = true;
+    this.affiliatesService
+      .deleteAffiliate(this.affiliateToDelete.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          if (error.status === 409) {
+            this.alertService.error(
+              'Cannot delete affiliate with associated clients'
+            );
+          } else {
+            this.alertService.error('Failed to delete affiliate');
+          }
+          console.error('Error deleting affiliate:', error);
+          return of(null);
+        }),
+        finalize(() => {
+          this.loading = false;
+          this.showDeleteModal = false;
+          this.affiliateToDelete = null;
+        })
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          this.alertService.success('Affiliate deleted successfully');
+          if (this.selectedAffiliate?.id === this.affiliateToDelete?.id) {
+            this.selectedAffiliate = null;
+          }
+        }
+      });
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.importFile(input.files[0]);
+      input.value = '';
+    }
+  }
+
+  private importFile(file: File): void {
+    this.importLoading = true;
+
+    this.affiliatesService
+      .importAffiliates(file)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to import affiliates');
+          console.error('Error importing affiliates:', error);
+          return of(null);
+        }),
+        finalize(() => (this.importLoading = false))
+      )
+      .subscribe((response) => {
+        if (response) {
+          const message = `Import completed: ${response.successCount} successful, ${response.failureCount} failed`;
+          this.alertService.success(message);
+        }
+      });
+  }
+
+  onExport(options: any): void {
+    const request = {
+      sortField: options.sortField,
+      sortDirection: options.sortDirection,
+      globalFilter: options.globalFilter,
+    };
+
+    // this.affiliatesService
+    //   .exportAffiliates(request)
+    //   .pipe(
+    //     takeUntil(this.destroy$),
+    //     catchError((error) => {
+    //       this.alertService.error('Failed to export affiliates');
+    //       console.error('Error exporting affiliates:', error);
+    //       return of(null);
+    //     })
+    //   )
+    //   .subscribe((blob) => {
+    //     if (blob) {
+    //       const url = window.URL.createObjectURL(blob);
+    //       const link = document.createElement('a');
+    //       link.href = url;
+    //       link.download = `affiliates_${
+    //         new Date().toISOString().split('T')[0]
+    //       }.csv`;
+    //       link.click();
+    //       window.URL.revokeObjectURL(url);
+    //       this.alertService.success('Export completed successfully');
+    //     }
+    //   });
+  }
+
+  public refreshSelectedAffiliate(): void {
+    if (this.selectedAffiliate) {
+      this.affiliatesService
+        .getAffiliateById(this.selectedAffiliate.id)
+        .pipe(
+          takeUntil(this.destroy$),
+          catchError((error) => {
+            console.error('Error refreshing affiliate:', error);
+            return of(null);
+          })
+        )
+        .subscribe((affiliate) => {
+          if (affiliate) {
+            this.selectedAffiliate = affiliate;
+          }
+        });
+    }
+  }
+
+  closeDetails(): void {
+    this.selectedAffiliate = null;
+    this.isEditing = false;
+  }
 }
