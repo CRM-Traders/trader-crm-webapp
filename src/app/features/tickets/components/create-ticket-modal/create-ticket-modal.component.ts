@@ -36,7 +36,7 @@ import {
 
         <!-- Modal panel -->
         <div
-          class="inline-block z-50 relative align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all my-4 sm:align-middle sm:max-w-2xl sm:w-full"
+          class="inline-block z-50 relative bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all mt-[5vh] max-h-[90vh] overflow-y-auto sm:align-middle sm:max-w-2xl sm:w-full"
         >
           <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
             <!-- Header -->
@@ -50,7 +50,7 @@ import {
                 <button
                   type="button"
                   (click)="close.emit()"
-                  class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                  class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 sticky top-0 "
                 >
                   <svg
                     class="h-6 w-6"
