@@ -12,6 +12,8 @@ export interface Affiliate {
 
 export interface AffiliateCreateRequest {
   name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone?: string;
   website?: string;
