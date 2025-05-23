@@ -80,11 +80,19 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
-            {
+      {
         path: 'api-docs',
         loadComponent: () =>
           import('./features/api-docs/api-docs.component').then(
             (m) => m.ApiDocsComponent
+          ),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'affiliates',
+        loadComponent: () =>
+          import('./features/affiliates/affiliates.component').then(
+            (m) => m.AffiliatesComponent
           ),
         canActivate: [authGuard],
       },
