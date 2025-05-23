@@ -196,21 +196,21 @@ tbody tr {
   position: relative;
 }
 
-tbody tr::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  background: transparent;
-  transition: background-color 0.15s ease;
-  pointer-events: none;
-}
+// tbody tr::before {
+//   content: "";
+//   position: absolute;
+//   left: 0;
+//   right: 0;
+//   top: 0;
+//   bottom: 0;
+//   background: transparent;
+//   transition: background-color 0.15s ease;
+//   pointer-events: none;
+// }
 
-tbody tr:hover::before {
-  background-color: rgba(0, 0, 0, 0.01);
-}
+// tbody tr:hover::before {
+//   background-color: rgba(0, 0, 0, 0.01);
+// }
 
 .dark tbody tr:hover::before {
   background-color: rgba(255, 255, 255, 0.01);
