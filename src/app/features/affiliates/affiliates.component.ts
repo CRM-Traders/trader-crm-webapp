@@ -20,6 +20,8 @@ import { AffiliatesService } from './services/affiliates.service';
 import { Affiliate, AffiliateUpdateRequest } from './models/affiliates.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
+import { ModalService } from '../../shared/services/modals/modal.service';
+import { AffiliateRegistrationModalComponent } from './components/affiliate-registration-modal/affiliate-registration-modal.component';
 import {
   GridColumn,
   GridAction,
@@ -35,6 +37,7 @@ import {
 export class AffiliatesComponent implements OnInit {
   private affiliatesService = inject(AffiliatesService);
   private alertService = inject(AlertService);
+  private modalService = inject(ModalService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
@@ -211,6 +214,7 @@ export class AffiliatesComponent implements OnInit {
           this.alertService.success('Affiliate updated successfully');
           this.isEditing = false;
           this.refreshSelectedAffiliate();
+          this.refreshGrid();
         }
       });
   }
@@ -256,6 +260,7 @@ export class AffiliatesComponent implements OnInit {
           if (this.selectedAffiliate?.id === this.affiliateToDelete?.id) {
             this.selectedAffiliate = null;
           }
+          this.refreshGrid();
         }
       });
   }
@@ -286,6 +291,7 @@ export class AffiliatesComponent implements OnInit {
         if (response) {
           const message = `Import completed: ${response.successCount} successful, ${response.failureCount} failed`;
           this.alertService.success(message);
+          this.refreshGrid();
         }
       });
   }
@@ -344,5 +350,69 @@ export class AffiliatesComponent implements OnInit {
   closeDetails(): void {
     this.selectedAffiliate = null;
     this.isEditing = false;
+  }
+
+  openRegistrationModal(): void {
+    const modalRef = this.modalService.open(
+      AffiliateRegistrationModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      }
+    );
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.refreshGrid();
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  downloadTemplate(): void {
+    this.affiliatesService
+      .downloadImportTemplate()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          if (error.status === 401) {
+            this.alertService.error('Unauthorized. Please login again.');
+          } else {
+            this.alertService.error(
+              'Failed to download template. Please try again.'
+            );
+          }
+          console.error('Error downloading template:', error);
+          return of(null);
+        })
+      )
+      .subscribe((blob) => {
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'affiliates-import-template.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          this.alertService.success('Template downloaded successfully!');
+        }
+      });
+  }
+
+  private refreshGrid(): void {
+    // Emit an event or call a method to refresh the grid
+    const gridComponent = document.querySelector(
+      `app-grid[gridId="${this.gridColumns}"]`
+    );
+    if (gridComponent) {
+      (gridComponent as any).refresh?.();
+    }
   }
 }

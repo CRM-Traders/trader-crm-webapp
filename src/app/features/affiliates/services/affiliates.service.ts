@@ -1,10 +1,10 @@
-// src/app/features/affiliates/services/affiliates.service.ts
-
 import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
+import { HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   Affiliate,
+  AffiliateCreateRequest,
   AffiliateUpdateRequest,
   AffiliateImportResponse,
 } from '../models/affiliates.model';
@@ -18,6 +18,10 @@ export class AffiliatesService {
 
   getAffiliateById(id: string): Observable<Affiliate> {
     return this.httpService.get<Affiliate>(`${this.apiPath}/${id}`);
+  }
+
+  createAffiliate(request: AffiliateCreateRequest): Observable<Affiliate> {
+    return this.httpService.post<Affiliate>(this.apiPath, request);
   }
 
   updateAffiliate(request: AffiliateUpdateRequest): Observable<void> {
@@ -39,8 +43,37 @@ export class AffiliatesService {
     );
   }
 
+  downloadImportTemplate(): Observable<Blob> {
+    const headers = new HttpHeaders({
+      Accept:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+
+    return this.httpService['_http'].get<Blob>(
+      `${this.httpService['_apiUrl']}/${this.apiPath}/import-template`,
+      {
+        responseType: 'blob' as 'json',
+        headers,
+      }
+    );
+  }
+
   /**
    * Export affiliates to file
    * Note: This endpoint might need adjustment based on actual API response
    */
+  exportAffiliates(request: any): Observable<Blob> {
+    const headers = new HttpHeaders({
+      Accept: 'text/csv',
+    });
+
+    return this.httpService['_http'].post<Blob>(
+      `${this.httpService['_apiUrl']}/${this.apiPath}/export`,
+      request,
+      {
+        responseType: 'blob' as 'json',
+        headers,
+      }
+    );
+  }
 }
