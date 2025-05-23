@@ -32,4 +32,39 @@ export class HttpService {
       headers: headers,
     });
   }
+
+  patch<T>(
+    endpoint: string,
+    body: any,
+    params?: HttpParams,
+    headers?: HttpHeaders
+  ): Observable<T> {
+    return this._http.patch<T>(`${this._apiUrl}/${endpoint}`, body, {
+      params: params,
+      headers: headers,
+    });
+  }
+
+  put<T>(
+    endpoint: string,
+    body: any,
+    params?: HttpParams,
+    headers?: HttpHeaders
+  ): Observable<T> {
+    return this._http.put<T>(`${this._apiUrl}/${endpoint}`, body, {
+      params: params,
+      headers: headers,
+    });
+  }
+
+  delete<T>(
+    endpoint: string,
+    params?: HttpParams,
+    headers?: HttpHeaders
+  ): Observable<T> {
+    return this._http.delete<T>(`${this._apiUrl}/${endpoint}`, {
+      params: params,
+      headers: headers,
+    });
+  }
 }

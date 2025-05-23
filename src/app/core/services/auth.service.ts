@@ -53,7 +53,7 @@ export class AuthService implements OnDestroy {
     rememberMe: boolean = false
   ): Observable<AuthResponse> {
     const credentials = {
-      email,
+      emailOrUsername: email,
       password,
       twoFactorCode,
       rememberMe,
