@@ -58,10 +58,6 @@ export class AffiliatesService {
     );
   }
 
-  /**
-   * Export affiliates to file
-   * Note: This endpoint might need adjustment based on actual API response
-   */
   exportAffiliates(request: any): Observable<Blob> {
     const headers = new HttpHeaders({
       Accept: 'text/csv',

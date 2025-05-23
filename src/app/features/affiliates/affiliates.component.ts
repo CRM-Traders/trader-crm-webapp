@@ -26,6 +26,7 @@ import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
+import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 
 @Component({
   selector: 'app-affiliates',
@@ -53,6 +54,8 @@ export class AffiliatesComponent implements OnInit {
   importLoading = false;
   showDeleteModal = false;
   affiliateToDelete: Affiliate | null = null;
+  totalCount = 0;
+  activeCount = 0;
 
   gridColumns: GridColumn[] = [
     {
@@ -126,6 +129,13 @@ export class AffiliatesComponent implements OnInit {
       icon: 'delete',
       disabled: (item: Affiliate) => item.clientsCount > 0,
       action: (item: Affiliate) => this.confirmDelete(item),
+    },
+    {
+      id: 'permissions',
+      label: 'Permissions',
+      icon: 'permission',
+      type: 'primary',
+      action: (item) => this.openPermissionDialog(item),
     },
   ];
 
@@ -406,13 +416,28 @@ export class AffiliatesComponent implements OnInit {
       });
   }
 
-  private refreshGrid(): void {
+  refreshGrid(): void {
     // Emit an event or call a method to refresh the grid
     const gridComponent = document.querySelector(
-      `app-grid[gridId="${this.gridColumns}"]`
+      `app-grid[gridId="affiliates-grid"]`
     );
     if (gridComponent) {
       (gridComponent as any).refresh?.();
     }
+  }
+
+  openPermissionDialog(user: any) {
+    this.modalService.open(
+      PermissionTableComponent,
+      {
+        size: 'xl',
+        centered: true,
+        closable: true,
+        customClass: 'max-h-screen',
+      },
+      {
+        userId: user.id,
+      }
+    );
   }
 }

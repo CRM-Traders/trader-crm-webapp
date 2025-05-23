@@ -2,32 +2,34 @@
 
 // Animation for side panel
 .side-panel-overlay {
-  animation: fade-in 0.3s ease-out;
+  z-index: 50; // High z-index to ensure it overlays everything
+  animation: slide-in 0.3s ease-out;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+
+  // Ensure proper scrolling on mobile
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 }
 
-@keyframes fade-in {
+@keyframes slide-in {
   from {
-    opacity: 0;
+    transform: translateX(100%);
   }
   to {
-    opacity: 1;
+    transform: translateX(0);
   }
+}
+
+// Mobile overlay for backdrop
+.mobile-overlay {
+  z-index: 40; // Below the side panel but above the content
 }
 
 // Grid container responsive adjustments
 .grid-container {
   width: 100%;
   overflow-x: auto;
-}
-
-// Side panel shadow and styling
-.side-panel {
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
-
-  // Ensure proper scrolling on mobile
-  @media (max-width: 768px) {
-    width: 100%;
-  }
 }
 
 // Table wrapper to prevent overflow
@@ -47,13 +49,6 @@
   }
   to {
     transform: rotate(360deg);
-  }
-}
-
-// Responsive grid adjustments
-@media (min-width: 1024px) {
-  .grid-with-panel {
-    margin-right: 400px;
   }
 }
 

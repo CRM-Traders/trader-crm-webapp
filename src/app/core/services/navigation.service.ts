@@ -46,9 +46,9 @@ export class NavigationService {
 
     // User Management
     {
-      label: 'Traders',
+      label: 'Clients',
       icon: 'traders',
-      route: '/traders',
+      route: '/clients',
     },
     {
       label: 'Affiliates',
