@@ -1,0 +1,708 @@
+<div class="bg-gray-100 dark:bg-gray-900 transition-colors min-h-screen">
+  <!-- Ticker Tape -->
+  <div
+    class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+    #tickerTape
+    id="ticker-tape"
+    style="height: 72px; overflow: hidden"
+  ></div>
+
+  <!-- Main Container -->
+  <div class="p-4 lg:p-6">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Live Trading
+        </h1>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Symbol Selector -->
+          <select
+            [(ngModel)]="selectedSymbol"
+            (ngModelChange)="onSymbolChange()"
+            class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option *ngFor="let symbol of symbols" [value]="symbol.value">
+              {{ symbol.label }}
+            </option>
+          </select>
+
+          <!-- Interval Selector -->
+          <select
+            [(ngModel)]="selectedInterval"
+            (ngModelChange)="onIntervalChange()"
+            class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option *ngFor="let interval of intervals" [value]="interval.value">
+              {{ interval.label }}
+            </option>
+          </select>
+
+          <!-- Chart Type Selector -->
+          <select
+            [(ngModel)]="selectedChartType"
+            (ngModelChange)="onChartTypeChange()"
+            class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option *ngFor="let type of chartTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+
+          <!-- Order Button -->
+          <button
+            (click)="toggleOrderPanel()"
+            class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+            New Order
+          </button>
+
+          <!-- Fullscreen Button -->
+          <button
+            (click)="toggleFullscreen()"
+            class="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-gray-600 dark:text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget Tabs -->
+    <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+      <nav class="-mb-px flex space-x-8 overflow-x-auto">
+        <button
+          (click)="setActiveWidget('chart')"
+          [class.border-blue-500]="activeWidget() === 'chart'"
+          [class.text-blue-600]="activeWidget() === 'chart'"
+          [class.dark:text-blue-400]="activeWidget() === 'chart'"
+          [class.border-transparent]="activeWidget() !== 'chart'"
+          [class.text-gray-500]="activeWidget() !== 'chart'"
+          [class.dark:text-gray-400]="activeWidget() !== 'chart'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          Chart
+        </button>
+        <button
+          (click)="setActiveWidget('overview')"
+          [class.border-blue-500]="activeWidget() === 'overview'"
+          [class.text-blue-600]="activeWidget() === 'overview'"
+          [class.dark:text-blue-400]="activeWidget() === 'overview'"
+          [class.border-transparent]="activeWidget() !== 'overview'"
+          [class.text-gray-500]="activeWidget() !== 'overview'"
+          [class.dark:text-gray-400]="activeWidget() !== 'overview'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          Market Overview
+        </button>
+        <button
+          (click)="setActiveWidget('screener')"
+          [class.border-blue-500]="activeWidget() === 'screener'"
+          [class.text-blue-600]="activeWidget() === 'screener'"
+          [class.dark:text-blue-400]="activeWidget() === 'screener'"
+          [class.border-transparent]="activeWidget() !== 'screener'"
+          [class.text-gray-500]="activeWidget() !== 'screener'"
+          [class.dark:text-gray-400]="activeWidget() !== 'screener'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          Screener
+        </button>
+        <button
+          (click)="setActiveWidget('calendar')"
+          [class.border-blue-500]="activeWidget() === 'calendar'"
+          [class.text-blue-600]="activeWidget() === 'calendar'"
+          [class.dark:text-blue-400]="activeWidget() === 'calendar'"
+          [class.border-transparent]="activeWidget() !== 'calendar'"
+          [class.text-gray-500]="activeWidget() !== 'calendar'"
+          [class.dark:text-gray-400]="activeWidget() !== 'calendar'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          Economic Calendar
+        </button>
+        <button
+          (click)="setActiveWidget('forex')"
+          [class.border-blue-500]="activeWidget() === 'forex'"
+          [class.text-blue-600]="activeWidget() === 'forex'"
+          [class.dark:text-blue-400]="activeWidget() === 'forex'"
+          [class.border-transparent]="activeWidget() !== 'forex'"
+          [class.text-gray-500]="activeWidget() !== 'forex'"
+          [class.dark:text-gray-400]="activeWidget() !== 'forex'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          Forex Rates
+        </button>
+        <button
+          (click)="setActiveWidget('crypto')"
+          [class.border-blue-500]="activeWidget() === 'crypto'"
+          [class.text-blue-600]="activeWidget() === 'crypto'"
+          [class.dark:text-blue-400]="activeWidget() === 'crypto'"
+          [class.border-transparent]="activeWidget() !== 'crypto'"
+          [class.text-gray-500]="activeWidget() !== 'crypto'"
+          [class.dark:text-gray-400]="activeWidget() !== 'crypto'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          Crypto Market
+        </button>
+      </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <!-- Left Column - Main Chart/Widgets -->
+      <div class="xl:col-span-2">
+        <!-- Chart View -->
+        <div
+          *ngIf="activeWidget() === 'chart'"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #chartContainer
+            id="tv_chart_container"
+            class="w-full"
+            style="height: 600px"
+          ></div>
+        </div>
+
+        <!-- Market Overview -->
+        <div
+          *ngIf="activeWidget() === 'overview'"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #marketOverview
+            id="market-overview"
+            class="w-full"
+            style="height: 600px"
+          ></div>
+        </div>
+
+        <!-- Screener -->
+        <div
+          *ngIf="activeWidget() === 'screener'"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #screener
+            id="screener"
+            class="w-full"
+            style="height: 600px"
+          ></div>
+        </div>
+
+        <!-- Economic Calendar -->
+        <div
+          *ngIf="activeWidget() === 'calendar'"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #economicCalendar
+            id="economic-calendar"
+            class="w-full"
+            style="height: 600px"
+          ></div>
+        </div>
+
+        <!-- Forex Cross Rates -->
+        <div
+          *ngIf="activeWidget() === 'forex'"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #forexCrossRates
+            id="forex-cross-rates"
+            class="w-full"
+            style="height: 600px"
+          ></div>
+        </div>
+
+        <!-- Crypto Market -->
+        <div
+          *ngIf="activeWidget() === 'crypto'"
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #cryptoMarket
+            id="crypto-market"
+            class="w-full"
+            style="height: 600px"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Right Column - Info Panels -->
+      <div class="space-y-6">
+        <!-- Symbol Overview -->
+        <div
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #symbolOverview
+            id="symbol-overview"
+            class="w-full"
+            style="height: 400px"
+          ></div>
+        </div>
+
+        <!-- Technical Analysis -->
+        <div
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+        >
+          <div
+            #technicalAnalysis
+            id="technical-analysis"
+            class="w-full"
+            style="height: 450px"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Positions Section -->
+    <div class="mt-6">
+      <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden"
+      >
+        <div
+          class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700"
+        >
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Open Positions
+          </h2>
+          <div class="flex items-center gap-4">
+            <div class="text-sm">
+              <span class="text-gray-500 dark:text-gray-400">Total P&L:</span>
+              <span
+                [class.text-emerald-600]="totalPnL() >= 0"
+                [class.dark:text-emerald-400]="totalPnL() >= 0"
+                [class.text-red-600]="totalPnL() < 0"
+                [class.dark:text-red-400]="totalPnL() < 0"
+                class="ml-2 font-semibold"
+              >
+                {{ formatCurrency(totalPnL()) }}
+                ({{ formatPercent(totalPnLPercent()) }})
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table
+            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+          >
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Symbol
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Side
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Quantity
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Entry Price
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Current Price
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  P&L
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  SL/TP
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Time
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+            >
+              <tr
+                *ngFor="let position of positions()"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div
+                    class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    {{ position.symbol }}
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    [class.bg-emerald-100]="position.side === 'buy'"
+                    [class.text-emerald-800]="position.side === 'buy'"
+                    [class.dark:bg-emerald-900]="position.side === 'buy'"
+                    [class.dark:text-emerald-200]="position.side === 'buy'"
+                    [class.bg-red-100]="position.side === 'sell'"
+                    [class.text-red-800]="position.side === 'sell'"
+                    [class.dark:bg-red-900]="position.side === 'sell'"
+                    [class.dark:text-red-200]="position.side === 'sell'"
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full uppercase"
+                  >
+                    {{ position.side }}
+                  </span>
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
+                >
+                  {{ position.quantity }}
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
+                >
+                  {{ formatCurrency(position.entryPrice) }}
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
+                >
+                  {{ formatCurrency(position.currentPrice) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div
+                    [class.text-emerald-600]="position.pnl >= 0"
+                    [class.dark:text-emerald-400]="position.pnl >= 0"
+                    [class.text-red-600]="position.pnl < 0"
+                    [class.dark:text-red-400]="position.pnl < 0"
+                    class="text-sm font-semibold"
+                  >
+                    {{ formatCurrency(position.pnl) }}
+                    <span class="text-xs ml-1"
+                      >({{ formatPercent(position.pnlPercent) }})</span
+                    >
+                  </div>
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400"
+                >
+                  <div *ngIf="position.stopLoss">
+                    SL: {{ formatCurrency(position.stopLoss) }}
+                  </div>
+                  <div *ngIf="position.takeProfit">
+                    TP: {{ formatCurrency(position.takeProfit) }}
+                  </div>
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+                >
+                  {{ formatDate(position.openTime) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                  <button
+                    (click)="closePosition(position)"
+                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
+                  >
+                    Close
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="positions().length === 0">
+                <td
+                  colspan="9"
+                  class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  No open positions
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Panel (Slide-over) -->
+  <div
+    *ngIf="showOrderPanel()"
+    class="fixed inset-0 overflow-hidden z-50"
+    aria-labelledby="slide-over-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="absolute inset-0 overflow-hidden">
+      <!-- Background overlay -->
+      <div
+        (click)="toggleOrderPanel()"
+        class="absolute inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+      ></div>
+
+      <div class="fixed inset-y-0 right-0 pl-10 max-w-full flex">
+        <div class="relative w-screen max-w-md">
+          <div
+            class="h-full flex flex-col bg-white dark:bg-gray-800 shadow-xl overflow-y-scroll"
+          >
+            <!-- Header -->
+            <div class="px-4 py-6 sm:px-6">
+              <div class="flex items-start justify-between">
+                <h2
+                  class="text-lg font-medium text-gray-900 dark:text-gray-100"
+                  id="slide-over-title"
+                >
+                  New Order
+                </h2>
+                <button
+                  (click)="toggleOrderPanel()"
+                  class="ml-3 h-7 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <svg
+                    class="h-6 w-6"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Order Form -->
+            <div class="relative flex-1 px-4 sm:px-6">
+              <div class="space-y-6">
+                <!-- Symbol -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Symbol
+                  </label>
+                  <div
+                    class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-md text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    {{ selectedSymbol() }}
+                  </div>
+                </div>
+
+                <!-- Order Type -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Order Type
+                  </label>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button
+                      (click)="orderType.set('market')"
+                      [class.bg-blue-600]="orderType() === 'market'"
+                      [class.text-white]="orderType() === 'market'"
+                      [class.bg-gray-200]="orderType() !== 'market'"
+                      [class.dark:bg-gray-700]="orderType() !== 'market'"
+                      [class.text-gray-700]="orderType() !== 'market'"
+                      [class.dark:text-gray-300]="orderType() !== 'market'"
+                      class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Market
+                    </button>
+                    <button
+                      (click)="orderType.set('limit')"
+                      [class.bg-blue-600]="orderType() === 'limit'"
+                      [class.text-white]="orderType() === 'limit'"
+                      [class.bg-gray-200]="orderType() !== 'limit'"
+                      [class.dark:bg-gray-700]="orderType() !== 'limit'"
+                      [class.text-gray-700]="orderType() !== 'limit'"
+                      [class.dark:text-gray-300]="orderType() !== 'limit'"
+                      class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Limit
+                    </button>
+                    <button
+                      (click)="orderType.set('stop')"
+                      [class.bg-blue-600]="orderType() === 'stop'"
+                      [class.text-white]="orderType() === 'stop'"
+                      [class.bg-gray-200]="orderType() !== 'stop'"
+                      [class.dark:bg-gray-700]="orderType() !== 'stop'"
+                      [class.text-gray-700]="orderType() !== 'stop'"
+                      [class.dark:text-gray-300]="orderType() !== 'stop'"
+                      class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Stop
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Side -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Side
+                  </label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button
+                      (click)="orderSide.set('buy')"
+                      [class.bg-emerald-600]="orderSide() === 'buy'"
+                      [class.text-white]="orderSide() === 'buy'"
+                      [class.bg-gray-200]="orderSide() !== 'buy'"
+                      [class.dark:bg-gray-700]="orderSide() !== 'buy'"
+                      [class.text-gray-700]="orderSide() !== 'buy'"
+                      [class.dark:text-gray-300]="orderSide() !== 'buy'"
+                      class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Buy
+                    </button>
+                    <button
+                      (click)="orderSide.set('sell')"
+                      [class.bg-red-600]="orderSide() === 'sell'"
+                      [class.text-white]="orderSide() === 'sell'"
+                      [class.bg-gray-200]="orderSide() !== 'sell'"
+                      [class.dark:bg-gray-700]="orderSide() !== 'sell'"
+                      [class.text-gray-700]="orderSide() !== 'sell'"
+                      [class.dark:text-gray-300]="orderSide() !== 'sell'"
+                      class="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Sell
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Quantity -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    [(ngModel)]="orderQuantity"
+                    step="0.01"
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <!-- Price (for limit/stop orders) -->
+                <div *ngIf="orderType() !== 'market'">
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Price
+                  </label>
+                  <input
+                    type="number"
+                    [(ngModel)]="orderPrice"
+                    step="0.01"
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <!-- Stop Loss -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Stop Loss (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    [(ngModel)]="stopLoss"
+                    step="0.01"
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <!-- Take Profit -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Take Profit (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    [(ngModel)]="takeProfit"
+                    step="0.01"
+                    min="0"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-6">
+                  <button
+                    (click)="placeOrder()"
+                    [disabled]="!orderQuantity() || orderQuantity() <= 0"
+                    [class.bg-blue-600]="orderQuantity() && orderQuantity() > 0"
+                    [class.hover:bg-blue-700]="
+                      orderQuantity() && orderQuantity() > 0
+                    "
+                    [class.bg-gray-400]="
+                      !orderQuantity() || orderQuantity() <= 0
+                    "
+                    [class.cursor-not-allowed]="
+                      !orderQuantity() || orderQuantity() <= 0
+                    "
+                    class="w-full py-3 px-4 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Place Order
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

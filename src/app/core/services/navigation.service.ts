@@ -26,13 +26,13 @@ export class NavigationService {
     {
       label: 'Trading Live',
       icon: 'traiding-live',
-      route: '/trading-live',
+      route: '/charts',
     },
-    {
-      label: 'Trading Groups',
-      icon: 'traiding-groups',
-      route: '/trading-groups',
-    },
+    // {
+    //   label: 'Trading Groups',
+    //   icon: 'traiding-groups',
+    //   route: '/trading-groups',
+    // },
     {
       label: 'Trading Server Positions',
       icon: 'trading-server-positions',
