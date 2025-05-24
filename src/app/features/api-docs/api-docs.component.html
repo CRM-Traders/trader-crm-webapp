@@ -1,23 +1,21 @@
-<!-- affiliate-docs.component.html with proper light/dark mode support -->
+<!-- src/app/features/api-docs/api-docs.component.html -->
 <div
   class="api-docs mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg overflow-y-auto transition-colors"
 >
   <h1 class="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
-    Affiliate API Documentation
+    Client Management API Documentation
   </h1>
 
   <!-- Endpoints navigation -->
   <div
     class="flex flex-wrap gap-2 mb-8 pb-4 border-b border-gray-200 dark:border-gray-700"
   >
-    <ng-container *ngFor="let endpoint of endpoints">
-      <a
-        [href]="'#' + endpoint.id"
-        class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded transition-colors"
-      >
-        {{ endpoint.title }}
-      </a>
-    </ng-container>
+    <button
+      *ngFor="let endpoint of endpoints"
+      class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded transition-colors cursor-pointer"
+    >
+      {{ endpoint.title }}
+    </button>
   </div>
 
   <!-- Each endpoint documentation -->
@@ -39,8 +37,11 @@
       <h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
         {{ section.title }}
       </h3>
+
+      <!-- Main content -->
       <div
-        class="mb-4 text-gray-700 dark:text-gray-300"
+        *ngIf="section.content"
+        class="mb-4 text-gray-700 dark:text-gray-300 leading-relaxed"
         [innerHTML]="section.content"
       ></div>
 
@@ -56,6 +57,7 @@
           <button
             class="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             (click)="copyToClipboard(section.curl.code)"
+            title="Copy to clipboard"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -69,7 +71,9 @@
               stroke-linejoin="round"
             >
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2 2v1"></path>
+              <path
+                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+              ></path>
             </svg>
           </button>
         </div>
@@ -81,7 +85,7 @@
       <!-- Headers if they exist -->
       <div *ngIf="section.headers && section.headers.length > 0" class="mb-6">
         <h4 class="text-lg font-medium mb-3 text-gray-900 dark:text-white">
-          Header parameters
+          Required Headers
         </h4>
         <div class="overflow-x-auto">
           <table
@@ -93,7 +97,7 @@
                   scope="col"
                   class="px-4 py-3 text-left text-sm font-medium text-gray-900 dark:text-white"
                 >
-                  Name
+                  Header Name
                 </th>
                 <th
                   scope="col"
@@ -113,26 +117,27 @@
               class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
             >
               <tr *ngFor="let header of section.headers">
-                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                <td
+                  class="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-300"
+                >
                   {{ header.name }}
                 </td>
                 <td class="px-4 py-3 text-sm">
                   <span
-                    *ngIf="header.required"
-                    class="px-2 py-1 text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 rounded"
+                    class="px-2 py-1 text-xs font-medium rounded"
+                    [ngClass]="{
+                      'bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200':
+                        header.required,
+                      'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200':
+                        !header.required
+                    }"
                   >
-                    REQUIRED
-                  </span>
-                  <span
-                    *ngIf="!header.required"
-                    class="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded"
-                  >
-                    OPTIONAL
+                    {{ header.required ? "REQUIRED" : "OPTIONAL" }}
                   </span>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                   <code
-                    class="bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-blue-600 dark:text-blue-400 font-mono"
+                    class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-blue-600 dark:text-blue-400 font-mono text-xs"
                     >{{ header.value }}</code
                   >
                 </td>
@@ -145,9 +150,12 @@
       <!-- Additional info if exists -->
       <div
         *ngIf="section.additionalInfo"
-        class="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-400 text-sm"
+        class="mt-4 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md"
       >
-        <p [innerHTML]="section.additionalInfo"></p>
+        <div
+          class="prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300"
+          [innerHTML]="section.additionalInfo"
+        ></div>
       </div>
     </div>
   </div>

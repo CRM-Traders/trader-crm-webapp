@@ -14,7 +14,7 @@ import {
 })
 export class ClientsService {
   private httpService = inject(HttpService);
-  private readonly apiPath = 'clients';
+  private readonly apiPath = 'identity/api/clients';
 
   getClientById(id: string): Observable<Client> {
     return this.httpService.get<Client>(`${this.apiPath}/${id}`);

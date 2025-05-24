@@ -13,7 +13,6 @@ export class NotificationService {
   unreadCount$ = this.unreadCount.asObservable();
 
   constructor() {
-    // Initialize with some mock notifications
     this.addNotification({
       title: 'New Trade',
       message: 'Trade #1294 has been executed successfully.',

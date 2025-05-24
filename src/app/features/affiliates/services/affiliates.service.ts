@@ -14,7 +14,7 @@ import {
 })
 export class AffiliatesService {
   private httpService = inject(HttpService);
-  private readonly apiPath = 'affiliates';
+  private readonly apiPath = 'identity/api/affiliates';
 
   getAffiliateById(id: string): Observable<Affiliate> {
     return this.httpService.get<Affiliate>(`${this.apiPath}/${id}`);
