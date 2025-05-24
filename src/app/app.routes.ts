@@ -104,6 +104,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
+      {
+        path: 'charts',
+        loadComponent: () =>
+          import('./features/charts/charts.component').then(
+            (m) => m.ChartsComponent
+          ),
+        canActivate: [authGuard],
+      },
     ],
   },
 
