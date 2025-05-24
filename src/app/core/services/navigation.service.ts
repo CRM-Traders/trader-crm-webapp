@@ -56,6 +56,11 @@ export class NavigationService {
       route: '/affiliates',
     },
     {
+      label: 'Leads',
+      icon: 'leads',
+      route: '/leads',
+    },
+    {
       label: 'Workers',
       icon: 'workers',
       route: '/workers',

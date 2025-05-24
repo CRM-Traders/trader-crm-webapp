@@ -417,7 +417,6 @@ export class AffiliatesComponent implements OnInit {
   }
 
   refreshGrid(): void {
-    // Emit an event or call a method to refresh the grid
     const gridComponent = document.querySelector(
       `app-grid[gridId="affiliates-grid"]`
     );

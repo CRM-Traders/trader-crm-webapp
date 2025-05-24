@@ -59,27 +59,29 @@ export class AuthService implements OnDestroy {
       rememberMe,
     };
 
-    return this._http.post<AuthResponse>('auth/login', credentials).pipe(
-      tap((response) => {
-        if (!response.requiresTwoFactor) {
-          this.handleAuthResponse(response);
-          this.initTokenRefresh();
-        }
-      }),
-      catchError((error) =>
-        throwError(
-          () =>
-            new Error('Authentication failed. Please check your credentials.')
+    return this._http
+      .post<AuthResponse>('identity/api/auth/login', credentials)
+      .pipe(
+        tap((response) => {
+          if (!response.requiresTwoFactor) {
+            this.handleAuthResponse(response);
+            this.initTokenRefresh();
+          }
+        }),
+        catchError((error) =>
+          throwError(
+            () =>
+              new Error('Authentication failed. Please check your credentials.')
+          )
         )
-      )
-    );
+      );
   }
 
   logout(): void {
     this.stopTokenCheck();
 
     if (this.getRefreshToken()) {
-      this._http.post<void>('auth/logout', {}).subscribe({
+      this._http.post<void>('identity/api/auth/logout', {}).subscribe({
         error: () => {
           /* Ignore logout errors */
         },
@@ -125,21 +127,23 @@ export class AuthService implements OnDestroy {
 
     const body = { accessToken: accessToken, refreshToken: refreshToken };
 
-    return this._http.post<AuthResponse>('auth/refresh-token', body).pipe(
-      tap((response) => {
-        this.handleAuthResponse(response);
-        this.refreshTokenInProgress = false;
-        this.refreshTokenSubject.next(response.accessToken);
-      }),
-      catchError((error) => {
-        this.refreshTokenInProgress = false;
-        this.refreshTokenSubject.next(null);
-        this.clearAuthState();
-        return throwError(
-          () => new Error('Session expired. Please log in again.')
-        );
-      })
-    );
+    return this._http
+      .post<AuthResponse>('identity/api/auth/refresh-token', body)
+      .pipe(
+        tap((response) => {
+          this.handleAuthResponse(response);
+          this.refreshTokenInProgress = false;
+          this.refreshTokenSubject.next(response.accessToken);
+        }),
+        catchError((error) => {
+          this.refreshTokenInProgress = false;
+          this.refreshTokenSubject.next(null);
+          this.clearAuthState();
+          return throwError(
+            () => new Error('Session expired. Please log in again.')
+          );
+        })
+      );
   }
 
   hasRole(requiredRole: string): boolean {

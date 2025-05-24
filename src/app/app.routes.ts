@@ -96,6 +96,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
+      {
+        path: 'leads',
+        loadComponent: () =>
+          import('./features/leads/leads.component').then(
+            (m) => m.LeadsComponent
+          ),
+        canActivate: [authGuard],
+      },
     ],
   },
 

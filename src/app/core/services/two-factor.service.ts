@@ -11,15 +11,18 @@ export class TwoFactorService {
   private http = inject(HttpService);
 
   setup(): Observable<TwoFactorSetupResponse> {
-    return this.http.post<TwoFactorSetupResponse>('auth/2fa/setup', {});
+    return this.http.post<TwoFactorSetupResponse>(
+      'identity/api/auth/2fa/setup',
+      {}
+    );
   }
 
   verify(code: string): Observable<any> {
-    return this.http.post<any>('auth/2fa/verify', { code });
+    return this.http.post<any>('identity/api/auth/2fa/verify', { code });
   }
 
   disable(code: string): Observable<any> {
-    return this.http.post<any>('auth/2fa/disable', { code });
+    return this.http.post<any>('identity/api/auth/2fa/disable', { code });
   }
 
   generateOtpauthUrl(

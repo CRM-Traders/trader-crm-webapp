@@ -39,15 +39,11 @@ export class SocketService implements OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor() {
-    this.authService.isAuthenticated$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((isAuthenticated) => {
-        if (isAuthenticated) {
-          this.reconnectAll();
-        } else {
-          this.disconnectAll();
-        }
-      });
+    if (this.authService.isAuthenticated()) {
+      this.reconnectAll();
+    } else {
+      this.disconnectAll();
+    }
   }
 
   public connect(key: string, config: SocketConfig): Observable<boolean> {

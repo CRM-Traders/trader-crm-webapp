@@ -9,6 +9,6 @@ export class SettingsService {
   private _http = inject(HttpService);
 
   getUserSettings() {
-    return this._http.get<Settings>('users/settings');
+    return this._http.get<Settings>('identity/api/users/settings');
   }
 }

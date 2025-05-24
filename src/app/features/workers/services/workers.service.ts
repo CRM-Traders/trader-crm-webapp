@@ -11,7 +11,7 @@ export class WorkersService {
   private httpService = inject(HttpService);
 
   registerWorker(worker: WorkerRegistrationDto): Observable<any> {
-    return this.httpService.post('users/register', worker);
+    return this.httpService.post('identity/api/users/register', worker);
   }
 
   downloadImportTemplate(): Observable<Blob> {
@@ -21,7 +21,7 @@ export class WorkersService {
     });
 
     return this.httpService['_http'].get<Blob>(
-      `${this.httpService['_apiUrl']}/users/import-template`,
+      `${this.httpService['_apiUrl']}/identity/api/users/import-template`,
       {
         responseType: 'blob' as 'json',
         headers,
@@ -33,6 +33,9 @@ export class WorkersService {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.httpService.post<ImportResult>('users/import', formData);
+    return this.httpService.post<ImportResult>(
+      'identity/api/users/import',
+      formData
+    );
   }
 }
