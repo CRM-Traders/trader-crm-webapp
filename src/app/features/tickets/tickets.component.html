@@ -1,7 +1,4 @@
-<!-- src/app/features/tickets/components/ticket-board/ticket-board.component.html -->
-
 <div class="container mx-auto py-6 px-4">
-  <!-- Header -->
   <div class="mb-6">
     <div
       class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
@@ -15,41 +12,130 @@
         </p>
       </div>
 
-      <button
-        (click)="openCreateTicket()"
-        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      <div class="flex items-center gap-2">
+        <button
+          (click)="showStatistics = !showStatistics"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Create Ticket
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 inline mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            />
+          </svg>
+          Statistics
+        </button>
+
+        <button
+          (click)="exportTickets()"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 inline mr-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          Export
+        </button>
+
+        <button
+          (click)="openCreateTicket()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Create Ticket
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Filters and View Toggle -->
+  <div
+    *ngIf="showStatistics && statistics"
+    class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+  >
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      Ticket Statistics
+    </h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div class="text-center">
+        <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          {{ statistics.totalTickets }}
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Total Tickets</p>
+      </div>
+      <div class="text-center">
+        <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+          {{ statistics.openTickets }}
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Open</p>
+      </div>
+      <div class="text-center">
+        <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+          {{ statistics.resolvedTickets }}
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Resolved</p>
+      </div>
+      <div class="text-center">
+        <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+          {{ statistics.averageResolutionTime }}h
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Avg Resolution</p>
+      </div>
+      <div class="text-center">
+        <p class="text-2xl font-bold text-red-600 dark:text-red-400">
+          {{ statistics.ticketsByPriority["4"] || 0 }}
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Critical</p>
+      </div>
+      <div class="text-center">
+        <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+          {{ statistics.ticketsByPriority["3"] || 0 }}
+        </p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">High Priority</p>
+      </div>
+    </div>
+  </div>
+
   <div
     class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4"
   >
     <div class="flex flex-col lg:flex-row gap-4">
-      <!-- Search -->
       <div class="flex-1">
         <div class="relative">
           <input
             type="text"
             [(ngModel)]="searchTerm"
-            (keyup.enter)="onSearch()"
+            (ngModelChange)="onSearchChange()"
             placeholder="Search tickets..."
             class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
           />
@@ -70,28 +156,40 @@
         </div>
       </div>
 
-      <!-- Priority Filter -->
-      <select
-        [(ngModel)]="selectedPriority"
-        (change)="loadTickets()"
-        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+      <button
+        (click)="showAdvancedFilters = !showAdvancedFilters"
+        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200 flex items-center gap-2"
       >
-        <option [value]="null">All Priorities</option>
-        <option [value]="1">Low</option>
-        <option [value]="2">Normal</option>
-        <option [value]="3">High</option>
-        <option [value]="4">Critical</option>
-      </select>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+          />
+        </svg>
+        Filters
+        <span
+          *ngIf="getActiveFiltersCount() > 0"
+          class="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full"
+          >{{ getActiveFiltersCount() }}</span
+        >
+      </button>
 
-      <!-- Clear Filters -->
       <button
         (click)="clearFilters()"
-        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200"
+        [disabled]="getActiveFiltersCount() === 0"
+        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200 disabled:opacity-50"
       >
         Clear Filters
       </button>
 
-      <!-- View Toggle -->
       <div class="flex gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
         <button
           (click)="viewMode = 'board'"
@@ -111,22 +209,202 @@
         >
           List
         </button>
+        <button
+          (click)="viewMode = 'grid'"
+          [class.bg-white]="viewMode === 'grid'"
+          [class.dark:bg-gray-600]="viewMode === 'grid'"
+          [class.shadow-sm]="viewMode === 'grid'"
+          class="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
+        >
+          Grid
+        </button>
+      </div>
+    </div>
+
+    <div
+      *ngIf="showAdvancedFilters"
+      class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4"
+    >
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Status</label
+          >
+          <div class="flex flex-wrap gap-2">
+            <button
+              *ngFor="let status of statusOptions"
+              (click)="toggleStatus(status.value)"
+              [class.bg-blue-100]="selectedStatuses.includes(status.value)"
+              [class.text-blue-800]="selectedStatuses.includes(status.value)"
+              [class.dark:bg-blue-900]="selectedStatuses.includes(status.value)"
+              [class.dark:text-blue-200]="
+                selectedStatuses.includes(status.value)
+              "
+              class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              {{ status.label }}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Priority</label
+          >
+          <div class="flex flex-wrap gap-2">
+            <button
+              *ngFor="let priority of priorityOptions"
+              (click)="togglePriority(priority.value)"
+              [class.bg-blue-100]="selectedPriorities.includes(priority.value)"
+              [class.text-blue-800]="
+                selectedPriorities.includes(priority.value)
+              "
+              [class.dark:bg-blue-900]="
+                selectedPriorities.includes(priority.value)
+              "
+              [class.dark:text-blue-200]="
+                selectedPriorities.includes(priority.value)
+              "
+              class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              {{ priority.label }}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Type</label
+          >
+          <div class="flex flex-wrap gap-2">
+            <button
+              *ngFor="let type of typeOptions"
+              (click)="toggleType(type.value)"
+              [class.bg-blue-100]="selectedTypes.includes(type.value)"
+              [class.text-blue-800]="selectedTypes.includes(type.value)"
+              [class.dark:bg-blue-900]="selectedTypes.includes(type.value)"
+              [class.dark:text-blue-200]="selectedTypes.includes(type.value)"
+              class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              {{ type.label }}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Category</label
+          >
+          <div class="flex flex-wrap gap-2">
+            <button
+              *ngFor="let category of categories"
+              (click)="toggleCategory(category.id)"
+              [class.bg-blue-100]="selectedCategories.includes(category.id)"
+              [class.text-blue-800]="selectedCategories.includes(category.id)"
+              [class.dark:bg-blue-900]="
+                selectedCategories.includes(category.id)
+              "
+              [class.dark:text-blue-200]="
+                selectedCategories.includes(category.id)
+              "
+              class="px-3 py-1 text-sm border rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              [style.border-color]="category.color"
+              [style.color]="
+                selectedCategories.includes(category.id) ? '' : category.color
+              "
+            >
+              {{ category.name }}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Created Date</label
+          >
+          <div class="flex gap-2">
+            <input
+              type="date"
+              [(ngModel)]="createdFrom"
+              (change)="loadTickets()"
+              class="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+            <span class="text-gray-500">to</span>
+            <input
+              type="date"
+              [(ngModel)]="createdTo"
+              (change)="loadTickets()"
+              class="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Due Date</label
+          >
+          <div class="flex gap-2">
+            <input
+              type="date"
+              [(ngModel)]="dueFrom"
+              (change)="loadTickets()"
+              class="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+            <span class="text-gray-500">to</span>
+            <input
+              type="date"
+              [(ngModel)]="dueTo"
+              (change)="loadTickets()"
+              class="flex-1 px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >Other Filters</label
+          >
+          <div class="flex gap-4">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                [(ngModel)]="hasAttachments"
+                (change)="loadTickets()"
+                class="mr-2 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+              />
+              <span class="text-sm">Has Attachments</span>
+            </label>
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                [(ngModel)]="hasComments"
+                (change)="loadTickets()"
+                class="mr-2 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+              />
+              <span class="text-sm">Has Comments</span>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="loading" class="flex justify-center items-center h-64">
     <div
       class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
     ></div>
   </div>
 
-  <!-- Kanban Board View -->
   <div *ngIf="!loading && viewMode === 'board'" class="overflow-x-auto pb-4">
     <div class="flex gap-4 min-w-max">
       <div *ngFor="let column of columns" class="w-80 flex-shrink-0">
-        <!-- Column Header -->
         <div
           class="mb-3 p-3 rounded-t-lg border-2 {{ column.color }}"
           [class.dark:bg-opacity-20]="true"
@@ -140,13 +418,11 @@
             </div>
             <span
               class="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full text-xs font-medium"
+              >{{ column.tickets.length }}</span
             >
-              {{ column.tickets.length }}
-            </span>
           </div>
         </div>
 
-        <!-- Tickets Container -->
         <div
           cdkDropList
           [cdkDropListData]="column.tickets"
@@ -155,7 +431,6 @@
             column.color.split(' ')[1]
           }}"
         >
-          <!-- Ticket Card -->
           <div
             *ngFor="let ticket of column.tickets"
             cdkDrag
@@ -163,7 +438,6 @@
             class="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow duration-200"
             [cdkDragData]="ticket"
           >
-            <!-- Drag Handle -->
             <div class="flex items-start gap-2 mb-2">
               <div
                 cdkDragHandle
@@ -194,29 +468,24 @@
               </div>
             </div>
 
-            <!-- Ticket Meta -->
             <div class="space-y-2">
-              <!-- Type and Priority -->
               <div class="flex items-center gap-2">
                 <span class="text-sm">{{ getTypeIcon(ticket.type) }}</span>
                 <span
                   class="px-2 py-0.5 text-xs font-medium rounded-full {{
                     getPriorityColor(ticket.priority)
                   }}"
+                  >{{ getPriorityLabel(ticket.priority) }}</span
                 >
-                  {{ getPriorityLabel(ticket.priority) }}
-                </span>
                 <span
                   *ngIf="ticket.categoryName"
                   class="px-2 py-0.5 text-xs font-medium rounded-full"
                   [style.background-color]="ticket.categoryColor + '20'"
                   [style.color]="ticket.categoryColor"
+                  >{{ ticket.categoryName }}</span
                 >
-                  {{ ticket.categoryName }}
-                </span>
               </div>
 
-              <!-- Due Date -->
               <div
                 *ngIf="ticket.dueDate"
                 class="flex items-center gap-1 text-xs {{
@@ -240,7 +509,6 @@
                 {{ formatDueDate(ticket.dueDate) }}
               </div>
 
-              <!-- Footer -->
               <div
                 class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"
               >
@@ -285,7 +553,6 @@
             </div>
           </div>
 
-          <!-- Empty State -->
           <div
             *ngIf="column.tickets.length === 0"
             class="flex items-center justify-center h-32 text-gray-400 dark:text-gray-500 text-sm"
@@ -297,7 +564,6 @@
     </div>
   </div>
 
-  <!-- List View (Alternative) -->
   <div
     *ngIf="!loading && viewMode === 'list'"
     class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
@@ -306,9 +572,26 @@
       <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
           <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            (click)="changeSorting('title')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
           >
             Title
+            <svg
+              *ngIf="sortField === 'title'"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 inline ml-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              [class.rotate-180]="sortDirection === 'desc'"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
+            </svg>
           </th>
           <th
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
@@ -316,9 +599,26 @@
             Type
           </th>
           <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            (click)="changeSorting('priority')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
           >
             Priority
+            <svg
+              *ngIf="sortField === 'priority'"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 inline ml-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              [class.rotate-180]="sortDirection === 'desc'"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
+            </svg>
           </th>
           <th
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
@@ -326,14 +626,48 @@
             Status
           </th>
           <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            (click)="changeSorting('dueDate')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
           >
             Due Date
+            <svg
+              *ngIf="sortField === 'dueDate'"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 inline ml-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              [class.rotate-180]="sortDirection === 'desc'"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
+            </svg>
           </th>
           <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            (click)="changeSorting('createdAt')"
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
           >
-            Actions
+            Created
+            <svg
+              *ngIf="sortField === 'createdAt'"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 inline ml-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              [class.rotate-180]="sortDirection === 'desc'"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 15l7-7 7 7"
+              />
+            </svg>
           </th>
         </tr>
       </thead>
@@ -364,16 +698,16 @@
               class="px-2 py-1 text-xs font-medium rounded-full {{
                 getPriorityColor(ticket.priority)
               }}"
+              >{{ getPriorityLabel(ticket.priority) }}</span
             >
-              {{ getPriorityLabel(ticket.priority) }}
-            </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
             <span
-              class="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-200"
+              class="px-2 py-1 text-xs font-medium rounded-full {{
+                getStatusColor(ticket.status)
+              }}"
+              >{{ ticket.status }}</span
             >
-              {{ ticket.status }}
-            </span>
           </td>
           <td
             class="px-6 py-4 whitespace-nowrap text-sm {{
@@ -382,27 +716,175 @@
           >
             {{ formatDueDate(ticket.dueDate) }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm">
-            <button
-              class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              View
-            </button>
+          <td
+            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+          >
+            {{ ticket.createdAt | date : "short" }}
           </td>
         </tr>
       </tbody>
     </table>
+
+    <div
+      class="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex items-center justify-between"
+    >
+      <div class="text-sm text-gray-700 dark:text-gray-300">
+        Showing {{ pageIndex * pageSize + 1 }} to {{ calculatePaging() }} of
+        {{ totalCount }} results
+      </div>
+      <div class="flex gap-2">
+        <button
+          (click)="previousPage()"
+          [disabled]="pageIndex === 0"
+          class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span class="px-3 py-1 text-sm"
+          >Page {{ pageIndex + 1 }} of {{ totalPages }}</span
+        >
+        <button
+          (click)="nextPage()"
+          [disabled]="pageIndex >= totalPages - 1"
+          class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!loading && viewMode === 'grid'"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+  >
+    <div
+      *ngFor="let ticket of allTickets"
+      (click)="openTicketDetail(ticket)"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 cursor-pointer hover:shadow-md transition-shadow duration-200"
+    >
+      <div class="flex items-start justify-between mb-2">
+        <span class="text-2xl">{{ getTypeIcon(ticket.type) }}</span>
+        <span
+          class="px-2 py-1 text-xs font-medium rounded-full {{
+            getStatusColor(ticket.status)
+          }}"
+          >{{ ticket.status }}</span
+        >
+      </div>
+
+      <h3 class="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2">
+        {{ ticket.title }}
+      </h3>
+
+      <div class="space-y-2 text-sm">
+        <div class="flex items-center justify-between">
+          <span
+            class="px-2 py-0.5 text-xs font-medium rounded-full {{
+              getPriorityColor(ticket.priority)
+            }}"
+            >{{ getPriorityLabel(ticket.priority) }}</span
+          >
+          <span class="text-gray-500 dark:text-gray-400"
+            >ID-{{ ticket.id.slice(0, 8) }}</span
+          >
+        </div>
+
+        <div
+          *ngIf="ticket.dueDate"
+          class="flex items-center gap-1 text-xs {{
+            getDueDateColor(ticket.dueDate)
+          }}"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-3 w-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          {{ formatDueDate(ticket.dueDate) }}
+        </div>
+
+        <div
+          class="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400"
+        >
+          <span class="flex items-center gap-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+              />
+            </svg>
+            {{ ticket.commentCount }}
+          </span>
+          <span class="flex items-center gap-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+              />
+            </svg>
+            {{ ticket.attachmentCount }}
+          </span>
+          <span class="flex items-center gap-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            {{ ticket.viewCount }}
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Create Ticket Modal -->
 <app-create-ticket-modal
   *ngIf="showCreateModal"
   (close)="showCreateModal = false"
   (ticketCreated)="onTicketCreated()"
 ></app-create-ticket-modal>
 
-<!-- Ticket Detail Modal -->
 <app-ticket-detail-modal
   *ngIf="showDetailModal && selectedTicket"
   [ticketId]="selectedTicket.id"
