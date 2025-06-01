@@ -1,0 +1,480 @@
+<!-- src/app/shared/components/communications/communications.component.html -->
+
+<div class="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+  <!-- Header -->
+  <div
+    class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 px-6 py-4"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+          Communications
+        </h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Manage customer support conversations
+          <span
+            *ngIf="totalUnreadCount > 0"
+            class="ml-2 text-blue-600 font-semibold"
+          >
+            ({{ totalUnreadCount }} unread)
+          </span>
+        </p>
+      </div>
+
+      <!-- Operator Status Selector -->
+      <div class="flex items-center space-x-4">
+        <!-- Connection Status -->
+        <div class="flex items-center space-x-2">
+          <div
+            class="w-3 h-3 rounded-full"
+            [ngClass]="{
+              'bg-green-500': connectionState === 'connected',
+              'bg-yellow-500 animate-pulse': connectionState === 'connecting',
+              'bg-red-500': connectionState === 'disconnected'
+            }"
+          ></div>
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {{
+              connectionState === "connected"
+                ? "Connected"
+                : connectionState === "connecting"
+                ? "Connecting..."
+                : "Disconnected"
+            }}
+          </span>
+        </div>
+
+        <!-- Status Dropdown -->
+        <div class="relative">
+          <select
+            [(ngModel)]="operatorStatus"
+            (ngModelChange)="setOperatorStatus($event)"
+            class="appearance-none bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option *ngFor="let status of statusOptions" [value]="status.value">
+              {{ status.label }}
+            </option>
+          </select>
+          <div
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none"
+          >
+            <svg
+              class="w-4 h-4 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- Sidebar - Chat List -->
+    <div
+      class="w-80 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col"
+    >
+      <!-- Search and Tabs -->
+      <div class="p-4 border-b dark:border-gray-700">
+        <!-- Search -->
+        <div class="relative mb-4">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput($event)"
+            placeholder="Search conversations..."
+            class="w-full px-4 py-2 pl-10 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <svg
+            class="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex space-x-1">
+          <button
+            *ngFor="let tab of ['active', 'pending', 'closed']"
+            (click)="selectedTab = tab"
+            [ngClass]="{
+              'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300':
+                selectedTab === tab,
+              'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700':
+                selectedTab !== tab
+            }"
+            class="flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors capitalize"
+          >
+            {{ tab }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat List -->
+      <div class="flex-1 overflow-y-auto">
+        <div
+          *ngFor="let chat of getFilteredChats(); trackBy: trackByChatId"
+          (click)="selectChat(chat)"
+          [ngClass]="{
+            'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600':
+              selectedChat?.id === chat.id,
+            'hover:bg-gray-50 dark:hover:bg-gray-700':
+              selectedChat?.id !== chat.id
+          }"
+          class="px-4 py-3 cursor-pointer transition-all border-b dark:border-gray-700"
+        >
+          <div class="flex items-start justify-between mb-1">
+            <h3
+              class="font-medium text-gray-900 dark:text-white truncate flex-1 mr-2"
+            >
+              {{ chat.title }}
+            </h3>
+            <span
+              class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap"
+            >
+              {{ formatMessageTime(chat.lastActivityAt || chat.createdAt) }}
+            </span>
+          </div>
+
+          <p class="text-sm text-gray-600 dark:text-gray-400 truncate mb-2">
+            {{ chat.lastMessage || "No messages yet" }}
+          </p>
+
+          <div class="flex items-center justify-between">
+            <span
+              [ngClass]="getChatPriorityColor(chat.priority || 2)"
+              class="text-xs px-2 py-1 rounded-full font-medium"
+            >
+              {{ getChatPriorityLabel(chat.priority || 2) }}
+            </span>
+
+            <div class="flex items-center space-x-2">
+              <span
+                *ngIf="chat.unreadCount > 0"
+                class="bg-blue-600 text-white text-xs rounded-full px-2 py-0.5 font-semibold"
+              >
+                {{ chat.unreadCount }}
+              </span>
+
+              <span
+                [ngClass]="{
+                  'bg-green-100 text-green-800': chat.status === 'Active',
+                  'bg-yellow-100 text-yellow-800': chat.status === 'Pending',
+                  'bg-gray-100 text-gray-800': chat.status === 'Closed'
+                }"
+                class="text-xs px-2 py-1 rounded-full"
+              >
+                {{ chat.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          *ngIf="getFilteredChats().length === 0"
+          class="p-8 text-center text-gray-500 dark:text-gray-400"
+        >
+          <svg
+            class="w-12 h-12 mx-auto mb-4 text-gray-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            ></path>
+          </svg>
+          <p>No conversations found</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="flex-1 flex flex-col bg-white dark:bg-gray-800">
+      <!-- Loading State -->
+      <div *ngIf="loading" class="flex-1 flex items-center justify-center">
+        <div
+          class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"
+        ></div>
+      </div>
+
+      <!-- No Chat Selected -->
+      <div
+        *ngIf="!loading && !selectedChat"
+        class="flex-1 flex items-center justify-center"
+      >
+        <div class="text-center">
+          <svg
+            class="w-16 h-16 mx-auto mb-4 text-gray-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            ></path>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            Select a conversation
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400">
+            Choose a conversation from the left to start messaging
+          </p>
+        </div>
+      </div>
+
+      <!-- Selected Chat -->
+      <div *ngIf="!loading && selectedChat" class="flex-1 flex flex-col">
+        <!-- Chat Header -->
+        <div class="px-6 py-4 border-b dark:border-gray-700">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                {{ selectedChat.title }}
+              </h2>
+              <p class="text-sm text-gray-600 dark:text-gray-400">
+                Customer ID: {{ selectedChat.initiatorId }}
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center space-x-2">
+              <button
+                (click)="openTransferModal(selectedChat.id)"
+                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+              >
+                Transfer
+              </button>
+              <button
+                (click)="openCloseModal(selectedChat.id)"
+                class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Close Chat
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div #messagesContainer class="flex-1 overflow-y-auto px-6 py-4">
+          <div
+            *ngFor="let message of currentMessages; trackBy: trackByMessageId"
+            class="mb-4 flex"
+            [ngClass]="
+              isMessageFromOperator(message) ? 'justify-end' : 'justify-start'
+            "
+          >
+            <div
+              class="max-w-[70%] rounded-lg px-4 py-3"
+              [ngClass]="
+                isMessageFromOperator(message)
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+              "
+            >
+              <p class="text-sm font-medium mb-1">
+                {{ getSenderName(message) }}
+              </p>
+              <p class="whitespace-pre-wrap">{{ message.content }}</p>
+              <p
+                class="text-xs mt-2"
+                [ngClass]="
+                  isMessageFromOperator(message)
+                    ? 'text-blue-100'
+                    : 'text-gray-500 dark:text-gray-400'
+                "
+              >
+                {{ formatMessageTime(message.createdAt) }}
+                <span *ngIf="message.isEdited" class="ml-1">(edited)</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Typing Indicator -->
+          <div
+            *ngIf="typingUsers.length > 0"
+            class="flex items-center space-x-2 text-gray-500 dark:text-gray-400"
+          >
+            <div class="flex space-x-1">
+              <div
+                class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                style="animation-delay: 0s"
+              ></div>
+              <div
+                class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                style="animation-delay: 0.2s"
+              ></div>
+              <div
+                class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                style="animation-delay: 0.4s"
+              ></div>
+            </div>
+            <span class="text-sm">Customer is typing...</span>
+          </div>
+        </div>
+
+        <!-- Message Input -->
+        <div class="px-6 py-4 border-t dark:border-gray-700">
+          <form (ngSubmit)="sendMessage()" class="flex items-center space-x-4">
+            <input
+              #messageInput
+              type="text"
+              [(ngModel)]="messageText"
+              (input)="onMessageInput()"
+              name="message"
+              placeholder="Type your message..."
+              class="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              [disabled]="!messageText.trim()"
+              class="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed font-medium"
+            >
+              Send
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Transfer Modal -->
+<div
+  *ngIf="transferModal.isOpen"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  (click)="closeTransferModal()"
+>
+  <div
+    class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4"
+    (click)="$event.stopPropagation()"
+  >
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      Transfer Chat
+    </h3>
+
+    <div class="mb-4">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
+        Select Operator
+      </label>
+      <select
+        [(ngModel)]="transferModal.selectedOperatorId"
+        class="w-full px-3 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+      >
+        <option value="">Choose an operator...</option>
+        <option
+          *ngFor="let operator of availableOperators"
+          [value]="operator.id"
+        >
+          {{ operator.name }} ({{ operator.status }})
+        </option>
+      </select>
+    </div>
+
+    <div class="mb-6">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
+        Reason for Transfer
+      </label>
+      <textarea
+        [(ngModel)]="transferModal.reason"
+        rows="3"
+        placeholder="Enter reason for transfer..."
+        class="w-full px-3 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+      ></textarea>
+    </div>
+
+    <div class="flex justify-end space-x-3">
+      <button
+        (click)="closeTransferModal()"
+        class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="transferChat()"
+        [disabled]="
+          !transferModal.selectedOperatorId || !transferModal.reason.trim()
+        "
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+      >
+        Transfer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Close Chat Modal -->
+<div
+  *ngIf="closeModal.isOpen"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  (click)="closeCloseModal()"
+>
+  <div
+    class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4"
+    (click)="$event.stopPropagation()"
+  >
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+      Close Chat
+    </h3>
+
+    <p class="text-gray-600 dark:text-gray-400 mb-4">
+      Are you sure you want to close this chat? This action cannot be undone.
+    </p>
+
+    <div class="mb-6">
+      <label
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
+        Reason for Closing (Optional)
+      </label>
+      <textarea
+        [(ngModel)]="closeModal.reason"
+        rows="3"
+        placeholder="Enter reason for closing..."
+        class="w-full px-3 py-2 border dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+      ></textarea>
+    </div>
+
+    <div class="flex justify-end space-x-3">
+      <button
+        (click)="closeCloseModal()"
+        class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+      >
+        Cancel
+      </button>
+      <button
+        (click)="closeChat()"
+        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+      >
+        Close Chat
+      </button>
+    </div>
+  </div>
+</div>
