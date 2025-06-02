@@ -23,26 +23,26 @@ export class NavigationService {
     },
 
     // Core Trading Operations
-    {
-      label: 'Trading Live',
-      icon: 'traiding-live',
-      route: '/charts',
-    },
+    // {
+    //   label: 'Trading Live',
+    //   icon: 'traiding-live',
+    //   route: '/charts',
+    // },
     // {
     //   label: 'Trading Groups',
     //   icon: 'traiding-groups',
     //   route: '/trading-groups',
     // },
-    {
-      label: 'Trading Server Positions',
-      icon: 'trading-server-positions',
-      route: '/trading-server-positions',
-    },
-    {
-      label: 'Assets',
-      icon: 'assets',
-      route: '/assets',
-    },
+    // {
+    //   label: 'Trading Server Positions',
+    //   icon: 'trading-server-positions',
+    //   route: '/trading-server-positions',
+    // },
+    // {
+    //   label: 'Assets',
+    //   icon: 'assets',
+    //   route: '/assets',
+    // },
 
     // User Management
     {
@@ -67,17 +67,22 @@ export class NavigationService {
     },
 
     // Analytics & Reporting
-    {
-      label: 'Analytics',
-      icon: 'analytics',
-      route: '/analytics',
-    },
+    // {
+    //   label: 'Analytics',
+    //   icon: 'analytics',
+    //   route: '/analytics',
+    // },
 
     // Communication & Support
     {
-      label: 'Communications',
-      icon: 'communications',
+      label: 'Support',
+      icon: 'support',
       route: '/communications',
+    },
+    {
+      label: 'Chat',
+      icon: 'chat',
+      route: '/employee-chat',
     },
     {
       label: 'Tickets',
@@ -99,6 +104,11 @@ export class NavigationService {
       label: 'API Docs',
       icon: 'api',
       route: '/api-docs',
+    },
+    {
+      label: 'KYC',
+      icon: 'kyc',
+      route: '/kyc-verification',
     },
   ];
 

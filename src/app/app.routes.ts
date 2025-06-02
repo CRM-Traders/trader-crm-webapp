@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { publicGuard } from './core/guards/public.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { EmployeeChatComponent } from './shared/components/employee-chat/employee-chat.component';
 
 export const routes: Routes = [
   // Publics
@@ -118,6 +119,30 @@ export const routes: Routes = [
           import('./features/communications/communications.component').then(
             (m) => m.CommunicationsComponent
           ),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'employee-chat',
+        loadComponent: () =>
+          import(
+            './shared/components/employee-chat/employee-chat.component'
+          ).then((m) => m.EmployeeChatComponent),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'documents',
+        loadComponent: () =>
+          import('./features/documents/documents.component').then(
+            (m) => m.DocumentsComponent
+          ),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'kyc-verification',
+        loadComponent: () =>
+          import(
+            './features/client-portal/kyc-verification/kyc-verification.component'
+          ).then((m) => m.KycVerificationComponent),
         canActivate: [authGuard],
       },
     ],
