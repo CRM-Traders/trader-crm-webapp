@@ -11,6 +11,7 @@ import { NotificationSettingsComponent } from './components/notification-setting
 import { LocalizationSettingsComponent } from './components/localization-settings/localization-settings.component';
 import { SettingsService } from './services/settings.service';
 import { Settings } from './models/settings.model';
+import { SecretsComponent } from './components/secrets/secrets.component';
 
 @Component({
   selector: 'app-settings',
@@ -24,6 +25,7 @@ import { Settings } from './models/settings.model';
     SecuritySettingsComponent,
     NotificationSettingsComponent,
     LocalizationSettingsComponent,
+    SecretsComponent,
   ],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],

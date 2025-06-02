@@ -112,6 +112,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
+      {
+        path: 'communications',
+        loadComponent: () =>
+          import('./features/communications/communications.component').then(
+            (m) => m.CommunicationsComponent
+          ),
+        canActivate: [authGuard],
+      },
     ],
   },
 

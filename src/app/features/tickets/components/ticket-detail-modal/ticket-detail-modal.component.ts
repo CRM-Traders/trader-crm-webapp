@@ -1,5 +1,3 @@
-// src/app/features/tickets/components/ticket-detail-modal/ticket-detail-modal.component.ts
-
 import {
   Component,
   EventEmitter,
@@ -23,12 +21,16 @@ import {
   TicketStatus,
   UpdateTicketRequest,
   ChangeTicketStatusRequest,
-  AssignTicketRequest,
+  AddCommentRequest,
+  AddTagToTicketRequest,
+  RemoveTagFromTicketRequest,
   getPriorityLabel,
   getPriorityColor,
   getTypeLabel,
   getTypeIcon,
   getStatusLabel,
+  TicketComment,
+  Tag,
 } from '../../models/ticket.model';
 
 @Component({
@@ -36,7 +38,54 @@ import {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './ticket-detail-modal.component.html',
-  styles: [],
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+
+      :host ::ng-deep .overflow-y-auto {
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db #f3f4f6;
+      }
+
+      :host ::ng-deep .overflow-y-auto::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      :host ::ng-deep .overflow-y-auto::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 4px;
+      }
+
+      :host ::ng-deep .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 4px;
+      }
+
+      :host ::ng-deep .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+
+      :host-context(.dark) ::ng-deep .overflow-y-auto {
+        scrollbar-color: #4b5563 #374151;
+      }
+
+      :host-context(.dark) ::ng-deep .overflow-y-auto::-webkit-scrollbar-track {
+        background: #374151;
+      }
+
+      :host-context(.dark) ::ng-deep .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: #4b5563;
+      }
+
+      :host-context(.dark)
+        ::ng-deep
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+    `,
+  ],
 })
 export class TicketDetailModalComponent implements OnInit {
   @Input() ticketId!: string;
@@ -54,8 +103,15 @@ export class TicketDetailModalComponent implements OnInit {
   selectedStatus: number = 1;
   newComment = '';
   editForm!: FormGroup;
+  comments: TicketComment[] = [];
+  loadingComments = false;
+  submittingComment = false;
+  editingCommentId: string | null = null;
+  editCommentContent = '';
+  popularTags: Tag[] = [];
+  newTag = '';
+  addingTag = false;
 
-  // Helper methods
   getPriorityLabel = getPriorityLabel;
   getPriorityColor = getPriorityColor;
   getTypeLabel = getTypeLabel;
@@ -65,6 +121,7 @@ export class TicketDetailModalComponent implements OnInit {
   ngOnInit(): void {
     this.loadTicket();
     this.initEditForm();
+    this.loadPopularTags();
   }
 
   private initEditForm(): void {
@@ -82,10 +139,33 @@ export class TicketDetailModalComponent implements OnInit {
         this.ticket = ticket;
         this.selectedStatus = ticket.status;
         this.loading = false;
+        this.loadComments();
       },
-      error: (error) => {
+      error: () => {
         this.alertService.error('Failed to load ticket details');
         this.loading = false;
+      },
+    });
+  }
+
+  private loadComments(): void {
+    this.loadingComments = true;
+    this.ticketService.getTicketComments(this.ticketId).subscribe({
+      next: (comments) => {
+        this.comments = comments;
+        this.loadingComments = false;
+      },
+      error: () => {
+        this.alertService.error('Failed to load comments');
+        this.loadingComments = false;
+      },
+    });
+  }
+
+  private loadPopularTags(): void {
+    this.ticketService.getPopularTags(20).subscribe({
+      next: (tags) => {
+        this.popularTags = tags;
       },
     });
   }
@@ -132,7 +212,7 @@ export class TicketDetailModalComponent implements OnInit {
         this.loadTicket();
         this.ticketUpdated.emit();
       },
-      error: (error) => {
+      error: () => {
         this.alertService.error('Failed to update ticket');
         this.isSaving = false;
       },
@@ -153,7 +233,7 @@ export class TicketDetailModalComponent implements OnInit {
         this.loadTicket();
         this.ticketUpdated.emit();
       },
-      error: (error) => {
+      error: () => {
         this.alertService.error('Failed to update status');
         this.selectedStatus = this.ticket!.status;
       },
@@ -163,9 +243,115 @@ export class TicketDetailModalComponent implements OnInit {
   addComment(isInternal: boolean): void {
     if (!this.ticket || !this.newComment.trim()) return;
 
-    // This would typically call a comment service
-    this.alertService.info('Comment functionality to be implemented');
-    this.newComment = '';
+    this.submittingComment = true;
+    const request: AddCommentRequest = {
+      ticketId: this.ticket.id,
+      content: this.newComment.trim(),
+      isInternal,
+    };
+
+    this.ticketService.addComment(request).subscribe({
+      next: () => {
+        this.alertService.success('Comment added successfully');
+        this.newComment = '';
+        this.submittingComment = false;
+        this.loadComments();
+        this.loadTicket();
+      },
+      error: () => {
+        this.alertService.error('Failed to add comment');
+        this.submittingComment = false;
+      },
+    });
+  }
+
+  startEditComment(comment: TicketComment): void {
+    this.editingCommentId = comment.id;
+    this.editCommentContent = comment.content;
+  }
+
+  saveEditComment(commentId: string): void {
+    if (!this.editCommentContent.trim()) return;
+
+    this.ticketService
+      .editComment({
+        id: commentId,
+        content: this.editCommentContent.trim(),
+      })
+      .subscribe({
+        next: () => {
+          this.alertService.success('Comment updated');
+          this.editingCommentId = null;
+          this.editCommentContent = '';
+          this.loadComments();
+        },
+        error: () => {
+          this.alertService.error('Failed to update comment');
+        },
+      });
+  }
+
+  cancelEditComment(): void {
+    this.editingCommentId = null;
+    this.editCommentContent = '';
+  }
+
+  deleteComment(commentId: string): void {
+    if (!confirm('Are you sure you want to delete this comment?')) return;
+
+    this.ticketService.deleteComment(commentId).subscribe({
+      next: () => {
+        this.alertService.success('Comment deleted');
+        this.loadComments();
+        this.loadTicket();
+      },
+      error: () => {
+        this.alertService.error('Failed to delete comment');
+      },
+    });
+  }
+
+  addTag(tag?: string): void {
+    const tagToAdd = tag || this.newTag.trim();
+    if (!this.ticket || !tagToAdd) return;
+
+    this.addingTag = true;
+    const request: AddTagToTicketRequest = {
+      ticketId: this.ticket.id,
+      tag: tagToAdd,
+    };
+
+    this.ticketService.addTagToTicket(request).subscribe({
+      next: () => {
+        this.alertService.success('Tag added');
+        this.newTag = '';
+        this.addingTag = false;
+        this.loadTicket();
+      },
+      error: () => {
+        this.alertService.error('Failed to add tag');
+        this.addingTag = false;
+      },
+    });
+  }
+
+  removeTag(tag: string): void {
+    if (!this.ticket) return;
+
+    const request: RemoveTagFromTicketRequest = {
+      ticketId: this.ticket.id,
+      tag,
+    };
+
+    this.ticketService.removeTagFromTicket(request).subscribe({
+      next: () => {
+        this.alertService.success('Tag removed');
+        this.loadTicket();
+      },
+      error: () => {
+        this.alertService.error('Failed to remove tag');
+      },
+    });
   }
 
   deleteTicket(): void {
@@ -178,7 +364,7 @@ export class TicketDetailModalComponent implements OnInit {
           this.ticketUpdated.emit();
           this.close.emit();
         },
-        error: (error) => {
+        error: () => {
           this.alertService.error('Failed to delete ticket');
         },
       });

@@ -56,6 +56,48 @@ export interface TicketStatusHistory {
   changedAt: Date;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  isActive: boolean;
+  ticketCount?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface Tag {
+  name: string;
+  count: number;
+}
+
+export interface TicketStatistics {
+  totalTickets: number;
+  openTickets: number;
+  resolvedTickets: number;
+  averageResolutionTime: number;
+  ticketsByPriority: Record<string, number>;
+  ticketsByStatus: Record<string, number>;
+  ticketsByType: Record<string, number>;
+  ticketsByCategory: Record<string, number>;
+  ticketTrend: Array<{
+    date: Date;
+    count: number;
+  }>;
+}
+
+export interface UserPerformance {
+  userId: string;
+  userName: string;
+  ticketsAssigned: number;
+  ticketsResolved: number;
+  ticketsClosed: number;
+  averageResolutionTime: number;
+  satisfactionRating?: number;
+  performanceScore: number;
+}
+
 export enum TicketPriority {
   Low = 1,
   Normal = 2,
@@ -113,12 +155,103 @@ export interface AssignTicketRequest {
   assignedToUserId?: string;
 }
 
-export interface TicketFilters {
-  status?: TicketStatus;
-  priority?: TicketPriority;
+export interface CreateCategoryRequest {
+  name: string;
+  description: string;
+  color: string;
+}
+
+export interface UpdateCategoryRequest {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  isActive: boolean;
+}
+
+export interface AddCommentRequest {
+  ticketId: string;
+  content: string;
+  isInternal?: boolean;
+  parentCommentId?: string;
+}
+
+export interface EditCommentRequest {
+  id: string;
+  content: string;
+}
+
+export interface UploadAttachmentRequest {
+  ticketId: string;
+  fileName: string;
+}
+
+export interface AddTagToTicketRequest {
+  ticketId: string;
+  tag: string;
+}
+
+export interface RemoveTagFromTicketRequest {
+  ticketId: string;
+  tag: string;
+}
+
+export interface GridQueryParams {
+  searchTerm?: string;
+  pageIndex?: number;
+  pageSize?: number;
+  sortField?: string;
+  sortDirection?: string;
+  visibleColumns?: string[];
+  globalFilter?: string;
+  filters?: Record<string, GridFilterItem>;
+}
+
+export interface GridFilterItem {
+  field?: string;
+  operator?: string;
+  value?: any;
+  values?: any[];
+}
+
+export interface TicketSearchParams extends GridQueryParams {
+  statuses?: TicketStatus[];
+  priorities?: TicketPriority[];
+  types?: TicketType[];
+  categoryIds?: string[];
+  assignedUserIds?: string[];
+  createdFrom?: Date;
+  createdTo?: Date;
+  dueFrom?: Date;
+  dueTo?: Date;
+  hasAttachments?: boolean;
+  hasComments?: boolean;
+  tags?: string[];
+}
+
+export interface CategorySearchParams extends GridQueryParams {
+  isActive?: boolean;
+}
+
+export interface TicketStatisticsParams {
+  startDate?: Date;
+  endDate?: Date;
   categoryId?: string;
   assignedToUserId?: string;
-  searchTerm?: string;
+}
+
+export interface UserPerformanceParams {
+  startDate?: Date;
+  endDate?: Date;
+  userIds?: string[];
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 export interface TicketColumn {
@@ -129,7 +262,6 @@ export interface TicketColumn {
   icon: string;
 }
 
-// Helper functions
 export const getStatusLabel = (status: TicketStatus): string => {
   const labels: Record<TicketStatus, string> = {
     [TicketStatus.Open]: 'Open',
@@ -186,4 +318,16 @@ export const getTypeIcon = (type: TicketType): string => {
     [TicketType.Incident]: '🚨',
   };
   return icons[type] || '📋';
+};
+
+export const getStatusColor = (status: TicketStatus): string => {
+  const colors: Record<TicketStatus, string> = {
+    [TicketStatus.Open]: 'bg-gray-100 text-gray-800',
+    [TicketStatus.InProgress]: 'bg-blue-100 text-blue-800',
+    [TicketStatus.OnHold]: 'bg-yellow-100 text-yellow-800',
+    [TicketStatus.Resolved]: 'bg-green-100 text-green-800',
+    [TicketStatus.Closed]: 'bg-gray-100 text-gray-800',
+    [TicketStatus.Reopened]: 'bg-orange-100 text-orange-800',
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800';
 };

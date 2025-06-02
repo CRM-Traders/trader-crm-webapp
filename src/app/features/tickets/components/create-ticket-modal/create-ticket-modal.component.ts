@@ -1,5 +1,3 @@
-// src/app/features/tickets/components/create-ticket-modal/create-ticket-modal.component.ts
-
 import { Component, EventEmitter, Output, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -7,6 +5,7 @@ import {
   FormGroup,
   ReactiveFormsModule,
   Validators,
+  FormsModule,
 } from '@angular/forms';
 import { TicketService } from '../../services/ticket.service';
 import { AlertService } from '../../../../core/services/alert.service';
@@ -16,30 +15,30 @@ import {
   TicketType,
   getPriorityLabel,
   getTypeLabel,
+  Category,
+  CreateCategoryRequest,
+  Tag,
 } from '../../models/ticket.model';
 
 @Component({
   selector: 'app-create-ticket-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   template: `
     <div class="fixed inset-0 z-50 overflow-y-auto">
       <div
         class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0"
       >
-        <!-- Background overlay -->
         <div class="fixed inset-0 transition-opacity" aria-hidden="true">
           <div
             class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"
           ></div>
         </div>
 
-        <!-- Modal panel -->
         <div
           class="inline-block z-50 relative bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all mt-[5vh] max-h-[90vh] overflow-y-auto sm:align-middle sm:max-w-2xl sm:w-full"
         >
           <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
-            <!-- Header -->
             <div
               class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4"
             >
@@ -50,7 +49,7 @@ import {
                 <button
                   type="button"
                   (click)="close.emit()"
-                  class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 sticky top-0 "
+                  class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 sticky top-0"
                 >
                   <svg
                     class="h-6 w-6"
@@ -69,7 +68,6 @@ import {
               </div>
 
               <div class="space-y-4">
-                <!-- Title -->
                 <div>
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -96,7 +94,6 @@ import {
                   </p>
                 </div>
 
-                <!-- Description -->
                 <div>
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -124,7 +121,6 @@ import {
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Type -->
                   <div>
                     <label
                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -145,7 +141,6 @@ import {
                     </select>
                   </div>
 
-                  <!-- Priority -->
                   <div>
                     <label
                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -168,7 +163,6 @@ import {
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <!-- Customer ID -->
                   <div>
                     <label
                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -183,32 +177,49 @@ import {
                     />
                   </div>
 
-                  <!-- Category -->
                   <div>
                     <label
                       class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                     >
                       Category <span class="text-red-500">*</span>
                     </label>
-                    <select
-                      formControlName="categoryId"
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="">Select category</option>
-                      <option value="c1d2e3f4-5678-90ab-cdef-1234567890ab">
-                        Technical Support
-                      </option>
-                      <option value="a1b2c3d4-5678-90ab-cdef-1234567890ab">
-                        Billing
-                      </option>
-                      <option value="b2c3d4e5-6789-01bc-def2-3456789012bc">
-                        General
-                      </option>
-                    </select>
+                    <div class="relative">
+                      <select
+                        formControlName="categoryId"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                      >
+                        <option value="">Select category</option>
+                        <option
+                          *ngFor="let category of categories"
+                          [value]="category.id"
+                        >
+                          {{ category.name }}
+                        </option>
+                      </select>
+                      <button
+                        type="button"
+                        (click)="showAddCategory = true"
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4v16m8-8H4"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Due Date -->
                 <div>
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -222,24 +233,73 @@ import {
                   />
                 </div>
 
-                <!-- Tags -->
                 <div>
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
-                    Tags (comma separated)
+                    Tags
                   </label>
-                  <input
-                    type="text"
-                    formControlName="tags"
-                    placeholder="e.g., urgent, customer-request, bug-fix"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
+                  <div class="space-y-2">
+                    <div
+                      class="flex flex-wrap gap-1 min-h-[32px] p-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+                    >
+                      <span
+                        *ngFor="let tag of selectedTags"
+                        class="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full flex items-center gap-1"
+                      >
+                        {{ tag }}
+                        <button
+                          type="button"
+                          (click)="removeTag(tag)"
+                          class="hover:text-blue-600 dark:hover:text-blue-300"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      [(ngModel)]="tagInput"
+                      [ngModelOptions]="{ standalone: true }"
+                      (keyup.enter)="addTag()"
+                      placeholder="Type tag and press Enter"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                    <div
+                      *ngIf="popularTags.length > 0"
+                      class="flex flex-wrap gap-1"
+                    >
+                      <span
+                        class="text-xs text-gray-500 dark:text-gray-400 mr-2"
+                        >Popular:</span
+                      >
+                      <button
+                        type="button"
+                        *ngFor="let tag of popularTags.slice(0, 10)"
+                        (click)="selectPopularTag(tag.name)"
+                        class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600"
+                      >
+                        {{ tag.name }} ({{ tag.count }})
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Footer -->
             <div
               class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
             >
@@ -281,6 +341,98 @@ import {
             </div>
           </form>
         </div>
+
+        <div
+          *ngIf="showAddCategory"
+          class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        >
+          <div
+            class="absolute inset-0 bg-black bg-opacity-50"
+            (click)="showAddCategory = false"
+          ></div>
+          <div
+            class="relative bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full"
+          >
+            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+              Add New Category
+            </h4>
+            <form [formGroup]="categoryForm" (ngSubmit)="onAddCategory()">
+              <div class="space-y-4">
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Category Name <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    formControlName="name"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Description <span class="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    formControlName="description"
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
+                    Color <span class="text-red-500">*</span>
+                  </label>
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="color"
+                      formControlName="color"
+                      class="h-10 w-20 border border-gray-300 dark:border-gray-600 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      formControlName="color"
+                      class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                  </div>
+                  <div class="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      *ngFor="let color of presetColors"
+                      (click)="selectColor(color)"
+                      class="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600 hover:scale-110 transition-transform"
+                      [style.background-color]="color"
+                    ></button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  (click)="showAddCategory = false"
+                  class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  [disabled]="isAddingCategory || categoryForm.invalid"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {{ isAddingCategory ? 'Adding...' : 'Add Category' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -295,7 +447,28 @@ export class CreateTicketModalComponent implements OnInit {
   private alertService = inject(AlertService);
 
   ticketForm!: FormGroup;
+  categoryForm!: FormGroup;
   isSubmitting = false;
+  isAddingCategory = false;
+  showAddCategory = false;
+
+  categories: Category[] = [];
+  popularTags: Tag[] = [];
+  selectedTags: string[] = [];
+  tagInput = '';
+
+  presetColors = [
+    '#3B82F6',
+    '#10B981',
+    '#F59E0B',
+    '#EF4444',
+    '#8B5CF6',
+    '#EC4899',
+    '#14B8A6',
+    '#F97316',
+    '#6366F1',
+    '#84CC16',
+  ];
 
   priorities = [
     { value: TicketPriority.Low, label: getPriorityLabel(TicketPriority.Low) },
@@ -327,10 +500,12 @@ export class CreateTicketModalComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.initForm();
+    this.initForms();
+    this.loadCategories();
+    this.loadPopularTags();
   }
 
-  private initForm(): void {
+  private initForms(): void {
     this.ticketForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(200)]],
       description: ['', [Validators.required, Validators.maxLength(4000)]],
@@ -339,7 +514,87 @@ export class CreateTicketModalComponent implements OnInit {
       customerId: ['', Validators.required],
       categoryId: ['', Validators.required],
       dueDate: [''],
-      tags: [''],
+    });
+
+    this.categoryForm = this.fb.group({
+      name: ['', [Validators.required, Validators.maxLength(100)]],
+      description: ['', [Validators.required, Validators.maxLength(500)]],
+      color: [
+        '#3B82F6',
+        [Validators.required, Validators.pattern(/^#[0-9A-F]{6}$/i)],
+      ],
+    });
+  }
+
+  private loadCategories(): void {
+    this.ticketService
+      .getCategories({ isActive: true, pageIndex: 0 })
+      .subscribe({
+        next: (response) => {
+          this.categories = response.items;
+        },
+        error: () => {
+          this.alertService.error('Failed to load categories');
+        },
+      });
+  }
+
+  private loadPopularTags(): void {
+    this.ticketService.getPopularTags(15).subscribe({
+      next: (tags) => {
+        this.popularTags = tags;
+      },
+    });
+  }
+
+  addTag(): void {
+    const tag = this.tagInput.trim();
+    if (tag && !this.selectedTags.includes(tag)) {
+      this.selectedTags.push(tag);
+      this.tagInput = '';
+    }
+  }
+
+  removeTag(tag: string): void {
+    const index = this.selectedTags.indexOf(tag);
+    if (index >= 0) {
+      this.selectedTags.splice(index, 1);
+    }
+  }
+
+  selectPopularTag(tag: string): void {
+    if (!this.selectedTags.includes(tag)) {
+      this.selectedTags.push(tag);
+    }
+  }
+
+  selectColor(color: string): void {
+    this.categoryForm.patchValue({ color });
+  }
+
+  onAddCategory(): void {
+    if (this.categoryForm.invalid) {
+      Object.keys(this.categoryForm.controls).forEach((key) => {
+        this.categoryForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    this.isAddingCategory = true;
+    const request: CreateCategoryRequest = this.categoryForm.value;
+
+    this.ticketService.createCategory(request).subscribe({
+      next: () => {
+        this.alertService.success('Category added successfully');
+        this.showAddCategory = false;
+        this.categoryForm.reset({ color: '#3B82F6' });
+        this.isAddingCategory = false;
+        this.loadCategories();
+      },
+      error: () => {
+        this.alertService.error('Failed to add category');
+        this.isAddingCategory = false;
+      },
     });
   }
 
@@ -362,12 +617,7 @@ export class CreateTicketModalComponent implements OnInit {
       customerId: formValue.customerId,
       categoryId: formValue.categoryId,
       dueDate: formValue.dueDate ? new Date(formValue.dueDate) : undefined,
-      tags: formValue.tags
-        ? formValue.tags
-            .split(',')
-            .map((tag: string) => tag.trim())
-            .filter((tag: string) => tag)
-        : [],
+      tags: this.selectedTags,
     };
 
     this.ticketService.createTicket(request).subscribe({
@@ -376,7 +626,7 @@ export class CreateTicketModalComponent implements OnInit {
         this.ticketCreated.emit();
         this.close.emit();
       },
-      error: (error) => {
+      error: () => {
         this.alertService.error('Failed to create ticket');
         this.isSubmitting = false;
       },
