@@ -203,6 +203,11 @@ export class ClientsComponent implements OnInit {
     if (investmentColumn) {
       investmentColumn.cellTemplate = this.investmentCellTemplate;
     }
+
+    this.clientsService.getActiveClients().subscribe((result: any) => {
+      this.totalCount = result.totalUsers;
+      this.activeCount = result.activeUsersTotalCount;
+    });
   }
 
   ngOnDestroy(): void {

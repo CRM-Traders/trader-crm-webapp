@@ -7,9 +7,10 @@ import { HttpService } from '../../../core/services/http.service';
 import {
   KycFilterParams,
   KycProcessResponse,
-  KycProcess,
+  KycProcessDetail,
   KycReviewRequest,
   KycStatus,
+  KycProcessListItem,
 } from '../../models/kyc/kyc.model';
 import { FileType } from '../../../core/models/storage.model';
 
@@ -18,7 +19,7 @@ import { FileType } from '../../../core/models/storage.model';
 })
 export class KycService {
   private readonly http = inject(HttpService);
-  private readonly baseEndpoint = 'storage/api/kyc';
+  private readonly baseEndpoint = 'identity/api/kyc';
 
   private currentFilterSubject = new BehaviorSubject<KycFilterParams>({
     sortBy: 'lastActivityTime',
@@ -77,16 +78,20 @@ export class KycService {
       .pipe(tap((response) => this.processesSubject.next(response)));
   }
 
-  getProcessById(id: string): Observable<KycProcess> {
-    return this.http.get<KycProcess>(`${this.baseEndpoint}/process/${id}`);
+  getProcessById(id: string): Observable<KycProcessDetail> {
+    return this.http.get<KycProcessDetail>(
+      `${this.baseEndpoint}/process/${id}`
+    );
   }
 
-  getProcessHistory(id: string): Observable<KycProcess[]> {
-    return this.http.get<KycProcess[]>(`${this.baseEndpoint}/${id}/history`);
+  getProcessHistory(id: string): Observable<KycProcessDetail[]> {
+    return this.http.get<KycProcessDetail[]>(
+      `${this.baseEndpoint}/${id}/history`
+    );
   }
 
-  reviewProcess(review: KycReviewRequest): Observable<KycProcess> {
-    return this.http.post<KycProcess>(
+  reviewProcess(review: KycReviewRequest): Observable<KycProcessDetail> {
+    return this.http.post<KycProcessDetail>(
       `${this.baseEndpoint}/${review.processId}/review`,
       {
         status: review.status,
@@ -95,10 +100,16 @@ export class KycService {
     );
   }
 
-  updateProcessStatus(id: string, status: KycStatus): Observable<KycProcess> {
-    return this.http.patch<KycProcess>(`${this.baseEndpoint}/${id}/status`, {
-      status,
-    });
+  updateProcessStatus(
+    id: string,
+    status: KycStatus
+  ): Observable<KycProcessDetail> {
+    return this.http.patch<KycProcessDetail>(
+      `${this.baseEndpoint}/${id}/status`,
+      {
+        status,
+      }
+    );
   }
 
   refreshCurrentList(): void {
@@ -107,8 +118,8 @@ export class KycService {
 
   getStatusLabel(status: KycStatus): string {
     const labels: Record<KycStatus, string> = {
-      [KycStatus.New]: 'New',
-      [KycStatus.PartiallyCompleted]: 'Partially Completed',
+      [KycStatus.NotStarted]: 'New',
+      [KycStatus.InProgress]: 'Partially Completed',
       [KycStatus.DocumentsUploaded]: 'Documents Uploaded',
       [KycStatus.UnderReview]: 'Under Review',
       [KycStatus.Verified]: 'Verified',
@@ -120,8 +131,8 @@ export class KycService {
 
   getStatusColor(status: KycStatus): string {
     const colors: Record<KycStatus, string> = {
-      [KycStatus.New]: 'blue',
-      [KycStatus.PartiallyCompleted]: 'yellow',
+      [KycStatus.NotStarted]: 'blue',
+      [KycStatus.InProgress]: 'yellow',
       [KycStatus.DocumentsUploaded]: 'orange',
       [KycStatus.UnderReview]: 'purple',
       [KycStatus.Verified]: 'green',
@@ -133,8 +144,8 @@ export class KycService {
 
   getStatusIcon(status: KycStatus): string {
     const icons: Record<KycStatus, string> = {
-      [KycStatus.New]: 'file-plus',
-      [KycStatus.PartiallyCompleted]: 'clock',
+      [KycStatus.NotStarted]: 'file-plus',
+      [KycStatus.InProgress]: 'clock',
       [KycStatus.DocumentsUploaded]: 'file-check',
       [KycStatus.UnderReview]: 'eye',
       [KycStatus.Verified]: 'check-circle',
@@ -144,14 +155,16 @@ export class KycService {
     return icons[status] || 'file';
   }
 
-  calculateCompletionPercentage(process: KycProcess): number {
+  calculateCompletionPercentage(
+    process: KycProcessDetail | KycProcessListItem
+  ): number {
     const requiredDocs = 4; // ID Front, ID Back, Passport, Face Photo
     let completedDocs = 0;
-
-    if (process.hasIdFront) completedDocs++;
-    if (process.hasIdBack) completedDocs++;
-    if (process.hasPassport) completedDocs++;
-    if (process.hasFacePhoto) completedDocs++;
+    const proc = process as KycProcessDetail;
+    if (proc.hasFrontNationalId) completedDocs++;
+    if (proc.hasBackNationalId) completedDocs++;
+    if (proc.hasPassport) completedDocs++;
+    if (proc.hasFacePhoto) completedDocs++;
 
     return Math.round((completedDocs / requiredDocs) * 100);
   }
@@ -196,9 +209,9 @@ export interface CreateKycProcessResponse {
 }
 
 export interface UploadKycFileResponse {
-  fileId: string;
+  documentId: string;
   kycProcessId: string;
-  fileType: FileType;
+  documentType: FileType;
   fileName: string;
   fileSize: number;
   status: number;

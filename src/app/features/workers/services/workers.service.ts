@@ -38,4 +38,8 @@ export class WorkersService {
       formData
     );
   }
+
+  getActiveWorkers() {
+    return this.httpService.get(`identity/api/users/get-active-users?role=1`);
+  }
 }

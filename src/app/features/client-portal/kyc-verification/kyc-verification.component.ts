@@ -6,7 +6,10 @@ import { Router } from '@angular/router';
 import { StorageService } from '../../../core/services/storage.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { FileType } from '../../../core/models/storage.model';
-import { KycProcess, KycStatus } from '../../../shared/models/kyc/kyc.model';
+import {
+  KycProcessDetail,
+  KycStatus,
+} from '../../../shared/models/kyc/kyc.model';
 import { KycService } from '../../../shared/services/kyc/kyc.service';
 
 interface VerificationStep {
@@ -35,7 +38,10 @@ interface VerificationStep {
             Identity Verification
           </h1>
           <p class="text-gray-600 dark:text-gray-400">
-            Please upload the required documents to verify your identity
+            @if (isVerified()) { Your identity has been verified successfully }
+            @else if (isLocked()) { Your documents are currently being reviewed
+            } @else { Please upload the required documents to verify your
+            identity }
           </p>
         </div>
 
@@ -51,18 +57,25 @@ interface VerificationStep {
           </div>
           <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
             <div
-              class="bg-blue-600 h-3 rounded-full transition-all duration-500"
+              class="h-3 rounded-full transition-all duration-500"
+              [ngClass]="{
+                'bg-blue-600': !isVerified() && !isRejected(),
+                'bg-green-600': isVerified(),
+                'bg-red-600': isRejected()
+              }"
               [style.width.%]="completionPercentage"
             ></div>
           </div>
         </div>
 
         <!-- Status Alert -->
-        @if (kycProcess() && kycProcess()!.status !== KycStatus.New &&
-        kycProcess()!.status !== KycStatus.PartiallyCompleted) {
+        @if (kycProcess()) {
         <div
           class="mb-6 p-4 rounded-lg"
           [ngClass]="{
+            'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800':
+              kycProcess()!.status === KycStatus.NotStarted ||
+              kycProcess()!.status === KycStatus.InProgress,
             'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800':
               kycProcess()!.status === KycStatus.DocumentsUploaded ||
               kycProcess()!.status === KycStatus.UnderReview,
@@ -73,8 +86,52 @@ interface VerificationStep {
           }"
         >
           <div class="flex items-center">
-            @switch (kycProcess()!.status) { @case (KycStatus.DocumentsUploaded)
-            {
+            @switch (kycProcess()!.status) { @case (KycStatus.NotStarted) {
+            <svg
+              class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <div>
+              <h3 class="font-medium text-blue-800 dark:text-blue-200">
+                Getting Started
+              </h3>
+              <p class="text-sm text-blue-700 dark:text-blue-300">
+                Upload your documents to begin the verification process.
+              </p>
+            </div>
+            } @case (KycStatus.InProgress) {
+            <svg
+              class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            <div>
+              <h3 class="font-medium text-blue-800 dark:text-blue-200">
+                In Progress
+              </h3>
+              <p class="text-sm text-blue-700 dark:text-blue-300">
+                Continue uploading the remaining documents to complete
+                verification.
+              </p>
+            </div>
+            } @case (KycStatus.DocumentsUploaded) {
             <svg
               class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3"
               fill="none"
@@ -90,10 +147,10 @@ interface VerificationStep {
             </svg>
             <div>
               <h3 class="font-medium text-yellow-800 dark:text-yellow-200">
-                Documents Submitted
+                Documents Received
               </h3>
               <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                Your documents have been uploaded and are waiting for review.
+                All documents have been uploaded and are waiting for review.
               </p>
             </div>
             } @case (KycStatus.UnderReview) {
@@ -115,7 +172,8 @@ interface VerificationStep {
                 Under Review
               </h3>
               <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                Your documents are currently being reviewed by our team.
+                Our team is currently reviewing your documents. This usually
+                takes 1-2 business days.
               </p>
             </div>
             } @case (KycStatus.Verified) {
@@ -137,7 +195,8 @@ interface VerificationStep {
                 Verification Complete
               </h3>
               <p class="text-sm text-green-700 dark:text-green-300">
-                Your identity has been successfully verified!
+                Your identity has been successfully verified. You now have full
+                access to all features.
               </p>
             </div>
             } @case (KycStatus.Rejected) {
@@ -161,7 +220,7 @@ interface VerificationStep {
               <p class="text-sm text-red-700 dark:text-red-300">
                 {{
                   kycProcess()!.verificationComment ||
-                    'Your verification was not successful. Please contact support for more information.'
+                    'Your documents could not be verified. Please ensure all documents are clear and valid, then try again.'
                 }}
               </p>
             </div>
@@ -306,13 +365,18 @@ interface VerificationStep {
                         step.fileName
                       }}</span>
                     </div>
+                    @if (canEdit()) {
                     <button
                       (click)="removeFile(step)"
-                      [disabled]="!canEdit()"
-                      class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     >
                       Remove
                     </button>
+                    } @else {
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                      @if (isVerified()) { Verified } @else { Locked }
+                    </span>
+                    }
                   </div>
                   } @else if (!step.uploading && canEdit()) {
                   <div class="flex items-center">
@@ -346,54 +410,16 @@ interface VerificationStep {
                       {{ getAllowedFormats(step.fileType) }}
                     </span>
                   </div>
+                  } @else if (!step.completed && !canEdit()) {
+                  <div class="text-sm text-gray-500 dark:text-gray-400 italic">
+                    @if (isVerified()) { Document verification completed } @else
+                    { Document upload locked during review }
+                  </div>
                   }
                 </div>
               </div>
             </div>
           </div>
-          }
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="mt-8 flex justify-between">
-          <button
-            (click)="goBack()"
-            class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            Back to Dashboard
-          </button>
-
-          @if (allStepsCompleted() && canEdit()) {
-          <button
-            (click)="submitForReview()"
-            [disabled]="submitting()"
-            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            @if (submitting()) {
-            <span class="flex items-center">
-              <svg
-                class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              Submitting...
-            </span>
-            } @else { Submit for Review }
-          </button>
           }
         </div>
         }
@@ -409,8 +435,7 @@ export class KycVerificationComponent implements OnInit {
 
   loading = signal(false);
   error = signal<string | null>(null);
-  kycProcess = signal<KycProcess | null>(null);
-  submitting = signal(false);
+  kycProcess = signal<KycProcessDetail | null>(null);
 
   KycStatus = KycStatus;
 
@@ -514,24 +539,44 @@ export class KycVerificationComponent implements OnInit {
     });
   }
 
-  private updateStepsFromProcess(process: KycProcess): void {
-    this.verificationSteps[0].completed = process.hasIdFront;
-    this.verificationSteps[1].completed = process.hasIdBack;
+  private updateStepsFromProcess(process: KycProcessDetail): void {
+    this.verificationSteps[0].completed = process.hasFrontNationalId;
+    this.verificationSteps[1].completed = process.hasBackNationalId;
     this.verificationSteps[2].completed = process.hasPassport;
     this.verificationSteps[3].completed = process.hasFacePhoto;
 
-    // Load file details if available
-    // if (process.files) {
-    //   process.files.forEach((file) => {
-    //     const step = this.verificationSteps.find(
-    //       (s) => s.fileType === file.fileType
-    //     );
-    //     if (step) {
-    //       step.fileId = file.id;
-    //       step.fileName = file.fileName;
-    //     }
-    //   });
-    // }
+    if (process.documents) {
+      process.documents.forEach((file: any) => {
+        const step = this.verificationSteps.find(
+          (s) => s.fileType === file.fileType
+        );
+        if (step) {
+          step.fileId = file.id;
+          step.fileName = file.fileName;
+        }
+      });
+    }
+  }
+
+  private checkAndUpdateProcessStatus(): void {
+    const process = this.kycProcess();
+    if (!process) return;
+
+    const allCompleted = this.verificationSteps.every((step) => step.completed);
+
+    // Automatically update status based on document completion
+    if (allCompleted && process.status === KycStatus.InProgress) {
+      this.kycService
+        .updateProcessStatus(process.id, KycStatus.DocumentsUploaded)
+        .subscribe({
+          next: () => {
+            this.loadProcess(process.id);
+          },
+          error: (error) => {
+            console.error('Failed to update process status:', error);
+          },
+        });
+    }
   }
 
   onFileSelected(event: Event, step: VerificationStep): void {
@@ -554,13 +599,14 @@ export class KycVerificationComponent implements OnInit {
       .subscribe({
         next: (response) => {
           step.completed = true;
-          step.fileId = response.fileId;
+          step.fileId = response.documentId;
           step.fileName = file.name;
           step.uploading = false;
           this.alertService.success(`${step.title} uploaded successfully`);
 
-          // Refresh process to get updated status
+          // Refresh process and check if all documents are uploaded
           this.loadProcess(process.id);
+          setTimeout(() => this.checkAndUpdateProcessStatus(), 1000);
         },
         error: (error) => {
           step.uploading = false;
@@ -595,43 +641,33 @@ export class KycVerificationComponent implements OnInit {
     });
   }
 
-  allStepsCompleted(): boolean {
-    return this.verificationSteps.every((step) => step.completed);
-  }
-
   canEdit(): boolean {
     const process = this.kycProcess();
     if (!process) return false;
 
     return (
-      process.status === KycStatus.New ||
-      process.status === KycStatus.PartiallyCompleted ||
+      process.status === KycStatus.NotStarted ||
+      process.status === KycStatus.InProgress ||
       process.status === KycStatus.Rejected
     );
   }
 
-  submitForReview(): void {
+  isVerified(): boolean {
     const process = this.kycProcess();
-    if (!process || !this.allStepsCompleted()) return;
+    return process?.status === KycStatus.Verified;
+  }
 
-    this.submitting.set(true);
+  isRejected(): boolean {
+    const process = this.kycProcess();
+    return process?.status === KycStatus.Rejected;
+  }
 
-    // Update process status to DocumentsUploaded
-    this.kycService
-      .updateProcessStatus(process.id, KycStatus.DocumentsUploaded)
-      .subscribe({
-        next: () => {
-          this.alertService.success(
-            'Documents submitted successfully for review'
-          );
-          this.loadProcess(process.id);
-          this.submitting.set(false);
-        },
-        error: (error) => {
-          this.alertService.error('Failed to submit documents for review');
-          this.submitting.set(false);
-        },
-      });
+  isLocked(): boolean {
+    const process = this.kycProcess();
+    return (
+      process?.status === KycStatus.DocumentsUploaded ||
+      process?.status === KycStatus.UnderReview
+    );
   }
 
   goBack(): void {

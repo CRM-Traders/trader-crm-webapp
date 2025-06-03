@@ -175,7 +175,6 @@ export class LeadsComponent {
   }
 
   ngOnInit(): void {
-    // Set cell templates after view initialization
     const statusColumn = this.gridColumns.find((col) => col.field === 'status');
     if (statusColumn) {
       statusColumn.cellTemplate = this.statusCellTemplate;
@@ -194,6 +193,11 @@ export class LeadsComponent {
     if (investmentColumn) {
       investmentColumn.cellTemplate = this.investmentCellTemplate;
     }
+
+    this.leadsService.getActiveLeads().subscribe((result: any) => {
+      this.totalCount = result.totalUsers;
+      this.activeCount = result.activeUsersTotalCount;
+    });
   }
 
   ngOnDestroy(): void {

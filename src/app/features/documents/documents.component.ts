@@ -5,10 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { KycDetailModalComponent } from './components/kyc-detail-modal/kyc-detail-modal.component';
 import { debounceTime, Subject } from 'rxjs';
 import {
-  KycProcess,
+  KycProcessDetail,
   KycProcessResponse,
   KycStatus,
   KycFilterParams,
+  KycProcessListItem,
 } from '../../shared/models/kyc/kyc.model';
 import { KycService } from '../../shared/services/kyc/kyc.service';
 
@@ -309,8 +310,10 @@ import { KycService } from '../../shared/services/kyc/kyc.service';
                 <div
                   class="flex items-center gap-2 text-sm"
                   [ngClass]="{
-                    'text-green-600 dark:text-green-400': process.hasIdFront,
-                    'text-gray-600 dark:text-gray-400': !process.hasIdFront
+                    'text-green-600 dark:text-green-400':
+                      process.hasFrontIdDocument,
+                    'text-gray-600 dark:text-gray-400':
+                      !process.hasBackIdDocument
                   }"
                 >
                   <svg
@@ -331,8 +334,10 @@ import { KycService } from '../../shared/services/kyc/kyc.service';
                 <div
                   class="flex items-center gap-2 text-sm"
                   [ngClass]="{
-                    'text-green-600 dark:text-green-400': process.hasIdBack,
-                    'text-gray-600 dark:text-gray-400': !process.hasIdBack
+                    'text-green-600 dark:text-green-400':
+                      process.hasFrontIdDocument,
+                    'text-gray-600 dark:text-gray-400':
+                      !process.hasBackIdDocument
                   }"
                 >
                   <svg
@@ -498,9 +503,9 @@ export class DocumentsComponent implements OnInit {
   // State
   loading = signal(false);
   error = signal<string | null>(null);
-  processes = signal<KycProcess[]>([]);
+  processes = signal<KycProcessListItem[]>([]);
   processResponse = signal<KycProcessResponse | null>(null);
-  selectedProcess = signal<KycProcess | null>(null);
+  selectedProcess = signal<KycProcessListItem | null>(null);
 
   // Filters
   searchTerm = '';
@@ -514,8 +519,8 @@ export class DocumentsComponent implements OnInit {
   private searchSubject = new Subject<string>();
 
   statusOptions = [
-    { value: KycStatus.New, label: 'New' },
-    { value: KycStatus.PartiallyCompleted, label: 'Partially Completed' },
+    { value: KycStatus.NotStarted, label: 'New' },
+    { value: KycStatus.InProgress, label: 'Partially Completed' },
     { value: KycStatus.DocumentsUploaded, label: 'Documents Uploaded' },
     { value: KycStatus.UnderReview, label: 'Under Review' },
     { value: KycStatus.Verified, label: 'Verified' },
@@ -596,7 +601,7 @@ export class DocumentsComponent implements OnInit {
     this.loadData();
   }
 
-  openDetail(process: KycProcess): void {
+  openDetail(process: KycProcessListItem): void {
     this.selectedProcess.set(process);
   }
 

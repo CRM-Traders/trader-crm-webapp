@@ -1,5 +1,3 @@
-// src/app/features/affiliates/affiliates.component.ts
-
 import {
   Component,
   OnInit,
@@ -147,7 +145,6 @@ export class AffiliatesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Set cell templates after view initialization
     const websiteColumn = this.gridColumns.find(
       (col) => col.field === 'website'
     );
@@ -161,6 +158,11 @@ export class AffiliatesComponent implements OnInit {
     if (statusColumn) {
       statusColumn.cellTemplate = this.statusCellTemplate;
     }
+
+    this.affiliatesService.getActiveAffiliates().subscribe((result: any) => {
+      this.totalCount = result.totalUsers;
+      this.activeCount = result.activeUsersTotalCount;
+    });
   }
 
   ngOnDestroy(): void {

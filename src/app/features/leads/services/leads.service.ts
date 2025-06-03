@@ -72,4 +72,8 @@ export class LeadsService {
       }
     );
   }
+
+  getActiveLeads() {
+    return this.httpService.get(`identity/api/users/get-active-users?role=7`);
+  }
 }

@@ -109,6 +109,7 @@ export class NavigationService {
       label: 'KYC',
       icon: 'kyc',
       route: '/kyc-verification',
+      requiredRoles: [UserRole.Lead],
     },
   ];
 

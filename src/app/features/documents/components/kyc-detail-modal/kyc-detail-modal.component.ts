@@ -1,4 +1,3 @@
-// src/app/features/documents/components/kyc-detail-modal/kyc-detail-modal.component.ts
 import { Component, Input, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +5,11 @@ import { StorageService } from '../../../../core/services/storage.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { FileMetadata, FileType } from '../../../../core/models/storage.model';
 import { FilePreviewComponent } from '../../../../shared/components/file-preview/file-preview.component';
-import { KycProcess, KycStatus } from '../../../../shared/models/kyc/kyc.model';
+import {
+  KycProcessListItem,
+  KycProcessDetail,
+  KycStatus,
+} from '../../../../shared/models/kyc/kyc.model';
 import { KycService } from '../../../../shared/services/kyc/kyc.service';
 
 @Component({
@@ -99,7 +102,9 @@ import { KycService } from '../../../../shared/services/kyc/kyc.service';
                     'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
                       kycService.getStatusColor(process.status) === 'green',
                     'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                      kycService.getStatusColor(process.status) === 'red'
+                      kycService.getStatusColor(process.status) === 'red',
+                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200':
+                      kycService.getStatusColor(process.status) === 'gray'
                   }"
                 >
                   {{ kycService.getStatusLabel(process.status) }}
@@ -120,7 +125,7 @@ import { KycService } from '../../../../shared/services/kyc/kyc.service';
                 class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center"
               >
                 <div class="text-2xl font-bold text-gray-900 dark:text-white">
-                  {{ process.totalSubmissions }}
+                  {{ getTotalSubmissions(process) }}
                 </div>
                 <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Total Submissions
@@ -130,7 +135,7 @@ import { KycService } from '../../../../shared/services/kyc/kyc.service';
                 class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center"
               >
                 <div class="text-2xl font-bold text-green-600">
-                  {{ process.approvedCount }}
+                  {{ getTotalApprove(process) }}
                 </div>
                 <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Approved
@@ -140,7 +145,7 @@ import { KycService } from '../../../../shared/services/kyc/kyc.service';
                 class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 text-center"
               >
                 <div class="text-2xl font-bold text-red-600">
-                  {{ process.rejectedCount }}
+                  {{ getTotalReject(process) }}
                 </div>
                 <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Rejected
@@ -236,7 +241,7 @@ import { KycService } from '../../../../shared/services/kyc/kyc.service';
               <div
                 class="absolute left-2 top-2 bottom-2 w-0.5 bg-gray-200 dark:bg-gray-700"
               ></div>
-              @for (item of process.history; track item.id) {
+              @for (item of getHistoryItems(); track item.id) {
               <div class="relative mb-4">
                 <div
                   class="absolute -left-6 top-1 w-4 h-4 rounded-full border-2 border-white dark:border-gray-800"
@@ -261,7 +266,9 @@ import { KycService } from '../../../../shared/services/kyc/kyc.service';
                         'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
                           kycService.getStatusColor(item.status) === 'green',
                         'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                          kycService.getStatusColor(item.status) === 'red'
+                          kycService.getStatusColor(item.status) === 'red',
+                        'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200':
+                          kycService.getStatusColor(item.status) === 'gray'
                       }"
                     >
                       {{ kycService.getStatusLabel(item.status) }}
@@ -367,7 +374,7 @@ import { KycService } from '../../../../shared/services/kyc/kyc.service';
   `,
 })
 export class KycDetailModalComponent implements OnInit {
-  @Input({ required: true }) process!: KycProcess;
+  @Input({ required: true }) process!: KycProcessListItem | KycProcessDetail;
   @Input() onClose: () => void = () => {};
   @Input() onUpdate: () => void = () => {};
 
@@ -412,11 +419,33 @@ export class KycDetailModalComponent implements OnInit {
     this.loadUserFiles();
   }
 
+  getTotalSubmissions(process: KycProcessListItem | KycProcessDetail) {
+    const proc = process as KycProcessListItem;
+    return proc.totalSubmissions;
+  }
+
+  getTotalApprove(process: KycProcessListItem | KycProcessDetail) {
+    const proc = process as KycProcessListItem;
+    return proc.approvedCount;
+  }
+
+  getTotalReject(process: KycProcessListItem | KycProcessDetail) {
+    const proc = process as KycProcessListItem;
+    return proc.rejectedCount;
+  }
+
   private updateDocumentStatus(): void {
-    this.documentTypes[0].hasDocument = this.process.hasIdFront;
-    this.documentTypes[1].hasDocument = this.process.hasIdBack;
-    this.documentTypes[2].hasDocument = this.process.hasPassport;
-    this.documentTypes[3].hasDocument = this.process.hasFacePhoto;
+    if ('hasFrontIdDocument' in this.process) {
+      this.documentTypes[0].hasDocument = this.process.hasFrontIdDocument;
+      this.documentTypes[1].hasDocument = this.process.hasBackIdDocument;
+      this.documentTypes[2].hasDocument = this.process.hasPassport;
+      this.documentTypes[3].hasDocument = this.process.hasFacePhoto;
+    } else {
+      this.documentTypes[0].hasDocument = this.process.hasFrontNationalId;
+      this.documentTypes[1].hasDocument = this.process.hasBackNationalId;
+      this.documentTypes[2].hasDocument = this.process.hasPassport;
+      this.documentTypes[3].hasDocument = this.process.hasFacePhoto;
+    }
   }
 
   private loadUserFiles(): void {
@@ -433,6 +462,35 @@ export class KycDetailModalComponent implements OnInit {
         console.error('Failed to load user files:', error);
       },
     });
+  }
+
+  getHistoryItems() {
+    // Use history if it's a list item, otherwise use documents or create from current process
+    if ('history' in this.process && this.process.history) {
+      return this.process.history;
+    } else if ('documents' in this.process && this.process.documents) {
+      // Convert documents to history format for detail view
+      return this.process.documents.map((doc) => ({
+        id: doc.id,
+        status: this.process.status,
+        createdAt: doc.createdAt,
+        reviewedAt: this.process.reviewedAt,
+        verificationComment: this.process.verificationComment,
+        isCurrent: true,
+      }));
+    } else {
+      // Create a single history item from current process state
+      return [
+        {
+          id: this.process.id,
+          status: this.process.status,
+          createdAt: this.process.createdAt,
+          reviewedAt: this.process.reviewedAt,
+          verificationComment: this.process.verificationComment,
+          isCurrent: true,
+        },
+      ];
+    }
   }
 
   canReview(): boolean {

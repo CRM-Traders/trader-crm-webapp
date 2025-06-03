@@ -1,11 +1,11 @@
 // src/app/core/models/kyc.model.ts
 export enum KycStatus {
-  New = 1,
-  PartiallyCompleted = 2,
-  DocumentsUploaded = 3,
-  UnderReview = 4,
-  Verified = 5,
-  Rejected = 6,
+  NotStarted = 0,
+  InProgress = 1,
+  DocumentsUploaded = 2,
+  UnderReview = 3,
+  Verified = 4,
+  Rejected = 5,
 }
 
 export interface KycHistoryItem {
@@ -17,9 +17,33 @@ export interface KycHistoryItem {
   isCurrent: boolean;
 }
 
-export interface KycProcess {
+export interface KycDocument {
+  id: string;
+  documentType: number;
+  fileName: string;
+  fileSize: number;
+  contentType: string;
+  status: number;
+  rejectionReason: string | null;
+  createdAt: string;
+  fileUrl: string;
+  fileSizeFormatted: string;
+  isImage: boolean;
+  isPdf: boolean;
+  documentTypeDisplayText: string;
+  statusDisplayText: string;
+  statusColorClass: string;
+  fileExtension: string;
+  documentTypeIcon: string;
+}
+
+// For detailed process view (individual process)
+export interface KycProcessDetail {
   id: string;
   userId: string;
+  userFirstName: string;
+  userLastName: string;
+  userEmail: string;
   status: KycStatus;
   sessionToken: string;
   createdAt: string;
@@ -27,10 +51,36 @@ export interface KycProcess {
   verificationComment: string | null;
   reviewedBy: string | null;
   reviewedAt: string | null;
-  userEmail: string | null;
-  userFullName: string | null;
-  hasIdFront: boolean;
-  hasIdBack: boolean;
+  documents: KycDocument[];
+  hasFrontNationalId: boolean;
+  hasBackNationalId: boolean;
+  hasPassport: boolean;
+  hasFacePhoto: boolean;
+  isDocumentationComplete: boolean;
+  userFullName: string;
+  canBeVerified: boolean;
+  isCompleted: boolean;
+  documentCount: number;
+  lastDocumentUploadDate: string | null;
+  statusDisplayText: string;
+  statusColorClass: string;
+}
+
+// For list view (matches network response structure)
+export interface KycProcessListItem {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userFullName: string;
+  status: KycStatus;
+  sessionToken: string;
+  createdAt: string;
+  lastActivityTime: string;
+  verificationComment: string | null;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  hasFrontIdDocument: boolean;
+  hasBackIdDocument: boolean;
   hasPassport: boolean;
   hasFacePhoto: boolean;
   isDocumentationComplete: boolean;
@@ -42,7 +92,7 @@ export interface KycProcess {
 }
 
 export interface KycProcessResponse {
-  items: KycProcess[];
+  items: KycProcessListItem[];
   totalCount: number;
   pageNumber: number;
   pageSize: number;

@@ -27,6 +27,7 @@ export class AuthService implements OnDestroy {
   private readonly REFRESH_TOKEN_KEY = 'LXP6usaZ340gDciGr69MQpPwpEdvPj9M';
   private readonly ROLE_KEY = '9JeQyQTsI03hbuMtl9tR1TjbOFGWf54p';
   private readonly EXPIRATION_KEY = 'z6ipay7ciaSpZQbb6cDLueVAAs0WtRjs';
+  private readonly NAME_KEY = 'amskskwmwi7ciaSpZQbb6cDLueVAAs0WtRjs';
 
   private refreshTokenInProgress = false;
   private refreshTokenSubject = new BehaviorSubject<string | null>(null);
@@ -163,6 +164,10 @@ export class AuthService implements OnDestroy {
     return localStorage.getItem(this.ROLE_KEY) || '';
   }
 
+  getName(): string {
+    return localStorage.getItem(this.NAME_KEY) || '';
+  }
+
   getTokenExpiration(): number {
     const expString = localStorage.getItem(this.EXPIRATION_KEY);
     return expString ? parseInt(expString, 10) : 0;
@@ -194,6 +199,7 @@ export class AuthService implements OnDestroy {
     localStorage.setItem(this.REFRESH_TOKEN_KEY, authData.refreshToken);
     localStorage.setItem(this.ROLE_KEY, authData.role);
     localStorage.setItem(this.EXPIRATION_KEY, `${authData.exp}`);
+    localStorage.setItem(this.NAME_KEY, authData.name);
   }
 
   private clearAuthData(): void {
@@ -201,6 +207,7 @@ export class AuthService implements OnDestroy {
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.ROLE_KEY);
     localStorage.removeItem(this.EXPIRATION_KEY);
+    localStorage.removeItem(this.NAME_KEY);
   }
 
   private initTokenRefresh(): void {
