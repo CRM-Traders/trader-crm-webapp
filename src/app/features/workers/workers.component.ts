@@ -113,7 +113,12 @@ export class WorkersComponent implements OnInit {
 
   onlineCount = 0;
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.workersService.getActiveWorkers().subscribe((result: any) => {
+      this.totalCount = result.totalUsers;
+      this.onlineCount = result.activeUsersTotalCount;
+    });
+  }
 
   openPermissionDialog(user: any) {
     this.modalService.open(

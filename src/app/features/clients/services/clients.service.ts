@@ -72,4 +72,8 @@ export class ClientsService {
       }
     );
   }
+
+  getActiveClients() {
+    return this.httpService.get(`identity/api/users/get-active-users?role=6`);
+  }
 }
