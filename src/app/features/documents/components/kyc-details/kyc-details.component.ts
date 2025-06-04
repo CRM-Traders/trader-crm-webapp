@@ -13,6 +13,7 @@ import { AlertService } from '../../../../core/services/alert.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { HttpService } from '../../../../core/services/http.service';
 import { StorageService } from '../../../../core/services/storage.service';
+import { HttpParams } from '@angular/common/http';
 
 // Enhanced KYC Models for Details View
 export interface KycDocument {
@@ -155,7 +156,7 @@ export class KycDetailsComponent implements OnInit {
 
   readonly canVerify = computed(() => {
     const proc = this._process();
-    return proc?.isDocumentationComplete;
+    return proc?.canBeVerified;
   });
 
   // Forms
@@ -209,27 +210,20 @@ export class KycDetailsComponent implements OnInit {
 
   openDocumentPreview(document: KycDocument): void {
     this._selectedDocument.set(document);
-
     if (document.isImage || document.isPdf) {
       this.loadDocumentPreview(document);
-    } else {
-      this.downloadDocument(document);
     }
   }
 
   private loadDocumentPreview(document: KycDocument): void {
-    this.storageService.downloadFile(document.fileStorageId).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const safeUrl = this.sanitizer.bypassSecurityTrustUrl(url);
-        this._previewUrl.set(safeUrl);
+    this.httpService
+      .getFile(`storage/api/files/${document.fileStorageId}`)
+      .subscribe((result: any) => {
+        const url = URL.createObjectURL(result);
+
+        this._previewUrl.set(url);
         this._showPreview.set(true);
-      },
-      error: (error) => {
-        this.alertService.error('Failed to load document preview');
-        this.downloadDocument(document);
-      },
-    });
+      });
   }
 
   downloadDocument(document: KycDocument): void {
@@ -274,7 +268,7 @@ export class KycDetailsComponent implements OnInit {
       };
 
       this.httpService
-        .post<VerificationResponse>('api/kyc/verify', request)
+        .post<VerificationResponse>('identity/api/kyc/verify', request)
         .subscribe({
           next: (response) => {
             this._verifying.set(false);
