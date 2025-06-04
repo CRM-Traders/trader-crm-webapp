@@ -1,76 +1,540 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  inject,
+  computed,
+  signal,
+} from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service';
 import { RouterModule } from '@angular/router';
+import { CalendarService, CalendarEvent } from './services/calendar.service';
+
+interface EventFormData {
+  title: string;
+  description: string;
+  location: string;
+  startDate: string;
+  startTime: string;
+  endDate: string;
+  endTime: string;
+  allDay: boolean;
+  color: string;
+}
 
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss'],
 })
-export class CalendarComponent implements OnInit {
-  private themeService = inject(ThemeService);
+export class CalendarComponent implements OnInit, OnDestroy {
+  private readonly themeService = inject(ThemeService);
+  private readonly calendarService = inject(CalendarService);
+  private readonly destroy$ = new Subject<void>();
 
-  isDarkMode = false;
-  currentDate = new Date();
-  displayDate = new Date();
-  selectedDate: Date | null = null;
+  // Reactive state from services
+  readonly isDarkMode = computed(() => this.themeService.isDarkMode$);
+  readonly events = this.calendarService.events;
+  readonly loading = this.calendarService.loading;
+  readonly error = this.calendarService.error;
+
+  // Component state signals
+  private readonly _currentDate = signal(new Date());
+  private readonly _displayDate = signal(new Date());
+  private readonly _selectedDate = signal<Date | null>(null);
+  private readonly _view = signal<'month' | 'week' | 'day' | 'list'>('month');
+
+  readonly currentDate = this._currentDate.asReadonly();
+  readonly displayDate = this._displayDate.asReadonly();
+  readonly selectedDate = this._selectedDate.asReadonly();
+  readonly view = this._view.asReadonly();
+
+  // Modal and form state
+  showEventModal = false;
+  showEventDetails = false;
+  showDeleteConfirm = false;
+  editingEvent: CalendarEventDisplay | null = null;
+  selectedEvent: CalendarEventDisplay | null = null;
+
+  // Event form data
+  eventFormData: EventFormData = {
+    title: '',
+    description: '',
+    location: '',
+    startDate: '',
+    startTime: '09:00',
+    endDate: '',
+    endTime: '10:00',
+    allDay: false,
+    color: 'blue',
+  };
+
+  // Calendar display data
   weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   calendarDays: CalendarDay[] = [];
   weekHours: string[] = [];
   weekDates: Date[] = [];
-  allEvents: CalendarEvent[] = [];
-  weekEvents: Record<string, CalendarEvent[]> = {};
-  monthEvents: CalendarEvent[] = [];
+  weekEvents: Record<string, CalendarEventDisplay[]> = {};
 
-  view: 'month' | 'week' | 'day' | 'list' = 'month';
+  // Available colors for events
+  availableColors = [
+    { value: 'blue', label: 'Blue', class: 'bg-blue-500' },
+    { value: 'green', label: 'Green', class: 'bg-green-500' },
+    { value: 'red', label: 'Red', class: 'bg-red-500' },
+    { value: 'purple', label: 'Purple', class: 'bg-purple-500' },
+    { value: 'orange', label: 'Orange', class: 'bg-orange-500' },
+    { value: 'teal', label: 'Teal', class: 'bg-teal-500' },
+    { value: 'gray', label: 'Gray', class: 'bg-gray-500' },
+  ];
+
+  // Computed properties for display
+  readonly displayEvents = computed(() => {
+    return this.events().map((event) => this.convertToDisplayEvent(event));
+  });
+
+  readonly filteredEvents = computed(() => {
+    const view = this._view();
+    const displayDate = this._displayDate();
+    const events = this.displayEvents();
+
+    switch (view) {
+      case 'month':
+        return this.getEventsForMonth(events, displayDate);
+      case 'week':
+        return this.getEventsForWeek(events, displayDate);
+      case 'list':
+        return this.getUpcomingEvents(events);
+      default:
+        return events;
+    }
+  });
 
   ngOnInit(): void {
-    this.themeService.isDarkMode$.subscribe((isDark) => {
-      this.isDarkMode = isDark;
-    });
+    this.initializeComponent();
+    this.subscribeToThemeChanges();
+    this.loadInitialData();
+  }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private initializeComponent(): void {
     this.generateCalendarDays();
     this.generateWeekDays();
     this.generateHours();
-    this.generateSampleEvents();
-    this.updateEventsDisplay();
   }
 
+  private subscribeToThemeChanges(): void {
+    this.themeService.isDarkMode$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        // Theme changes are handled reactively through computed signals
+      });
+  }
+
+  private loadInitialData(): void {
+    this.loadEventsForCurrentView();
+  }
+
+  private loadEventsForCurrentView(): void {
+    const view = this._view();
+    const displayDate = this._displayDate();
+    let startDate: Date;
+    let endDate: Date;
+
+    switch (view) {
+      case 'month':
+        startDate = new Date(
+          displayDate.getFullYear(),
+          displayDate.getMonth(),
+          1
+        );
+        endDate = new Date(
+          displayDate.getFullYear(),
+          displayDate.getMonth() + 1,
+          0
+        );
+        break;
+      case 'week':
+        startDate = this.getWeekStart(displayDate);
+        endDate = this.getWeekEnd(displayDate);
+        break;
+      default:
+        startDate = new Date(
+          displayDate.getFullYear(),
+          displayDate.getMonth(),
+          1
+        );
+        endDate = new Date(
+          displayDate.getFullYear(),
+          displayDate.getMonth() + 1,
+          0
+        );
+    }
+
+    this.calendarService
+      .getEvents(startDate, endDate)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.updateEventsDisplay();
+        },
+        error: (error) => {
+          console.error('Failed to load calendar events:', error);
+        },
+      });
+  }
+
+  private convertToDisplayEvent(event: CalendarEvent): CalendarEventDisplay {
+    return {
+      id: event.id,
+      title: event.title,
+      description: event.description || undefined,
+      location: event.location || undefined,
+      start: new Date(event.start),
+      end: new Date(event.end),
+      allDay: event.allDay,
+      color: event.color,
+    };
+  }
+
+  private getEventsForMonth(
+    events: CalendarEventDisplay[],
+    displayDate: Date
+  ): CalendarEventDisplay[] {
+    const startOfMonth = new Date(
+      displayDate.getFullYear(),
+      displayDate.getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      displayDate.getFullYear(),
+      displayDate.getMonth() + 1,
+      0
+    );
+
+    return events.filter((event) => {
+      const eventDate = event.start;
+      return eventDate >= startOfMonth && eventDate <= endOfMonth;
+    });
+  }
+
+  private getEventsForWeek(
+    events: CalendarEventDisplay[],
+    displayDate: Date
+  ): CalendarEventDisplay[] {
+    const weekStart = this.getWeekStart(displayDate);
+    const weekEnd = this.getWeekEnd(displayDate);
+
+    return events.filter((event) => {
+      const eventDate = event.start;
+      return eventDate >= weekStart && eventDate <= weekEnd;
+    });
+  }
+
+  private getUpcomingEvents(
+    events: CalendarEventDisplay[]
+  ): CalendarEventDisplay[] {
+    const now = new Date();
+    return events
+      .filter((event) => event.start >= now)
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
+
+  private getWeekStart(date: Date): Date {
+    const weekStart = new Date(date);
+    weekStart.setDate(date.getDate() - date.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+    return weekStart;
+  }
+
+  private getWeekEnd(date: Date): Date {
+    const weekEnd = new Date(date);
+    weekEnd.setDate(date.getDate() - date.getDay() + 6);
+    weekEnd.setHours(23, 59, 59, 999);
+    return weekEnd;
+  }
+
+  // Event Management Methods
+  openCreateEventModal(selectedDate?: Date): void {
+    this.editingEvent = null;
+    this.resetEventForm();
+
+    if (selectedDate) {
+      const dateString = this.formatDateForInput(selectedDate);
+      this.eventFormData.startDate = dateString;
+      this.eventFormData.endDate = dateString;
+    } else {
+      const today = new Date();
+      const todayString = this.formatDateForInput(today);
+      this.eventFormData.startDate = todayString;
+      this.eventFormData.endDate = todayString;
+    }
+
+    this.showEventModal = true;
+  }
+
+  openEditEventModal(event: CalendarEventDisplay): void {
+    this.editingEvent = event;
+    this.populateEventForm(event);
+    this.showEventModal = true;
+    this.showEventDetails = false;
+  }
+
+  openEventDetails(event: CalendarEventDisplay): void {
+    this.selectedEvent = event;
+    this.showEventDetails = true;
+  }
+
+  closeEventModal(): void {
+    this.showEventModal = false;
+    this.editingEvent = null;
+    this.resetEventForm();
+  }
+
+  closeEventDetails(): void {
+    this.showEventDetails = false;
+    this.selectedEvent = null;
+  }
+
+  private resetEventForm(): void {
+    this.eventFormData = {
+      title: '',
+      description: '',
+      location: '',
+      startDate: '',
+      startTime: '09:00',
+      endDate: '',
+      endTime: '10:00',
+      allDay: false,
+      color: 'blue',
+    };
+  }
+
+  private populateEventForm(event: CalendarEventDisplay): void {
+    this.eventFormData = {
+      title: event.title,
+      description: event.description || '',
+      location: event.location || '',
+      startDate: this.formatDateForInput(event.start),
+      startTime: this.formatTimeForInput(event.start),
+      endDate: this.formatDateForInput(event.end),
+      endTime: this.formatTimeForInput(event.end),
+      allDay: event.allDay,
+      color: event.color,
+    };
+  }
+
+  onAllDayChange(): void {
+    if (this.eventFormData.allDay) {
+      this.eventFormData.startTime = '00:00';
+      this.eventFormData.endTime = '23:59';
+    } else {
+      this.eventFormData.startTime = '09:00';
+      this.eventFormData.endTime = '10:00';
+    }
+  }
+
+  saveEvent(form: NgForm): void {
+    if (!form.valid) {
+      return;
+    }
+
+    const startDateTime = this.createDateTimeFromForm(
+      this.eventFormData.startDate,
+      this.eventFormData.allDay ? '00:00' : this.eventFormData.startTime
+    );
+
+    const endDateTime = this.createDateTimeFromForm(
+      this.eventFormData.endDate,
+      this.eventFormData.allDay ? '23:59' : this.eventFormData.endTime
+    );
+
+    const eventData = {
+      title: this.eventFormData.title.trim(),
+      description: this.eventFormData.description.trim() || undefined,
+      location: this.eventFormData.location.trim() || undefined,
+      start: startDateTime,
+      end: endDateTime,
+      allDay: this.eventFormData.allDay,
+      color: this.eventFormData.color,
+    };
+
+    if (this.editingEvent) {
+      this.updateEvent(this.editingEvent.id, eventData);
+    } else {
+      this.createEvent(eventData);
+    }
+  }
+
+  createEvent(eventData: {
+    title: string;
+    description?: string;
+    location?: string;
+    start: Date;
+    end: Date;
+    allDay: boolean;
+    color: string;
+  }): void {
+    const createData = {
+      title: eventData.title,
+      description: eventData.description || null,
+      location: eventData.location || null,
+      startTime: this.calendarService.createISOString(eventData.start),
+      endTime: this.calendarService.createISOString(eventData.end),
+      allDay: eventData.allDay,
+      color: eventData.color,
+    };
+
+    this.calendarService
+      .createEvent(createData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.closeEventModal();
+          this.updateEventsDisplay();
+        },
+        error: (error) => {
+          console.error('Failed to create event:', error);
+        },
+      });
+  }
+
+  updateEvent(
+    eventId: string,
+    eventData: {
+      title: string;
+      description?: string;
+      location?: string;
+      start: Date;
+      end: Date;
+      allDay: boolean;
+      color: string;
+    }
+  ): void {
+    const updateData = {
+      title: eventData.title,
+      description: eventData.description || null,
+      location: eventData.location || null,
+      startTime: this.calendarService.createISOString(eventData.start),
+      endTime: this.calendarService.createISOString(eventData.end),
+      allDay: eventData.allDay,
+      color: eventData.color,
+    };
+
+    this.calendarService
+      .updateEvent(eventId, updateData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.closeEventModal();
+          this.closeEventDetails();
+          this.updateEventsDisplay();
+        },
+        error: (error) => {
+          console.error('Failed to update event:', error);
+        },
+      });
+  }
+
+  confirmDeleteEvent(): void {
+    this.showDeleteConfirm = true;
+  }
+
+  executeDeleteEvent(): void {
+    const eventToDelete = this.editingEvent || this.selectedEvent;
+    if (!eventToDelete) {
+      return;
+    }
+
+    this.calendarService
+      .deleteEvent(eventToDelete.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.showDeleteConfirm = false;
+          this.closeEventModal();
+          this.closeEventDetails();
+          this.updateEventsDisplay();
+        },
+        error: (error) => {
+          console.error('Failed to delete event:', error);
+          this.showDeleteConfirm = false;
+        },
+      });
+  }
+
+  clearError(): void {
+    // This would be implemented in the calendar service
+    // For now, we'll just trigger a refresh
+    this.refreshEvents();
+  }
+
+  showMoreEvents(day: CalendarDay): void {
+    // Implementation for showing more events in a day
+    // Could open a modal or expand the day view
+    this.selectDate(day);
+  }
+
+  // Helper Methods
+  private formatDateForInput(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  private formatTimeForInput(date: Date): string {
+    return date.toTimeString().slice(0, 5);
+  }
+
+  private createDateTimeFromForm(dateString: string, timeString: string): Date {
+    return new Date(`${dateString}T${timeString}:00`);
+  }
+
+  private createDateTimeFromFormISO(
+    dateString: string,
+    timeString: string
+  ): string {
+    return new Date(`${dateString}T${timeString}:00`).toISOString();
+  }
+
+  // Calendar Navigation and Display Methods
   getDateFromString(dateString: string): Date {
     return new Date(dateString);
   }
 
   generateCalendarDays(): void {
     this.calendarDays = [];
+    const displayDate = this._displayDate();
 
     const firstDayOfMonth = new Date(
-      this.displayDate.getFullYear(),
-      this.displayDate.getMonth(),
+      displayDate.getFullYear(),
+      displayDate.getMonth(),
       1
     );
-
     const lastDayOfMonth = new Date(
-      this.displayDate.getFullYear(),
-      this.displayDate.getMonth() + 1,
+      displayDate.getFullYear(),
+      displayDate.getMonth() + 1,
       0
     );
-
     const firstDayOfWeek = firstDayOfMonth.getDay();
-
     const prevMonthLastDay = new Date(
-      this.displayDate.getFullYear(),
-      this.displayDate.getMonth(),
+      displayDate.getFullYear(),
+      displayDate.getMonth(),
       0
     ).getDate();
 
+    // Previous month days
     for (let i = 0; i < firstDayOfWeek; i++) {
       const day = prevMonthLastDay - firstDayOfWeek + i + 1;
       const date = new Date(
-        this.displayDate.getFullYear(),
-        this.displayDate.getMonth() - 1,
+        displayDate.getFullYear(),
+        displayDate.getMonth() - 1,
         day
       );
       this.calendarDays.push({
@@ -83,10 +547,11 @@ export class CalendarComponent implements OnInit {
       });
     }
 
+    // Current month days
     for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
       const date = new Date(
-        this.displayDate.getFullYear(),
-        this.displayDate.getMonth(),
+        displayDate.getFullYear(),
+        displayDate.getMonth(),
         i
       );
       this.calendarDays.push({
@@ -99,11 +564,12 @@ export class CalendarComponent implements OnInit {
       });
     }
 
+    // Next month days
     const remainingDays = 42 - this.calendarDays.length;
     for (let i = 1; i <= remainingDays; i++) {
       const date = new Date(
-        this.displayDate.getFullYear(),
-        this.displayDate.getMonth() + 1,
+        displayDate.getFullYear(),
+        displayDate.getMonth() + 1,
         i
       );
       this.calendarDays.push({
@@ -119,9 +585,8 @@ export class CalendarComponent implements OnInit {
 
   generateWeekDays(): void {
     this.weekDates = [];
-
-    const startDate = new Date(this.displayDate);
-    startDate.setDate(startDate.getDate() - startDate.getDay());
+    const displayDate = this._displayDate();
+    const startDate = this.getWeekStart(displayDate);
 
     for (let i = 0; i < 7; i++) {
       const date = new Date(startDate);
@@ -139,105 +604,25 @@ export class CalendarComponent implements OnInit {
     }
   }
 
-  generateSampleEvents(): void {
-    this.allEvents = [];
-
-    const year = this.currentDate.getFullYear();
-    const month = this.currentDate.getMonth();
-    const date = this.currentDate.getDate();
-
-    this.allEvents = [
-      {
-        id: '1',
-        title: 'Team Meeting',
-        description: 'Weekly team sync with project updates',
-        location: 'Conference Room A',
-        start: new Date(year, month, date, 10, 0),
-        end: new Date(year, month, date, 11, 30),
-        allDay: false,
-        color: 'blue',
-      },
-      {
-        id: '2',
-        title: 'Client Presentation',
-        description: 'Presenting new trading platform features',
-        location: 'Main Boardroom',
-        start: new Date(year, month, date + 1, 14, 0),
-        end: new Date(year, month, date + 1, 15, 30),
-        allDay: false,
-        color: 'green',
-      },
-      {
-        id: '3',
-        title: 'Quarterly Review',
-        description: 'Review of Q2 performance metrics',
-        location: 'Virtual Meeting',
-        start: new Date(year, month, date + 2, 9, 0),
-        end: new Date(year, month, date + 2, 12, 0),
-        allDay: false,
-        color: 'purple',
-      },
-      {
-        id: '4',
-        title: 'System Maintenance',
-        description: 'Scheduled downtime for server updates',
-        location: 'N/A',
-        start: new Date(year, month, date + 3),
-        end: new Date(year, month, date + 3),
-        allDay: true,
-        color: 'red',
-      },
-      {
-        id: '5',
-        title: 'Training Workshop',
-        description: 'New compliance procedures training',
-        location: 'Training Room 2',
-        start: new Date(year, month, date - 1, 13, 0),
-        end: new Date(year, month, date - 1, 16, 0),
-        allDay: false,
-        color: 'orange',
-      },
-      {
-        id: '6',
-        title: 'Market Analysis',
-        description: 'Weekly market trend review',
-        location: 'Trading Floor',
-        start: new Date(year, month, date - 2, 8, 30),
-        end: new Date(year, month, date - 2, 9, 30),
-        allDay: false,
-        color: 'teal',
-      },
-      {
-        id: '7',
-        title: 'Holiday - Memorial Day',
-        description: 'Office Closed',
-        location: 'N/A',
-        start: new Date(year, month, date + 5),
-        end: new Date(year, month, date + 5),
-        allDay: true,
-        color: 'gray',
-      },
-    ];
-  }
-
   updateEventsDisplay(): void {
+    const events = this.displayEvents();
+
+    // Update calendar days with events
     this.calendarDays.forEach((day) => {
-      day.events = this.allEvents
+      day.events = events
         .filter((event) => this.isSameDay(event.start, day.date))
         .slice(0, 3);
-
       day.hasEvents = day.events.length > 0;
     });
 
+    // Update week events
     this.weekEvents = {};
     this.weekDates.forEach((date, dayIndex) => {
       const dayKey = `day_${dayIndex}`;
-      this.weekEvents[dayKey] = this.allEvents.filter((event) =>
+      this.weekEvents[dayKey] = events.filter((event) =>
         this.isSameDay(event.start, date)
       );
     });
-
-    this.allEvents.sort((a, b) => a.start.getTime() - b.start.getTime());
   }
 
   isSameDay(date1: Date, date2: Date): boolean {
@@ -250,70 +635,70 @@ export class CalendarComponent implements OnInit {
 
   isToday(date: Date): boolean {
     const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
+    return this.isSameDay(date, today);
   }
 
+  // Navigation methods
   goToPreviousMonth(): void {
-    this.displayDate = new Date(
-      this.displayDate.getFullYear(),
-      this.displayDate.getMonth() - 1,
-      1
-    );
+    const newDate = new Date(this._displayDate());
+    newDate.setMonth(newDate.getMonth() - 1);
+    this._displayDate.set(newDate);
     this.generateCalendarDays();
-    this.updateEventsDisplay();
+    this.loadEventsForCurrentView();
   }
 
   goToNextMonth(): void {
-    this.displayDate = new Date(
-      this.displayDate.getFullYear(),
-      this.displayDate.getMonth() + 1,
-      1
-    );
+    const newDate = new Date(this._displayDate());
+    newDate.setMonth(newDate.getMonth() + 1);
+    this._displayDate.set(newDate);
     this.generateCalendarDays();
-    this.updateEventsDisplay();
+    this.loadEventsForCurrentView();
   }
 
   goToPreviousWeek(): void {
-    const newDate = new Date(this.displayDate);
+    const newDate = new Date(this._displayDate());
     newDate.setDate(newDate.getDate() - 7);
-    this.displayDate = newDate;
+    this._displayDate.set(newDate);
     this.generateWeekDays();
-    this.updateEventsDisplay();
+    this.loadEventsForCurrentView();
   }
 
   goToNextWeek(): void {
-    const newDate = new Date(this.displayDate);
+    const newDate = new Date(this._displayDate());
     newDate.setDate(newDate.getDate() + 7);
-    this.displayDate = newDate;
+    this._displayDate.set(newDate);
     this.generateWeekDays();
-    this.updateEventsDisplay();
+    this.loadEventsForCurrentView();
   }
 
   goToToday(): void {
-    this.displayDate = new Date();
+    const today = new Date();
+    this._displayDate.set(today);
+    this._currentDate.set(today);
     this.generateCalendarDays();
     this.generateWeekDays();
-    this.updateEventsDisplay();
+    this.loadEventsForCurrentView();
   }
 
   selectDate(day: CalendarDay): void {
-    this.selectedDate = day.date;
+    this._selectedDate.set(day.date);
   }
 
   changeView(view: 'month' | 'week' | 'day' | 'list'): void {
-    this.view = view;
+    this._view.set(view);
 
     if (view === 'week') {
       this.generateWeekDays();
     }
 
-    this.updateEventsDisplay();
+    this.loadEventsForCurrentView();
   }
 
+  refreshEvents(): void {
+    this.loadEventsForCurrentView();
+  }
+
+  // Formatting methods
   formatDate(date: Date): string {
     return date.toLocaleDateString('en-US', {
       month: 'long',
@@ -340,7 +725,7 @@ export class CalendarComponent implements OnInit {
     }
   }
 
-  formatEventTime(event: CalendarEvent): string {
+  formatEventTime(event: CalendarEventDisplay): string {
     if (event.allDay) {
       return 'All Day';
     } else {
@@ -359,7 +744,7 @@ export class CalendarComponent implements OnInit {
   }
 
   calculateEventPosition(
-    event: CalendarEvent,
+    event: CalendarEventDisplay,
     dayIndex: number
   ): { top: string; height: string } {
     const startHour = event.start.getHours();
@@ -368,16 +753,14 @@ export class CalendarComponent implements OnInit {
     const endMinutes = event.end.getMinutes();
 
     const hourHeight = 60;
-
     const top = startHour * hourHeight + (startMinutes / 60) * hourHeight;
-
     const duration = endHour - startHour + (endMinutes - startMinutes) / 60;
     const height = Math.max(30, duration * hourHeight);
 
     return { top: `${top}px`, height: `${height}px` };
   }
 
-  getEventStyles(color: string): any {
+  getEventStyles(color: string): string {
     const bgColors: Record<string, string> = {
       blue: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700',
       green:
@@ -417,9 +800,9 @@ export class CalendarComponent implements OnInit {
   }
 
   groupEventsByDay(
-    events: CalendarEvent[]
-  ): { date: string; events: CalendarEvent[] }[] {
-    const groupedEvents: { [key: string]: CalendarEvent[] } = {};
+    events: CalendarEventDisplay[]
+  ): { date: string; events: CalendarEventDisplay[] }[] {
+    const groupedEvents: { [key: string]: CalendarEventDisplay[] } = {};
 
     events.forEach((event) => {
       const dateKey = event.start.toDateString();
@@ -434,6 +817,11 @@ export class CalendarComponent implements OnInit {
       events: groupedEvents[dateKey],
     }));
   }
+
+  // Getter for template access to filtered events
+  get allEvents(): CalendarEventDisplay[] {
+    return this.filteredEvents();
+  }
 }
 
 interface CalendarDay {
@@ -442,10 +830,10 @@ interface CalendarDay {
   isCurrentMonth: boolean;
   isToday: boolean;
   hasEvents: boolean;
-  events: CalendarEvent[];
+  events: CalendarEventDisplay[];
 }
 
-interface CalendarEvent {
+interface CalendarEventDisplay {
   id: string;
   title: string;
   description?: string;
