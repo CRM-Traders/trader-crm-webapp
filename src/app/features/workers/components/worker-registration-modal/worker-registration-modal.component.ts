@@ -11,6 +11,17 @@ import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import { WorkerRegistrationDto } from '../../models/worker.model';
 import { WorkersService } from '../../services/workers.service';
 
+interface UserRole {
+  value: number;
+  label: string;
+}
+
+interface RegistrationResponse {
+  username: string;
+  email: string;
+  password?: string; // Present when password was auto-generated
+}
+
 @Component({
   selector: 'app-worker-registration-modal',
   standalone: true,
@@ -26,7 +37,55 @@ import { WorkersService } from '../../services/workers.service';
 
       <!-- Modal Body -->
       <div class="px-6 py-6">
-        <form [formGroup]="registrationForm" class="space-y-4">
+        <!-- Success Message with Generated Password -->
+        <div
+          *ngIf="generatedPassword"
+          class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
+        >
+          <div class="flex items-center mb-2">
+            <svg
+              class="w-5 h-5 text-green-600 dark:text-green-400 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <h5 class="text-sm font-medium text-green-800 dark:text-green-200">
+              Worker Registered Successfully
+            </h5>
+          </div>
+          <p class="text-sm text-green-700 dark:text-green-300 mb-3">
+            A password has been generated for the new worker. Please copy and
+            securely share this password:
+          </p>
+          <div class="flex items-center space-x-2">
+            <input
+              type="text"
+              readonly
+              [value]="generatedPassword"
+              class="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-green-300 dark:border-green-600 rounded-md text-sm font-mono text-gray-900 dark:text-gray-100"
+            />
+            <button
+              type="button"
+              (click)="copyPassword()"
+              class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              {{ passwordCopied ? 'Copied!' : 'Copy' }}
+            </button>
+          </div>
+        </div>
+
+        <form
+          [formGroup]="registrationForm"
+          class="space-y-4"
+          *ngIf="!generatedPassword"
+        >
           <!-- First Name and Last Name Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -176,43 +235,42 @@ import { WorkersService } from '../../services/workers.service';
             </div>
           </div>
 
-          <!-- Password and Phone Number Row -->
+          <!-- Role and Phone Number Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label
-                for="password"
+                for="role"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Password <span class="text-red-500">*</span>
+                Role <span class="text-red-500">*</span>
               </label>
-              <input
-                type="password"
-                id="password"
-                formControlName="password"
+              <select
+                id="role"
+                formControlName="role"
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 [class.border-red-500]="
-                  registrationForm.get('password')?.invalid &&
-                  registrationForm.get('password')?.touched
+                  registrationForm.get('role')?.invalid &&
+                  registrationForm.get('role')?.touched
                 "
                 [class.focus:ring-red-500]="
-                  registrationForm.get('password')?.invalid &&
-                  registrationForm.get('password')?.touched
+                  registrationForm.get('role')?.invalid &&
+                  registrationForm.get('role')?.touched
                 "
-              />
+              >
+                <option value="" disabled>Select a role</option>
+                <option *ngFor="let role of userRoles" [value]="role.value">
+                  {{ role.label }}
+                </option>
+              </select>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
-                  registrationForm.get('password')?.invalid &&
-                  registrationForm.get('password')?.touched
+                  registrationForm.get('role')?.invalid &&
+                  registrationForm.get('role')?.touched
                 "
               >
-                <span
-                  *ngIf="registrationForm.get('password')?.errors?.['required']"
-                  >Password is required</span
-                >
-                <span
-                  *ngIf="registrationForm.get('password')?.errors?.['minlength']"
-                  >Password must be at least 6 characters</span
+                <span *ngIf="registrationForm.get('role')?.errors?.['required']"
+                  >Role is required</span
                 >
               </p>
             </div>
@@ -252,6 +310,50 @@ import { WorkersService } from '../../services/workers.service';
               </p>
             </div>
           </div>
+
+          <!-- Password Field (Optional) -->
+          <div>
+            <label
+              for="password"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Password
+              <span class="text-gray-500 text-xs"
+                >(Optional - will be generated if not provided)</span
+              >
+            </label>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              placeholder="Leave empty to generate automatically"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              [class.border-red-500]="
+                registrationForm.get('password')?.invalid &&
+                registrationForm.get('password')?.touched
+              "
+              [class.focus:ring-red-500]="
+                registrationForm.get('password')?.invalid &&
+                registrationForm.get('password')?.touched
+              "
+            />
+            <p
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+              *ngIf="
+                registrationForm.get('password')?.invalid &&
+                registrationForm.get('password')?.touched
+              "
+            >
+              <span
+                *ngIf="registrationForm.get('password')?.errors?.['minlength']"
+                >Password must be at least 6 characters</span
+              >
+            </p>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              If no password is provided, a secure password will be generated
+              automatically
+            </p>
+          </div>
         </form>
       </div>
 
@@ -260,6 +362,7 @@ import { WorkersService } from '../../services/workers.service';
         class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3"
       >
         <button
+          *ngIf="!generatedPassword"
           type="button"
           class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           (click)="onCancel()"
@@ -267,6 +370,7 @@ import { WorkersService } from '../../services/workers.service';
           Cancel
         </button>
         <button
+          *ngIf="!generatedPassword"
           type="button"
           class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           (click)="onSubmit()"
@@ -297,6 +401,14 @@ import { WorkersService } from '../../services/workers.service';
             {{ isSubmitting ? 'Registering...' : 'Register Worker' }}
           </span>
         </button>
+        <button
+          *ngIf="generatedPassword"
+          type="button"
+          class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+          (click)="onClose()"
+        >
+          Close
+        </button>
       </div>
     </div>
   `,
@@ -311,6 +423,16 @@ export class WorkerRegistrationModalComponent {
 
   isSubmitting = false;
   registrationForm: FormGroup;
+  generatedPassword: string | null = null;
+  passwordCopied = false;
+
+  userRoles: UserRole[] = [
+    { value: 1, label: 'User' },
+    { value: 2, label: 'Manager' },
+    { value: 3, label: 'Admin' },
+    { value: 4, label: 'SuperUser' },
+    { value: 8, label: 'Worker' },
+  ];
 
   constructor() {
     this.registrationForm = this.fb.group({
@@ -318,7 +440,8 @@ export class WorkerRegistrationModalComponent {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       username: ['', Validators.required],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      role: ['', Validators.required],
+      password: ['', [Validators.minLength(6)]], // Removed required validator
       phoneNumber: ['', Validators.required],
     });
   }
@@ -332,12 +455,34 @@ export class WorkerRegistrationModalComponent {
     }
 
     this.isSubmitting = true;
-    const workerData: WorkerRegistrationDto = this.registrationForm.value;
+    const formValue = this.registrationForm.value;
+
+    // Prepare the worker data
+    const workerData: WorkerRegistrationDto = {
+      firstName: formValue.firstName,
+      lastName: formValue.lastName,
+      email: formValue.email,
+      username: formValue.username,
+      role: Number.parseInt(formValue.role),
+      phoneNumber: formValue.phoneNumber,
+      // Only include password if it's provided
+      ...(formValue.password && { password: formValue.password }),
+    };
 
     this.workersService.registerWorker(workerData).subscribe({
-      next: () => {
-        this.alertService.success('Worker registered successfully!');
-        this.modalRef.close(true);
+      next: (response: RegistrationResponse) => {
+        this.isSubmitting = false;
+
+        // Check if a password was generated (response includes password field)
+        if (response.password) {
+          this.generatedPassword = response.password;
+          this.alertService.success(
+            'Worker registered successfully! A password has been generated.'
+          );
+        } else {
+          this.alertService.success('Worker registered successfully!');
+          this.modalRef.close(true);
+        }
       },
       error: (error) => {
         this.isSubmitting = false;
@@ -358,7 +503,41 @@ export class WorkerRegistrationModalComponent {
     });
   }
 
+  async copyPassword() {
+    if (!this.generatedPassword) return;
+
+    try {
+      await navigator.clipboard.writeText(this.generatedPassword);
+      this.passwordCopied = true;
+      this.alertService.success('Password copied to clipboard!');
+
+      // Reset the copied state after 3 seconds
+      setTimeout(() => {
+        this.passwordCopied = false;
+      }, 3000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = this.generatedPassword;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      this.passwordCopied = true;
+      this.alertService.success('Password copied to clipboard!');
+
+      setTimeout(() => {
+        this.passwordCopied = false;
+      }, 3000);
+    }
+  }
+
   onCancel() {
     this.modalRef.dismiss();
+  }
+
+  onClose() {
+    this.modalRef.close(true);
   }
 }
