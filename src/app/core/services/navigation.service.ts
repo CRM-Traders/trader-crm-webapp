@@ -20,96 +20,128 @@ export class NavigationService {
       label: 'Dashboard',
       icon: 'dashboard',
       route: '/dashboard',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
-
-    // Core Trading Operations
-    // {
-    //   label: 'Trading Live',
-    //   icon: 'traiding-live',
-    //   route: '/charts',
-    // },
-    // {
-    //   label: 'Trading Groups',
-    //   icon: 'traiding-groups',
-    //   route: '/trading-groups',
-    // },
-    // {
-    //   label: 'Trading Server Positions',
-    //   icon: 'trading-server-positions',
-    //   route: '/trading-server-positions',
-    // },
-    // {
-    //   label: 'Assets',
-    //   icon: 'assets',
-    //   route: '/assets',
-    // },
-
-    // User Management
     {
       label: 'Clients',
       icon: 'traders',
       route: '/clients',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
     {
       label: 'Affiliates',
       icon: 'affiliates',
       route: '/affiliates',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
     {
       label: 'Leads',
       icon: 'leads',
       route: '/leads',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
     {
       label: 'Workers',
       icon: 'workers',
       route: '/workers',
+      requiredRoles: [UserRole.SUPERUSER, UserRole.ADMIN],
     },
-
-    // Analytics & Reporting
-    // {
-    //   label: 'Analytics',
-    //   icon: 'analytics',
-    //   route: '/analytics',
-    // },
-
-    // Communication & Support
     {
       label: 'Support',
       icon: 'support',
       route: '/communications',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
     {
       label: 'Chat',
       icon: 'chat',
       route: '/employee-chat',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
     {
       label: 'Tickets',
       icon: 'tickets',
       route: '/tickets',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
     {
       label: 'Calendar',
       icon: 'calendar',
       route: '/calendar',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
 
     {
       label: 'Documents',
       icon: 'documents',
       route: '/documents',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
     },
     {
       label: 'API Docs',
       icon: 'api',
       route: '/api-docs',
+      requiredRoles: [UserRole.AFFILIATE, UserRole.SUPERUSER],
     },
     {
       label: 'KYC',
       icon: 'kyc',
       route: '/kyc-verification',
-      requiredRoles: [UserRole.Lead],
+      requiredRoles: [UserRole.LEAD, UserRole.CLIENT, UserRole.SUPERUSER],
     },
   ];
 

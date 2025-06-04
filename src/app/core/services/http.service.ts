@@ -21,6 +21,11 @@ export class HttpService {
     });
   }
 
+  getFile(endpoint: string): Observable<Blob> {
+    return this._http.get(`${this._apiUrl}/${endpoint}`, {
+      responseType: 'blob',
+    });
+  }
   post<T>(
     endpoint: string,
     body: any,

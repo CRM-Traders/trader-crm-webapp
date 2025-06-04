@@ -62,18 +62,20 @@ export class AffiliatesComponent implements OnInit {
       sortable: true,
       filterable: true,
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
+      filterType: 'text',
     },
     {
       field: 'email',
       header: 'Email',
       sortable: true,
       filterable: true,
+      filterType: 'text',
     },
     {
       field: 'phone',
       header: 'Phone',
       sortable: true,
-      filterable: true,
+      filterable: false,
       selector: (row: Affiliate) => row.phone || '-',
     },
     {
@@ -81,6 +83,7 @@ export class AffiliatesComponent implements OnInit {
       header: 'Website',
       sortable: true,
       filterable: true,
+      filterType: 'text',
       cellTemplate: null, // Will be set in ngOnInit
       hidden: false,
     },
@@ -90,6 +93,7 @@ export class AffiliatesComponent implements OnInit {
       sortable: true,
       filterable: true,
       type: 'number',
+      filterType: 'number',
     },
     {
       field: 'isActive',
@@ -97,6 +101,7 @@ export class AffiliatesComponent implements OnInit {
       sortable: true,
       filterable: true,
       cellTemplate: null,
+      filterType: 'boolean',
     },
     {
       field: 'createdAt',
@@ -105,6 +110,7 @@ export class AffiliatesComponent implements OnInit {
       filterable: true,
       type: 'date',
       format: 'short',
+      filterType: 'date',
     },
   ];
 

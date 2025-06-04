@@ -153,98 +153,143 @@
     left: 100%;
   }
 }
+/* Add these specific modal fixes to your kyc-details.component.scss */
 
-/* Verification modal specific styling */
+/* Ensure modal has proper z-index and visibility */
+.fixed.inset-0.z-50 {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+/* Modal backdrop styling */
+.bg-gray-500.bg-opacity-75 {
+  background-color: rgba(107, 114, 128, 0.75) !important;
+  backdrop-filter: blur(2px);
+}
+
+/* Modal content container - ensure it's visible */
+.inline-block.align-bottom.bg-white {
+  background-color: white !important;
+  color: #1f2937 !important;
+  position: relative !important;
+  z-index: 10000 !important;
+  min-height: 200px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure form content is visible */
 .verification-modal {
-  backdrop-filter: blur(4px);
-}
-
-/* Radio button custom styling */
-.radio-approve:checked + label {
-  color: #059669;
-}
-
-.radio-reject:checked + label {
-  color: #dc2626;
-}
-
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .document-grid {
-    grid-template-columns: 1fr;
+  .space-y-6 > div {
+    background-color: transparent !important;
+    color: #1f2937 !important;
   }
 
-  .preview-image {
-    max-height: 50vh;
+  /* Form labels */
+  label {
+    color: #374151 !important;
+    font-weight: 500 !important;
   }
 
-  .modal-content {
-    margin: 0;
-    min-height: 100vh;
-    border-radius: 0;
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .document-card {
-    border-width: 2px;
+  /* Radio button labels */
+  input[type="radio"] + label {
+    color: #374151 !important;
   }
 
-  .status-badge {
-    border-width: 2px;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .document-card,
-  .modal-overlay,
-  .modal-content,
-  .document-icon {
-    animation: none;
-    transition: none;
+  /* Textarea */
+  textarea {
+    background-color: white !important;
+    color: #1f2937 !important;
+    border: 1px solid #d1d5db !important;
   }
 
-  .status-pending {
-    animation: none;
+  /* Buttons */
+  button {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* Header text */
+  h3 {
+    color: #1f2937 !important;
+  }
+
+  /* Description text */
+  p {
+    color: #6b7280 !important;
   }
 }
 
-/* Print styles */
-@media print {
-  .modal-overlay,
-  .verification-modal,
-  .preview-modal {
-    display: none !important;
+/* Specific overrides for modal visibility */
+[role="dialog"] {
+  .text-gray-900 {
+    color: #1f2937 !important;
   }
 
-  .document-card {
-    break-inside: avoid;
+  .text-gray-700 {
+    color: #374151 !important;
+  }
+
+  .text-gray-500 {
+    color: #6b7280 !important;
+  }
+
+  .bg-white {
+    background-color: white !important;
   }
 }
 
-/* Focus styles for accessibility */
-.focus-visible:focus {
-  outline: 2px solid #4f46e5;
-  outline-offset: 2px;
+/* Ensure radio buttons are visible */
+input[type="radio"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  position: relative !important;
 }
 
-/* Custom scrollbar for modal content */
-.modal-content::-webkit-scrollbar {
-  width: 6px;
+/* Force visibility for all modal text elements */
+.fixed.inset-0.z-50 * {
+  visibility: visible !important;
 }
 
-.modal-content::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
+/* Override any conflicting styles */
+.fixed.inset-0.z-50 .inline-block {
+  transform: none !important;
+  opacity: 1 !important;
 }
 
-.modal-content::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+/* Debugging styles - remove after fixing */
+.verification-modal-debug {
+  border: 2px solid red !important;
+  background-color: yellow !important;
 }
 
-.modal-content::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* Alternative modal styling if the above doesn't work */
+.modal-content-override {
+  background: white !important;
+  color: black !important;
+  padding: 2rem !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  max-width: 32rem !important;
+  width: 100% !important;
+  margin: 2rem !important;
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+.modal-content-override * {
+  color: inherit !important;
+}
+
+.modal-content-override label {
+  color: #374151 !important;
+  display: block !important;
+}
+
+.modal-content-override input,
+.modal-content-override textarea {
+  background: white !important;
+  color: black !important;
+  border: 1px solid #d1d5db !important;
 }

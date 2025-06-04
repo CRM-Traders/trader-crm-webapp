@@ -1,14 +1,68 @@
+<!-- Loading Overlay -->
+<div
+  *ngIf="loading()"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+>
+  <div
+    class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center space-x-3"
+  >
+    <div
+      class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"
+    ></div>
+    <span class="text-gray-700 dark:text-gray-300">Loading events...</span>
+  </div>
+</div>
+
+<!-- Error Alert -->
+<div
+  *ngIf="error()"
+  class="mb-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md p-4"
+>
+  <div class="flex">
+    <div class="flex-shrink-0">
+      <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </div>
+    <div class="ml-3">
+      <p class="text-sm text-red-800 dark:text-red-200">{{ error() }}</p>
+    </div>
+    <div class="ml-auto pl-3">
+      <button
+        (click)="clearError()"
+        class="text-red-400 hover:text-red-600 dark:hover:text-red-300"
+      >
+        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path
+            fill-rule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Calendar Container -->
 <div
   class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
 >
+  <!-- Calendar Header -->
   <div
     class="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-3"
   >
     <div class="flex items-center">
+      <!-- Navigation Buttons -->
       <button
-        (click)="view === 'month' ? goToPreviousMonth() : goToPreviousWeek()"
+        (click)="view() === 'month' ? goToPreviousMonth() : goToPreviousWeek()"
         class="p-2 rounded-md text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Previous"
+        [disabled]="loading()"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -27,9 +81,10 @@
       </button>
 
       <button
-        (click)="view === 'month' ? goToNextMonth() : goToNextWeek()"
+        (click)="view() === 'month' ? goToNextMonth() : goToNextWeek()"
         class="p-2 rounded-md text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
         aria-label="Next"
+        [disabled]="loading()"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -50,56 +105,106 @@
       <button
         (click)="goToToday()"
         class="ml-2 px-3 py-1 text-sm rounded-md bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        [disabled]="loading()"
       >
         Today
       </button>
 
+      <!-- Calendar Title -->
       <h2 class="ml-4 text-xl font-semibold text-gray-800 dark:text-gray-100">
-        <ng-container *ngIf="view === 'month'">{{
-          formatDate(displayDate)
+        <ng-container *ngIf="view() === 'month'">{{
+          formatDate(displayDate())
         }}</ng-container>
-        <ng-container *ngIf="view === 'week'">{{
+        <ng-container *ngIf="view() === 'week'">{{
           formatWeekRange()
         }}</ng-container>
-        <ng-container *ngIf="view === 'list'">Upcoming Events</ng-container>
+        <ng-container *ngIf="view() === 'list'">Upcoming Events</ng-container>
       </h2>
     </div>
 
-    <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md">
+    <div class="flex items-center space-x-3">
+      <!-- Create Event Button -->
       <button
-        (click)="changeView('month')"
-        class="px-3 py-1 text-sm rounded-l-md"
-        [class.bg-white]="view === 'month' && !isDarkMode"
-        [class.bg-gray-800]="view === 'month' && isDarkMode"
-        [class.text-blue-600]="view === 'month'"
-        [class.shadow]="view === 'month'"
+        (click)="openCreateEventModal()"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        [disabled]="loading()"
       >
-        Month
+        <svg
+          class="h-4 w-4 mr-2 inline"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        New Event
       </button>
+
+      <!-- Refresh Button -->
       <button
-        (click)="changeView('week')"
-        class="px-3 py-1 text-sm"
-        [class.bg-white]="view === 'week' && !isDarkMode"
-        [class.bg-gray-800]="view === 'week' && isDarkMode"
-        [class.text-blue-600]="view === 'week'"
-        [class.shadow]="view === 'week'"
+        (click)="refreshEvents()"
+        class="p-2 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+        [disabled]="loading()"
+        title="Refresh Events"
       >
-        Week
+        <svg
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
       </button>
-      <button
-        (click)="changeView('list')"
-        class="px-3 py-1 text-sm rounded-r-md"
-        [class.bg-white]="view === 'list' && !isDarkMode"
-        [class.bg-gray-800]="view === 'list' && isDarkMode"
-        [class.text-blue-600]="view === 'list'"
-        [class.shadow]="view === 'list'"
-      >
-        List
-      </button>
+
+      <!-- View Toggle Buttons -->
+      <div class="flex bg-gray-100 dark:bg-gray-700 rounded-md">
+        <button
+          (click)="changeView('month')"
+          class="px-3 py-1 text-sm rounded-l-md"
+          [class.bg-white]="view() === 'month' && !isDarkMode()"
+          [class.bg-gray-800]="view() === 'month' && isDarkMode()"
+          [class.text-blue-600]="view() === 'month'"
+          [class.shadow]="view() === 'month'"
+        >
+          Month
+        </button>
+        <button
+          (click)="changeView('week')"
+          class="px-3 py-1 text-sm"
+          [class.bg-white]="view() === 'week' && !isDarkMode()"
+          [class.bg-gray-800]="view() === 'week' && isDarkMode()"
+          [class.text-blue-600]="view() === 'week'"
+          [class.shadow]="view() === 'week'"
+        >
+          Week
+        </button>
+        <button
+          (click)="changeView('list')"
+          class="px-3 py-1 text-sm rounded-r-md"
+          [class.bg-white]="view() === 'list' && !isDarkMode()"
+          [class.bg-gray-800]="view() === 'list' && isDarkMode()"
+          [class.text-blue-600]="view() === 'list'"
+          [class.shadow]="view() === 'list'"
+        >
+          List
+        </button>
+      </div>
     </div>
   </div>
 
-  <div *ngIf="view === 'month'" class="calendar-grid">
+  <!-- Month View -->
+  <div *ngIf="view() === 'month'" class="calendar-grid">
     <div class="grid grid-cols-7 bg-gray-50 dark:bg-gray-700">
       <div
         *ngFor="let day of weekDays"
@@ -112,15 +217,16 @@
     <div class="grid grid-cols-7 border-t border-gray-200 dark:border-gray-700">
       <div
         *ngFor="let day of calendarDays"
-        class="min-h-[100px] border-b border-r border-gray-200 dark:border-gray-700 p-1 relative"
-        [class.bg-white]="day.isCurrentMonth && !isDarkMode"
-        [class.bg-gray-800]="day.isCurrentMonth && isDarkMode"
-        [class.bg-gray-50]="!day.isCurrentMonth && !isDarkMode"
-        [class.bg-gray-900]="!day.isCurrentMonth && isDarkMode"
-        [class.text-gray-600]="!day.isCurrentMonth && !isDarkMode"
-        [class.text-gray-500]="!day.isCurrentMonth && isDarkMode"
+        class="min-h-[100px] border-b border-r border-gray-200 dark:border-gray-700 p-1 relative cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
+        [class.bg-white]="day.isCurrentMonth && !isDarkMode()"
+        [class.bg-gray-800]="day.isCurrentMonth && isDarkMode()"
+        [class.bg-gray-50]="!day.isCurrentMonth && !isDarkMode()"
+        [class.bg-gray-900]="!day.isCurrentMonth && isDarkMode()"
+        [class.text-gray-600]="!day.isCurrentMonth && !isDarkMode()"
+        [class.text-gray-500]="!day.isCurrentMonth && isDarkMode()"
         [class.font-bold]="day.isToday"
         (click)="selectDate(day)"
+        (dblclick)="openCreateEventModal(day.date)"
       >
         <div class="flex justify-between items-start">
           <div
@@ -130,6 +236,26 @@
           >
             {{ day.day }}
           </div>
+          <button
+            *ngIf="day.isCurrentMonth"
+            (click)="openCreateEventModal(day.date); $event.stopPropagation()"
+            class="opacity-0 hover:opacity-100 p-1 text-gray-400 hover:text-blue-600 rounded"
+            title="Create event"
+          >
+            <svg
+              class="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+          </button>
         </div>
 
         <div
@@ -137,16 +263,21 @@
           class="mt-1 space-y-1 overflow-y-auto max-h-[70px]"
         >
           <div
-            *ngFor="let event of day.events"
-            class="text-xs px-2 py-1 rounded truncate border-l-4"
+            *ngFor="let event of day.events; let i = index"
+            class="text-xs px-2 py-1 rounded truncate border-l-4 cursor-pointer hover:shadow-sm"
             [class]="getEventStyles(event.color)"
+            (click)="openEventDetails(event); $event.stopPropagation()"
+            [title]="
+              event.title + (event.description ? ' - ' + event.description : '')
+            "
           >
             {{ event.title }}
           </div>
 
           <div
             *ngIf="day.events.length > 3"
-            class="text-xs text-center text-gray-500 dark:text-gray-400 mt-1"
+            class="text-xs text-center text-gray-500 dark:text-gray-400 mt-1 cursor-pointer hover:text-blue-600"
+            (click)="showMoreEvents(day); $event.stopPropagation()"
           >
             +{{ day.events.length - 3 }} more
           </div>
@@ -155,7 +286,8 @@
     </div>
   </div>
 
-  <div *ngIf="view === 'week'" class="week-view">
+  <!-- Week View -->
+  <div *ngIf="view() === 'week'" class="week-view">
     <div
       class="grid grid-cols-8 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700"
     >
@@ -167,19 +299,20 @@
 
       <div
         *ngFor="let dateItem of weekDates; let i = index"
-        class="p-2 text-center"
-        [class.bg-blue-50]="isToday(dateItem) && !isDarkMode"
-        [class.bg-blue-900]="isToday(dateItem) && isDarkMode"
-        [class.bg-opacity-20]="isToday(dateItem) && isDarkMode"
+        class="p-2 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900"
+        [class.bg-blue-50]="isToday(dateItem) && !isDarkMode()"
+        [class.bg-blue-900]="isToday(dateItem) && isDarkMode()"
+        [class.bg-opacity-20]="isToday(dateItem) && isDarkMode()"
         [class.font-bold]="isToday(dateItem)"
+        (dblclick)="openCreateEventModal(dateItem)"
       >
         <div class="text-sm font-medium text-gray-600 dark:text-gray-300">
           {{ weekDays[i] }}
         </div>
         <div
           class="text-lg mt-1"
-          [class.text-blue-600]="isToday(dateItem) && !isDarkMode"
-          [class.text-blue-400]="isToday(dateItem) && isDarkMode"
+          [class.text-blue-600]="isToday(dateItem) && !isDarkMode()"
+          [class.text-blue-400]="isToday(dateItem) && isDarkMode()"
         >
           {{ dateItem.getDate() }}
         </div>
@@ -198,7 +331,8 @@
 
       <div
         *ngFor="let date of weekDates; let dayIndex = index"
-        class="relative border-r border-gray-200 dark:border-gray-700"
+        class="relative border-r border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+        (dblclick)="openCreateEventModal(date)"
       >
         <div
           *ngFor="let hour of weekHours"
@@ -207,10 +341,11 @@
 
         <div
           *ngFor="let event of weekEvents['day_' + dayIndex]"
-          class="absolute w-[95%] px-2 py-1 text-xs rounded overflow-hidden border-l-4 z-10"
+          class="absolute w-[95%] px-2 py-1 text-xs rounded overflow-hidden border-l-4 z-10 cursor-pointer hover:shadow-lg"
           [class]="getEventStyles(event.color)"
           [style.top]="calculateEventPosition(event, dayIndex).top"
           [style.height]="calculateEventPosition(event, dayIndex).height"
+          (click)="openEventDetails(event)"
         >
           <div class="font-semibold truncate">{{ event.title }}</div>
           <div *ngIf="!event.allDay" class="truncate">
@@ -221,12 +356,52 @@
     </div>
   </div>
 
-  <div *ngIf="view === 'list'" class="list-view">
+  <!-- List View -->
+  <div *ngIf="view() === 'list'" class="list-view">
     <div
       *ngIf="allEvents.length === 0"
       class="p-6 text-center text-gray-500 dark:text-gray-400"
     >
-      No upcoming events
+      <svg
+        class="mx-auto h-12 w-12 text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+        No events
+      </h3>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Get started by creating a new event.
+      </p>
+      <div class="mt-6">
+        <button
+          (click)="openCreateEventModal()"
+          class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg
+            class="-ml-1 mr-2 h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          New Event
+        </button>
+      </div>
     </div>
 
     <div
@@ -242,35 +417,80 @@
 
         <div
           *ngFor="let event of group.events"
-          class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700"
+          class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+          (click)="openEventDetails(event)"
         >
-          <div class="flex items-start">
-            <div class="w-24 flex-shrink-0">
-              <div class="text-sm font-medium text-gray-900 dark:text-white">
-                {{ event.allDay ? "All Day" : formatTimeString(event.start) }}
+          <div class="flex items-start justify-between">
+            <div class="flex items-start flex-1">
+              <div class="w-24 flex-shrink-0">
+                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                  {{ event.allDay ? "All Day" : formatTimeString(event.start) }}
+                </div>
+              </div>
+
+              <div class="flex-1 min-w-0 ml-3">
+                <div class="flex items-center">
+                  <div
+                    class="h-2 w-2 rounded-full mr-2"
+                    [class]="getDotColor(event.color)"
+                  ></div>
+                  <h4
+                    class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                  >
+                    {{ event.title }}
+                  </h4>
+                </div>
+
+                <div
+                  *ngIf="event.location"
+                  class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3 w-3 mr-1"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  {{ event.location }}
+                </div>
+
+                <div
+                  *ngIf="event.description"
+                  class="mt-1 text-xs text-gray-600 dark:text-gray-300 line-clamp-2"
+                >
+                  {{ event.description }}
+                </div>
               </div>
             </div>
 
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center">
-                <div
-                  class="h-2 w-2 rounded-full mr-2"
-                  [class]="getDotColor(event.color)"
-                ></div>
-                <h4
-                  class="text-sm font-medium text-gray-900 dark:text-white truncate"
-                >
-                  {{ event.title }}
-                </h4>
-              </div>
-
+            <div class="ml-4 flex items-center space-x-2">
               <div
-                *ngIf="event.location"
-                class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center"
+                *ngIf="!event.allDay"
+                class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
+              >
+                {{ formatTimeString(event.end) }}
+              </div>
+              <button
+                (click)="openEditEventModal(event); $event.stopPropagation()"
+                class="text-gray-400 hover:text-blue-600 p-1 rounded"
+                title="Edit event"
               >
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-3 w-3 mr-1"
+                  class="h-4 w-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -279,35 +499,491 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
                 </svg>
-                {{ event.location }}
-              </div>
-
-              <div
-                *ngIf="event.description"
-                class="mt-1 text-xs text-gray-600 dark:text-gray-300"
-              >
-                {{ event.description }}
-              </div>
-            </div>
-
-            <div
-              *ngIf="!event.allDay"
-              class="ml-4 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
-            >
-              {{ formatTimeString(event.end) }}
+              </button>
             </div>
           </div>
         </div>
       </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- Event Creation/Edit Modal -->
+<div
+  *ngIf="showEventModal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+  (click)="closeEventModal()"
+>
+  <div
+    class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 xl:w-1/3 shadow-lg rounded-md bg-white dark:bg-gray-800"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="mt-3">
+      <!-- Modal Header -->
+      <div
+        class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-600"
+      >
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+          {{ editingEvent ? "Edit Event" : "Create New Event" }}
+        </h3>
+        <button
+          (click)="closeEventModal()"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          <svg
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Form -->
+      <form
+        #eventForm="ngForm"
+        (ngSubmit)="saveEvent(eventForm)"
+        class="mt-4 space-y-4"
+      >
+        <!-- Event Title -->
+        <div>
+          <label
+            for="eventTitle"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Title *
+          </label>
+          <input
+            type="text"
+            id="eventTitle"
+            name="title"
+            [(ngModel)]="eventFormData.title"
+            required
+            maxlength="255"
+            class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            placeholder="Enter event title"
+          />
+        </div>
+
+        <!-- Event Description -->
+        <div>
+          <label
+            for="eventDescription"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Description
+          </label>
+          <textarea
+            id="eventDescription"
+            name="description"
+            [(ngModel)]="eventFormData.description"
+            rows="3"
+            maxlength="1000"
+            class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            placeholder="Enter event description"
+          ></textarea>
+        </div>
+
+        <!-- Event Location -->
+        <div>
+          <label
+            for="eventLocation"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Location
+          </label>
+          <input
+            type="text"
+            id="eventLocation"
+            name="location"
+            [(ngModel)]="eventFormData.location"
+            maxlength="255"
+            class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            placeholder="Enter event location"
+          />
+        </div>
+
+        <!-- All Day Toggle -->
+        <div class="flex items-center">
+          <input
+            type="checkbox"
+            id="allDay"
+            name="allDay"
+            [(ngModel)]="eventFormData.allDay"
+            (change)="onAllDayChange()"
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label
+            for="allDay"
+            class="ml-2 block text-sm text-gray-700 dark:text-gray-300"
+          >
+            All day event
+          </label>
+        </div>
+
+        <!-- Start Date/Time -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              for="startDate"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Start Date *
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              [(ngModel)]="eventFormData.startDate"
+              required
+              class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+          <div *ngIf="!eventFormData.allDay">
+            <label
+              for="startTime"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Start Time *
+            </label>
+            <input
+              type="time"
+              id="startTime"
+              name="startTime"
+              [(ngModel)]="eventFormData.startTime"
+              [required]="!eventFormData.allDay"
+              class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        <!-- End Date/Time -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              for="endDate"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              End Date *
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              [(ngModel)]="eventFormData.endDate"
+              required
+              class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+          <div *ngIf="!eventFormData.allDay">
+            <label
+              for="endTime"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              End Time *
+            </label>
+            <input
+              type="time"
+              id="endTime"
+              name="endTime"
+              [(ngModel)]="eventFormData.endTime"
+              [required]="!eventFormData.allDay"
+              class="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+          </div>
+        </div>
+
+        <!-- Event Color -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Color
+          </label>
+          <div class="flex space-x-2">
+            <div
+              *ngFor="let color of availableColors"
+              class="w-8 h-8 rounded-full cursor-pointer border-2 flex items-center justify-center"
+              [class]="color.class"
+              [class.border-gray-400]="eventFormData.color !== color.value"
+              [class.border-gray-800]="eventFormData.color === color.value"
+              (click)="eventFormData.color = color.value"
+              [title]="color.label"
+            >
+              <svg
+                *ngIf="eventFormData.color === color.value"
+                class="h-4 w-4 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div
+          class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600"
+        >
+          <div>
+            <button
+              *ngIf="editingEvent"
+              type="button"
+              (click)="confirmDeleteEvent()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              <svg
+                class="h-4 w-4 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+              Delete
+            </button>
+          </div>
+
+          <div class="flex space-x-3">
+            <button
+              type="button"
+              (click)="closeEventModal()"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              [disabled]="!eventForm.valid || loading()"
+              class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {{ editingEvent ? "Update Event" : "Create Event" }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Event Details Modal -->
+<div
+  *ngIf="showEventDetails && selectedEvent"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+  (click)="closeEventDetails()"
+>
+  <div
+    class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white dark:bg-gray-800"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="mt-3">
+      <!-- Modal Header -->
+      <div
+        class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-600"
+      >
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+          Event Details
+        </h3>
+        <div class="flex items-center space-x-2">
+          <button
+            (click)="openEditEventModal(selectedEvent)"
+            class="text-gray-400 hover:text-blue-600 p-1 rounded"
+            title="Edit event"
+          >
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+          <button
+            (click)="closeEventDetails()"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            <svg
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Event Details Content -->
+      <div class="mt-4 space-y-4">
+        <div class="flex items-center">
+          <div
+            class="h-4 w-4 rounded-full mr-3"
+            [class]="getDotColor(selectedEvent.color)"
+          ></div>
+          <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
+            {{ selectedEvent.title }}
+          </h4>
+        </div>
+
+        <div
+          *ngIf="selectedEvent.description"
+          class="text-gray-600 dark:text-gray-300"
+        >
+          {{ selectedEvent.description }}
+        </div>
+
+        <div class="space-y-2">
+          <div
+            class="flex items-center text-sm text-gray-500 dark:text-gray-400"
+          >
+            <svg
+              class="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {{ formatEventTime(selectedEvent) }}
+          </div>
+
+          <div
+            *ngIf="selectedEvent.location"
+            class="flex items-center text-sm text-gray-500 dark:text-gray-400"
+          >
+            <svg
+              class="h-4 w-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            {{ selectedEvent.location }}
+          </div>
+        </div>
+
+        <div
+          class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600"
+        >
+          <button
+            (click)="confirmDeleteEvent()"
+            class="px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          >
+            Delete Event
+          </button>
+          <button
+            (click)="openEditEventModal(selectedEvent)"
+            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Edit Event
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div
+  *ngIf="showDeleteConfirm"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+>
+  <div
+    class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800"
+  >
+    <div class="mt-3 text-center">
+      <div
+        class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900"
+      >
+        <svg
+          class="h-6 w-6 text-red-600 dark:text-red-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+          />
+        </svg>
+      </div>
+      <h3
+        class="text-lg leading-6 font-medium text-gray-900 dark:text-white mt-4"
+      >
+        Delete Event
+      </h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Are you sure you want to delete this event? This action cannot be
+          undone.
+        </p>
+      </div>
+      <div class="flex justify-center space-x-3 mt-4">
+        <button
+          (click)="showDeleteConfirm = false"
+          class="px-4 py-2 bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="executeDeleteEvent()"
+          [disabled]="loading()"
+          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   </div>
 </div>
