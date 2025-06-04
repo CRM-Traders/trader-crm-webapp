@@ -1,18 +1,24 @@
-// src/app/core/services/kyc.service.ts
+// src/app/shared/services/kyc/kyc.service.ts
+
 import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, map, catchError, throwError } from 'rxjs';
 import { HttpService } from '../../../core/services/http.service';
 import {
+  KycProcess,
+  KycStatus,
+  DocumentType,
+  DocumentStatus,
+  UserKycStatus,
+  CreateKycProcessResponse,
+  VerifyKycRequest,
+  VerifyKycResponse,
+  UploadKycDocumentRequest,
+  UploadKycDocumentResponse,
+  QrCodeResponse,
   KycFilterParams,
   KycProcessResponse,
-  KycProcessDetail,
-  KycReviewRequest,
-  KycStatus,
-  KycProcessListItem,
 } from '../../models/kyc/kyc.model';
-import { FileType } from '../../../core/models/storage.model';
 
 @Injectable({
   providedIn: 'root',
@@ -21,154 +27,9 @@ export class KycService {
   private readonly http = inject(HttpService);
   private readonly baseEndpoint = 'identity/api/kyc';
 
-  private currentFilterSubject = new BehaviorSubject<KycFilterParams>({
-    sortBy: 'lastActivityTime',
-    sortDescending: true,
-    pageNumber: 1,
-    pageSize: 20,
-  });
-
-  currentFilter$ = this.currentFilterSubject.asObservable();
-
-  // Cache for the processes list
-  private processesSubject = new BehaviorSubject<KycProcessResponse | null>(
-    null
-  );
-  processes$ = this.processesSubject.asObservable();
-
-  getProcesses(params?: KycFilterParams): Observable<KycProcessResponse> {
-    const filter = { ...this.currentFilterSubject.value, ...params };
-    this.currentFilterSubject.next(filter);
-
-    let httpParams = new HttpParams();
-
-    if (filter.status !== undefined) {
-      httpParams = httpParams.set('status', filter.status.toString());
-    }
-
-    if (filter.userId) {
-      httpParams = httpParams.set('userId', filter.userId);
-    }
-
-    if (filter.searchTerm) {
-      httpParams = httpParams.set('searchTerm', filter.searchTerm);
-    }
-
-    if (filter.sortBy) {
-      httpParams = httpParams.set('sortBy', filter.sortBy);
-    }
-
-    if (filter.sortDescending !== undefined) {
-      httpParams = httpParams.set(
-        'sortDescending',
-        filter.sortDescending.toString()
-      );
-    }
-
-    if (filter.pageNumber) {
-      httpParams = httpParams.set('pageNumber', filter.pageNumber.toString());
-    }
-
-    if (filter.pageSize) {
-      httpParams = httpParams.set('pageSize', filter.pageSize.toString());
-    }
-
-    return this.http
-      .get<KycProcessResponse>(`${this.baseEndpoint}/processes`, httpParams)
-      .pipe(tap((response) => this.processesSubject.next(response)));
-  }
-
-  getProcessById(id: string): Observable<KycProcessDetail> {
-    return this.http.get<KycProcessDetail>(
-      `${this.baseEndpoint}/process/${id}`
-    );
-  }
-
-  getProcessHistory(id: string): Observable<KycProcessDetail[]> {
-    return this.http.get<KycProcessDetail[]>(
-      `${this.baseEndpoint}/${id}/history`
-    );
-  }
-
-  reviewProcess(review: KycReviewRequest): Observable<KycProcessDetail> {
-    return this.http.post<KycProcessDetail>(
-      `${this.baseEndpoint}/${review.processId}/review`,
-      {
-        status: review.status,
-        comment: review.comment,
-      }
-    );
-  }
-
-  updateProcessStatus(
-    id: string,
-    status: KycStatus
-  ): Observable<KycProcessDetail> {
-    return this.http.patch<KycProcessDetail>(
-      `${this.baseEndpoint}/${id}/status`,
-      {
-        status,
-      }
-    );
-  }
-
-  refreshCurrentList(): void {
-    this.getProcesses(this.currentFilterSubject.value).subscribe();
-  }
-
-  getStatusLabel(status: KycStatus): string {
-    const labels: Record<KycStatus, string> = {
-      [KycStatus.NotStarted]: 'New',
-      [KycStatus.InProgress]: 'Partially Completed',
-      [KycStatus.DocumentsUploaded]: 'Documents Uploaded',
-      [KycStatus.UnderReview]: 'Under Review',
-      [KycStatus.Verified]: 'Verified',
-      [KycStatus.Rejected]: 'Rejected',
-    };
-
-    return labels[status] || 'Unknown';
-  }
-
-  getStatusColor(status: KycStatus): string {
-    const colors: Record<KycStatus, string> = {
-      [KycStatus.NotStarted]: 'blue',
-      [KycStatus.InProgress]: 'yellow',
-      [KycStatus.DocumentsUploaded]: 'orange',
-      [KycStatus.UnderReview]: 'purple',
-      [KycStatus.Verified]: 'green',
-      [KycStatus.Rejected]: 'red',
-    };
-
-    return colors[status] || 'gray';
-  }
-
-  getStatusIcon(status: KycStatus): string {
-    const icons: Record<KycStatus, string> = {
-      [KycStatus.NotStarted]: 'file-plus',
-      [KycStatus.InProgress]: 'clock',
-      [KycStatus.DocumentsUploaded]: 'file-check',
-      [KycStatus.UnderReview]: 'eye',
-      [KycStatus.Verified]: 'check-circle',
-      [KycStatus.Rejected]: 'x-circle',
-    };
-
-    return icons[status] || 'file';
-  }
-
-  calculateCompletionPercentage(
-    process: KycProcessDetail | KycProcessListItem
-  ): number {
-    const requiredDocs = 4; // ID Front, ID Back, Passport, Face Photo
-    let completedDocs = 0;
-    const proc = process as KycProcessDetail;
-    if (proc.hasFrontNationalId) completedDocs++;
-    if (proc.hasBackNationalId) completedDocs++;
-    if (proc.hasPassport) completedDocs++;
-    if (proc.hasFacePhoto) completedDocs++;
-
-    return Math.round((completedDocs / requiredDocs) * 100);
-  }
-
+  /**
+   * Creates a new KYC verification process
+   */
   createProcess(): Observable<CreateKycProcessResponse> {
     return this.http.post<CreateKycProcessResponse>(
       `${this.baseEndpoint}/process`,
@@ -176,49 +37,261 @@ export class KycService {
     );
   }
 
-  uploadKycFile(request: {
-    kycProcessIdOrToken: string;
-    fileType: FileType;
-    file: File;
-  }): Observable<UploadKycFileResponse> {
-    const formData = new FormData();
-    formData.append('KycProcessIdOrToken', request.kycProcessIdOrToken);
-    formData.append('FileType', request.fileType.toString());
-    formData.append('File', request.file);
-
-    // Using HttpClient directly for FormData
-    return this.http['_http'].post<UploadKycFileResponse>(
-      `${this.http['_apiUrl']}/${this.baseEndpoint}/upload`,
-      formData
+  /**
+   * Gets KYC process by ID or token
+   */
+  getProcessById(idOrToken: string): Observable<KycProcess> {
+    return this.http.get<KycProcess>(
+      `${this.baseEndpoint}/process/${idOrToken}`
     );
   }
 
+  /**
+   * Gets user's KYC status and active process
+   */
+  getUserKycStatus(userId: string): Observable<UserKycStatus> {
+    return this.http.get<UserKycStatus>(
+      `${this.baseEndpoint}/users/${userId}/status`
+    );
+  }
+
+  getAuthKycStatus(): Observable<UserKycStatus> {
+    return this.http.get<UserKycStatus>(`${this.baseEndpoint}/users/status`);
+  }
+
+  /**
+   * Gets QR code information for a process
+   */
   getQrCode(idOrToken: string): Observable<QrCodeResponse> {
     return this.http.get<QrCodeResponse>(
       `${this.baseEndpoint}/qr/${idOrToken}`
     );
   }
-}
 
-// Additional interfaces needed for the service
-export interface CreateKycProcessResponse {
-  kycProcessId: string;
-  sessionToken: string;
-  continuationUrl: string;
-  qrCodeUrl: string;
-}
+  /**
+   * Uploads a document for KYC verification
+   */
+  uploadKycFile(
+    request: UploadKycDocumentRequest
+  ): Observable<UploadKycDocumentResponse> {
+    const formData = new FormData();
+    formData.append('KycProcessIdOrToken', request.kycProcessIdOrToken);
+    formData.append('FileType', request.fileType);
+    formData.append('File', request.file);
 
-export interface UploadKycFileResponse {
-  documentId: string;
-  kycProcessId: string;
-  documentType: FileType;
-  fileName: string;
-  fileSize: number;
-  status: number;
-}
+    return this.http.post<UploadKycDocumentResponse>(
+      `${this.baseEndpoint}/upload`,
+      formData
+    );
+  }
 
-export interface QrCodeResponse {
-  kycProcessId: string;
-  sessionToken: string;
-  continuationUrl: string;
+  /**
+   * Reviews and approves/rejects a KYC process
+   */
+  reviewProcess(request: VerifyKycRequest): Observable<VerifyKycResponse> {
+    const body = {
+      kycProcessId: request.kycProcessId,
+      isApproved: request.isApproved,
+      comment: request.comment,
+    };
+
+    return this.http.post<VerifyKycResponse>(
+      `${this.baseEndpoint}/verify`,
+      body
+    );
+  }
+
+  /**
+   * Gets paginated list of KYC processes with filtering
+   */
+  getProcesses(params: KycFilterParams = {}): Observable<KycProcessResponse> {
+    let httpParams = new HttpParams();
+
+    if (params.searchTerm) {
+      httpParams = httpParams.set('searchTerm', params.searchTerm);
+    }
+    if (params.status !== undefined) {
+      httpParams = httpParams.set('status', params.status.toString());
+    }
+    if (params.sortBy) {
+      httpParams = httpParams.set('sortBy', params.sortBy);
+    }
+    if (params.sortDescending !== undefined) {
+      httpParams = httpParams.set(
+        'sortDescending',
+        params.sortDescending.toString()
+      );
+    }
+    if (params.pageNumber) {
+      httpParams = httpParams.set('pageNumber', params.pageNumber.toString());
+    }
+    if (params.pageSize) {
+      httpParams = httpParams.set('pageSize', params.pageSize.toString());
+    }
+
+    return this.http.get<KycProcessResponse>(
+      `${this.baseEndpoint}/processes`,
+      httpParams
+    );
+  }
+
+  /**
+   * Updates KYC process status
+   */
+  updateProcessStatus(processId: string, status: KycStatus): Observable<void> {
+    return this.http.patch<void>(
+      `${this.baseEndpoint}/process/${processId}/status`,
+      { status }
+    );
+  }
+
+  /**
+   * Helper methods for UI display
+   */
+  getStatusLabel(status: KycStatus): string {
+    const statusLabels: Record<KycStatus, string> = {
+      [KycStatus.NotStarted]: 'Not Started',
+      [KycStatus.InProgress]: 'In Progress',
+      [KycStatus.DocumentsUploaded]: 'Documents Uploaded',
+      [KycStatus.UnderReview]: 'Under Review',
+      [KycStatus.Verified]: 'Verified',
+      [KycStatus.Rejected]: 'Rejected',
+    };
+    return statusLabels[status] || 'Unknown';
+  }
+
+  getStatusColor(status: KycStatus): string {
+    const statusColors: Record<KycStatus, string> = {
+      [KycStatus.NotStarted]: 'gray',
+      [KycStatus.InProgress]: 'blue',
+      [KycStatus.DocumentsUploaded]: 'yellow',
+      [KycStatus.UnderReview]: 'orange',
+      [KycStatus.Verified]: 'green',
+      [KycStatus.Rejected]: 'red',
+    };
+    return statusColors[status] || 'gray';
+  }
+
+  getDocumentTypeLabel(documentType: DocumentType): string {
+    const typeLabels: Record<DocumentType, string> = {
+      [DocumentType.IdFront]: 'ID Front',
+      [DocumentType.IdBack]: 'ID Back',
+      [DocumentType.PassportMain]: 'Passport',
+      [DocumentType.FacePhoto]: 'Face Photo',
+    };
+    return typeLabels[documentType] || 'Unknown';
+  }
+
+  getDocumentStatusLabel(status: DocumentStatus): string {
+    const statusLabels: Record<DocumentStatus, string> = {
+      [DocumentStatus.Pending]: 'Pending',
+      [DocumentStatus.Approved]: 'Approved',
+      [DocumentStatus.Rejected]: 'Rejected',
+    };
+    return statusLabels[status] || 'Unknown';
+  }
+
+  getDocumentStatusColor(status: DocumentStatus): string {
+    const statusColors: Record<DocumentStatus, string> = {
+      [DocumentStatus.Pending]: 'yellow',
+      [DocumentStatus.Approved]: 'green',
+      [DocumentStatus.Rejected]: 'red',
+    };
+    return statusColors[status] || 'gray';
+  }
+
+  calculateCompletionPercentage(process: KycProcess): number {
+    const totalDocuments = 4; // ID Front, ID Back, Passport, Face Photo
+    let completedDocuments = 0;
+
+    if (process.hasFrontNationalId) completedDocuments++;
+    if (process.hasBackNationalId) completedDocuments++;
+    if (process.hasPassport) completedDocuments++;
+    if (process.hasFacePhoto) completedDocuments++;
+
+    return Math.round((completedDocuments / totalDocuments) * 100);
+  }
+
+  isProcessEditable(status: KycStatus): boolean {
+    return (
+      status === KycStatus.NotStarted ||
+      status === KycStatus.InProgress ||
+      status === KycStatus.Rejected
+    );
+  }
+
+  isProcessReviewable(status: KycStatus): boolean {
+    return (
+      status === KycStatus.DocumentsUploaded || status === KycStatus.UnderReview
+    );
+  }
+
+  canUploadDocuments(process: KycProcess): boolean {
+    return this.isProcessEditable(process.status);
+  }
+
+  getDocumentTypeFromFileType(fileType: any): DocumentType {
+    // Map the old FileType enum to new DocumentType enum
+    const fileTypeMap: Record<string, DocumentType> = {
+      IdFront: DocumentType.IdFront,
+      IdBack: DocumentType.IdBack,
+      PassportMain: DocumentType.PassportMain,
+      FacePhoto: DocumentType.FacePhoto,
+    };
+
+    if (typeof fileType === 'number') {
+      return fileType as DocumentType;
+    }
+
+    return fileTypeMap[fileType] || DocumentType.IdFront;
+  }
+
+  getFileTypeFromDocumentType(documentType: DocumentType): string {
+    const documentTypeMap: Record<DocumentType, string> = {
+      [DocumentType.IdFront]: 'IdFront',
+      [DocumentType.IdBack]: 'IdBack',
+      [DocumentType.PassportMain]: 'PassportMain',
+      [DocumentType.FacePhoto]: 'FacePhoto',
+    };
+    return documentTypeMap[documentType] || 'IdFront';
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  formatRelativeTime(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60)
+      return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24)
+      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+
+    return date.toLocaleDateString();
+  }
 }

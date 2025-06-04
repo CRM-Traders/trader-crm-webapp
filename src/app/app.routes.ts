@@ -138,11 +138,19 @@ export const routes: Routes = [
         canActivate: [authGuard],
       },
       {
+        path: 'documents/:id',
+        loadComponent: () =>
+          import(
+            './features/documents/components/kyc-details/kyc-details.component'
+          ).then((m) => m.KycDetailsComponent),
+        canActivate: [authGuard],
+      },
+      {
         path: 'kyc-verification',
         loadComponent: () =>
           import(
-            './features/client-portal/kyc-verification/kyc-verification.component'
-          ).then((m) => m.KycVerificationComponent),
+            './features/client-portal/client-kyc/client-kyc.component'
+          ).then((m) => m.ClientKycComponent),
         canActivate: [authGuard],
       },
     ],

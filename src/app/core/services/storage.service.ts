@@ -19,7 +19,7 @@ import { HttpService } from './http.service';
 export class StorageService {
   private readonly http = inject(HttpService);
   private readonly alertService = inject(AlertService);
-  private readonly baseEndpoint = 'identity/api/files';
+  private readonly baseEndpoint = 'storage/api/files';
 
   private readonly MAX_FILE_SIZE = 50 * 1024 * 1024;
 
