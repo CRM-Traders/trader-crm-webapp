@@ -33,6 +33,31 @@ export class HttpService {
     });
   }
 
+  postForm<T>(
+    endpoint: string,
+    formData: URLSearchParams | FormData,
+    params?: HttpParams,
+    headers?: HttpHeaders
+  ): Observable<T> {
+    let body: string | FormData;
+    let finalHeaders = headers;
+
+    if (formData instanceof FormData) {
+      body = formData;
+    } else {
+      body = formData.toString();
+      const defaultHeaders = new HttpHeaders({
+        'Content-Type': 'application/x-www-form-urlencoded',
+      });
+      finalHeaders = headers ? headers : defaultHeaders;
+    }
+
+    return this._http.post<T>(`${this._apiUrl}/${endpoint}`, body, {
+      params: params,
+      headers: finalHeaders,
+    });
+  }
+
   patch<T>(
     endpoint: string,
     body: any,

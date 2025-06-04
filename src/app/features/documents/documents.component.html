@@ -1,1 +1,497 @@
-<p>documents works!</p>
+<div class="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+  <div class="mx-auto max-w-7xl">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+          <h1
+            class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight"
+          >
+            KYC Documents Management
+          </h1>
+          <p class="mt-1 text-sm text-gray-500">
+            Manage and review customer verification documents and processes
+          </p>
+        </div>
+        <div class="mt-4 flex md:ml-4 md:mt-0">
+          <button
+            type="button"
+            (click)="refreshProcesses()"
+            class="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            <svg
+              class="-ml-0.5 mr-1.5 h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+              />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <!-- Search -->
+      <div class="lg:col-span-2">
+        <label
+          for="search"
+          class="block text-sm font-medium leading-6 text-gray-900"
+          >Search</label
+        >
+        <div class="relative mt-2">
+          <div
+            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"
+          >
+            <svg
+              class="h-5 w-5 text-gray-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <input
+            id="search"
+            name="search"
+            type="text"
+            placeholder="Search by name or email..."
+            [value]="searchQuery()"
+            (input)="onSearchChange($any($event.target).value)"
+            class="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+          />
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div>
+        <label
+          for="status-filter"
+          class="block text-sm font-medium leading-6 text-gray-900"
+          >Status</label
+        >
+        <select
+          id="status-filter"
+          name="status-filter"
+          (change)="
+            onStatusFilterChange(
+              $any($event.target).value === ''
+                ? null
+                : +$any($event.target).value
+            )
+          "
+          class="mt-2 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
+        >
+          <option value="">All Statuses</option>
+          <option [value]="KycStatus.NotStarted">Not Started</option>
+          <option [value]="KycStatus.InProgress">In Progress</option>
+          <option [value]="KycStatus.DocumentsUploaded">
+            Documents Uploaded
+          </option>
+          <option [value]="KycStatus.UnderReview">Under Review</option>
+          <option [value]="KycStatus.Verified">Verified</option>
+          <option [value]="KycStatus.Rejected">Rejected</option>
+        </select>
+      </div>
+
+      <!-- Results Count -->
+      <div class="flex items-end">
+        <div class="text-sm text-gray-700">
+          <span class="font-medium">{{ totalCount() }}</span> results found
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="flex justify-center items-center py-12">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"
+      ></div>
+    </div>
+
+    <!-- Empty State -->
+    <div
+      *ngIf="!loading() && processes().length === 0"
+      class="text-center py-12"
+    >
+      <svg
+        class="mx-auto h-12 w-12 text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1"
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+      <h3 class="mt-2 text-sm font-semibold text-gray-900">
+        No KYC processes found
+      </h3>
+      <p class="mt-1 text-sm text-gray-500">
+        Try adjusting your search or filter criteria.
+      </p>
+    </div>
+
+    <!-- Process Cards -->
+    <div
+      *ngIf="!loading() && processes().length > 0"
+      class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      <div
+        *ngFor="let process of processes()"
+        class="overflow-hidden rounded-lg bg-white shadow hover:shadow-md transition-shadow duration-200"
+      >
+        <div class="p-6">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">
+                <div
+                  class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center"
+                >
+                  <svg
+                    class="h-6 w-6 text-indigo-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-sm font-medium text-gray-900 truncate">
+                  {{ process.userFullName }}
+                </h3>
+                <p class="text-sm text-gray-500 truncate">
+                  {{ process.userEmail }}
+                </p>
+              </div>
+            </div>
+            <span
+              [class]="
+                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ' +
+                getStatusColor(process.status)
+              "
+            >
+              {{ getStatusLabel(process.status) }}
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-700 mb-1">
+              <span>Documentation Progress</span>
+              <span>{{ getCompletionPercentage(process) }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div
+                class="h-2 rounded-full transition-all duration-300"
+                [class.bg-green-600]="getCompletionPercentage(process) === 100"
+                [class.bg-yellow-600]="
+                  getCompletionPercentage(process) > 50 &&
+                  getCompletionPercentage(process) < 100
+                "
+                [class.bg-red-600]="getCompletionPercentage(process) <= 50"
+                [style.width.%]="getCompletionPercentage(process)"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Document Status Icons -->
+          <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="flex flex-col items-center space-y-1">
+              <div
+                [class]="
+                  'w-8 h-8 rounded-full flex items-center justify-center ' +
+                  (process.hasFrontIdDocument ? 'bg-green-100' : 'bg-gray-100')
+                "
+              >
+                <svg
+                  [class]="
+                    'w-4 h-4 ' +
+                    (process.hasFrontIdDocument
+                      ? 'text-green-600'
+                      : 'text-gray-400')
+                  "
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 2h2v4H7V6zm2 6H7v2h2v-2zm2-6h2v2h-2V6zm2 4h-2v4h2v-4z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500">ID Front</span>
+            </div>
+
+            <div class="flex flex-col items-center space-y-1">
+              <div
+                [class]="
+                  'w-8 h-8 rounded-full flex items-center justify-center ' +
+                  (process.hasBackIdDocument ? 'bg-green-100' : 'bg-gray-100')
+                "
+              >
+                <svg
+                  [class]="
+                    'w-4 h-4 ' +
+                    (process.hasBackIdDocument
+                      ? 'text-green-600'
+                      : 'text-gray-400')
+                  "
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 2h2v4H7V6zm2 6H7v2h2v-2zm2-6h2v2h-2V6zm2 4h-2v4h2v-4z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500">ID Back</span>
+            </div>
+
+            <div class="flex flex-col items-center space-y-1">
+              <div
+                [class]="
+                  'w-8 h-8 rounded-full flex items-center justify-center ' +
+                  (process.hasPassport ? 'bg-green-100' : 'bg-gray-100')
+                "
+              >
+                <svg
+                  [class]="
+                    'w-4 h-4 ' +
+                    (process.hasPassport ? 'text-green-600' : 'text-gray-400')
+                  "
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M3 4a1 1 0 011-1h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm2 2v8h10V6H5z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500">Passport</span>
+            </div>
+
+            <div class="flex flex-col items-center space-y-1">
+              <div
+                [class]="
+                  'w-8 h-8 rounded-full flex items-center justify-center ' +
+                  (process.hasFacePhoto ? 'bg-green-100' : 'bg-gray-100')
+                "
+              >
+                <svg
+                  [class]="
+                    'w-4 h-4 ' +
+                    (process.hasFacePhoto ? 'text-green-600' : 'text-gray-400')
+                  "
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500">Face Photo</span>
+            </div>
+          </div>
+
+          <!-- Statistics -->
+          <div
+            class="grid grid-cols-3 gap-4 mb-4 pt-4 border-t border-gray-200"
+          >
+            <div class="text-center">
+              <dt class="text-sm font-medium text-gray-500">Submissions</dt>
+              <dd class="mt-1 text-lg font-semibold text-gray-900">
+                {{ process.totalSubmissions }}
+              </dd>
+            </div>
+            <div class="text-center">
+              <dt class="text-sm font-medium text-gray-500">Approved</dt>
+              <dd class="mt-1 text-lg font-semibold text-green-600">
+                {{ process.approvedCount }}
+              </dd>
+            </div>
+            <div class="text-center">
+              <dt class="text-sm font-medium text-gray-500">Rejected</dt>
+              <dd class="mt-1 text-lg font-semibold text-red-600">
+                {{ process.rejectedCount }}
+              </dd>
+            </div>
+          </div>
+
+          <!-- Timestamps -->
+          <div class="space-y-2 text-sm text-gray-500">
+            <div class="flex justify-between">
+              <span>Created:</span>
+              <span>{{ formatDate(process.createdAt) }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Last Activity:</span>
+              <span>{{ formatDate(process.lastActivityTime) }}</span>
+            </div>
+            <div *ngIf="process.reviewedAt" class="flex justify-between">
+              <span>Reviewed:</span>
+              <span>{{ formatDate(process.reviewedAt) }}</span>
+            </div>
+          </div>
+
+          <!-- Verification Comment -->
+          <div
+            *ngIf="process.verificationComment"
+            class="mt-4 p-3 bg-gray-50 rounded-md"
+          >
+            <p class="text-sm text-gray-700">
+              <span class="font-medium">Comment:</span>
+              {{ process.verificationComment }}
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-6 flex space-x-3">
+            <button
+              type="button"
+              [routerLink]="['/documents', process.id]"
+              class="flex-1 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            >
+              View Details
+            </button>
+            <button
+              type="button"
+              *ngIf="process.status === KycStatus.UnderReview"
+              class="flex-1 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+            >
+              Review
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div
+      *ngIf="!loading() && processes().length > 0"
+      class="mt-8 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-lg shadow"
+    >
+      <div class="flex flex-1 justify-between sm:hidden">
+        <button
+          [disabled]="!hasPreviousPage()"
+          (click)="onPageChange(currentPage() - 1)"
+          [class.opacity-50]="!hasPreviousPage()"
+          [class.cursor-not-allowed]="!hasPreviousPage()"
+          class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Previous
+        </button>
+        <button
+          [disabled]="!hasNextPage()"
+          (click)="onPageChange(currentPage() + 1)"
+          [class.opacity-50]="!hasNextPage()"
+          [class.cursor-not-allowed]="!hasNextPage()"
+          class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Next
+        </button>
+      </div>
+      <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Showing
+            <span class="font-medium">{{
+              (currentPage() - 1) * pageSize() + 1
+            }}</span>
+            to
+            <span class="font-medium">{{ calculateShow() }}</span>
+            of
+            <span class="font-medium">{{ totalCount() }}</span>
+            results
+          </p>
+        </div>
+        <div>
+          <nav
+            class="isolate inline-flex -space-x-px rounded-md shadow-sm"
+            aria-label="Pagination"
+          >
+            <button
+              [disabled]="!hasPreviousPage()"
+              (click)="onPageChange(currentPage() - 1)"
+              [class.opacity-50]="!hasPreviousPage()"
+              [class.cursor-not-allowed]="!hasPreviousPage()"
+              class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+            >
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+
+            <button
+              *ngFor="
+                let page of [].constructor(calculatePages());
+                let i = index
+              "
+              [disabled]="currentPage() === i + 1"
+              (click)="onPageChange(i + 1)"
+              [class.bg-indigo-600]="currentPage() === i + 1"
+              [class.text-white]="currentPage() === i + 1"
+              [class.text-gray-900]="currentPage() !== i + 1"
+              class="relative inline-flex items-center px-4 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+            >
+              {{ i + 1 }}
+            </button>
+
+            <button
+              [disabled]="!hasNextPage()"
+              (click)="onPageChange(currentPage() + 1)"
+              [class.opacity-50]="!hasNextPage()"
+              [class.cursor-not-allowed]="!hasNextPage()"
+              class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
+            >
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fill-rule="evenodd"
+                  d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
