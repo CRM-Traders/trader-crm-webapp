@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import {
   Affiliate,
   AffiliateCreateRequest,
+  AffiliateCreateResponse, // Updated return type
   AffiliateUpdateRequest,
   AffiliateImportResponse,
 } from '../models/affiliates.model';
@@ -20,8 +21,13 @@ export class AffiliatesService {
     return this.httpService.get<Affiliate>(`${this.apiPath}/${id}`);
   }
 
-  createAffiliate(request: AffiliateCreateRequest): Observable<Affiliate> {
-    return this.httpService.post<Affiliate>(this.apiPath, request);
+  createAffiliate(
+    request: AffiliateCreateRequest
+  ): Observable<AffiliateCreateResponse> {
+    return this.httpService.post<AffiliateCreateResponse>(
+      this.apiPath,
+      request
+    );
   }
 
   updateAffiliate(request: AffiliateUpdateRequest): Observable<void> {
