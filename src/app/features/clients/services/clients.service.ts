@@ -7,6 +7,7 @@ import {
   ClientCreateRequest,
   ClientUpdateRequest,
   ClientImportResponse,
+  ClientRegistrationResponse,
 } from '../models/clients.model';
 
 @Injectable({
@@ -22,6 +23,16 @@ export class ClientsService {
 
   createClient(request: ClientCreateRequest): Observable<Client> {
     return this.httpService.post<Client>(this.apiPath, request);
+  }
+
+  // New method for admin client creation with generated password
+  createClientForAdmin(
+    request: ClientCreateRequest
+  ): Observable<ClientRegistrationResponse> {
+    return this.httpService.post<ClientRegistrationResponse>(
+      `${this.apiPath}/create-client-for-admin`,
+      request
+    );
   }
 
   updateClient(request: ClientUpdateRequest): Observable<void> {
@@ -76,4 +87,45 @@ export class ClientsService {
   getActiveClients() {
     return this.httpService.get(`identity/api/users/get-active-users?role=6`);
   }
+
+  // Enhanced method to get affiliates with pagination and filtering
+  getAffiliatesDropdown(
+    params: AffiliateSearchParams = {}
+  ): Observable<AffiliateSearchResponse> {
+    const queryParams = new URLSearchParams();
+
+    if (params.globalFilter) {
+      queryParams.append('globalFilter', params.globalFilter);
+    }
+    if (params.pageIndex !== undefined) {
+      queryParams.append('pageIndex', params.pageIndex.toString());
+    }
+    if (params.pageSize !== undefined) {
+      queryParams.append('pageSize', params.pageSize.toString());
+    }
+
+    const url = `identity/api/affiliates/affiliates-dropdown${
+      queryParams.toString() ? '?' + queryParams.toString() : ''
+    }`;
+    return this.httpService.get<AffiliateSearchResponse>(url);
+  }
+}
+
+// Enhanced interfaces for paginated affiliate search
+export interface AffiliateDropdownItem {
+  affiliateId: string;
+  userFullName: string;
+}
+
+export interface AffiliateSearchParams {
+  globalFilter?: string;
+  pageIndex?: number;
+  pageSize?: number;
+}
+
+export interface AffiliateSearchResponse {
+  items: AffiliateDropdownItem[];
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }

@@ -50,8 +50,6 @@ export class ClientsComponent implements OnInit {
 
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
-  @ViewChild('flagsCell', { static: true })
-  flagsCellTemplate!: TemplateRef<any>;
   @ViewChild('investmentCell', { static: true })
   investmentCellTemplate!: TemplateRef<any>;
 
@@ -193,9 +191,6 @@ export class ClientsComponent implements OnInit {
     const flagsColumn = this.gridColumns.find(
       (col) => col.field === 'isProblematic'
     );
-    if (flagsColumn) {
-      flagsColumn.cellTemplate = this.flagsCellTemplate;
-    }
 
     const investmentColumn = this.gridColumns.find(
       (col) => col.field === 'hasInvestments'
