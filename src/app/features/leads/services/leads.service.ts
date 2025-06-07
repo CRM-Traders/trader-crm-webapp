@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import {
   Lead,
   LeadCreateRequest,
+  LeadCreateResponse,
   LeadUpdateRequest,
   LeadImportResponse,
 } from '../models/leads.model';
@@ -16,12 +17,20 @@ export class LeadsService {
   private httpService = inject(HttpService);
   private readonly apiPath = 'identity/api/leads';
 
+  createLead(request: LeadCreateRequest): Observable<LeadCreateResponse> {
+    return this.httpService.post<LeadCreateResponse>(
+      `${this.apiPath}`,
+      request
+    );
+  }
+
   getClientById(id: string): Observable<Lead> {
     return this.httpService.get<Lead>(`${this.apiPath}/${id}`);
   }
 
-  createClient(request: LeadCreateRequest): Observable<Lead> {
-    return this.httpService.post<Lead>(this.apiPath, request);
+  createClient(request: LeadCreateRequest) {
+    // Alias for backward compatibility
+    return this.createLead(request);
   }
 
   updateClient(request: LeadUpdateRequest): Observable<void> {
@@ -73,7 +82,7 @@ export class LeadsService {
     );
   }
 
-  getActiveLeads() {
+  getActiveLeads(): Observable<any> {
     return this.httpService.get(`identity/api/users/get-active-users?role=7`);
   }
 }

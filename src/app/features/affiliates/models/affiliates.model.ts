@@ -15,9 +15,16 @@ export interface AffiliateCreateRequest {
   name: string;
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
   phone?: string;
   website?: string;
+}
+
+export interface AffiliateCreateResponse {
+  affiliateId: string;
+  userId: string;
+  generatedPassword: string; // Added response structure
 }
 
 export interface AffiliateUpdateRequest {

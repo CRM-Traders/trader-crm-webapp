@@ -14,21 +14,14 @@ import {
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
 import { ModalService } from '../../shared/services/modals/modal.service';
-import { ClientRegistrationModalComponent } from '../clients/components/client-registration-modal/client-registration-modal.component';
-import {
-  Client,
-  ClientStatus,
-  ClientStatusLabels,
-  ClientStatusColors,
-  ClientUpdateRequest,
-} from '../clients/models/clients.model';
-import { ClientsService } from '../clients/services/clients.service';
+import { LeadRegistrationModalComponent } from './components/lead-registration-modal/lead-registration-modal.component';
 import { LeadsService } from './services/leads.service';
 import {
   Lead,
   LeadStatus,
   LeadStatusColors,
   LeadStatusLabels,
+  LeadUpdateRequest,
 } from './models/leads.model';
 import { CommonModule } from '@angular/common';
 import { GridComponent } from '../../shared/components/grid/grid.component';
@@ -48,8 +41,6 @@ export class LeadsComponent {
 
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
-  @ViewChild('flagsCell', { static: true })
-  flagsCellTemplate!: TemplateRef<any>;
   @ViewChild('investmentCell', { static: true })
   investmentCellTemplate!: TemplateRef<any>;
 
@@ -73,6 +64,7 @@ export class LeadsComponent {
       header: 'First Name',
       sortable: true,
       filterable: true,
+      filterType: 'text',
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
@@ -80,26 +72,45 @@ export class LeadsComponent {
       header: 'Last Name',
       sortable: true,
       filterable: true,
+      filterType: 'text',
     },
     {
       field: 'email',
       header: 'Email',
       sortable: true,
       filterable: true,
+      filterType: 'text',
     },
+    // {
+    //   field: 'username',
+    //   header: 'Username',
+    //   sortable: true,
+    //   filterable: true,
+    //   filterType:'text'
+    // },
     {
       field: 'telephone',
       header: 'Phone',
       sortable: true,
       filterable: true,
-      selector: (row: Client) => row.telephone || '-',
+      selector: (row: Lead) => row.telephone || '-',
+      filterType: 'text',
     },
     {
       field: 'country',
       header: 'Country',
       sortable: true,
       filterable: true,
-      selector: (row: Client) => row.country || '-',
+      selector: (row: Lead) => row.country || '-',
+      filterType: 'text',
+    },
+    {
+      field: 'language',
+      header: 'Language',
+      sortable: true,
+      filterable: true,
+      selector: (row: Lead) => row.language || '-',
+      filterType: 'text',
     },
     {
       field: 'status',
@@ -107,24 +118,75 @@ export class LeadsComponent {
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
+      filterType: 'select',
+      filterOptions: [
+        { label: '0', value: 'Active' },
+        { label: '1', value: 'Passive' },
+        { label: '2', value: 'Neutral' },
+        { label: '3', value: 'Inactive' },
+        { label: '4', value: 'Blocked' },
+        { label: '5', value: 'Disabled' },
+      ],
     },
     {
-      field: 'hasInvestments',
-      header: 'Investment',
+      field: 'salesStatus',
+      header: 'Sales Status',
       sortable: true,
       filterable: true,
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
+      filterType: 'text',
     },
     {
       field: 'isProblematic',
-      header: 'Flags',
+      header: 'Is Problematic',
       sortable: false,
       filterable: false,
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
+      filterType: 'boolean',
+    },
+    {
+      field: 'isBonusAbuser',
+      header: 'Is Bonus Abuser',
+      sortable: false,
+      filterable: false,
+      cellTemplate: null,
+      filterType: 'boolean',
     },
     {
       field: 'registrationDate',
-      header: 'Registered',
+      header: 'Registered At',
+      sortable: true,
+      filterable: true,
+      type: 'date',
+      format: 'short',
+    },
+    {
+      field: 'registrationIP',
+      header: 'Registration IP',
+      sortable: true,
+      filterable: true,
+      type: 'text',
+      filterType: 'text',
+    },
+    {
+      field: 'source',
+      header: 'Source',
+      sortable: true,
+      filterable: true,
+      type: 'text',
+      filterType: 'text',
+    },
+    {
+      field: 'lastLogin',
+      header: 'Last Login',
+      sortable: true,
+      filterable: true,
+      type: 'date',
+      format: 'short',
+    },
+    {
+      field: 'lastCommunication',
+      header: 'Last Communication',
       sortable: true,
       filterable: true,
       type: 'date',
@@ -165,6 +227,7 @@ export class LeadsComponent {
     this.editForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
+      username: ['', [Validators.required, Validators.minLength(3)]],
       telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       secondTelephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       skype: [''],
@@ -178,13 +241,6 @@ export class LeadsComponent {
     const statusColumn = this.gridColumns.find((col) => col.field === 'status');
     if (statusColumn) {
       statusColumn.cellTemplate = this.statusCellTemplate;
-    }
-
-    const flagsColumn = this.gridColumns.find(
-      (col) => col.field === 'isProblematic'
-    );
-    if (flagsColumn) {
-      flagsColumn.cellTemplate = this.flagsCellTemplate;
     }
 
     const investmentColumn = this.gridColumns.find(
@@ -215,6 +271,7 @@ export class LeadsComponent {
     this.editForm.patchValue({
       firstName: lead.firstName,
       lastName: lead.lastName,
+      username: lead.username,
       telephone: lead.telephone || '',
       skype: lead.skype || '',
       country: lead.country || '',
@@ -236,6 +293,7 @@ export class LeadsComponent {
       this.editForm.patchValue({
         firstName: this.selectedLead.firstName,
         lastName: this.selectedLead.lastName,
+        username: this.selectedLead.username,
         telephone: this.selectedLead.telephone || '',
         skype: this.selectedLead.skype || '',
         country: this.selectedLead.country || '',
@@ -248,10 +306,11 @@ export class LeadsComponent {
   saveClient(): void {
     if (this.editForm.invalid || !this.selectedLead) return;
 
-    const updateRequest: ClientUpdateRequest = {
+    const updateRequest: LeadUpdateRequest = {
       id: this.selectedLead.id,
       firstName: this.editForm.value.firstName,
       lastName: this.editForm.value.lastName,
+      username: this.editForm.value.username,
       telephone: this.editForm.value.telephone || null,
       secondTelephone: this.editForm.value.secondTelephone || null,
       skype: this.editForm.value.skype || null,
@@ -266,15 +325,15 @@ export class LeadsComponent {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          this.alertService.error('Failed to update client');
-          console.error('Error updating client:', error);
+          this.alertService.error('Failed to update lead');
+          console.error('Error updating lead:', error);
           return of(null);
         }),
         finalize(() => (this.loading = false))
       )
       .subscribe((result) => {
         if (result !== null) {
-          this.alertService.success('Client updated successfully');
+          this.alertService.success('Lead updated successfully');
           this.isEditing = false;
           this.refreshSelectedClient();
           this.refreshGrid();
@@ -303,12 +362,12 @@ export class LeadsComponent {
         catchError((error) => {
           if (error.status === 409) {
             this.alertService.error(
-              'Cannot delete client with active investments'
+              'Cannot delete lead with active investments'
             );
           } else {
-            this.alertService.error('Failed to delete client');
+            this.alertService.error('Failed to delete lead');
           }
-          console.error('Error deleting client:', error);
+          console.error('Error deleting lead:', error);
           return of(null);
         }),
         finalize(() => {
@@ -319,7 +378,7 @@ export class LeadsComponent {
       )
       .subscribe((result) => {
         if (result !== null) {
-          this.alertService.success('Client deleted successfully');
+          this.alertService.success('Lead deleted successfully');
           if (this.selectedLead?.id === this.clientToDelete?.id) {
             this.selectedLead = null;
           }
@@ -344,8 +403,8 @@ export class LeadsComponent {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          this.alertService.error('Failed to import clients');
-          console.error('Error importing clients:', error);
+          this.alertService.error('Failed to import leads');
+          console.error('Error importing leads:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -371,8 +430,8 @@ export class LeadsComponent {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          this.alertService.error('Failed to export clients');
-          console.error('Error exporting clients:', error);
+          this.alertService.error('Failed to export leads');
+          console.error('Error exporting leads:', error);
           return of(null);
         })
       )
@@ -381,9 +440,7 @@ export class LeadsComponent {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `clients_${
-            new Date().toISOString().split('T')[0]
-          }.csv`;
+          link.download = `leads_${new Date().toISOString().split('T')[0]}.csv`;
           link.click();
           window.URL.revokeObjectURL(url);
           this.alertService.success('Export completed successfully');
@@ -398,7 +455,7 @@ export class LeadsComponent {
         .pipe(
           takeUntil(this.destroy$),
           catchError((error) => {
-            console.error('Error refreshing client:', error);
+            console.error('Error refreshing lead:', error);
             return of(null);
           })
         )
@@ -416,7 +473,7 @@ export class LeadsComponent {
   }
 
   openRegistrationModal(): void {
-    const modalRef = this.modalService.open(ClientRegistrationModalComponent, {
+    const modalRef = this.modalService.open(LeadRegistrationModalComponent, {
       size: 'lg',
       centered: true,
       closable: true,
@@ -426,6 +483,7 @@ export class LeadsComponent {
       (result) => {
         if (result) {
           this.refreshGrid();
+          this.loadStatistics();
         }
       },
       () => {
@@ -475,7 +533,14 @@ export class LeadsComponent {
     }
   }
 
-  openPermissionDialog(user: any) {
+  private loadStatistics(): void {
+    this.leadsService.getActiveLeads().subscribe((result: any) => {
+      this.totalCount = result.totalUsers;
+      this.activeCount = result.activeUsersTotalCount;
+    });
+  }
+
+  openPermissionDialog(user: any): void {
     this.modalService.open(
       PermissionTableComponent,
       {

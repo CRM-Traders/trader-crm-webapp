@@ -34,12 +34,19 @@ export interface ClientCreateRequest {
   firstName: string;
   lastName: string;
   email: string;
+  username: string;
   affiliateId: string;
-  telephone?: string;
-  country?: string;
-  language?: string;
-  dateOfBirth?: string;
-  source?: string;
+  telephone?: string | null;
+  country?: string | null;
+  language?: string | null;
+  dateOfBirth?: string | null;
+  source?: string | null;
+}
+
+export interface ClientRegistrationResponse {
+  clientId: string;
+  userId: string;
+  generatedPassword?: string; // Present when password was auto-generated
 }
 
 export interface ClientUpdateRequest {

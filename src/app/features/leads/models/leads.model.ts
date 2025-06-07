@@ -3,6 +3,7 @@ export interface Lead {
   firstName: string;
   lastName: string;
   email: string;
+  username: string;
   telephone: string | null;
   skype: string | null;
   country: string | null;
@@ -31,17 +32,25 @@ export interface LeadCreateRequest {
   firstName: string;
   lastName: string;
   email: string;
-  telephone?: string;
-  country?: string;
-  language?: string;
-  dateOfBirth?: string;
-  source?: string;
+  username: string;
+  telephone: string;
+  country: string;
+  language: string;
+  dateOfBirth: string;
+  source: string;
+}
+
+export interface LeadCreateResponse {
+  leadId: string;
+  userId: string;
+  generatedPassword: string;
 }
 
 export interface LeadUpdateRequest {
   id: string;
   firstName?: string;
   lastName?: string;
+  username?: string;
   telephone?: string | null;
   secondTelephone?: string | null;
   skype?: string | null;
@@ -64,6 +73,7 @@ export interface LeadImportResult {
   firstName: string;
   lastName: string;
   email: string;
+  username: string;
   generatedPassword: string;
   clientId: string;
   userId: string;
