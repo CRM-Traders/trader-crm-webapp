@@ -1,7 +1,7 @@
 <!-- src/app/features/affiliates/affiliates.component.html -->
 
-<div class="min-h-screen bg-gray-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="general-container bg-gray-50">
+  <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Page Header -->
     <div class="mb-6">
       <div class="sm:flex sm:items-center sm:justify-between">
@@ -550,7 +550,7 @@
   <!-- Mobile overlay -->
   <div
     *ngIf="selectedAffiliate"
-    class="fixed inset-0 bg-black bg-opacity-50 mobile-overlay lg:hidden"
+    class="fixed inset-0 bg-black/30 mobile-overlay lg:hidden"
     (click)="closeDetails()"
   ></div>
 
