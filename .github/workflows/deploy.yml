@@ -1,19 +1,234 @@
-name: Deploy CRM.TraderWebApp
+name: Deploy Angular Application
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+env:
+  NODE_VERSION: '20.x'
+  APP_NAME: 'trader-crm-webapp'  # შეცვალე შენი აპლიკაციის სახელით
+  DIST_FOLDER: 'dist/trader-crm-webapp'  # შეცვალე შენი build output folder-ით
+
 jobs:
   deploy:
-    uses: CRM-Traders/.github/.github/workflows/deploy-angular.yml@main
-    with:
-      app_name: "CRM.TraderWebApp"
-      node_version: "20.x"
-      build_configuration: "production"
-      dist_folder: "dist/trader-crm-webapp"
-    secrets:
-      SSH_KEY: ${{ secrets.SSH_KEY }}
-      SERVER_HOST: ${{ secrets.SERVER_HOST }}
-      SERVER_USER: ${{ secrets.SERVER_USER }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run tests
+        run: |
+          npm run test -- --watch=false --browsers=ChromeHeadless
+          
+      - name: Build application
+        run: |
+          # Generate deployment info
+          APP_NAME_LOWER=$(echo ${{ env.APP_NAME }} | tr '[:upper:]' '[:lower:]' | sed 's/crm\.//g')
+          DEPLOY_PATH="/www/wwwroot/${APP_NAME_LOWER}.crm-system.com"
+          BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S)"
+          NGINX_CONFIG="/www/server/panel/vhost/nginx/${APP_NAME_LOWER}.crm-system.com.conf"
+          
+          echo "APP_NAME_LOWER=${APP_NAME_LOWER}" >> $GITHUB_ENV
+          echo "DEPLOY_PATH=${DEPLOY_PATH}" >> $GITHUB_ENV
+          echo "BACKUP_NAME=${BACKUP_NAME}" >> $GITHUB_ENV
+          echo "NGINX_CONFIG=${NGINX_CONFIG}" >> $GITHUB_ENV
+          
+          # Build the application
+          npm run build -- --configuration=production
+          
+          # Verify build output
+          if [ ! -d "${{ env.DIST_FOLDER }}" ]; then
+            echo "❌ Build failed - dist folder not found"
+            exit 1
+          fi
+          
+          echo "✅ Build completed successfully"
+          ls -la ${{ env.DIST_FOLDER }}
+          
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          
+      - name: Create backup on server
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            if [ -d '${{ env.DEPLOY_PATH }}' ]; then
+              sudo mkdir -p /www/backups/${{ env.APP_NAME }}
+              sudo cp -r '${{ env.DEPLOY_PATH }}' '/www/backups/${{ env.APP_NAME }}/${{ env.BACKUP_NAME }}'
+              echo 'Backup created: /www/backups/${{ env.APP_NAME }}/${{ env.BACKUP_NAME }}'
+            else
+              echo 'No existing deployment found - first time deployment'
+            fi
+          "
+          
+      - name: Deploy application
+        id: deploy
+        run: |
+          # Create deployment directory if it doesn't exist
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            sudo mkdir -p '${{ env.DEPLOY_PATH }}'
+          "
+          
+          # Deploy the built application
+          rsync -avz --delete ${{ env.DIST_FOLDER }}/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
+          
+          echo "✅ Files deployed successfully"
+          
+      - name: Set proper permissions
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            sudo chown -R www:www '${{ env.DEPLOY_PATH }}'
+            sudo chmod -R 755 '${{ env.DEPLOY_PATH }}'
+            echo '✅ Permissions set successfully'
+          "
+          
+      - name: Create/Update Nginx config
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            # Create nginx config if it doesn't exist
+            if [ ! -f '${{ env.NGINX_CONFIG }}' ]; then
+              sudo tee '${{ env.NGINX_CONFIG }}' > /dev/null << 'EOF'
+          server {
+            listen 80;
+            listen 443 ssl http2;
+            server_name ${{ env.APP_NAME_LOWER }}.crm-system.com;
+            
+            # SSL configuration will be handled by panel
+            
+            root ${{ env.DEPLOY_PATH }};
+            index index.html;
+            
+            # Angular routing support
+            location / {
+                try_files \$uri \$uri/ /index.html;
+            }
+            
+            # API proxy (uncomment and modify if needed)
+            # location /api/ {
+            #     proxy_pass http://localhost:5000/;
+            #     proxy_http_version 1.1;
+            #     proxy_set_header Upgrade \$http_upgrade;
+            #     proxy_set_header Connection 'upgrade';
+            #     proxy_set_header Host \$host;
+            #     proxy_cache_bypass \$http_upgrade;
+            #     proxy_set_header X-Real-IP \$remote_addr;
+            #     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            #     proxy_set_header X-Forwarded-Proto \$scheme;
+            # }
+            
+            # Static assets caching
+            location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+                expires 1y;
+                add_header Cache-Control 'public, immutable';
+            }
+            
+            # Security headers
+            add_header X-Frame-Options 'SAMEORIGIN' always;
+            add_header X-Content-Type-Options 'nosniff' always;
+            add_header X-XSS-Protection '1; mode=block' always;
+            add_header Referrer-Policy 'no-referrer-when-downgrade' always;
+            add_header Content-Security-Policy 'default-src \\'self\\' http: https: data: blob: \\'unsafe-inline\\'; frame-ancestors \\'self\\';' always;
+            
+            # Gzip compression
+            gzip on;
+            gzip_vary on;
+            gzip_min_length 1024;
+            gzip_types 
+                text/plain
+                text/css
+                text/xml
+                text/javascript
+                application/javascript
+                application/xml+rss
+                application/json;
+            }
+            EOF
+              echo '✅ Nginx config created'
+            else
+              echo '✅ Nginx config already exists'
+            fi
+          "
+          
+      - name: Test and reload Nginx
+        id: nginx_reload
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            sudo nginx -t
+            if [ \$? -eq 0 ]; then
+              sudo systemctl reload nginx
+              echo '✅ Nginx reloaded successfully'
+            else
+              echo '❌ Nginx configuration test failed'
+              exit 1
+            fi
+          "
+          
+      - name: Verify deployment
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            if [ -f '${{ env.DEPLOY_PATH }}/index.html' ]; then
+              echo '✅ Deployment verification successful'
+              echo 'Application available at: https://${{ env.APP_NAME_LOWER }}.crm-system.com'
+            else
+              echo '❌ Deployment verification failed'
+              exit 1
+            fi
+          "
+          
+      - name: Rollback on failure
+        if: failure() && (steps.deploy.outcome == 'failure' || steps.nginx_reload.outcome == 'failure')
+        run: |
+          echo "🔄 Deployment failed, rolling back..."
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            if [ -d '/www/backups/${{ env.APP_NAME }}/${{ env.BACKUP_NAME }}' ]; then
+              sudo rm -rf '${{ env.DEPLOY_PATH }}'
+              sudo cp -r '/www/backups/${{ env.APP_NAME }}/${{ env.BACKUP_NAME }}' '${{ env.DEPLOY_PATH }}'
+              sudo chown -R www:www '${{ env.DEPLOY_PATH }}'
+              sudo systemctl reload nginx
+              echo '✅ Rollback completed successfully'
+            else
+              echo '❌ No backup found for rollback'
+            fi
+          "
+          exit 1
+          
+      - name: Cleanup old backups
+        if: success()
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            cd /www/backups/${{ env.APP_NAME }} 2>/dev/null || exit 0
+            ls -1t | tail -n +6 | while read backup; do
+              if [ ! -z \"\$backup\" ]; then
+                echo \"Removing old backup: \$backup\"
+                sudo rm -rf \"\$backup\"
+              fi
+            done
+            echo '✅ Old backups cleaned up'
+          "
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ~/.ssh ${{ env.DIST_FOLDER }}
+          
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "📱 Application: ${{ env.APP_NAME }}"
+          echo "🌐 URL: https://${{ env.APP_NAME_LOWER }}.crm-system.com"
+          echo "📦 Build: ${{ github.sha }}"
+          echo "⏰ Deployed at: $(date)"
