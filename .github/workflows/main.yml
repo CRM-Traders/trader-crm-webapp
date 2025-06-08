@@ -1,0 +1,19 @@
+name: Deploy CRM.TraderWebApp
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: CRM-Traders/.github/.github/workflows/deploy-angular-app.yml@main
+    with:
+      app_name: "CRM.TraderWebApp"
+      node_version: "20.x"
+      build_configuration: "production"
+      dist_folder: "dist/trader-crm-webapp"
+    secrets:
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
