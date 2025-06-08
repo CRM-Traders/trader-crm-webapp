@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { publicGuard } from './core/guards/public.guard';
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard, roleGuard } from './core/guards/auth.guard';
 import { EmployeeChatComponent } from './shared/components/employee-chat/employee-chat.component';
+import { UserRole } from './core/models/roles.model';
 
 export const routes: Routes = [
   // Publics
@@ -39,7 +40,16 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'settings',
@@ -55,7 +65,16 @@ export const routes: Routes = [
           import('./features/calendar-page/calendar-page.component').then(
             (m) => m.CalendarPageComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'clients',
@@ -63,7 +82,16 @@ export const routes: Routes = [
           import('./features/clients/clients.component').then(
             (m) => m.ClientsComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'workers',
@@ -71,7 +99,16 @@ export const routes: Routes = [
           import('./features/workers/workers.component').then(
             (m) => m.WorkersComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'tickets',
@@ -79,15 +116,35 @@ export const routes: Routes = [
           import('./features/tickets/tickets.component').then(
             (m) => m.TicketsComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'api-docs',
         loadComponent: () =>
-          import('./features/api-docs/api-docs.component').then(
-            (m) => m.ApiDocsComponent
-          ),
-        canActivate: [authGuard],
+          import(
+            './features/affiliate-portal/api-docs/api-docs.component'
+          ).then((m) => m.ApiDocsComponent),
+        canActivate: [
+          authGuard,
+          roleGuard([UserRole.SUPERUSER, UserRole.AFFILIATE]),
+        ],
+      },
+      {
+        path: 'affiliate-clients',
+        loadComponent: () =>
+          import(
+            './features/affiliate-portal/clients/affiliate-clients/affiliate-clients.component'
+          ).then((m) => m.AffiliateClientsComponent),
+        canActivate: [authGuard, roleGuard([UserRole.AFFILIATE])],
       },
       {
         path: 'affiliates',
@@ -95,7 +152,16 @@ export const routes: Routes = [
           import('./features/affiliates/affiliates.component').then(
             (m) => m.AffiliatesComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'leads',
@@ -103,15 +169,16 @@ export const routes: Routes = [
           import('./features/leads/leads.component').then(
             (m) => m.LeadsComponent
           ),
-        canActivate: [authGuard],
-      },
-      {
-        path: 'charts',
-        loadComponent: () =>
-          import('./features/charts/charts.component').then(
-            (m) => m.ChartsComponent
-          ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'communications',
@@ -119,7 +186,16 @@ export const routes: Routes = [
           import('./features/communications/communications.component').then(
             (m) => m.CommunicationsComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'employee-chat',
@@ -127,7 +203,16 @@ export const routes: Routes = [
           import(
             './shared/components/employee-chat/employee-chat.component'
           ).then((m) => m.EmployeeChatComponent),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'documents',
@@ -135,7 +220,16 @@ export const routes: Routes = [
           import('./features/documents/documents.component').then(
             (m) => m.DocumentsComponent
           ),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'documents/:id',
@@ -143,7 +237,16 @@ export const routes: Routes = [
           import(
             './features/documents/components/kyc-details/kyc-details.component'
           ).then((m) => m.KycDetailsComponent),
-        canActivate: [authGuard],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SUPERUSER,
+            UserRole.ADMIN,
+            UserRole.MANAGER,
+            UserRole.USER,
+            UserRole.WORKER,
+          ]),
+        ],
       },
       {
         path: 'kyc-verification',
@@ -151,12 +254,19 @@ export const routes: Routes = [
           import(
             './features/client-portal/client-kyc/client-kyc.component'
           ).then((m) => m.ClientKycComponent),
-        canActivate: [authGuard],
+        canActivate: [authGuard, roleGuard([UserRole.CLIENT])],
+      },
+      {
+        path: 'traiding-accounts',
+        loadComponent: () =>
+          import(
+            './features/client-portal/trading-accounts/trading-accounts.component'
+          ).then((m) => m.TradingAccountsComponent),
+        canActivate: [authGuard, roleGuard([UserRole.CLIENT])],
       },
     ],
   },
 
-  // Default
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: '/dashboard' },
 ];

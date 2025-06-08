@@ -1,166 +1,518 @@
 @use "tailwindcss" as *;
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+// Comprehensive Color System with CSS Custom Properties
+:root {
+  // === LIGHT MODE COLORS ===
 
+  // Primary Brand Colors
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6;  // Main brand
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
+
+  // Secondary Colors (Purple/Indigo)
+  --secondary-50: #f0f9ff;
+  --secondary-100: #e0f2fe;
+  --secondary-200: #bae6fd;
+  --secondary-300: #7dd3fc;
+  --secondary-400: #38bdf8;
+  --secondary-500: #0ea5e9;
+  --secondary-600: #0284c7;
+  --secondary-700: #0369a1;
+  --secondary-800: #075985;
+  --secondary-900: #0c4a6e;
+
+  // Accent Colors
+  --accent-purple-500: #8b5cf6;
+  --accent-purple-600: #7c3aed;
+  --accent-pink-500: #ec4899;
+  --accent-pink-600: #db2777;
+  --accent-orange-500: #f97316;
+  --accent-orange-600: #ea580c;
+  --accent-teal-500: #14b8a6;
+  --accent-teal-600: #0d9488;
+
+  // Semantic Colors
+  --success-50: #f0fdf4;
+  --success-100: #dcfce7;
+  --success-500: #22c55e;
+  --success-600: #16a34a;
+  --success-700: #15803d;
+
+  --warning-50: #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+
+  --error-50: #fef2f2;
+  --error-100: #fee2e2;
+  --error-500: #ef4444;
+  --error-600: #dc2626;
+  --error-700: #b91c1c;
+
+  --info-50: #f0f9ff;
+  --info-100: #e0f2fe;
+  --info-500: #06b6d4;
+  --info-600: #0891b2;
+  --info-700: #0e7490;
+
+  // Neutral Grays
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  // Surface Colors (Backgrounds)
+  --surface-primary: #ffffff;
+  --surface-secondary: #f9fafb;
+  --surface-tertiary: #f3f4f6;
+  --surface-elevated: #ffffff;
+
+  // Text Colors
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-tertiary: #6b7280;
+  --text-disabled: #9ca3af;
+  --text-inverse: #ffffff;
+
+  // Border Colors
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --border-focus: var(--primary-500);
+
+  // Shadow Colors
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+// === DARK MODE COLOR OVERRIDES ===
+.dark {
+  // Primary Brand Colors (enhanced for dark mode)
+  --primary-50: #0f1629;
+  --primary-100: #172554;
+  --primary-200: #1e3a8a;
+  --primary-300: #1d4ed8;
+  --primary-400: #2563eb;
+  --primary-500: #3b82f6;  // Keep main brand consistent
+  --primary-600: #60a5fa;  // Brighter for better contrast
+  --primary-700: #93c5fd;
+  --primary-800: #bfdbfe;
+  --primary-900: #dbeafe;
+
+  // Secondary Colors (cyan/sky theme for dark mode)
+  --secondary-50: #0c1821;
+  --secondary-100: #164e63;
+  --secondary-200: #0891b2;
+  --secondary-300: #0ea5e9;
+  --secondary-400: #38bdf8;
+  --secondary-500: #0ea5e9;  // Main secondary
+  --secondary-600: #38bdf8;
+  --secondary-700: #7dd3fc;
+  --secondary-800: #bae6fd;
+  --secondary-900: #e0f2fe;
+
+  // Accent Colors (vibrant and modern for dark mode)
+  --accent-purple-500: #a855f7;   // More vibrant purple
+  --accent-purple-600: #c084fc;   // Lighter for contrast
+  --accent-pink-500: #f472b6;     // Brighter pink
+  --accent-pink-600: #f9a8d4;     // Even lighter
+  --accent-orange-500: #fb923c;   // Warmer orange
+  --accent-orange-600: #fdba74;   // Lighter orange
+  --accent-teal-500: #14b8a6;     // Keep vibrant teal
+  --accent-teal-600: #2dd4bf;     // Brighter teal
+
+  // Semantic Colors (balanced for lighter dark backgrounds)
+  --success-50: #134e4a;
+  --success-100: #0f766e;
+  --success-500: #10b981;     // Emerald green - vibrant but not harsh
+  --success-600: #34d399;     // Brighter for good visibility
+  --success-700: #6ee7b7;
+
+  --warning-50: #713f12;
+  --warning-100: #a16207;
+  --warning-500: #f59e0b;     // Keep amber
+  --warning-600: #fbbf24;     // Brighter amber
+  --warning-700: #fcd34d;
+
+  --error-50: #7f1d1d;
+  --error-100: #991b1b;
+  --error-500: #f87171;      // Softer red for dark mode
+  --error-600: #fca5a5;      // Even softer
+  --error-700: #fecaca;
+
+  --info-50: #164e63;
+  --info-100: #0891b2;
+  --info-500: #06b6d4;       // Cyan
+  --info-600: #22d3ee;       // Brighter cyan
+  --info-700: #67e8f9;
+
+  // Balanced Dark Surface Colors (much lighter)
+  --surface-primary: #1e293b;      // Slate-800 - much lighter base
+  --surface-secondary: #334155;    // Slate-700 - lighter secondary
+  --surface-tertiary: #475569;     // Slate-600 - even lighter
+  --surface-elevated: #374151;     // Slate-700 variant for cards
+
+  // Balanced Text Colors
+  --text-primary: #f1f5f9;         // Slate-100 - softer white
+  --text-secondary: #cbd5e1;       // Slate-300 - readable gray
+  --text-tertiary: #94a3b8;        // Slate-400 - medium gray
+  --text-disabled: #64748b;        // Slate-500 - muted
+  --text-inverse: #1e293b;         // Matches surface primary
+
+  // Lighter Border Colors
+  --border-primary: #64748b;       // Slate-500 - more visible
+  --border-secondary: #94a3b8;     // Slate-400 - lighter
+  --border-focus: var(--primary-500); // Keep original primary
+
+  // Balanced Shadow Colors for dark mode
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+
+  // Balanced dark mode enhancements
+  --glass-bg: rgba(51, 65, 85, 0.8);
+  --glass-border: rgba(100, 116, 139, 0.3);
+  --glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
+  --glow-accent: 0 0 20px rgba(168, 85, 247, 0.3);
+}
+
+// === BASE STYLES ===
 html,
 body {
   height: 100%;
   margin: 0;
   padding: 0;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-body {
-  &.dark {
-    background-color: #1f2937;
-    color: white;
-  }
-}
-
+// Smooth transitions for theme switching
 *,
 *::before,
 *::after {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease;
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark {
-  .bg-white.dark\:bg-gray-900 {
-    background-color: #111827 !important;
-  }
+// === COMPONENT STYLES ===
 
-  .bg-white.dark\:bg-gray-800 {
-    background-color: #1f2937 !important;
-  }
+// Background Classes
+.bg-primary { background-color: var(--primary-500) !important; }
+.bg-primary-light { background-color: var(--primary-100) !important; }
+.bg-primary-dark { background-color: var(--primary-700) !important; }
 
-  .text-gray-900.dark\:text-white {
-    color: white !important;
-  }
+.bg-secondary { background-color: var(--secondary-500) !important; }
+.bg-accent-purple { background-color: var(--accent-purple-500) !important; }
+.bg-accent-pink { background-color: var(--accent-pink-500) !important; }
+.bg-accent-orange { background-color: var(--accent-orange-500) !important; }
+.bg-accent-teal { background-color: var(--accent-teal-500) !important; }
 
-  .text-gray-700.dark\:text-gray-300,
-  .text-gray-600.dark\:text-gray-300,
-  .text-gray-800.dark\:text-gray-300 {
-    color: #d1d5db !important;
-  }
+.bg-success { background-color: var(--success-500) !important; }
+.bg-warning { background-color: var(--warning-500) !important; }
+.bg-error { background-color: var(--error-500) !important; }
+.bg-info { background-color: var(--info-500) !important; }
 
-  .text-gray-600.dark\:text-gray-400,
-  .text-gray-500.dark\:text-gray-400 {
-    color: #9ca3af !important;
-  }
+// Surface Classes
+.bg-surface { background-color: var(--surface-primary) !important; }
+.bg-surface-secondary { background-color: var(--surface-secondary) !important; }
+.bg-surface-tertiary { background-color: var(--surface-tertiary) !important; }
+.bg-surface-elevated { background-color: var(--surface-elevated) !important; }
 
-  input.dark\:bg-gray-700 {
-    background-color: #374151 !important;
-    color: white !important;
-  }
+// Glass effect for dark mode
+.bg-glass {
+  background-color: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
 
-  input.dark\:border-gray-600 {
-    border-color: #4b5563 !important;
-  }
+// Text Color Classes
+.text-primary-color { color: var(--primary-500) !important; }
+.text-secondary-color { color: var(--secondary-500) !important; }
+.text-accent-purple { color: var(--accent-purple-500) !important; }
+.text-accent-pink { color: var(--accent-pink-500) !important; }
+.text-accent-orange { color: var(--accent-orange-500) !important; }
+.text-accent-teal { color: var(--accent-teal-500) !important; }
 
-  input::placeholder.dark\:placeholder-gray-500 {
-    color: #6b7280 !important;
-  }
+.text-success { color: var(--success-600) !important; }
+.text-warning { color: var(--warning-600) !important; }
+.text-error { color: var(--error-600) !important; }
+.text-info { color: var(--info-600) !important; }
 
-  input[type="checkbox"].dark\:bg-gray-700 {
-    background-color: #374151 !important;
-  }
+// Override existing Tailwind classes
+.bg-white { background-color: var(--surface-primary) !important; }
+.bg-gray-50 { background-color: var(--surface-secondary) !important; }
+.bg-gray-100 { background-color: var(--surface-tertiary) !important; }
 
-  input[type="checkbox"].dark\:checked\:bg-blue-600:checked {
-    background-color: #2563eb !important;
-  }
+.text-gray-900 { color: var(--text-primary) !important; }
+.text-gray-800 { color: var(--text-primary) !important; }
+.text-gray-700 { color: var(--text-secondary) !important; }
+.text-gray-600 { color: var(--text-secondary) !important; }
+.text-gray-500 { color: var(--text-tertiary) !important; }
 
-  .border-gray-200.dark\:border-gray-700 {
-    border-color: #374151 !important;
-  }
+.border-gray-200 { border-color: var(--border-primary) !important; }
+.border-gray-300 { border-color: var(--border-secondary) !important; }
 
-  .bg-blue-600.dark\:bg-blue-500 {
-    background-color: #3b82f6 !important;
-  }
+// === BUTTONS ===
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
 
-  .hover\:bg-blue-700.dark\:hover\:bg-blue-600:hover {
-    background-color: #2563eb !important;
-  }
-
-  .bg-gray-200.dark\:bg-gray-700 {
-    background-color: #374151 !important;
+  &:focus {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
   }
 }
 
-.dark body {
-  background-color: #111827;
+.btn-primary {
+  background-color: var(--primary-500);
   color: white;
+
+  &:hover {
+    background-color: var(--primary-600);
+    box-shadow: var(--glow-primary);
+  }
+  &:active { background-color: var(--primary-700); }
 }
 
-html,
-body,
-app-root {
-  display: block;
-  min-height: 100vh;
+.btn-secondary {
+  background-color: var(--secondary-500);
+  color: white;
+
+  &:hover { background-color: var(--secondary-600); }
 }
 
-.dark {
-  body,
-  .bg-gray-100.dark\:bg-gray-900 {
-    background-color: #1a202c !important;
-  }
+.btn-success {
+  background-color: var(--success-500);
+  color: white;
 
-  .bg-white.dark\:bg-gray-800 {
-    background-color: #2d3748 !important;
-  }
+  &:hover { background-color: var(--success-600); }
+}
 
-  .text-gray-900.dark\:text-gray-100,
-  .text-gray-800.dark\:text-gray-100 {
-    color: #f7fafc !important;
-  }
+.btn-warning {
+  background-color: var(--warning-500);
+  color: white;
 
-  .text-gray-700.dark\:text-gray-200,
-  .text-gray-600.dark\:text-gray-200 {
-    color: #e2e8f0 !important;
-  }
+  &:hover { background-color: var(--warning-600); }
+}
 
-  .text-gray-500.dark\:text-gray-300,
-  .text-gray-600.dark\:text-gray-300 {
-    color: #cbd5e0 !important;
-  }
+.btn-error {
+  background-color: var(--error-500);
+  color: white;
 
-  input.dark\:bg-gray-700 {
-    background-color: #4a5568 !important;
-    color: #fff !important;
-  }
+  &:hover { background-color: var(--error-600); }
+}
 
-  input.dark\:border-gray-600 {
-    border-color: #718096 !important;
-  }
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
 
-  .dark\:bg-gray-700 {
-    background-color: #4a5568 !important;
-  }
-
-  .dark\:hover\:bg-gray-600:hover {
-    background-color: #4a5568 !important;
-  }
-
-  .dark\:hover\:bg-gray-700:hover {
-    background-color: #4a5568 !important;
-  }
-
-  .dark\:bg-blue-800 {
-    background-color: #2c5282 !important;
-  }
-
-  .bg-white.dark\:bg-gray-800 * {
-    color-scheme: dark;
+  &:hover {
+    background-color: var(--surface-tertiary);
   }
 }
 
-.dark * {
-  color-scheme: dark;
+// === CARDS & CONTAINERS ===
+.card {
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+
+  &.elevated {
+    box-shadow: var(--shadow-md);
+  }
+
+  &.floating {
+    box-shadow: var(--shadow-lg);
+  }
+
+  &.glow {
+    box-shadow: var(--shadow-md), var(--glow-primary);
+  }
 }
 
-.transition-colors,
-.transition-all,
-.transition {
-  transition-duration: 300ms;
+// === FORMS ===
+input,
+textarea,
+select {
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+
+  &::placeholder {
+    color: var(--text-disabled);
+  }
+
+  &:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+  }
+}
+
+// === ALERTS & NOTIFICATIONS ===
+.alert {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid;
+
+  &.alert-success {
+    background-color: var(--success-50);
+    color: var(--success-700);
+    border-color: var(--success-500);
+  }
+
+  &.alert-warning {
+    background-color: var(--warning-50);
+    color: var(--warning-700);
+    border-color: var(--warning-500);
+  }
+
+  &.alert-error {
+    background-color: var(--error-50);
+    color: var(--error-700);
+    border-color: var(--error-500);
+  }
+
+  &.alert-info {
+    background-color: var(--info-50);
+    color: var(--info-700);
+    border-color: var(--info-500);
+  }
+}
+
+// === BADGES ===
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+
+  &.badge-primary {
+    background-color: var(--primary-100);
+    color: var(--primary-700);
+  }
+
+  &.badge-success {
+    background-color: var(--success-100);
+    color: var(--success-700);
+  }
+
+  &.badge-warning {
+    background-color: var(--warning-100);
+    color: var(--warning-700);
+  }
+
+  &.badge-error {
+    background-color: var(--error-100);
+    color: var(--error-700);
+  }
+}
+
+// === NAVIGATION ===
+.nav-item {
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    background-color: var(--surface-tertiary);
+    color: var(--text-primary);
+  }
+
+  &.active {
+    background-color: var(--primary-100);
+    color: var(--primary-700);
+    font-weight: 500;
+  }
+}
+
+// === UTILITY CLASSES ===
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+
+.glow-primary { box-shadow: var(--glow-primary); }
+.glow-accent { box-shadow: var(--glow-accent); }
+
+// === SCROLLBARS ===
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-tertiary);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--text-secondary);
+  }
+}
+
+// Firefox scrollbar
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-tertiary) var(--surface-secondary);
+}
+
+body {
+  font-family: 'Nunito Sans', sans-serif;
+  overflow: hidden;
+}
+
+// === ACCESSIBILITY ===
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 button {
   cursor: pointer;
+}
+
+.general-container {
+  height: calc(100vh - 110px);
+  overflow-y: auto;
+  border-radius: 10px;
 }

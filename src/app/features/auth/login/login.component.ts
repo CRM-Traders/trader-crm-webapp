@@ -10,6 +10,8 @@ import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/th
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { TwoFactorComponent } from '../two-factor/two-factor.component';
+import { AuthResponse } from '../../../core/models/auth-response.model';
+import { UserRole } from '../../../core/models/roles.model';
 
 @Component({
   selector: 'app-login',
@@ -69,7 +71,7 @@ export class LoginComponent {
           this.userId = result.userId;
         } else if (result.accessToken) {
           // Login successful
-          this.router.navigateByUrl(this.returnUrl);
+          this.navigateByRole(result.role);
         }
         this.isLoading = false;
       },
@@ -94,8 +96,7 @@ export class LoginComponent {
       .subscribe(
         (result: any) => {
           if (result.accessToken) {
-            // 2FA verification successful
-            this.router.navigateByUrl(this.returnUrl);
+            this.navigateByRole(result.role);
           } else {
             this.errorMessage =
               'Two-factor authentication failed. Please try again.';
@@ -117,5 +118,15 @@ export class LoginComponent {
         this.markFormGroupTouched(control as FormGroup);
       }
     });
+  }
+
+  private navigateByRole(role: string) {
+    if (role === UserRole.AFFILIATE) {
+      this.router.navigateByUrl('/affiliate-clients');
+    } else if (role === UserRole.CLIENT || role === UserRole.LEAD) {
+      this.router.navigateByUrl('/traiding-accounts');
+    } else {
+      this.router.navigateByUrl('/dashboard');
+    }
   }
 }

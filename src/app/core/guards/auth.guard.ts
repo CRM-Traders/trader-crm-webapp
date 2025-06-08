@@ -15,12 +15,12 @@ export const authGuard: CanActivateFn = (): boolean | UrlTree => {
   });
 };
 
-export const roleGuard = (requiredRole: string): CanActivateFn => {
+export const roleGuard = (requiredRole: string[]): CanActivateFn => {
   return (): boolean | UrlTree => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (authService.userRole() === requiredRole) {
+    if (requiredRole.includes(authService.userRole())) {
       return true;
     }
 

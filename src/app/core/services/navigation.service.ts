@@ -15,7 +15,6 @@ export class NavigationService {
   expanded$ = this.expandedSubject.asObservable();
 
   private navigationItems: NavItem[] = [
-    // Overview
     {
       label: 'Dashboard',
       icon: 'dashboard',
@@ -39,6 +38,13 @@ export class NavigationService {
         UserRole.WORKER,
         UserRole.USER,
       ],
+    },
+
+    {
+      label: 'Clients',
+      icon: 'traders',
+      route: '/affiliate-clients',
+      requiredRoles: [UserRole.AFFILIATE],
     },
     {
       label: 'Affiliates',
@@ -138,10 +144,16 @@ export class NavigationService {
       requiredRoles: [UserRole.AFFILIATE, UserRole.SUPERUSER],
     },
     {
+      label: 'Traiding Accounts',
+      icon: 'traders',
+      route: '/traiding-accounts',
+      requiredRoles: [UserRole.LEAD, UserRole.CLIENT],
+    },
+    {
       label: 'KYC',
       icon: 'kyc',
       route: '/kyc-verification',
-      requiredRoles: [UserRole.LEAD, UserRole.CLIENT, UserRole.SUPERUSER],
+      requiredRoles: [UserRole.LEAD, UserRole.CLIENT],
     },
   ];
 

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 
 interface Header {
   name: string;
@@ -34,6 +34,8 @@ interface Endpoint {
   styleUrl: './api-docs.component.scss',
 })
 export class ApiDocsComponent implements OnInit {
+  @ViewChild('documentationContent', { static: false })
+  documentationContent!: ElementRef;
   endpoints: Endpoint[] = [
     {
       id: 'overview',
@@ -322,8 +324,209 @@ export class ApiDocsComponent implements OnInit {
 
   copyToClipboard(text: string): void {
     navigator.clipboard.writeText(text).then(() => {
-      // You could trigger an alert service notification here
       console.log('Copied to clipboard');
     });
+  }
+
+  printDocumentation(): void {
+    // Get the documentation content
+    const content = this.documentationContent.nativeElement;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+
+    if (!printWindow) {
+      alert('Please allow pop-ups to enable PDF export functionality.');
+      return;
+    }
+
+    // Create the complete HTML document for printing
+    const printDocument = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Client Management API Documentation</title>
+        <style>
+          /* Print-specific styles */
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
+
+          @page {
+            margin: 1in;
+            size: A4;
+          }
+
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+          }
+
+          h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            margin-bottom: 16pt;
+            page-break-after: avoid;
+            border-bottom: 2pt solid #000;
+            padding-bottom: 8pt;
+          }
+
+          h2 {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-top: 20pt;
+            margin-bottom: 12pt;
+            page-break-after: avoid;
+            color: #000;
+          }
+
+          h3 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 16pt;
+            margin-bottom: 8pt;
+            page-break-after: avoid;
+            color: #000;
+          }
+
+          h4 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 12pt;
+            margin-bottom: 6pt;
+            page-break-after: avoid;
+            color: #000;
+          }
+
+          p, div {
+            margin-bottom: 8pt;
+            line-height: 1.5;
+            color: #000;
+            orphans: 3;
+            widows: 3;
+          }
+
+          pre, code {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            font-family: 'Courier New', Monaco, monospace;
+            font-size: 10pt;
+            padding: 8pt;
+            margin: 8pt 0;
+            page-break-inside: avoid;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: visible;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12pt 0;
+            page-break-inside: avoid;
+            font-size: 10pt;
+          }
+
+          th, td {
+            border: 1px solid #333;
+            padding: 6pt;
+            text-align: left;
+            vertical-align: top;
+          }
+
+          th {
+            background: #f0f0f0;
+            font-weight: bold;
+          }
+
+          ul, ol {
+            margin: 8pt 0;
+            padding-left: 20pt;
+          }
+
+          li {
+            margin-bottom: 4pt;
+          }
+
+          .section-break {
+            margin-bottom: 20pt;
+            page-break-inside: avoid;
+          }
+
+          /* Hide any buttons or interactive elements */
+          button, .copy-button, .navigation {
+            display: none !important;
+          }
+
+          /* Ensure proper spacing */
+          .endpoint-section {
+            margin-bottom: 24pt;
+            page-break-inside: avoid;
+          }
+
+          .code-block {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            padding: 8pt;
+            margin: 8pt 0;
+            page-break-inside: avoid;
+          }
+
+          /* Badge styling for print */
+          .badge {
+            background: #f0f0f0 !important;
+            border: 1px solid #ccc !important;
+            color: #000 !important;
+            padding: 2pt 4pt;
+            font-size: 9pt;
+            font-weight: bold;
+          }
+
+          /* Additional info boxes */
+          .info-box {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            padding: 8pt;
+            margin: 8pt 0;
+            page-break-inside: avoid;
+          }
+
+          /* Strong emphasis */
+          strong, b {
+            font-weight: bold;
+            color: #000;
+          }
+
+          /* Links */
+          a {
+            color: #000;
+            text-decoration: underline;
+          }
+        </style>
+      </head>
+      <body>
+        ${content.innerHTML}
+      </body>
+      </html>
+    `;
+
+    // Write the document to the new window
+    printWindow.document.write(printDocument);
+    printWindow.document.close();
+
+    // Wait for the content to load, then print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    };
   }
 }
