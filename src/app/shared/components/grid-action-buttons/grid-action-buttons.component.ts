@@ -14,7 +14,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
           [disabled]="isActionDisabled(action)"
           (click)="executeAction(action, $event)"
           [title]="action.label"
-          class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-600 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-300/30 hover:bg-gray-300 dark:bg-white dark:hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           [ngClass]="{
             'text-gray-700 dark:text-gray-200':
               !isActionDisabled(action) && action.type !== 'danger',
@@ -39,7 +39,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
           <img
             *ngIf="action.icon"
             [src]="getIconSvg(action.icon)"
-            class="w-4 h-4 mr-2"
+            class="w-4 h-4"
             [alt]="action.label"
           />
         </button>
@@ -49,7 +49,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
       <div *ngIf="secondaryActions.length > 0" class="relative inline-block">
         <button
           (click)="toggleDropdown($event)"
-          class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          class="inline-flex items-center relative justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-300/30 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
           [ngClass]="{ 'bg-gray-50 dark:bg-gray-600': isDropdownOpen }"
         >
           <svg
@@ -70,7 +70,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
         <!-- Dropdown menu -->
         <div
           *ngIf="isDropdownOpen"
-          class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-10"
+          class="fixed right-20 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50"
         >
           <ng-container *ngFor="let action of secondaryActions">
             <hr
@@ -81,7 +81,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
               *ngIf="!action.separator && isActionVisible(action)"
               [disabled]="isActionDisabled(action)"
               (click)="executeAction(action, $event)"
-              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-300/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               [ngClass]="{
                 'text-gray-700 dark:text-gray-200':
                   !isActionDisabled(action) && action.type !== 'danger',
