@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 env:
-  APP_NAME: 'trader-crm-webapp'  # შეცვალე
-  DIST_FOLDER: 'dist/trader-crm-webapp'  # შეცვალე
+  APP_NAME: 'trader-crm-webapp' 
+  DIST_FOLDER: 'dist/trader-crm-webapp/browser' 
 
 jobs:
   deploy:
