@@ -15,7 +15,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
   template: `
     <div
       *ngIf="visible"
-      class="context-menu fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 min-w-48"
+      class="context-menu fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-300/30 rounded-md shadow-lg py-1 min-w-48"
       [style.left.px]="position.x"
       [style.top.px]="position.y"
     >
@@ -28,7 +28,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
           *ngIf="!action.separator && isActionVisible(action)"
           [disabled]="isActionDisabled(action)"
           (click)="executeAction(action)"
-          class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-300/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
           [ngClass]="{
             'text-gray-700 dark:text-gray-200': !isActionDisabled(action),
             'text-gray-400 dark:text-gray-500': isActionDisabled(action),

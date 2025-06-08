@@ -9,11 +9,7 @@
 >
   <!-- Backdrop -->
   <div
-    class="fixed inset-0 transition-all duration-300 ease-out"
-    [class.bg-gray-100]="modal.config.backdrop && !isDarkMode"
-    [class.bg-opacity-20]="modal.config.backdrop && !isDarkMode"
-    [class.bg-gray-900]="modal.config.backdrop && isDarkMode"
-    [class.bg-opacity-10]="modal.config.backdrop && isDarkMode"
+    class="fixed inset-0 transition-all duration-300 ease-out bg-black/30"
     [class.backdrop-blur-xs]="modal.config.backdrop"
     [class.bg-transparent]="!modal.config.backdrop"
     (click)="onBackdropClick(modal.id)"

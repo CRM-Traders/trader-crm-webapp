@@ -40,7 +40,7 @@ interface RegistrationResponse {
         <!-- Success Message with Generated Password -->
         <div
           *ngIf="generatedPassword"
-          class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
+          class="mb-6 p-4 bg-green-50/5 dark:bg-green-900/5 border border-green-200/10 dark:border-green-800/10 rounded-lg"
         >
           <div class="flex items-center mb-2">
             <svg
@@ -56,11 +56,11 @@ interface RegistrationResponse {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               ></path>
             </svg>
-            <h5 class="text-sm font-medium text-green-800 dark:text-green-200">
+            <h5 class="text-sm font-medium text-green-800 dark:text-green-500">
               Worker Registered Successfully
             </h5>
           </div>
-          <p class="text-sm text-green-700 dark:text-green-300 mb-3">
+          <p class="text-sm text-green-800 dark:text-green-400 mb-3">
             A password has been generated for the new worker. Please copy and
             securely share this password:
           </p>
@@ -69,7 +69,7 @@ interface RegistrationResponse {
               type="text"
               readonly
               [value]="generatedPassword"
-              class="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-green-300 dark:border-green-600 rounded-md text-sm font-mono text-gray-900 dark:text-gray-100"
+              class="flex-1 px-3 py-2 bg-white dark:bg-gray-800/30 border border-green-300 dark:border-green-600/5 rounded-md text-sm font-mono text-gray-900 dark:text-gray-100"
             />
             <button
               type="button"
