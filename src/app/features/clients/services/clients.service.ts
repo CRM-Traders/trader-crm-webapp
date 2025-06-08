@@ -8,6 +8,7 @@ import {
   ClientUpdateRequest,
   ClientImportResponse,
   ClientRegistrationResponse,
+  ClientCreateForAffiliateRequest,
 } from '../models/clients.model';
 
 @Injectable({
@@ -31,6 +32,15 @@ export class ClientsService {
   ): Observable<ClientRegistrationResponse> {
     return this.httpService.post<ClientRegistrationResponse>(
       `${this.apiPath}/create-client-for-admin`,
+      request
+    );
+  }
+
+  createClientForAffiliate(
+    request: ClientCreateForAffiliateRequest
+  ): Observable<ClientRegistrationResponse> {
+    return this.httpService.post<ClientRegistrationResponse>(
+      `${this.apiPath}/create-client-for-user`,
       request
     );
   }

@@ -43,6 +43,18 @@ export interface ClientCreateRequest {
   source?: string | null;
 }
 
+export interface ClientCreateForAffiliateRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  telephone?: string | null;
+  country?: string | null;
+  language?: string | null;
+  dateOfBirth?: string | null;
+  source?: string | null;
+}
+
 export interface ClientRegistrationResponse {
   clientId: string;
   userId: string;

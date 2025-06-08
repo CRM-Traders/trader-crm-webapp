@@ -15,7 +15,6 @@ export class NavigationService {
   expanded$ = this.expandedSubject.asObservable();
 
   private navigationItems: NavItem[] = [
-    // Overview
     {
       label: 'Dashboard',
       icon: 'dashboard',
@@ -39,6 +38,13 @@ export class NavigationService {
         UserRole.WORKER,
         UserRole.USER,
       ],
+    },
+
+    {
+      label: 'Clients',
+      icon: 'traders',
+      route: '/affiliate-clients',
+      requiredRoles: [UserRole.AFFILIATE],
     },
     {
       label: 'Affiliates',
