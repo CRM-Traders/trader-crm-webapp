@@ -256,6 +256,14 @@ export const routes: Routes = [
           ).then((m) => m.ClientKycComponent),
         canActivate: [authGuard, roleGuard([UserRole.CLIENT])],
       },
+      {
+        path: 'traiding-accounts',
+        loadComponent: () =>
+          import(
+            './features/client-portal/trading-accounts/trading-accounts.component'
+          ).then((m) => m.TradingAccountsComponent),
+        canActivate: [authGuard, roleGuard([UserRole.CLIENT])],
+      },
     ],
   },
 

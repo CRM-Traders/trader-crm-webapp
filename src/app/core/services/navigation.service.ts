@@ -144,10 +144,16 @@ export class NavigationService {
       requiredRoles: [UserRole.AFFILIATE, UserRole.SUPERUSER],
     },
     {
+      label: 'Traiding Accounts',
+      icon: 'traders',
+      route: '/traiding-accounts',
+      requiredRoles: [UserRole.LEAD, UserRole.CLIENT],
+    },
+    {
       label: 'KYC',
       icon: 'kyc',
       route: '/kyc-verification',
-      requiredRoles: [UserRole.LEAD, UserRole.CLIENT, UserRole.SUPERUSER],
+      requiredRoles: [UserRole.LEAD, UserRole.CLIENT],
     },
   ];
 

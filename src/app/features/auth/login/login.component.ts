@@ -123,8 +123,8 @@ export class LoginComponent {
   private navigateByRole(role: string) {
     if (role === UserRole.AFFILIATE) {
       this.router.navigateByUrl('/affiliate-clients');
-    } else if (role === UserRole.CLIENT) {
-      this.router.navigateByUrl('/');
+    } else if (role === UserRole.CLIENT || role === UserRole.LEAD) {
+      this.router.navigateByUrl('/traiding-accounts');
     } else {
       this.router.navigateByUrl('/dashboard');
     }

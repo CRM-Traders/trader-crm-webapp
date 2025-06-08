@@ -1,4 +1,4 @@
 export const environment = {
-  gatewayDomain: 'https://localhost:5031/',
-  socketDomain: 'wss://localhost:5031/socket',
+  gatewayDomain: 'http://localhost:5000',
+  socketDomain: 'http://localhost:5004',
 };
