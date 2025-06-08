@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    uses: CRM-Traders/.github/.github/workflows/deploy-angular-app.yml@main
+    uses: CRM-Traders/.github/.github/workflows/deploy-angular.yml@main
     with:
       app_name: "CRM.TraderWebApp"
       node_version: "20.x"
