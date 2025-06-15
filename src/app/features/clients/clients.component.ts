@@ -33,6 +33,7 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { ClientRegistrationModalComponent } from './components/client-registration-modal/client-registration-modal.component';
+import { ClientDetailsModalComponent } from './components/client-details-modal/client-details-modal.component';
 
 @Component({
   selector: 'app-clients',
@@ -53,10 +54,6 @@ export class ClientsComponent implements OnInit {
   @ViewChild('investmentCell', { static: true })
   investmentCellTemplate!: TemplateRef<any>;
 
-  selectedClient: Client | null = null;
-  editForm: FormGroup;
-  isEditing = false;
-  loading = false;
   importLoading = false;
   showDeleteModal = false;
   clientToDelete: Client | null = null;
@@ -144,13 +141,13 @@ export class ClientsComponent implements OnInit {
       id: 'view',
       label: 'View Details',
       icon: 'view',
-      action: (item: Client) => this.viewClient(item),
+      action: (item: Client) => this.openClientDetailsModal(item),
     },
     {
       id: 'edit',
       label: 'Edit',
       icon: 'edit',
-      action: (item: Client) => this.startEdit(item),
+      action: (item: Client) => this.openClientDetailsModal(item),
     },
     {
       id: 'delete',
@@ -168,41 +165,11 @@ export class ClientsComponent implements OnInit {
     },
   ];
 
-  constructor() {
-    this.editForm = this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
-      secondTelephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
-      skype: [''],
-      country: [''],
-      language: [''],
-      dateOfBirth: [''],
-    });
-  }
+  constructor() {}
 
   ngOnInit(): void {
-    // Set cell templates after view initialization
-    const statusColumn = this.gridColumns.find((col) => col.field === 'status');
-    if (statusColumn) {
-      statusColumn.cellTemplate = this.statusCellTemplate;
-    }
-
-    const flagsColumn = this.gridColumns.find(
-      (col) => col.field === 'isProblematic'
-    );
-
-    const investmentColumn = this.gridColumns.find(
-      (col) => col.field === 'hasInvestments'
-    );
-    if (investmentColumn) {
-      investmentColumn.cellTemplate = this.investmentCellTemplate;
-    }
-
-    this.clientsService.getActiveClients().subscribe((result: any) => {
-      this.totalCount = result.totalUsers;
-      this.activeCount = result.activeUsersTotalCount;
-    });
+    this.initializeGridTemplates();
+    this.loadClientStatistics();
   }
 
   ngOnDestroy(): void {
@@ -210,83 +177,55 @@ export class ClientsComponent implements OnInit {
     this.destroy$.complete();
   }
 
-  onRowClick(client: Client): void {
-    this.viewClient(client);
+  private initializeGridTemplates(): void {
+    const statusColumn = this.gridColumns.find((col) => col.field === 'status');
+    if (statusColumn) {
+      statusColumn.cellTemplate = this.statusCellTemplate;
+    }
+
+    const investmentColumn = this.gridColumns.find(
+      (col) => col.field === 'hasInvestments'
+    );
+    if (investmentColumn) {
+      investmentColumn.cellTemplate = this.investmentCellTemplate;
+    }
   }
 
-  viewClient(client: Client): void {
-    this.selectedClient = client;
-    this.isEditing = false;
-    this.editForm.patchValue({
-      firstName: client.firstName,
-      lastName: client.lastName,
-      telephone: client.telephone || '',
-      secondTelephone: client.secondTelephone || '',
-      skype: client.skype || '',
-      country: client.country || '',
-      language: client.language || '',
-      dateOfBirth: client.dateOfBirth || '',
+  private loadClientStatistics(): void {
+    this.clientsService.getActiveClients().subscribe((result: any) => {
+      this.totalCount = result.totalUsers;
+      this.activeCount = result.activeUsersTotalCount;
     });
   }
 
-  startEdit(client?: Client): void {
-    if (client) {
-      this.viewClient(client);
-    }
-    this.isEditing = true;
+  onRowClick(client: Client): void {
+    this.openClientDetailsModal(client);
   }
 
-  cancelEdit(): void {
-    this.isEditing = false;
-    if (this.selectedClient) {
-      this.editForm.patchValue({
-        firstName: this.selectedClient.firstName,
-        lastName: this.selectedClient.lastName,
-        telephone: this.selectedClient.telephone || '',
-        secondTelephone: this.selectedClient.secondTelephone || '',
-        skype: this.selectedClient.skype || '',
-        country: this.selectedClient.country || '',
-        language: this.selectedClient.language || '',
-        dateOfBirth: this.selectedClient.dateOfBirth || '',
-      });
-    }
-  }
+  openClientDetailsModal(client: Client): void {
+    const modalRef = this.modalService.open(
+      ClientDetailsModalComponent,
+      {
+        size: 'xl',
+        centered: true,
+        closable: true,
+        customClass: 'max-w-7xl',
+      },
+      {
+        client: client,
+      }
+    );
 
-  saveClient(): void {
-    if (this.editForm.invalid || !this.selectedClient) return;
-
-    const updateRequest: ClientUpdateRequest = {
-      id: this.selectedClient.id,
-      firstName: this.editForm.value.firstName,
-      lastName: this.editForm.value.lastName,
-      telephone: this.editForm.value.telephone || null,
-      secondTelephone: this.editForm.value.secondTelephone || null,
-      skype: this.editForm.value.skype || null,
-      country: this.editForm.value.country || null,
-      language: this.editForm.value.language || null,
-      dateOfBirth: this.editForm.value.dateOfBirth || null,
-    };
-
-    this.loading = true;
-    this.clientsService
-      .updateClient(updateRequest)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          this.alertService.error('Failed to update client');
-          console.error('Error updating client:', error);
-          return of(null);
-        }),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success('Client updated successfully');
-          this.isEditing = false;
-          this.refreshSelectedClient();
+    modalRef.result.then(
+      (result) => {
+        if (result) {
           this.refreshGrid();
         }
-      });
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
   }
 
   confirmDelete(client: Client): void {
@@ -302,7 +241,6 @@ export class ClientsComponent implements OnInit {
   deleteClient(): void {
     if (!this.clientToDelete) return;
 
-    this.loading = true;
     this.clientsService
       .deleteClient(this.clientToDelete.id)
       .pipe(
@@ -319,7 +257,6 @@ export class ClientsComponent implements OnInit {
           return of(null);
         }),
         finalize(() => {
-          this.loading = false;
           this.showDeleteModal = false;
           this.clientToDelete = null;
         })
@@ -327,9 +264,6 @@ export class ClientsComponent implements OnInit {
       .subscribe((result) => {
         if (result !== null) {
           this.alertService.success('Client deleted successfully');
-          if (this.selectedClient?.id === this.clientToDelete?.id) {
-            this.selectedClient = null;
-          }
           this.refreshGrid();
         }
       });
@@ -398,30 +332,6 @@ export class ClientsComponent implements OnInit {
       });
   }
 
-  private refreshSelectedClient(): void {
-    if (this.selectedClient) {
-      this.clientsService
-        .getClientById(this.selectedClient.id)
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError((error) => {
-            console.error('Error refreshing client:', error);
-            return of(null);
-          })
-        )
-        .subscribe((client) => {
-          if (client) {
-            this.selectedClient = client;
-          }
-        });
-    }
-  }
-
-  closeDetails(): void {
-    this.selectedClient = null;
-    this.isEditing = false;
-  }
-
   openRegistrationModal(): void {
     const modalRef = this.modalService.open(ClientRegistrationModalComponent, {
       size: 'lg',
@@ -474,7 +384,6 @@ export class ClientsComponent implements OnInit {
   }
 
   refreshGrid(): void {
-    // Emit an event or call a method to refresh the grid
     const gridComponent = document.querySelector(
       `app-grid[gridId="clients-grid"]`
     );
@@ -483,7 +392,7 @@ export class ClientsComponent implements OnInit {
     }
   }
 
-  openPermissionDialog(user: any) {
+  openPermissionDialog(user: any): void {
     this.modalService.open(
       PermissionTableComponent,
       {

@@ -483,7 +483,7 @@ import { LeadsService } from '../../services/leads.service';
 
           <!-- Warning Message -->
           <div
-            class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3"
+            class="bg-yellow-50 dark:bg-yellow-900/5 border border-yellow-200 dark:border-yellow-800/5 rounded-lg p-3"
           >
             <div class="flex items-start">
               <svg

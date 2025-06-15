@@ -1,7 +1,7 @@
 <div class="general-container flex flex-col bg-gray-50 dark:bg-gray-900">
   <!-- Header -->
   <div
-    class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 px-6 py-4"
+    class="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-300/40 px-6 py-4"
   >
     <div class="flex items-center justify-between">
       <div>
@@ -70,10 +70,10 @@
   <div class="flex-1 flex overflow-hidden">
     <!-- Sidebar - Chat List -->
     <div
-      class="w-80 bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col"
+      class="w-80 bg-white dark:bg-gray-800 border-r dark:border-gray-300/30 flex flex-col"
     >
       <!-- Search and Filters -->
-      <div class="p-4 border-b dark:border-gray-700">
+      <div class="p-4 border-b dark:border-gray-300/40">
         <!-- Search -->
         <div class="relative mb-4">
           <input
@@ -113,7 +113,7 @@
 
       <!-- Online Employees Section -->
       <div
-        class="px-4 py-3 border-b dark:border-gray-700"
+        class="px-4 py-3 border-b dark:divide-gray-300/30"
         *ngIf="onlineEmployees.length > 0"
       >
         <h3
@@ -547,7 +547,7 @@
     <div class="flex justify-end space-x-3">
       <button
         (click)="closeNewChatModal()"
-        class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        class="px-4 py-2 text-black bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
       >
         Cancel
       </button>

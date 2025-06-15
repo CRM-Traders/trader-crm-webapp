@@ -2,10 +2,7 @@
 
 .trading-accounts-container {
   padding: 1.5rem;
-  max-width: 1200px;
   margin: 0 auto;
-  min-height: 100vh;
-  background: var(--background-primary, #ffffff);
   color: var(--text-primary, #1a1a1a);
 
   @media (max-width: 768px) {
