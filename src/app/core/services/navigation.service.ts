@@ -28,6 +28,19 @@ export class NavigationService {
       ],
     },
     {
+      label: 'Brands',
+      icon: 'brands',
+      route: '/brands',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
+    },
+
+    {
       label: 'Clients',
       icon: 'traders',
       route: '/clients',
