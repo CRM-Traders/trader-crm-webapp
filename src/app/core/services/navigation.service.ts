@@ -39,6 +39,18 @@ export class NavigationService {
         UserRole.USER,
       ],
     },
+    {
+      label: 'Desks',
+      icon: 'desks',
+      route: '/desks',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
+    },
 
     {
       label: 'Clients',

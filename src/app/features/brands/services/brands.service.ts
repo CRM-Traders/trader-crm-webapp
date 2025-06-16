@@ -1,3 +1,5 @@
+// src/app/features/brands/services/brands.service.ts
+
 import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
 import { HttpHeaders } from '@angular/common/http';
@@ -10,6 +12,8 @@ import {
   BrandImportResponse,
   BrandStats,
   BrandStatsMetaData,
+  BrandDropdownResponse,
+  BrandDropdownRequest,
 } from '../models/brand.model';
 
 @Injectable({
@@ -38,6 +42,21 @@ export class BrandsService {
   getBrandStats(): Observable<BrandStatsMetaData> {
     return this.httpService.get<BrandStatsMetaData>(
       `${this.apiPath}/brands-stat`
+    );
+  }
+
+  getBrandList(): Observable<BrandStatsMetaData> {
+    return this.httpService.get<BrandStatsMetaData>(
+      `${this.apiPath}/brands-stat`
+    );
+  }
+
+  getBrandsDropdown(
+    request: BrandDropdownRequest
+  ): Observable<BrandDropdownResponse> {
+    return this.httpService.post<BrandDropdownResponse>(
+      `${this.apiPath}/dropdown`,
+      request
     );
   }
 
