@@ -9,6 +9,7 @@ import {
   BrandCreateResponse,
   BrandImportResponse,
   BrandStats,
+  BrandStatsMetaData,
 } from '../models/brand.model';
 
 @Injectable({
@@ -27,16 +28,17 @@ export class BrandsService {
   }
 
   updateBrand(request: BrandUpdateRequest): Observable<void> {
-    const { id, ...body } = request;
-    return this.httpService.put<void>(`${this.apiPath}/${id}`, body);
+    return this.httpService.put<void>(`${this.apiPath}/${request.id}`, request);
   }
 
   deleteBrand(id: string): Observable<void> {
     return this.httpService.delete<void>(`${this.apiPath}/${id}`);
   }
 
-  getBrandStats(): Observable<BrandStats> {
-    return this.httpService.get<BrandStats>(`${this.apiPath}/stats`);
+  getBrandStats(): Observable<BrandStatsMetaData> {
+    return this.httpService.get<BrandStatsMetaData>(
+      `${this.apiPath}/brands-stat`
+    );
   }
 
   importBrands(file: File): Observable<BrandImportResponse> {

@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { BrandsService } from './services/brands.service';
-import { Brand, BrandStats } from './models/brand.model';
+import { Brand } from './models/brand.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
@@ -22,6 +22,7 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { BrandCreationModalComponent } from './components/brand-creation-modal/brand-creation-modal.component';
 import { BrandDetailsModalComponent } from './components/brand-details-modal/brand-details-modal.component';
+import { GridService } from '../../shared/services/grid/grid.service';
 
 @Component({
   selector: 'app-brands',
@@ -34,7 +35,10 @@ export class BrandsComponent implements OnInit, OnDestroy {
   private brandsService = inject(BrandsService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
+  private grid = inject(GridService);
+
   private destroy$ = new Subject<void>();
+  gridId = 'brands-grid';
 
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
@@ -153,16 +157,15 @@ export class BrandsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           console.error('Error loading brand statistics:', error);
-          // Set default values if API fails
           this.totalCount = 0;
           this.activeCount = 0;
           return of(null);
         })
       )
-      .subscribe((stats: BrandStats | null) => {
+      .subscribe((stats: any) => {
         if (stats) {
-          this.totalCount = stats.totalCount;
-          this.activeCount = stats.activeCount;
+          this.totalCount = stats.value.totalBrands;
+          this.activeCount = stats.value.activeBrands;
         }
       });
   }
@@ -181,14 +184,20 @@ export class BrandsComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshGrid();
+          this.refreshSpecificGrid();
+
           this.loadBrandStatistics();
         }
       },
-      () => {
-        // Modal dismissed
-      }
+      () => {}
     );
+  }
+
+  refreshSpecificGrid(): void {
+    const event = new CustomEvent('refreshGrid', {
+      detail: { gridId: this.gridId },
+    });
+    window.dispatchEvent(event);
   }
 
   openDetailsModal(brand: Brand): void {
@@ -207,7 +216,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadBrandStatistics();
         }
       },
@@ -218,7 +227,6 @@ export class BrandsComponent implements OnInit, OnDestroy {
   }
 
   confirmDelete(brand: Brand): void {
-    // Check if brand has departments before allowing deletion
     if (brand.departmentsCount !== undefined && brand.departmentsCount > 0) {
       this.alertService.error(
         'Cannot delete brand that has associated departments'
@@ -262,7 +270,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
       .subscribe((result) => {
         if (result !== null) {
           this.alertService.success('Brand deleted successfully');
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadBrandStatistics();
         }
       });
@@ -294,7 +302,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
         if (response) {
           const message = `Import completed: ${response.successCount} successful, ${response.failureCount} failed`;
           this.alertService.success(message);
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadBrandStatistics();
         }
       });
@@ -362,14 +370,5 @@ export class BrandsComponent implements OnInit, OnDestroy {
           this.alertService.success('Template downloaded successfully!');
         }
       });
-  }
-
-  refreshGrid(): void {
-    const gridComponent = document.querySelector(
-      `app-grid[gridId="brands-grid"]`
-    );
-    if (gridComponent) {
-      (gridComponent as any).refresh?.();
-    }
   }
 }

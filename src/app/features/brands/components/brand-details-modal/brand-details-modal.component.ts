@@ -314,29 +314,25 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to update brand');
-          console.error('Error updating brand:', error);
           return of(null);
         }),
         finalize(() => (this.loading = false))
       )
       .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success('Brand updated successfully');
-          this.isEditing = false;
+        this.alertService.success('Brand updated successfully');
+        this.isEditing = false;
 
-          // Update the brand object with new values
-          this.brand = {
-            ...this.brand,
-            name: this.editForm.value.name.trim(),
-            isActive: this.editForm.value.isActive,
-            lastModifiedAt: new Date(),
-          };
+        this.brand = {
+          ...this.brand,
+          name: this.editForm.value.name.trim(),
+          isActive: this.editForm.value.isActive,
+          lastModifiedAt: new Date(),
+        };
 
-          this.modalRef.close({
-            updated: true,
-            brand: this.brand,
-          });
-        }
+        this.modalRef.close({
+          updated: true,
+          brand: this.brand,
+        });
       });
   }
 

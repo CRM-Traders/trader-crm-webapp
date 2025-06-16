@@ -32,9 +32,13 @@ export interface BrandsListRequest {
   filters?: Record<string, any> | null;
 }
 
+export interface BrandStatsMetaData {
+  value: BrandStats;
+}
+
 export interface BrandStats {
-  totalCount: number;
-  activeCount: number;
+  totalBrands: number;
+  activeBrands: number;
 }
 
 export interface BrandCreateResponse {

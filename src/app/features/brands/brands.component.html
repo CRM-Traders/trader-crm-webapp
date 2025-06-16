@@ -154,22 +154,21 @@
       >
         <div class="overflow-x-auto">
           <app-grid
-            gridId="brands-grid"
+            [gridId]="gridId"
             [endpoint]="'identity/api/brands/grid'"
             [columns]="gridColumns"
             [actions]="gridActions"
             [sortable]="true"
             [enableContextMenu]="true"
             [exportable]="true"
-            [selectable]="true"
-            [showColumnSelector]="true"
+            [selectable]="false"
+            [showColumnSelector]="false"
             [showFilters]="true"
             emptyMessage="No brands found"
             (rowClick)="onRowClick($event)"
             (export)="onExport($event)"
-            (refresh)="refreshGrid()"
+            (refresh)="refreshSpecificGrid()"
           >
-            <!-- Custom Status Cell Template -->
             <ng-template #statusCell let-value="value">
               <span
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -182,7 +181,6 @@
               </span>
             </ng-template>
 
-            <!-- Custom Departments Count Cell Template -->
             <ng-template #departmentsCell let-value="value">
               <span
                 class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800"
