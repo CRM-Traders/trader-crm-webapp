@@ -42,7 +42,7 @@ jobs:
       - name: Deploy
         run: |
           # Deploy files
-          rsync -avz --delete ${{ env.DIST_FOLDER }}/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
+          rsync -avz --delete --exclude='.user.ini' ${{ env.DIST_FOLDER }}/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
           
           # Set permissions
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
