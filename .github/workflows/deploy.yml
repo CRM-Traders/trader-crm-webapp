@@ -40,15 +40,20 @@ jobs:
           ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           
       - name: Deploy
-        run: |
-          # Deploy files
-          rsync -avz --delete --exclude='.user.ini' ${{ env.DIST_FOLDER }}/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
-          
-          # Set permissions
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-            sudo chown -R www:www '${{ env.DEPLOY_PATH }}'
-            sudo chmod -R 755 '${{ env.DEPLOY_PATH }}'
-          "
+        run: | 
+            rsync -avz --delete \
+            --exclude='.user.ini' \
+            --exclude='*.log' \
+            --exclude='.htaccess' \
+            ${{ env.DIST_FOLDER }}/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
+    
+            # Set permissions only on application files (exclude system files)
+            ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type f -exec sudo chown www:www {} + 2>/dev/null || true
+            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type d -exec sudo chown www:www {} + 2>/dev/null || true
+            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type f -exec sudo chmod 644 {} + 2>/dev/null || true
+            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type d -exec sudo chmod 755 {} + 2>/dev/null || true
+            "
           
       - name: Cleanup
         if: always()
