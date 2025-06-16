@@ -51,6 +51,18 @@ export class NavigationService {
         UserRole.USER,
       ],
     },
+    {
+      label: 'Departments',
+      icon: 'departaments',
+      route: '/departments',
+      requiredRoles: [
+        UserRole.SUPERUSER,
+        UserRole.ADMIN,
+        UserRole.MANAGER,
+        UserRole.WORKER,
+        UserRole.USER,
+      ],
+    },
 
     {
       label: 'Clients',
