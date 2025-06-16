@@ -272,6 +272,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
       },
+      {
+        path: 'desks',
+        loadComponent: () =>
+          import('./features/desks/desks.component').then(
+            (m) => m.DesksComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
+      },
     ],
   },
 
