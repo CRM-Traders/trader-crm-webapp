@@ -280,6 +280,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
       },
+      {
+        path: 'departments',
+        loadComponent: () =>
+          import('./features/departments/departments.component').then(
+            (m) => m.DepartmentsComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
+      },
     ],
   },
 
