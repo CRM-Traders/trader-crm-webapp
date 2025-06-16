@@ -69,7 +69,7 @@
       </button>
 
       <!-- Column Selector Button -->
-      <button
+      <!-- <button
         *ngIf="showColumnSelector"
         (click)="toggleColumnSelector()"
         class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -95,8 +95,66 @@
           </svg>
           <span>Columns</span>
         </div>
-      </button>
+      </button> -->
+      <div class="relative inline-block">
+        <!-- Column Selector Button -->
+        <button
+          *ngIf="showColumnSelector"
+          (click)="toggleColumnSelector()"
+          class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          [ngClass]="{
+            'bg-blue-50': isColumnSelectorVisible && !isDarkMode,
+            'bg-blue-900/20': isColumnSelectorVisible && isDarkMode
+          }"
+        >
+          <div class="flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h7"
+              />
+            </svg>
+            <span>Columns</span>
+            <!-- Dropdown Arrow -->
+            <svg
+              class="ml-2 h-4 w-4 transition-transform duration-200"
+              [ngClass]="{ 'rotate-180': isColumnSelectorVisible }"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </button>
 
+        <!-- Column Selector Dropdown -->
+        <div
+          *ngIf="isColumnSelectorVisible"
+          class="absolute top-full right-0 mt-1 w-[50vw] max-w-lg z-50 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600"
+          (click)="$event.stopPropagation()"
+        >
+          <app-grid-column-selector
+            [columns]="columns"
+            [gridId]="gridId"
+            (columnsChange)="onColumnVisibilityChange($event)"
+          ></app-grid-column-selector>
+        </div>
+      </div>
       <!-- Export Button -->
       <!-- <div *ngIf="exportable" class="relative inline-block">
         <button
@@ -174,7 +232,7 @@
   </div>
 
   <!-- Column Selector Section -->
-  <div
+  <!-- <div
     *ngIf="isColumnSelectorVisible"
     class="p-4 border-b border-gray-300/30 bg-gray-50"
   >
@@ -183,7 +241,7 @@
       [gridId]="gridId"
       (columnsChange)="onColumnVisibilityChange($event)"
     ></app-grid-column-selector>
-  </div>
+  </div> -->
 
   <!-- Grid Content -->
   <div class="overflow-x-auto">
@@ -285,7 +343,7 @@
 
       <!-- Table Body -->
       <tbody
-        class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+        class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-500/20"
       >
         <!-- Loading State -->
         <tr *ngIf="loading">
@@ -371,7 +429,7 @@
         <ng-container *ngIf="!loading && pagedData.length > 0">
           <tr
             *ngFor="let item of pagedData"
-            (click)="onRowClick(item, $event)"
+            (dblclick)="onRowClick(item, $event)"
             (contextmenu)="onRowRightClick(item, $event)"
           >
             <!-- Checkbox Column -->

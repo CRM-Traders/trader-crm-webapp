@@ -264,6 +264,14 @@ export const routes: Routes = [
           ).then((m) => m.TradingAccountsComponent),
         canActivate: [authGuard, roleGuard([UserRole.CLIENT])],
       },
+      {
+        path: 'brands',
+        loadComponent: () =>
+          import('./features/brands/brands.component').then(
+            (m) => m.BrandsComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
+      },
     ],
   },
 

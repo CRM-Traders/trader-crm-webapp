@@ -2,6 +2,7 @@
 import {
   Component,
   EventEmitter,
+  HostListener,
   Input,
   OnDestroy,
   OnInit,
@@ -45,390 +46,7 @@ interface ActiveFilter {
   selector: 'app-grid-filter',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  template: `
-    <div
-      class="grid-filter bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700"
-    >
-      <!-- Filter Header -->
-      <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div
-          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        >
-          <!-- Filter Selector Dropdown -->
-          <div class="relative">
-            <button
-              type="button"
-              (click)="toggleFilterSelector()"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <svg
-                class="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                ></path>
-              </svg>
-              Add Filter
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="isFilterSelectorOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Filter Selector Dropdown -->
-            <div
-              *ngIf="isFilterSelectorOpen"
-              class="absolute z-50 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg"
-            >
-              <!-- Search in filters -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <div class="relative">
-                  <input
-                    type="text"
-                    [(ngModel)]="filterSearchTerm"
-                    (input)="filterAvailableOptions()"
-                    placeholder="Search filters..."
-                    class="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <svg
-                    class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Selected Options -->
-              <div
-                *ngIf="selectedFilterOptions.length > 0"
-                class="p-3 border-b border-gray-200 dark:border-gray-700"
-              >
-                <div class="flex items-center justify-between mb-2">
-                  <h4
-                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                  >
-                    Selected Options
-                  </h4>
-                  <button
-                    (click)="clearAllFilters()"
-                    class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                  >
-                    Clear All
-                  </button>
-                </div>
-                <div class="space-y-1 max-h-32 overflow-y-auto">
-                  <div
-                    *ngFor="let option of selectedFilterOptions"
-                    class="flex items-center"
-                  >
-                    <input
-                      type="checkbox"
-                      [id]="'selected-' + option.id"
-                      checked="true"
-                      (change)="toggleFilterOption(option)"
-                      class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label
-                      [for]="'selected-' + option.id"
-                      class="ml-2 text-sm text-gray-700 dark:text-gray-200"
-                    >
-                      {{ option.label }}
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Available Options -->
-              <div class="p-3">
-                <div class="flex items-center justify-between mb-2">
-                  <h4
-                    class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                  >
-                    Available Options
-                  </h4>
-                  <div class="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="select-all-filters"
-                      [checked]="areAllAvailableOptionsSelected()"
-                      [indeterminate]="isPartialSelection()"
-                      (change)="toggleSelectAll($event)"
-                      class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label
-                      for="select-all-filters"
-                      class="ml-2 text-xs text-gray-600 dark:text-gray-300"
-                    >
-                      Select All
-                    </label>
-                  </div>
-                </div>
-                <div class="space-y-1 max-h-48 overflow-y-auto">
-                  <div
-                    *ngFor="let option of filteredAvailableOptions"
-                    class="flex items-center"
-                  >
-                    <input
-                      type="checkbox"
-                      [id]="'available-' + option.id"
-                      [checked]="option.selected"
-                      (change)="toggleFilterOption(option)"
-                      class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label
-                      [for]="'available-' + option.id"
-                      class="ml-2 text-sm text-gray-700 dark:text-gray-200"
-                    >
-                      {{ option.label }}
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="flex items-center space-x-2">
-            <button
-              *ngIf="activeFilters.length > 0"
-              (click)="resetAllFilters()"
-              class="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 focus:outline-none"
-            >
-              Reset All
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Active Filter Tags -->
-      <div
-        *ngIf="activeFilters.length > 0"
-        class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"
-      >
-        <div class="flex flex-wrap gap-2">
-          <div
-            *ngFor="let filter of activeFilters"
-            class="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800"
-          >
-            <span class="font-medium">{{ filter.column.header }}:</span>
-            <span class="ml-1">{{ getFilterDisplayValue(filter) }}</span>
-            <button
-              (click)="removeActiveFilter(filter.id)"
-              class="ml-2 flex-shrink-0 focus:outline-none"
-              aria-label="Remove filter"
-            >
-              <svg
-                class="h-3 w-3 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                ></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filter Controls -->
-      <div *ngIf="selectedFilterOptions.length > 0" class="p-4 space-y-4">
-        <div
-          *ngFor="let activeFilter of activeFilters; let i = index"
-          class="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-        >
-          <div class="grid grid-cols-1 gap-4">
-            <!-- Field Name -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <h4
-                  class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  {{ activeFilter.column.header }}
-                </h4>
-              </div>
-              <button
-                (click)="removeActiveFilter(activeFilter.id)"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
-              >
-                <svg
-                  class="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  ></path>
-                </svg>
-              </button>
-            </div>
-
-            <!-- Value Input Based on Type -->
-            <div>
-              <!-- Text input -->
-              <input
-                *ngIf="isTextType(activeFilter.column)"
-                type="text"
-                [(ngModel)]="activeFilter.value"
-                [placeholder]="
-                  'Enter ' + activeFilter.column.header.toLowerCase()
-                "
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                (input)="applyFilter(activeFilter)"
-              />
-
-              <!-- Number range inputs -->
-              <div
-                *ngIf="isNumberType(activeFilter.column)"
-                class="flex items-center space-x-2"
-              >
-                <input
-                  type="number"
-                  [(ngModel)]="activeFilter.valueFrom"
-                  placeholder="From"
-                  class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  (input)="applyFilter(activeFilter)"
-                />
-                <span
-                  class="text-gray-500 dark:text-gray-400 text-sm font-medium"
-                  >to</span
-                >
-                <input
-                  type="number"
-                  [(ngModel)]="activeFilter.valueTo"
-                  placeholder="To"
-                  class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  (input)="applyFilter(activeFilter)"
-                />
-              </div>
-
-              <!-- Date range inputs -->
-              <div
-                *ngIf="isDateType(activeFilter.column)"
-                class="flex items-center space-x-2"
-              >
-                <input
-                  type="date"
-                  [(ngModel)]="activeFilter.valueFrom"
-                  class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  (change)="applyFilter(activeFilter)"
-                />
-                <span
-                  class="text-gray-500 dark:text-gray-400 text-sm font-medium"
-                  >to</span
-                >
-                <input
-                  type="date"
-                  [(ngModel)]="activeFilter.valueTo"
-                  class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  (change)="applyFilter(activeFilter)"
-                />
-              </div>
-
-              <!-- Boolean select -->
-              <select
-                *ngIf="isBooleanType(activeFilter.column)"
-                [(ngModel)]="activeFilter.value"
-                (change)="applyFilter(activeFilter)"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">All</option>
-                <option [ngValue]="true">Yes</option>
-                <option [ngValue]="false">No</option>
-              </select>
-
-              <!-- Select options with multi-select -->
-              <div
-                *ngIf="isSelectType(activeFilter.column)"
-                class="border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 max-h-32 overflow-y-auto"
-              >
-                <div
-                  *ngFor="let option of getFilterOptions(activeFilter.column)"
-                  class="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600"
-                >
-                  <input
-                    type="checkbox"
-                    [id]="'multi-' + activeFilter.id + '-' + option.value"
-                    [checked]="
-                      (activeFilter.multiSelectValues || []).includes(
-                        option.value
-                      )
-                    "
-                    (change)="
-                      toggleMultiSelectValue(activeFilter, option.value);
-                      applyFilter(activeFilter)
-                    "
-                    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                  />
-                  <label
-                    [for]="'multi-' + activeFilter.id + '-' + option.value"
-                    class="ml-2 text-sm text-gray-700 dark:text-gray-200"
-                  >
-                    {{ option.label }}
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div *ngIf="selectedFilterOptions.length === 0" class="p-8 text-center">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-          ></path>
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          No filters selected
-        </h3>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Get started by selecting filter options from the dropdown above.
-        </p>
-      </div>
-    </div>
-  `,
+  templateUrl: './grid-filter.component.html',
   styleUrls: ['./grid-filter.component.scss'],
 })
 export class GridFilterComponent implements OnInit, OnDestroy {
@@ -556,6 +174,27 @@ export class GridFilterComponent implements OnInit, OnDestroy {
           (option.category &&
             option.category.toLowerCase().includes(searchTerm))
       );
+  }
+
+  private openDropdowns = new Set<string>();
+
+  // Dropdown state management
+  toggleFilterDropdown(filterId: string): void {
+    if (this.openDropdowns.has(filterId)) {
+      this.openDropdowns.delete(filterId);
+    } else {
+      this.openDropdowns.clear(); // Close other dropdowns
+      this.openDropdowns.add(filterId);
+    }
+  }
+
+  isFilterDropdownOpen(filterId: string): boolean {
+    return this.openDropdowns.has(filterId);
+  }
+
+  toggleOptionSelection(filter: any, value: any): void {
+    this.toggleMultiSelectValue(filter, value);
+    this.applyFilter(filter);
   }
 
   toggleFilterOption(option: FilterOption): void {

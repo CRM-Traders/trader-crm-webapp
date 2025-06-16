@@ -176,6 +176,7 @@ export class GridService {
 
     this.gridStateMap.get(gridId)!.next(newState);
   }
+
   buildQueryParams(state: GridState): HttpParams {
     let params = new HttpParams();
 
@@ -253,8 +254,6 @@ export class GridService {
         return '';
     }
   }
-
-  // src/app/shared/services/grid/grid.service.ts
 
   fetchData<T>(endpoint: string, gridId: string): Observable<T> {
     const state = this.getCurrentState(gridId);

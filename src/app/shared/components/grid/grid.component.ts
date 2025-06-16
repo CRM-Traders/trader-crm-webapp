@@ -143,6 +143,15 @@ export class GridComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('window:refreshGrid', ['$event'])
+  onRefreshGridEvent(event: CustomEvent): void {
+    if (event.detail?.gridId && event.detail.gridId !== this.gridId) {
+      return;
+    }
+
+    this.refreshGrid();
+  }
+
   ngOnInit(): void {
     this.themeService.isDarkMode$
       .pipe(takeUntil(this.destroy$))
