@@ -228,6 +228,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
 
     this.brandToDelete = brand;
     this.showDeleteModal = true;
+    this.loadBrandStatistics();
   }
 
   cancelDelete(): void {
