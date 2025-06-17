@@ -22,6 +22,8 @@ import { ClientPaymentsComponent } from './components/client-payments/client-pay
 import { ClientProfileComponent } from './components/client-profile/client-profile.component';
 import { ClientReferralsComponent } from './components/client-referrals/client-referrals.component';
 import { ClientTradingActivityComponent } from './components/client-trading-activity/client-trading-activity.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ClientsService } from '../clients/services/clients.service';
 
 export enum ClientDetailSection {
   Profile = 'profile',
@@ -632,41 +634,17 @@ export enum ClientDetailSection {
   ],
 })
 export class ClientDetailsComponent implements OnInit, OnDestroy {
-  client: Client = {
-    id: 'CLT-2024-789456',
-    firstName: 'Alexander',
-    lastName: 'Rodriguez',
-    email: 'alexander.rodriguez@email.com',
-    telephone: '+1-555-0123',
-    secondTelephone: '+1-555-0456',
-    skype: 'alex.rodriguez.trader',
-    country: 'United States',
-    language: 'English',
-    dateOfBirth: '1985-03-15',
-    status: ClientStatus.Active, // Assuming Active = 1
-    kycStatusId: 'KYC-VERIFIED-2024-001',
-    salesStatus: 'QUALIFIED_INVESTOR',
-    isProblematic: false,
-    isBonusAbuser: false,
-    bonusAbuserReason: null,
-    hasInvestments: true,
-    affiliateId: 'AFF-PREMIUM-001',
-    affiliateName: 'Global Trading Partners LLC',
-    ftdTime: '2024-01-15T09:30:00Z', // First Time Deposit
-    ltdTime: '2024-06-10T14:22:00Z', // Last Time Deposit
-    qualificationTime: '2024-01-20T11:45:00Z',
-    registrationDate: '2024-01-10T16:20:00Z',
-    registrationIP: '192.168.1.100',
-    source: 'ORGANIC_SEARCH',
-    lastLogin: '2024-06-16T08:15:00Z',
-    lastCommunication: '2024-06-15T13:30:00Z',
-  };
-
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
+  private _service = inject(ClientsService);
+
   private destroy$ = new Subject<void>();
 
   activeSection: ClientDetailSection = ClientDetailSection.Profile;
+
+  client!: Client;
 
   navigationSections = [
     { key: ClientDetailSection.Profile, label: 'Profile' },
@@ -681,10 +659,16 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     { key: ClientDetailSection.Referrals, label: 'Referrals' },
   ];
 
-  constructor() {}
-
   ngOnInit(): void {
-    // Initialize component
+    const clientId = this.activatedRoute.snapshot.paramMap.get('id');
+
+    if (!clientId) {
+      this.router.navigate(['/']);
+    }
+
+    this._service.getClientById(clientId!).subscribe((result: Client) => {
+      this.client = result;
+    });
   }
 
   ngOnDestroy(): void {

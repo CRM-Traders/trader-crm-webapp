@@ -34,6 +34,7 @@ import {
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { ClientRegistrationModalComponent } from './components/client-registration-modal/client-registration-modal.component';
 import { ClientDetailsModalComponent } from './components/client-details-modal/client-details-modal.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-clients',
@@ -46,8 +47,8 @@ export class ClientsComponent implements OnInit {
   private clientsService = inject(ClientsService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
-  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
+  private router = inject(Router);
 
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
@@ -203,29 +204,10 @@ export class ClientsComponent implements OnInit {
   }
 
   openClientDetailsModal(client: Client): void {
-    const modalRef = this.modalService.open(
-      ClientDetailsModalComponent,
-      {
-        size: 'xl',
-        centered: true,
-        closable: true,
-        customClass: 'max-w-7xl',
-      },
-      {
-        client: client,
-      }
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/clients', client.id])
     );
-
-    modalRef.result.then(
-      (result) => {
-        if (result) {
-          this.refreshGrid();
-        }
-      },
-      () => {
-        // Modal dismissed
-      }
-    );
+    window.open(url, '_blank');
   }
 
   confirmDelete(client: Client): void {

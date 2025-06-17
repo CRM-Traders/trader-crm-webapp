@@ -202,6 +202,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
+      {
+        path: 'hierarchy',
+        loadComponent: () =>
+          import('./features/hierarchy/hierarchy.component').then(
+            (m) => m.HierarchyComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
     ],
   },
 

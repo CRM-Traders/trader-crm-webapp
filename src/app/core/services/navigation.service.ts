@@ -22,6 +22,12 @@ export class NavigationService {
       requiredRoles: [UserRole.SuperAdmin],
     },
     {
+      label: 'Hierarchy',
+      icon: 'hierarchy',
+      route: '/hierarchy',
+      requiredRoles: [UserRole.SuperAdmin],
+    },
+    {
       label: 'Brands',
       icon: 'brands',
       route: '/brands',

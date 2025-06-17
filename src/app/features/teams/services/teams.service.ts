@@ -40,7 +40,9 @@ export class TeamsService {
   }
 
   getTeamStats(): Observable<TeamStatsMetaData> {
-    return this.httpService.get<TeamStatsMetaData>(`${this.apiPath}/stats`);
+    return this.httpService.get<TeamStatsMetaData>(
+      `${this.apiPath}/teams-stat`
+    );
   }
 
   getTeamDropdown(request: TeamsListRequest): Observable<TeamDropdownResponse> {

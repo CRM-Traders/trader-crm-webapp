@@ -1,5 +1,3 @@
-// src/app/features/clients/components/client-details/sections/client-profile/client-profile.component.ts
-
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
