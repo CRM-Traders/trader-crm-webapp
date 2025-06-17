@@ -40,7 +40,9 @@ export class DesksService {
   }
 
   getDeskStats(): Observable<DeskStatsMetaData> {
-    return this.httpService.get<DeskStatsMetaData>(`${this.apiPath}/stats`);
+    return this.httpService.get<DeskStatsMetaData>(
+      `${this.apiPath}/desks-stat`
+    );
   }
 
   getDeskDropdown(request: DesksListRequest): Observable<DeskDropdownResponse> {

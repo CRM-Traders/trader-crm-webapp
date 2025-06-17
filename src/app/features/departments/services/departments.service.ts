@@ -46,7 +46,7 @@ export class DepartmentsService {
 
   getDepartmentStats(): Observable<DepartmentStatsMetaData> {
     return this.httpService.get<DepartmentStatsMetaData>(
-      `${this.apiPath}/stats`
+      `${this.apiPath}/departments-stat`
     );
   }
 
