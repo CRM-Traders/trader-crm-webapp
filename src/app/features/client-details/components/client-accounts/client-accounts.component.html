@@ -326,7 +326,7 @@
           <button
             type="button"
             (click)="toggleAddAccount()"
-            class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             Cancel
           </button>
@@ -382,7 +382,7 @@
           <!-- Refresh Button -->
           <button
             type="button"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             <svg
               class="w-4 h-4 mr-2"
@@ -405,8 +405,8 @@
 
     <!-- Table -->
     <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-900">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/30">
+        <thead class="bg-gray-50 dark:bg-gray-900/20">
           <tr>
             <th
               class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -466,11 +466,11 @@
           </tr>
         </thead>
         <tbody
-          class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+          class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30"
         >
           <tr
             *ngFor="let account of filteredAccounts"
-            class="hover:bg-gray-50 dark:hover:bg-gray-700"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700/30"
           >
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm font-medium text-blue-600 dark:text-blue-400">

@@ -133,7 +133,7 @@ export enum ClientDetailSection {
               </button>
               <button
                 type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <svg
                   class="w-4 h-4 mr-2"
@@ -153,7 +153,7 @@ export enum ClientDetailSection {
               <button
                 type="button"
                 (click)="refreshData()"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <svg
                   class="w-4 h-4 mr-2"
@@ -456,10 +456,10 @@ export enum ClientDetailSection {
 
               <!-- Pinned Notes -->
               <div
-                class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4"
+                class="bg-yellow-50 dark:bg-yellow-900/2 border border-yellow-200 dark:border-yellow-800/20 rounded-lg p-4"
               >
                 <h3
-                  class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center"
+                  class="text-sm font-semibold text-yellow-800 dark:text-yellow-500 mb-2 flex items-center"
                 >
                   <svg
                     class="w-4 h-4 mr-1"
@@ -472,7 +472,7 @@ export enum ClientDetailSection {
                   </svg>
                   Pinned Notes
                 </h3>
-                <div class="text-sm text-yellow-700 dark:text-yellow-300">
+                <div class="text-sm text-yellow-700 dark:text-yellow-400">
                   <p class="mb-1">
                     • High-value client - requires priority support
                   </p>

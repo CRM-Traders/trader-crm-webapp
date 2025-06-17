@@ -46,11 +46,11 @@ import {
         <!-- Success Message with Generated Password -->
         <div
           *ngIf="generatedPassword"
-          class="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
+          class="mb-6 p-4 bg-green-50/10 dark:bg-green-900/5 border border-green-200/20 dark:border-green-800/20 rounded-lg"
         >
           <div class="flex items-center mb-2">
             <svg
-              class="w-5 h-5 text-green-600 dark:text-green-400 mr-2"
+              class="w-5 h-5 text-green-600 mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -62,11 +62,11 @@ import {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               ></path>
             </svg>
-            <h5 class="text-sm font-medium text-green-800 dark:text-green-200">
+            <h5 class="text-sm font-medium text-green-800 dark:text-green-500">
               Client Registered Successfully
             </h5>
           </div>
-          <p class="text-sm text-green-700 dark:text-green-300 mb-3">
+          <p class="text-sm text-green-700 dark:text-green-400 mb-3">
             A password has been generated for the new client. Please copy and
             securely share this password:
           </p>

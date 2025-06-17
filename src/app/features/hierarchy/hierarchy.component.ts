@@ -133,7 +133,7 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
                 [(ngModel)]="searchQuery"
                 (input)="onSearchInput($event)"
                 placeholder="Search by name, email, or country..."
-                class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                class="block w-full !pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
               <div
                 *ngIf="searchQuery"

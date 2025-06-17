@@ -183,9 +183,9 @@ interface TradingActivity {
 
       <!-- Trading Activity Grid -->
       <div
-        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700/30 overflow-hidden"
       >
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-200/40 dark:border-gray-700/30">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
               Recent Trades
@@ -219,7 +219,7 @@ interface TradingActivity {
               </div>
               <button
                 type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <svg
                   class="w-4 h-4 mr-2"
@@ -243,7 +243,7 @@ interface TradingActivity {
         <!-- Table -->
         <div class="overflow-x-auto">
           <table
-            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/30"
           >
             <thead class="bg-gray-50 dark:bg-gray-900">
               <tr>
@@ -300,11 +300,11 @@ interface TradingActivity {
               </tr>
             </thead>
             <tbody
-              class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+              class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30"
             >
               <tr
                 *ngFor="let trade of filteredTrades"
-                class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/30"
               >
                 <td
                   class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400"

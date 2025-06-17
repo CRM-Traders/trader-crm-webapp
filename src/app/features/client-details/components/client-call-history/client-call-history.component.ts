@@ -75,7 +75,7 @@ interface CallRecord {
         <!-- Table -->
         <div class="overflow-x-auto">
           <table
-            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/30"
           >
             <thead class="bg-gray-50 dark:bg-gray-900">
               <tr>
@@ -132,11 +132,11 @@ interface CallRecord {
               </tr>
             </thead>
             <tbody
-              class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+              class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30"
             >
               <tr
                 *ngFor="let call of filteredCalls"
-                class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/30"
               >
                 <td
                   class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400"

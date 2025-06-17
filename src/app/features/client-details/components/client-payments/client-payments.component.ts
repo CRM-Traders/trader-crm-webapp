@@ -341,7 +341,7 @@ interface Transaction {
               <button
                 type="button"
                 (click)="toggleAddTransaction()"
-                class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 Cancel
               </button>
@@ -371,7 +371,7 @@ interface Transaction {
               <!-- Search -->
               <div class="relative">
                 <div
-                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  class="absolute inset-y-0 left-0 !pl-3 flex items-center pointer-events-none"
                 >
                   <svg
                     class="h-5 w-5 text-gray-400"
@@ -390,14 +390,14 @@ interface Transaction {
                 <input
                   type="text"
                   [(ngModel)]="searchTerm"
-                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  class="block w-full !pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="Search transactions..."
                 />
               </div>
               <!-- Export Button -->
               <button
                 type="button"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <svg
                   class="w-4 h-4 mr-2"
@@ -421,7 +421,7 @@ interface Transaction {
         <!-- Table -->
         <div class="overflow-x-auto">
           <table
-            class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+            class="min-w-full divide-y divide-gray-400 dark:divide-gray-700/30"
           >
             <thead class="bg-gray-50 dark:bg-gray-900">
               <tr>
@@ -488,11 +488,11 @@ interface Transaction {
               </tr>
             </thead>
             <tbody
-              class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+              class="bg-white dark:bg-gray-800 divide-y divide-gray-400 dark:divide-gray-700/30"
             >
               <tr
                 *ngFor="let transaction of filteredTransactions"
-                class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/30/20"
               >
                 <td
                   class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400"
@@ -635,12 +635,12 @@ interface Transaction {
           <div class="flex items-center justify-between">
             <div class="flex-1 flex justify-between sm:hidden">
               <button
-                class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30"
               >
                 Previous
               </button>
               <button
-                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30"
               >
                 Next
               </button>
@@ -662,7 +662,7 @@ interface Transaction {
                   aria-label="Pagination"
                 >
                   <button
-                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/30"
                   >
                     <span class="sr-only">Previous</span>
                     <svg
@@ -678,12 +678,12 @@ interface Transaction {
                     </svg>
                   </button>
                   <button
-                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/30"
                   >
                     1
                   </button>
                   <button
-                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/30"
                   >
                     <span class="sr-only">Next</span>
                     <svg
