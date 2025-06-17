@@ -51,9 +51,7 @@
   <nav class="flex-1 py-2 overflow-y-auto overflow-x-hidden">
     <ul class="space-y-1 px-1">
       <li *ngFor="let item of navItems">
-        <ng-container
-          *hasRole="item.requiredRoles || ['User', 'Manager', 'Admin']"
-        >
+        <ng-container *hasRole="item.requiredRoles || ['Admin']">
           <a
             [routerLink]="item.route"
             routerLinkActive="active-nav-item"
