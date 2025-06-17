@@ -48,7 +48,7 @@ export class NavigationService {
     },
 
     {
-      label: 'Clients',
+      label: 'Affiliate Clients',
       icon: 'traders',
       route: '/affiliate-clients',
       requiredRoles: [UserRole.SuperAdmin],
