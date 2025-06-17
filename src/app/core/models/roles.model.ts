@@ -1,18 +1,29 @@
 export enum UserRole {
-  USER = 'User', // Agent Con
-  MANAGER = 'Manager', // TL Con
-  LEADMANAGER = 'ManagerCon', // Manager Conve
-
-  //   USER = 'User', // Agent ret
-  // MANAGER = 'Manager', // TL ret
-  // LEADMANAGER = "ManagerCon", // Manager ret
-
-  ADMIN = 'Admin',
-  SUPERUSER = 'SuperUser',
-
-  LEAD = 'Lead',
-  CLIENT = 'Client',
-
-  AFFILIATE = 'Affiliate',
-  WORKER = 'Worker',
+  CompanyAdmin = 'CompanyAdmin',
+  BrandAdmin = 'BrandAdmin',
+  SalesHOD = 'SalesHOD',
+  RetentionHOD = 'RetentionHOD',
+  SupportHOD = 'SupportHOD',
+  PspHOD = 'PspHOD',
+  SalesManager = 'SalesManager',
+  RetentionManager = 'RetentionManager',
+  SupportManager = 'SupportManager',
+  PSPManager = 'PSPManager',
+  BOManager = 'BOManager',
+  ComplianceManager = 'ComplianceManager',
+  OperationsManager = 'OperationsManager',
+  DealingManager = 'DealingManager',
+  SalesLead = 'SalesLead',
+  RetentionLead = 'RetentionLead',
+  SupportLead = 'SupportLead',
+  SalesAgent = 'SalesAgent',
+  RetentionAgent = 'RetentionAgent',
+  SupportAgent = 'SupportAgent',
+  AffiliateManager = 'AffiliateManager',
+  Client = 'Client',
+  Affiliate = 'Affiliate',
+  Lead = 'Lead',
+  Worker = 'Worker',
+  Operator = 'Operator',
+  SuperAdmin = 'SuperAdmin',
 }

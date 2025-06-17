@@ -1,11 +1,9 @@
 import { Routes } from '@angular/router';
 import { publicGuard } from './core/guards/public.guard';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
-import { EmployeeChatComponent } from './shared/components/employee-chat/employee-chat.component';
 import { UserRole } from './core/models/roles.model';
 
 export const routes: Routes = [
-  // Publics
   {
     path: 'auth/login',
     loadComponent: () =>
@@ -15,7 +13,6 @@ export const routes: Routes = [
     canActivate: [publicGuard],
   },
 
-  // Auth
   {
     path: 'auth/unauthorized',
     loadComponent: () =>
@@ -40,16 +37,7 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'settings',
@@ -65,16 +53,7 @@ export const routes: Routes = [
           import('./features/calendar-page/calendar-page.component').then(
             (m) => m.CalendarPageComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'clients',
@@ -82,16 +61,7 @@ export const routes: Routes = [
           import('./features/clients/clients.component').then(
             (m) => m.ClientsComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'workers',
@@ -99,16 +69,7 @@ export const routes: Routes = [
           import('./features/workers/workers.component').then(
             (m) => m.WorkersComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'tickets',
@@ -116,16 +77,7 @@ export const routes: Routes = [
           import('./features/tickets/tickets.component').then(
             (m) => m.TicketsComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'api-docs',
@@ -135,7 +87,7 @@ export const routes: Routes = [
           ).then((m) => m.ApiDocsComponent),
         canActivate: [
           authGuard,
-          roleGuard([UserRole.SUPERUSER, UserRole.AFFILIATE]),
+          roleGuard([UserRole.SuperAdmin, UserRole.SuperAdmin]),
         ],
       },
       {
@@ -144,7 +96,7 @@ export const routes: Routes = [
           import(
             './features/affiliate-portal/clients/affiliate-clients/affiliate-clients.component'
           ).then((m) => m.AffiliateClientsComponent),
-        canActivate: [authGuard, roleGuard([UserRole.AFFILIATE])],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'affiliates',
@@ -152,16 +104,7 @@ export const routes: Routes = [
           import('./features/affiliates/affiliates.component').then(
             (m) => m.AffiliatesComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'leads',
@@ -169,16 +112,7 @@ export const routes: Routes = [
           import('./features/leads/leads.component').then(
             (m) => m.LeadsComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'communications',
@@ -186,16 +120,7 @@ export const routes: Routes = [
           import('./features/communications/communications.component').then(
             (m) => m.CommunicationsComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'employee-chat',
@@ -203,16 +128,7 @@ export const routes: Routes = [
           import(
             './shared/components/employee-chat/employee-chat.component'
           ).then((m) => m.EmployeeChatComponent),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'documents',
@@ -220,16 +136,7 @@ export const routes: Routes = [
           import('./features/documents/documents.component').then(
             (m) => m.DocumentsComponent
           ),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'documents/:id',
@@ -237,16 +144,7 @@ export const routes: Routes = [
           import(
             './features/documents/components/kyc-details/kyc-details.component'
           ).then((m) => m.KycDetailsComponent),
-        canActivate: [
-          authGuard,
-          roleGuard([
-            UserRole.SUPERUSER,
-            UserRole.ADMIN,
-            UserRole.MANAGER,
-            UserRole.USER,
-            UserRole.WORKER,
-          ]),
-        ],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'kyc-verification',
@@ -254,7 +152,7 @@ export const routes: Routes = [
           import(
             './features/client-portal/client-kyc/client-kyc.component'
           ).then((m) => m.ClientKycComponent),
-        canActivate: [authGuard, roleGuard([UserRole.CLIENT])],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'traiding-accounts',
@@ -262,7 +160,7 @@ export const routes: Routes = [
           import(
             './features/client-portal/trading-accounts/trading-accounts.component'
           ).then((m) => m.TradingAccountsComponent),
-        canActivate: [authGuard, roleGuard([UserRole.CLIENT])],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'brands',
@@ -270,7 +168,7 @@ export const routes: Routes = [
           import('./features/brands/brands.component').then(
             (m) => m.BrandsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'desks',
@@ -278,7 +176,7 @@ export const routes: Routes = [
           import('./features/desks/desks.component').then(
             (m) => m.DesksComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
         path: 'departments',
@@ -286,7 +184,7 @@ export const routes: Routes = [
           import('./features/departments/departments.component').then(
             (m) => m.DepartmentsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SUPERUSER])],
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
     ],
   },

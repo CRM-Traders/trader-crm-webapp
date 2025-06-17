@@ -71,7 +71,7 @@ export class LoginComponent {
           this.userId = result.userId;
         } else if (result.accessToken) {
           // Login successful
-          this.navigateByRole(result.role);
+          this.router.navigateByUrl('/');
         }
         this.isLoading = false;
       },
@@ -96,7 +96,7 @@ export class LoginComponent {
       .subscribe(
         (result: any) => {
           if (result.accessToken) {
-            this.navigateByRole(result.role);
+            this.router.navigateByUrl('/');
           } else {
             this.errorMessage =
               'Two-factor authentication failed. Please try again.';
@@ -118,15 +118,5 @@ export class LoginComponent {
         this.markFormGroupTouched(control as FormGroup);
       }
     });
-  }
-
-  private navigateByRole(role: string) {
-    if (role === UserRole.AFFILIATE) {
-      this.router.navigateByUrl('/affiliate-clients');
-    } else if (role === UserRole.CLIENT || role === UserRole.LEAD) {
-      this.router.navigateByUrl('/traiding-accounts');
-    } else {
-      this.router.navigateByUrl('/dashboard');
-    }
   }
 }
