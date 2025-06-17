@@ -186,6 +186,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
+      {
+        path: 'teams',
+        loadComponent: () =>
+          import('./features/teams/teams.component').then(
+            (m) => m.TeamsComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
     ],
   },
 

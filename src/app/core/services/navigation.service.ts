@@ -39,6 +39,12 @@ export class NavigationService {
       route: '/departments',
       requiredRoles: [UserRole.SuperAdmin],
     },
+    {
+      label: 'Teams',
+      icon: 'teams',
+      route: '/teams',
+      requiredRoles: [UserRole.SuperAdmin],
+    },
 
     {
       label: 'Clients',
