@@ -12,7 +12,6 @@ export const routes: Routes = [
       ),
     canActivate: [publicGuard],
   },
-
   {
     path: 'auth/unauthorized',
     loadComponent: () =>
@@ -207,6 +206,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/hierarchy/hierarchy.component').then(
             (m) => m.HierarchyComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
+      {
+        path: 'sources',
+        loadComponent: () =>
+          import('./features/sources/sources.component').then(
+            (m) => m.SourcesComponent
           ),
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },

@@ -132,6 +132,12 @@ export class NavigationService {
       route: '/kyc-verification',
       requiredRoles: [UserRole.SuperAdmin],
     },
+    {
+      label: 'Sources',
+      icon: 'sources',
+      route: '/sources',
+      requiredRoles: [UserRole.SuperAdmin],
+    },
   ];
 
   constructor(private router: Router) {
