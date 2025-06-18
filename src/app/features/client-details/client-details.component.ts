@@ -484,7 +484,7 @@ export enum ClientDetailSection {
         </div>
       </div>
       <!-- Navigation Tabs -->
-      <div class="sticky top-0 z-50 bg-white">
+      <div class="sticky top-0 z-10 bg-white">
         <div
           class="flex justify-center flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700"
         >
