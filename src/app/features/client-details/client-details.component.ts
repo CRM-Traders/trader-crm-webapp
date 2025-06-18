@@ -8,7 +8,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalRef } from '../../shared/models/modals/modal.model';
 import { Client, ClientStatus } from '../clients/models/clients.model';
@@ -24,6 +24,9 @@ import { ClientReferralsComponent } from './components/client-referrals/client-r
 import { ClientTradingActivityComponent } from './components/client-trading-activity/client-trading-activity.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ClientsService } from '../clients/services/clients.service';
+// Import the notes service and model
+import { NotesService } from './components/client-notes/services/notes.service';
+import { ClientNote } from './components/client-notes/models/note.model';
 
 export enum ClientDetailSection {
   Profile = 'profile',
@@ -456,7 +459,8 @@ export enum ClientDetailSection {
 
               <!-- Pinned Notes -->
               <div
-                class="bg-yellow-50 dark:bg-yellow-900/2 border border-yellow-200 dark:border-yellow-800/20 rounded-lg p-4"
+                *ngIf="pinnedNotes.length > 0"
+                class="bg-yellow-50 dark:bg-yellow-900/5 border border-yellow-200 dark:border-yellow-800/20 rounded-lg p-4"
               >
                 <h3
                   class="text-sm font-semibold text-yellow-800 dark:text-yellow-500 mb-2 flex items-center"
@@ -470,13 +474,74 @@ export enum ClientDetailSection {
                       d="M4 3a1 1 0 000 2h1v6l-2 2v1h14v-1l-2-2V5h1a1 1 0 100-2H4zM9 17v1a1 1 0 102 0v-1H9z"
                     ></path>
                   </svg>
+                  Pinned Notes ({{ pinnedNotes.length }})
+                </h3>
+                <div class="space-y-2">
+                  <div
+                    *ngFor="let note of pinnedNotes; let i = index"
+                    class="text-sm text-yellow-700 dark:text-yellow-500"
+                  >
+                    <div class="flex items-start">
+                      <span class="mr-2">•</span>
+                      <div class="flex-1">
+                        <p class="break-words">{{ getPreviewText(note.note) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- No Pinned Notes State -->
+              <div
+                *ngIf="pinnedNotes.length === 0 && !loadingPinnedNotes"
+                class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              >
+                <h3
+                  class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 3a1 1 0 000 2h1v6l-2 2v1h14v-1l-2-2V5h1a1 1 0 100-2H4zM9 17v1a1 1 0 102 0v-1H9z"
+                    ></path>
+                  </svg>
                   Pinned Notes
                 </h3>
-                <div class="text-sm text-yellow-700 dark:text-yellow-400">
-                  <p class="mb-1">
-                    • High-value client - requires priority support
-                  </p>
-                  <p>• Scheduled for premium upgrade call on Friday</p>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                  <p>No pinned notes yet.</p>
+                </div>
+              </div>
+
+              <!-- Loading State for Pinned Notes -->
+              <div
+                *ngIf="loadingPinnedNotes"
+                class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              >
+                <h3
+                  class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2 flex items-center"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      d="M4 3a1 1 0 000 2h1v6l-2 2v1h14v-1l-2-2V5h1a1 1 0 100-2H4zM9 17v1a1 1 0 102 0v-1H9z"
+                    ></path>
+                  </svg>
+                  Pinned Notes
+                </h3>
+                <div class="flex justify-center items-center py-2">
+                  <div
+                    class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"
+                  ></div>
                 </div>
               </div>
             </div>
@@ -635,12 +700,17 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
   private _service = inject(ClientsService);
+  private notesService = inject(NotesService);
 
   private destroy$ = new Subject<void>();
 
   activeSection: ClientDetailSection = ClientDetailSection.Profile;
 
   client!: Client;
+
+  // Pinned notes properties
+  pinnedNotes: ClientNote[] = [];
+  loadingPinnedNotes = false;
 
   navigationSections = [
     { key: ClientDetailSection.Profile, label: 'Profile' },
@@ -660,16 +730,46 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
     if (!clientId) {
       this.router.navigate(['/']);
+      return;
     }
 
     this._service.getClientById(clientId!).subscribe((result: Client) => {
       this.client = result;
+      // Load pinned notes after client is loaded
+      this.loadPinnedNotes();
     });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private loadPinnedNotes(): void {
+    if (!this.client?.id) return;
+
+    this.loadingPinnedNotes = true;
+    this.notesService
+      .getClientCommentsById(this.client.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading pinned notes:', error);
+          return of([]);
+        })
+      )
+      .subscribe((notes) => {
+        // Filter only pinned notes and sort by creation date (newest first)
+        this.pinnedNotes = notes
+          .filter((note) => note.isPinnedComment)
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+          .slice(0, 5); // Show only the first 5 pinned notes in the summary
+
+        this.loadingPinnedNotes = false;
+      });
   }
 
   setActiveSection(section: ClientDetailSection): void {
@@ -702,8 +802,14 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     return colorMap[status] || 'bg-gray-100 text-gray-800';
   }
 
+  getPreviewText(text: string | undefined): string {
+    if (!text) return '';
+    return text.length > 80 ? text.substring(0, 80) + '...' : text;
+  }
+
   refreshData(): void {
     this.alertService.success('Data refreshed successfully');
-    // Implement actual refresh logic here
+    // Reload pinned notes along with other data
+    this.loadPinnedNotes();
   }
 }

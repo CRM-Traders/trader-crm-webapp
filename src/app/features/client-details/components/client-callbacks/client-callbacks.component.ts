@@ -1,47 +1,52 @@
-// src/app/features/clients/components/client-details/sections/client-callbacks/client-callbacks.component.ts
-
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
+import { ModalService } from '../../../../shared/services/modals/modal.service';
 import { Client } from '../../../clients/models/clients.model';
-
-interface Callback {
-  id: string;
-  operatorId: string;
-  operatorName: string;
-  status: string;
-  callbackDateTime: Date;
-  reminderDateTime?: Date;
-  note: string;
-  priority: string;
-  outcome?: string;
-  duration?: number;
-  createdDate: Date;
-  completedDate?: Date;
-}
+import { Callback } from './models/callback.model';
+import { CallbacksService } from './services/callbacks.service';
+import { CallbackCreationModalComponent } from './components/callback-creation-modal/callback-creation-modal.component';
 
 @Component({
   selector: 'app-client-callbacks',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="max-w-7xl mx-auto">
-      <div class="mb-6">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Callbacks & Reminders
-        </h2>
-        <p class="text-gray-600 dark:text-gray-400">
-          Schedule and manage client callbacks and follow-up activities
-        </p>
+      <div class="flex items-center justify-between mb-6">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Callbacks & Reminders
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400">
+            Schedule and manage client callbacks and follow-up activities
+          </p>
+        </div>
+        <div class="">
+          <button
+            type="button"
+            (click)="openCallbackModal()"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              ></path>
+            </svg>
+            Add Callback
+          </button>
+        </div>
       </div>
-
       <!-- Callback Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div
@@ -70,7 +75,7 @@ interface Callback {
               <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">
                 {{ getPendingCallbacksCount() }}
               </p>
-              <p class="text-xs text-blue-700 dark:text-blue-300">Scheduled</p>
+              <p class="text-xs text-blue-700 dark:text-blue-300">Due</p>
             </div>
           </div>
         </div>
@@ -90,20 +95,24 @@ interface Callback {
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M5 13l4 4L19 7"
+                  d="M15 17h5l-5 5v-5z"
+                ></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4"
                 ></path>
               </svg>
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-green-800 dark:text-green-200">
-                Completed
+                Reminders Open
               </p>
               <p class="text-2xl font-bold text-green-900 dark:text-green-100">
-                {{ getCompletedCallbacksCount() }}
+                {{ getOpenRemindersCount() }}
               </p>
-              <p class="text-xs text-green-700 dark:text-green-300">
-                This month
-              </p>
+              <p class="text-xs text-green-700 dark:text-green-300">Active</p>
             </div>
           </div>
         </div>
@@ -160,7 +169,7 @@ interface Callback {
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                  d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 0V3a2 2 0 00-2 0V3m-1 0V3"
                 ></path>
               </svg>
             </div>
@@ -168,216 +177,18 @@ interface Callback {
               <p
                 class="text-sm font-medium text-purple-800 dark:text-purple-200"
               >
-                Success Rate
+                Total Callbacks
               </p>
               <p
                 class="text-2xl font-bold text-purple-900 dark:text-purple-100"
               >
-                {{ getSuccessRate() }}%
+                {{ getTotalCallbacksCount() }}
               </p>
               <p class="text-xs text-purple-700 dark:text-purple-300">
-                Successful contacts
+                All time
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Add Callback Section -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8"
-      >
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Schedule New Callback
-          </h3>
-          <button
-            type="button"
-            (click)="toggleAddCallback()"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              ></path>
-            </svg>
-            {{ showAddForm ? 'Cancel' : 'Add Callback' }}
-          </button>
-        </div>
-
-        <div
-          *ngIf="showAddForm"
-          class="border-t border-gray-200 dark:border-gray-700 pt-6"
-        >
-          <form [formGroup]="callbackForm" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Operator -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Operator <span class="text-red-500">*</span>
-                </label>
-                <select
-                  formControlName="operator"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                >
-                  <option value="">Select Operator</option>
-                  <option value="john-smith">John Smith - Sales Manager</option>
-                  <option value="sarah-johnson">
-                    Sarah Johnson - Account Manager
-                  </option>
-                  <option value="mike-brown">Mike Brown - Senior Broker</option>
-                  <option value="lisa-davis">Lisa Davis - VIP Manager</option>
-                  <option value="current-user">Assign to Me</option>
-                </select>
-              </div>
-
-              <!-- Priority -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Priority <span class="text-red-500">*</span>
-                </label>
-                <select
-                  formControlName="priority"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                >
-                  <option value="">Select Priority</option>
-                  <option value="low">Low</option>
-                  <option value="normal">Normal</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-
-              <!-- Callback Date & Time -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Callback Date & Time <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="datetime-local"
-                  formControlName="callbackDateTime"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                />
-              </div>
-
-              <!-- Reminder -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Reminder Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  formControlName="reminderDateTime"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                />
-              </div>
-            </div>
-
-            <!-- Callback Type -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Callback Type <span class="text-red-500">*</span>
-              </label>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    formControlName="callbackType"
-                    value="follow-up"
-                    class="mr-2 text-blue-600"
-                  />
-                  <span class="text-sm text-gray-700 dark:text-gray-300"
-                    >Follow-up</span
-                  >
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    formControlName="callbackType"
-                    value="sales"
-                    class="mr-2 text-blue-600"
-                  />
-                  <span class="text-sm text-gray-700 dark:text-gray-300"
-                    >Sales Call</span
-                  >
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    formControlName="callbackType"
-                    value="support"
-                    class="mr-2 text-blue-600"
-                  />
-                  <span class="text-sm text-gray-700 dark:text-gray-300"
-                    >Support</span
-                  >
-                </label>
-                <label class="flex items-center">
-                  <input
-                    type="radio"
-                    formControlName="callbackType"
-                    value="retention"
-                    class="mr-2 text-blue-600"
-                  />
-                  <span class="text-sm text-gray-700 dark:text-gray-300"
-                    >Retention</span
-                  >
-                </label>
-              </div>
-            </div>
-
-            <!-- Add Note -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Callback Note <span class="text-red-500">*</span>
-              </label>
-              <textarea
-                formControlName="note"
-                rows="4"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
-                placeholder="Enter the purpose and details for this callback..."
-              ></textarea>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="flex justify-end space-x-3">
-              <button
-                type="button"
-                (click)="toggleAddCallback()"
-                class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                (click)="submitCallback()"
-                [disabled]="callbackForm.invalid"
-                class="px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Schedule Callback
-              </button>
-            </div>
-          </form>
         </div>
       </div>
 
@@ -391,18 +202,15 @@ interface Callback {
               Callback History
             </h3>
             <div class="flex items-center space-x-3">
-              <!-- Filter -->
               <select
                 [(ngModel)]="statusFilter"
                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               >
-                <option value="">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="">All Status</option>
+                <option value="due">Due</option>
                 <option value="overdue">Overdue</option>
+                <option value="reminder-open">Reminder Open</option>
               </select>
-              <!-- Search -->
               <div class="relative">
                 <div
                   class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
@@ -432,7 +240,6 @@ interface Callback {
           </div>
         </div>
 
-        <!-- Table -->
         <div class="overflow-x-auto">
           <table
             class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/30"
@@ -442,7 +249,7 @@ interface Callback {
                 <th
                   class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
-                  Operator
+                  Client
                 </th>
                 <th
                   class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -452,12 +259,7 @@ interface Callback {
                 <th
                   class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
-                  Priority
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  Scheduled Date & Time
+                  Callback Date & Time
                 </th>
                 <th
                   class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -467,17 +269,7 @@ interface Callback {
                 <th
                   class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                 >
-                  Duration
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  Outcome
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-                >
-                  Note
+                  Created Date
                 </th>
                 <th
                   class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
@@ -499,17 +291,23 @@ interface Callback {
                       <div
                         class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium"
                       >
-                        {{ getOperatorInitials(callback.operatorName) }}
+                        {{
+                          getClientInitials(
+                            callback.clientFirstName,
+                            callback.clientLastName
+                          )
+                        }}
                       </div>
                     </div>
                     <div class="ml-3">
                       <div
                         class="text-sm font-medium text-gray-900 dark:text-white"
                       >
-                        {{ callback.operatorName }}
+                        {{ callback.clientFirstName }}
+                        {{ callback.clientLastName }}
                       </div>
                       <div class="text-sm text-gray-500 dark:text-gray-400">
-                        {{ callback.operatorId }}
+                        {{ callback.clientEmail }}
                       </div>
                     </div>
                   </div>
@@ -518,34 +316,19 @@ interface Callback {
                   <span
                     class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                     [ngClass]="{
-                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
-                        callback.status === 'pending',
-                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                        callback.status === 'completed',
-                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                        callback.status === 'overdue',
-                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200':
-                        callback.status === 'cancelled'
-                    }"
-                  >
-                    {{ callback.status | titlecase }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    [ngClass]="{
-                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                        callback.priority === 'low',
                       'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200':
-                        callback.priority === 'normal',
-                      'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200':
-                        callback.priority === 'high',
+                        callback.isDue && !callback.isOverdue,
                       'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                        callback.priority === 'urgent'
+                        callback.isOverdue,
+                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
+                        callback.isOpenedReminder,
+                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200':
+                        !callback.isDue &&
+                        !callback.isOverdue &&
+                        !callback.isOpenedReminder
                     }"
                   >
-                    {{ callback.priority | titlecase }}
+                    {{ getCallbackStatus(callback) | titlecase }}
                   </span>
                 </td>
                 <td
@@ -556,42 +339,12 @@ interface Callback {
                 <td
                   class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
                 >
-                  {{
-                    callback.reminderDateTime
-                      ? (callback.reminderDateTime | date : 'short')
-                      : '-'
-                  }}
+                  {{ callback.reminderInMinutes }} min before
                 </td>
                 <td
-                  class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white"
+                  class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
                 >
-                  {{ callback.duration ? callback.duration + ' min' : '-' }}
-                </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white"
-                >
-                  <span
-                    *ngIf="callback.outcome"
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                    [ngClass]="{
-                      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                        callback.outcome === 'successful',
-                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
-                        callback.outcome === 'rescheduled',
-                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                        callback.outcome === 'no-answer'
-                    }"
-                  >
-                    {{ callback.outcome | titlecase }}
-                  </span>
-                  <span *ngIf="!callback.outcome">-</span>
-                </td>
-                <td
-                  class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs"
-                >
-                  <div class="truncate" [title]="callback.note">
-                    {{ callback.note }}
-                  </div>
+                  {{ callback.createdAt | date : 'short' }}
                 </td>
                 <td
                   class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
@@ -599,10 +352,30 @@ interface Callback {
                   <div class="flex items-center space-x-2">
                     <button
                       type="button"
-                      *ngIf="callback.status === 'pending'"
-                      (click)="markAsCompleted(callback)"
+                      *ngIf="!callback.isOpenedReminder"
+                      (click)="openReminder(callback)"
                       class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                      title="Mark as Completed"
+                      title="Open Reminder"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 17h5l-5 5v-5z"
+                        ></path>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="completeCallback(callback)"
+                      class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                      title="Complete Callback"
                     >
                       <svg
                         class="w-4 h-4"
@@ -620,7 +393,8 @@ interface Callback {
                     </button>
                     <button
                       type="button"
-                      class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                      (click)="editCallback(callback)"
+                      class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300"
                       title="Edit Callback"
                     >
                       <svg
@@ -639,10 +413,9 @@ interface Callback {
                     </button>
                     <button
                       type="button"
-                      *ngIf="callback.status === 'pending'"
-                      (click)="rescheduleCallback(callback)"
-                      class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300"
-                      title="Reschedule"
+                      (click)="showDeleteConfirmation(callback)"
+                      class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                      title="Delete Callback"
                     >
                       <svg
                         class="w-4 h-4"
@@ -654,7 +427,7 @@ interface Callback {
                           stroke-linecap="round"
                           stroke-linejoin="round"
                           stroke-width="2"
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                         ></path>
                       </svg>
                     </button>
@@ -663,6 +436,91 @@ interface Callback {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Modal -->
+      <div *ngIf="showDeleteModal" class="fixed z-50 inset-0 overflow-y-auto">
+        <div
+          class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+        >
+          <div class="fixed inset-0 transition-opacity -z-1" aria-hidden="true">
+            <div class="absolute inset-0 bg-black/30 -z-1"></div>
+          </div>
+
+          <span
+            class="hidden sm:inline-block sm:align-middle sm:h-screen"
+            aria-hidden="true"
+            >&#8203;</span
+          >
+
+          <div
+            class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+          >
+            <div
+              class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4"
+            >
+              <div class="sm:flex sm:items-start">
+                <div
+                  class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10"
+                >
+                  <svg
+                    class="h-6 w-6 text-red-600 dark:text-red-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <h3
+                    class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                  >
+                    Delete Callback
+                  </h3>
+                  <div class="mt-2">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Are you sure you want to delete the callback for
+                      <strong
+                        >{{ callbackToDelete?.clientFirstName }}
+                        {{ callbackToDelete?.clientLastName }}</strong
+                      >
+                      scheduled on
+                      <strong>{{
+                        callbackToDelete?.callbackDateTime | date : 'medium'
+                      }}</strong
+                      >? This action cannot be undone.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
+            >
+              <button
+                type="button"
+                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                (click)="confirmDelete()"
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                (click)="cancelDelete()"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -676,119 +534,77 @@ interface Callback {
     `,
   ],
 })
-export class ClientCallbacksComponent implements OnInit {
+export class ClientCallbacksComponent implements OnInit, OnDestroy {
   @Input() client!: Client;
 
-  private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
+  private modalService = inject(ModalService);
+  private callbacksService = inject(CallbacksService);
+  private destroy$ = new Subject<void>();
 
-  callbackForm: FormGroup;
-  showAddForm = false;
   searchTerm = '';
   statusFilter = '';
+  callbacks: Callback[] = [];
+  loading = false;
 
-  callbacks: Callback[] = [
-    {
-      id: '1',
-      operatorId: 'john-smith',
-      operatorName: 'John Smith',
-      status: 'pending',
-      callbackDateTime: new Date('2024-01-26T10:00:00'),
-      reminderDateTime: new Date('2024-01-26T09:30:00'),
-      note: 'Follow up on new investment opportunity discussion',
-      priority: 'high',
-      createdDate: new Date('2024-01-25T14:30:00'),
-    },
-    {
-      id: '2',
-      operatorId: 'sarah-johnson',
-      operatorName: 'Sarah Johnson',
-      status: 'completed',
-      callbackDateTime: new Date('2024-01-24T15:00:00'),
-      note: 'Account verification and KYC document review',
-      priority: 'normal',
-      outcome: 'successful',
-      duration: 25,
-      createdDate: new Date('2024-01-23T09:15:00'),
-      completedDate: new Date('2024-01-24T15:25:00'),
-    },
-    {
-      id: '3',
-      operatorId: 'mike-brown',
-      operatorName: 'Mike Brown',
-      status: 'overdue',
-      callbackDateTime: new Date('2024-01-23T11:00:00'),
-      reminderDateTime: new Date('2024-01-23T10:30:00'),
-      note: 'Discuss trading strategy and risk management',
-      priority: 'urgent',
-      createdDate: new Date('2024-01-22T16:45:00'),
-    },
-    {
-      id: '4',
-      operatorId: 'lisa-davis',
-      operatorName: 'Lisa Davis',
-      status: 'completed',
-      callbackDateTime: new Date('2024-01-22T14:00:00'),
-      note: 'VIP account upgrade and benefits explanation',
-      priority: 'high',
-      outcome: 'successful',
-      duration: 35,
-      createdDate: new Date('2024-01-21T11:20:00'),
-      completedDate: new Date('2024-01-22T14:35:00'),
-    },
-    {
-      id: '5',
-      operatorId: 'john-smith',
-      operatorName: 'John Smith',
-      status: 'cancelled',
-      callbackDateTime: new Date('2024-01-21T16:00:00'),
-      note: 'Initial welcome call and platform orientation',
-      priority: 'normal',
-      createdDate: new Date('2024-01-20T13:10:00'),
-    },
-  ];
-
-  constructor() {
-    this.callbackForm = this.fb.group({
-      operator: ['', Validators.required],
-      priority: ['', Validators.required],
-      callbackDateTime: ['', Validators.required],
-      reminderDateTime: [''],
-      callbackType: ['', Validators.required],
-      note: ['', Validators.required],
-    });
-  }
+  // Delete confirmation modal properties
+  showDeleteModal = false;
+  callbackToDelete: Callback | null = null;
 
   ngOnInit(): void {
-    // Set default callback time to tomorrow at 10 AM
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(10, 0, 0, 0);
+    this.loadCallbacks();
+  }
 
-    this.callbackForm.patchValue({
-      callbackDateTime: tomorrow.toISOString().slice(0, 16),
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadCallbacks(): void {
+    if (!this.client?.id) return;
+
+    this.loading = true;
+    this.callbacksService
+      .getCallbacksByClientId(this.client.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading callbacks:', error);
+          this.alertService.error('Failed to load callbacks');
+          return of([]);
+        })
+      )
+      .subscribe((callbacks) => {
+        this.callbacks = callbacks;
+        this.loading = false;
+      });
   }
 
   get filteredCallbacks(): Callback[] {
     let filtered = this.callbacks;
 
-    // Apply status filter
     if (this.statusFilter) {
-      filtered = filtered.filter(
-        (callback) => callback.status === this.statusFilter
-      );
+      filtered = filtered.filter((callback) => {
+        switch (this.statusFilter) {
+          case 'due':
+            return callback.isDue && !callback.isOverdue;
+          case 'overdue':
+            return callback.isOverdue;
+          case 'reminder-open':
+            return callback.isOpenedReminder;
+          default:
+            return true;
+        }
+      });
     }
 
-    // Apply search filter
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(
         (callback) =>
-          callback.operatorName.toLowerCase().includes(term) ||
-          callback.note.toLowerCase().includes(term) ||
-          callback.status.toLowerCase().includes(term) ||
-          callback.priority.toLowerCase().includes(term)
+          callback.clientFirstName?.toLowerCase().includes(term) ||
+          callback.clientLastName?.toLowerCase().includes(term) ||
+          callback.clientEmail?.toLowerCase().includes(term)
       );
     }
 
@@ -799,115 +615,160 @@ export class ClientCallbacksComponent implements OnInit {
     );
   }
 
-  getPendingCallbacksCount(): number {
-    return this.callbacks.filter((callback) => callback.status === 'pending')
-      .length;
+  getCallbackStatus(callback: Callback): string {
+    if (callback.isOverdue) return 'overdue';
+    if (callback.isOpenedReminder) return 'reminder open';
+    if (callback.isDue) return 'due';
+    return 'scheduled';
   }
 
-  getCompletedCallbacksCount(): number {
-    return this.callbacks.filter((callback) => callback.status === 'completed')
+  getPendingCallbacksCount(): number {
+    return this.callbacks.filter(
+      (callback) => callback.isDue && !callback.isOverdue
+    ).length;
+  }
+
+  getOpenRemindersCount(): number {
+    return this.callbacks.filter((callback) => callback.isOpenedReminder)
       .length;
   }
 
   getOverdueCallbacksCount(): number {
-    const now = new Date();
-    return this.callbacks.filter(
-      (callback) =>
-        callback.status === 'pending' &&
-        new Date(callback.callbackDateTime) < now
-    ).length;
+    return this.callbacks.filter((callback) => callback.isOverdue).length;
   }
 
-  getSuccessRate(): number {
-    const completed = this.callbacks.filter(
-      (callback) => callback.status === 'completed'
+  getTotalCallbacksCount(): number {
+    return this.callbacks.length;
+  }
+
+  getClientInitials(firstName: string, lastName: string): string {
+    return `${firstName?.charAt(0) || ''}${
+      lastName?.charAt(0) || ''
+    }`.toUpperCase();
+  }
+
+  openCallbackModal(): void {
+    const modalRef = this.modalService.open(
+      CallbackCreationModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        client: this.client,
+      }
     );
-    const successful = completed.filter(
-      (callback) => callback.outcome === 'successful'
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.loadCallbacks();
+        }
+      },
+      () => {}
+    );
+  }
+
+  editCallback(callback: Callback): void {
+    const modalRef = this.modalService.open(
+      CallbackCreationModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        client: this.client,
+        callback: callback,
+      }
     );
 
-    return completed.length > 0
-      ? Math.round((successful.length / completed.length) * 100)
-      : 0;
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.loadCallbacks();
+        }
+      },
+      () => {}
+    );
   }
 
-  getOperatorInitials(name: string): string {
-    return name
-      .split(' ')
-      .map((n) => n.charAt(0))
-      .join('')
-      .toUpperCase();
-  }
-
-  toggleAddCallback(): void {
-    this.showAddForm = !this.showAddForm;
-    if (!this.showAddForm) {
-      this.callbackForm.reset();
-      // Reset default time
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(10, 0, 0, 0);
-      this.callbackForm.patchValue({
-        callbackDateTime: tomorrow.toISOString().slice(0, 16),
+  openReminder(callback: Callback): void {
+    this.callbacksService
+      .openReminder(callback.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error opening reminder:', error);
+          this.alertService.error('Failed to open reminder');
+          return of(null);
+        })
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          this.alertService.success('Reminder opened successfully');
+        }
+        this.loadCallbacks();
       });
+  }
+
+  completeCallback(callback: Callback): void {
+    this.callbacksService
+      .completeCallback(callback.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error completing callback:', error);
+          this.alertService.error('Failed to complete callback');
+          return of(null);
+        })
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          this.alertService.success('Callback completed successfully');
+        }
+        this.loadCallbacks();
+      });
+  }
+
+  // Show delete confirmation modal
+  showDeleteConfirmation(callback: Callback): void {
+    this.callbackToDelete = callback;
+    this.showDeleteModal = true;
+  }
+
+  // Confirm and execute delete
+  confirmDelete(): void {
+    if (this.callbackToDelete) {
+      this.callbacksService
+        .deleteCallback(this.callbackToDelete.id)
+        .pipe(
+          takeUntil(this.destroy$),
+          catchError((error) => {
+            console.error('Error deleting callback:', error);
+            this.alertService.error('Failed to delete callback');
+            return of(null);
+          })
+        )
+        .subscribe((result) => {
+          if (result !== null) {
+            this.alertService.success('Callback deleted successfully');
+          }
+          this.loadCallbacks();
+        });
     }
+    this.cancelDelete();
   }
 
-  submitCallback(): void {
-    if (this.callbackForm.valid) {
-      const formData = this.callbackForm.value;
-
-      const newCallback: Callback = {
-        id: String(this.callbacks.length + 1),
-        operatorId: formData.operator,
-        operatorName: this.getOperatorNameById(formData.operator),
-        status: 'pending',
-        callbackDateTime: new Date(formData.callbackDateTime),
-        reminderDateTime: formData.reminderDateTime
-          ? new Date(formData.reminderDateTime)
-          : undefined,
-        note: formData.note,
-        priority: formData.priority,
-        createdDate: new Date(),
-      };
-
-      this.callbacks.unshift(newCallback);
-      this.callbackForm.reset();
-      this.showAddForm = false;
-
-      this.alertService.success('Callback scheduled successfully');
-    } else {
-      this.alertService.error('Please fill in all required fields');
-    }
+  // Cancel delete and close modal
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.callbackToDelete = null;
   }
 
-  markAsCompleted(callback: Callback): void {
-    callback.status = 'completed';
-    callback.completedDate = new Date();
-    callback.outcome = 'successful'; // Default outcome
-    callback.duration = 15; // Default duration
-
-    this.alertService.success('Callback marked as completed');
-  }
-
-  rescheduleCallback(callback: Callback): void {
-    // In a real app, this would open a modal to select new date/time
-    const newDate = new Date(callback.callbackDateTime);
-    newDate.setDate(newDate.getDate() + 1);
-    callback.callbackDateTime = newDate;
-
-    this.alertService.success('Callback rescheduled successfully');
-  }
-
-  private getOperatorNameById(operatorId: string): string {
-    const operatorMap: { [key: string]: string } = {
-      'john-smith': 'John Smith',
-      'sarah-johnson': 'Sarah Johnson',
-      'mike-brown': 'Mike Brown',
-      'lisa-davis': 'Lisa Davis',
-      'current-user': 'Current User',
-    };
-
-    return operatorMap[operatorId] || operatorId;
+  // Legacy method - now redirects to showDeleteConfirmation
+  deleteCallback(callback: Callback): void {
+    this.showDeleteConfirmation(callback);
   }
 }

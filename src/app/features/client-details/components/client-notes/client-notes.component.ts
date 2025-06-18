@@ -183,80 +183,7 @@ import { NoteCreationModalComponent } from './components/note-creation-modal/not
                       {{ note.createdAt | date : 'short' }}
                     </div>
                   </td>
-                  <td
-                    class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                  >
-                    <div class="flex items-center justify-end space-x-2">
-                      <button
-                        type="button"
-                        (click)="togglePinNote(note)"
-                        [class]="
-                          note.isPinnedComment
-                            ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300'
-                            : 'text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400'
-                        "
-                        [title]="
-                          note.isPinnedComment ? 'Unpin Note' : 'Pin Note'
-                        "
-                      >
-                        <svg
-                          class="w-4 h-4"
-                          [attr.fill]="
-                            note.isPinnedComment ? 'currentColor' : 'none'
-                          "
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                          ></path>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        (click)="editNote(note)"
-                        class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                        title="Edit Note"
-                      >
-                        <svg
-                          class="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          ></path>
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        (click)="deleteNote(note)"
-                        class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                        title="Delete Note"
-                      >
-                        <svg
-                          class="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          ></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
+
                 </tr>
               </tbody>
             </table>
@@ -571,35 +498,35 @@ export class ClientNotesComponent implements OnInit, OnDestroy {
     );
   }
 
-  togglePinNote(note: ClientNote): void {
-    note.isPinnedComment = !note.isPinnedComment;
-    this.applyFilters(); // Reapply filters to update the view
-    this.alertService.success(
-      note.isPinnedComment
-        ? 'Note pinned successfully'
-        : 'Note unpinned successfully'
-    );
-    // Here you would typically call an API to update the pin status
-    // this.notesService.updateNotePin(note.id, note.isPinnedComment).subscribe(...)
-  }
+  // togglePinNote(note: ClientNote): void {
+  //   note.isPinnedComment = !note.isPinnedComment;
+  //   this.applyFilters(); // Reapply filters to update the view
+  //   this.alertService.success(
+  //     note.isPinnedComment
+  //       ? 'Note pinned successfully'
+  //       : 'Note unpinned successfully'
+  //   );
+  //   // Here you would typically call an API to update the pin status
+  //   // this.notesService.updateNotePin(note.id, note.isPinnedComment).subscribe(...)
+  // }
 
-  editNote(note: ClientNote): void {
-    // Implement edit note modal
-    console.log('Edit note:', note);
-  }
+  // editNote(note: ClientNote): void {
+  //   // Implement edit note modal
+  //   console.log('Edit note:', note);
+  // }
 
-  deleteNote(note: ClientNote): void {
-    if (confirm('Are you sure you want to delete this note?')) {
-      const index = this.notes.findIndex((n) => n.id === note.id);
-      if (index > -1) {
-        this.notes.splice(index, 1);
-        this.applyFilters();
-        this.alertService.success('Note deleted successfully');
-      }
-      // Here you would typically call an API to delete the note
-      // this.notesService.deleteNote(note.id).subscribe(...)
-    }
-  }
+  // deleteNote(note: ClientNote): void {
+  //   if (confirm('Are you sure you want to delete this note?')) {
+  //     const index = this.notes.findIndex((n) => n.id === note.id);
+  //     if (index > -1) {
+  //       this.notes.splice(index, 1);
+  //       this.applyFilters();
+  //       this.alertService.success('Note deleted successfully');
+  //     }
+  //     // Here you would typically call an API to delete the note
+  //     // this.notesService.deleteNote(note.id).subscribe(...)
+  //   }
+  // }
 
   // Pagination methods
   previousPage(): void {
