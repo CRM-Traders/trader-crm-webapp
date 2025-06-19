@@ -1,28 +1,29 @@
 <!-- src/app/features/client-portal/trading-accounts/trading-accounts.component.html -->
 
-<div class="trading-accounts-container general-container bg-white">
+<div class="bg-white general-container p-6 mx-auto text-gray-900">
   <!-- Header Section -->
-  <div class="header-section">
-    <div class="header-content">
-      <div class="title-section">
-        <h1 class="page-title">Trading Accounts</h1>
-        <p class="page-subtitle">
+  <div class="mb-8">
+    <div class="flex justify-between items-start gap-4 flex-col md:flex-row">
+      <div class="flex-1">
+        <h1 class="text-3xl font-bold mb-2 text-gray-900">Trading Accounts</h1>
+        <p class="text-gray-600">
           Manage your trading accounts and access the trading platform
         </p>
       </div>
 
-      <div class="header-actions">
+      <div class="flex gap-3 items-center">
         <button
-          class="btn-icon"
+          class="p-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200 disabled:opacity-50"
           (click)="refreshAccounts()"
           [disabled]="loading()"
           title="Refresh accounts"
         >
           <svg
-            class="icon"
+            class="w-4 h-4 mx-0.5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
+            stroke-width="2"
           >
             <path
               d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4a9 9 0 0 1-14.85 4.36L23 14"
@@ -31,7 +32,7 @@
         </button>
 
         <button
-          class="btn-icon"
+          class="p-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all duration-200"
           (click)="toggleViewMode()"
           [title]="
             viewMode() === 'grid'
@@ -41,10 +42,11 @@
         >
           <svg
             *ngIf="viewMode() === 'grid'"
-            class="icon"
+            class="w-4 h-4 me-1"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
+            stroke-width="2"
           >
             <line x1="8" y1="6" x2="21" y2="6"></line>
             <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -55,10 +57,11 @@
           </svg>
           <svg
             *ngIf="viewMode() === 'list'"
-            class="icon"
+            class="w-4 h-4 mx-0.5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
+            stroke-width="2"
           >
             <rect x="3" y="3" width="7" height="7"></rect>
             <rect x="14" y="3" width="7" height="7"></rect>
@@ -68,15 +71,16 @@
         </button>
 
         <button
-          class="btn-primary"
+          class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none flex items-center gap-2"
           (click)="showCreateForm.set(true)"
           [disabled]="loading()"
         >
           <svg
-            class="icon"
+            class="w-4 h-4"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
+            stroke-width="2"
           >
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -88,42 +92,83 @@
   </div>
 
   <!-- Stats Overview -->
-  <div class="stats-section" *ngIf="stats()">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-content">
-          <div class="stat-label">Total Accounts</div>
-          <div class="stat-value">{{ stats()?.totalAccounts || 0 }}</div>
+  <div
+    class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+    *ngIf="accounts().length > 0"
+  >
+    <div
+      class="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:transform hover:-translate-y-1 transition-all duration-200 hover:shadow-lg"
+    >
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-sm text-gray-600 mb-1">Total Accounts</div>
+          <div class="text-2xl font-bold text-gray-900">
+            {{ accounts().length }}
+          </div>
         </div>
-        <div class="stat-icon accounts">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <div
+          class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center"
+        >
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
         </div>
       </div>
+    </div>
 
-      <div class="stat-card">
-        <div class="stat-content">
-          <div class="stat-label">Active Accounts</div>
-          <div class="stat-value">{{ stats()?.activeAccounts || 0 }}</div>
+    <div
+      class="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:transform hover:-translate-y-1 transition-all duration-200 hover:shadow-lg"
+    >
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-sm text-gray-600 mb-1">Active Accounts</div>
+          <div class="text-2xl font-bold text-gray-900">
+            {{ activeAccounts().length }}
+          </div>
         </div>
-        <div class="stat-icon active">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <div
+          class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center"
+        >
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
           </svg>
         </div>
       </div>
+    </div>
 
-      <div class="stat-card">
-        <div class="stat-content">
-          <div class="stat-label">Total Balance</div>
-          <div class="stat-value">
-            {{ formatBalance(stats()?.totalBalance || 0) }}
+    <div
+      class="bg-gray-50 border border-gray-200 rounded-xl p-6 hover:transform hover:-translate-y-1 transition-all duration-200 hover:shadow-lg"
+    >
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="text-sm text-gray-600 mb-1">Total Balance</div>
+          <div class="text-2xl font-bold text-gray-900">
+            ${{ getTotalBalance() | number : "1.2-2" }}
           </div>
         </div>
-        <div class="stat-icon balance">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <div
+          class="w-10 h-10 bg-yellow-100 text-yellow-600 rounded-lg flex items-center justify-center"
+        >
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <line x1="12" y1="1" x2="12" y2="23"></line>
             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
           </svg>
@@ -133,214 +178,461 @@
   </div>
 
   <!-- Loading State -->
-  <div class="loading-section" *ngIf="loading()">
-    <div class="loading-spinner">
-      <div class="spinner"></div>
-    </div>
-    <p class="loading-text">Loading your trading accounts...</p>
+  <div
+    class="flex flex-col items-center justify-center py-16"
+    *ngIf="loading()"
+  >
+    <div
+      class="w-8 h-8 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin mb-4"
+    ></div>
+    <p class="text-gray-600">Loading your trading accounts...</p>
   </div>
 
   <!-- Empty State -->
-  <div class="empty-state" *ngIf="!loading() && !hasAccounts()">
-    <div class="empty-content">
-      <div class="empty-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+  <div class="flex justify-center py-16" *ngIf="!loading() && !hasAccounts()">
+    <div class="text-center max-w-md">
+      <div class="w-16 h-16 mx-auto mb-6 text-gray-400">
+        <svg
+          class="w-full h-full"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
           <rect x="2" y="4" width="20" height="16" rx="2"></rect>
           <path d="M7 15h0M2 9.5h20"></path>
         </svg>
       </div>
-      <h3 class="empty-title">No Trading Accounts</h3>
-      <p class="empty-description">
-        Get started by creating your first trading account. Choose from Demo,
-        Live, or Paper trading options.
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">
+        No Trading Accounts
+      </h3>
+      <p class="text-gray-600 mb-6 leading-relaxed">
+        Get started by creating your first trading account.
       </p>
-      <button class="btn-primary" (click)="showCreateForm.set(true)">
+      <button
+        class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 transform hover:-translate-y-0.5"
+        (click)="showCreateForm.set(true)"
+      >
         Create Your First Account
       </button>
     </div>
   </div>
 
   <!-- Accounts Section -->
-  <div class="accounts-section" *ngIf="!loading() && hasAccounts()">
+  <div *ngIf="!loading() && hasAccounts()">
     <!-- Active Accounts -->
-    <div class="accounts-group" *ngIf="activeAccounts().length > 0">
-      <h2 class="group-title">Active Accounts</h2>
-      <div [class]="'accounts-' + viewMode()">
+    <div *ngIf="activeAccounts().length > 0" class="mb-8">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">Active Accounts</h2>
+<div
+  [class]="
+    viewMode() === 'grid'
+      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+      : 'flex flex-col gap-3'
+  "
+>
+  <div
+    *ngFor="let account of activeAccounts(); trackBy: trackByAccountId"
+    [class.ring-2]="selectedAccount()?.id === account.id"
+    [class.ring-blue-500]="selectedAccount()?.id === account.id"
+    [class]="
+      viewMode() === 'grid'
+        ? 'bg-white border border-gray-200 rounded-xl p-6 hover:transform hover:-translate-y-1 transition-all duration-200 hover:shadow-lg cursor-pointer'
+        : 'bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer max-h-[125px] flex items-center gap-4'
+    "
+  >
+    <!-- Grid View Content -->
+    <ng-container *ngIf="viewMode() === 'grid'">
+      <!-- Account Header -->
+      <div class="flex justify-between items-start mb-4">
+        <div class="flex-1">
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">
+            {{ account.displayName }}
+          </h3>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-600 font-mono"
+              >#{{ account.accountNumber }}</span
+            >
+            <span
+              class="text-xs font-medium px-2 py-1 rounded-full"
+              [class]="getAccountTypeClasses(account.accountType)"
+            >
+              {{ getAccountTypeName(account.accountType) }}
+            </span>
+          </div>
+        </div>
         <div
-          class="account-card"
-          *ngFor="let account of activeAccounts(); trackBy: trackByAccountId"
-          [class.selected]="selectedAccount()?.id === account.id"
+          class="flex items-center gap-2 text-sm font-medium"
+          [class]="getAccountStatusClasses(account.status)"
         >
-          <div class="account-header">
-            <div class="account-info">
-              <h3 class="account-name">{{ account.displayName }}</h3>
-              <div class="account-meta">
-                <span class="account-number">#{{ account.accountNumber }}</span>
-                <span
-                  class="account-type"
-                  [class]="'type-' + account.accountType"
-                >
-                  {{ getAccountTypeName(account.accountType) }}
-                </span>
-              </div>
-            </div>
-            <div
-              class="account-status"
-              [class]="'status-' + getAccountStatusInfo(account.status).color"
-            >
-              <span class="status-dot"></span>
-              {{ getAccountStatusInfo(account.status).label }}
-            </div>
-          </div>
+          <span
+            class="w-2 h-2 rounded-full"
+            [class]="getStatusDotClasses(account.status)"
+          ></span>
+          {{ account.status }}
+        </div>
+      </div>
 
-          <div class="account-balance">
-            <div class="balance-label">Balance</div>
-            <div class="balance-value">
-              {{
-                formatBalance(account.currentBalance || account.initialBalance)
-              }}
-            </div>
-          </div>
+      <!-- Account Balance -->
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Balance</div>
+        <div class="text-2xl font-bold text-gray-900 font-mono">
+          ${{ account.initialBalance | number : "1.2-2" }}
+        </div>
+      </div>
 
-          <div class="account-features">
-            <div class="feature" *ngIf="account.enableSpotTrading">
-              <svg
-                class="feature-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
-              </svg>
-              Spot Trading
-            </div>
-            <div class="feature" *ngIf="account.enableFuturesTrading">
-              <svg
-                class="feature-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-              </svg>
-              Futures Trading
-            </div>
-            <div class="feature">
-              <svg
-                class="feature-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
-                ></path>
-                <path d="M8 21v-4a2 2 0 012-2h4a2 2 0 012 2v4"></path>
-              </svg>
-              {{ getLeverageText(account.maxLeverage) }}
-            </div>
-          </div>
+      <!-- Account Features -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <div
+          *ngIf="account.enableSpotTrading"
+          class="flex items-center gap-1.5 text-xs text-gray-600 px-2 py-1 bg-gray-100 rounded-md"
+        >
+          <svg
+            class="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
+          </svg>
+          Spot Trading
+        </div>
+        <div
+          *ngIf="account.enableFuturesTrading"
+          class="flex items-center gap-1.5 text-xs text-gray-600 px-2 py-1 bg-gray-100 rounded-md"
+        >
+          <svg
+            class="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+          </svg>
+          Futures Trading
+        </div>
+        <div
+          class="flex items-center gap-1.5 text-xs text-gray-600 px-2 py-1 bg-gray-100 rounded-md"
+        >
+          <svg
+            class="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+            ></path>
+            <path d="M8 21v-4a2 2 0 012-2h4a2 2 0 012 2v4"></path>
+          </svg>
+          {{ getLeverageText(account.maxLeverage) }}
+        </div>
+      </div>
 
-          <div class="account-actions">
-            <button class="btn-secondary" (click)="showAccountDetails(account)">
-              View Details
-            </button>
-            <button
-              class="btn-primary"
-              (click)="openTradingPlatform(account)"
-              [disabled]="!tradingAccountService.canTrade(account)"
-            >
-              <svg
-                class="icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-                ></path>
-                <polyline points="15,3 21,3 21,9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-              Start Trading
-            </button>
-          </div>
+      <!-- Account Actions -->
+      <div class="flex gap-3 mb-4">
+        <button
+          class="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium text-sm hover:bg-gray-200 transition-colors duration-200"
+          (click)="showAccountDetails(account)"
+        >
+          View Details
+        </button>
+        <button
+          class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium text-sm hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+          (click)="openTradingPlatform(account)"
+          [disabled]="!canTrade(account)"
+        >
+          <svg
+            class="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+            ></path>
+            <polyline points="15,3 21,3 21,9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          Start Trading
+        </button>
+      </div>
 
-          <div class="account-created">
-            Created {{ formatDate(account.createdAt) }}
+      <!-- Account Created -->
+      <div class="text-xs text-gray-500 text-right">
+        Created {{ formatDate(account.createdAt) }}
+      </div>
+    </ng-container>
+
+    <!-- List View Content -->
+    <ng-container *ngIf="viewMode() === 'list'">
+      <!-- Account Info -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 mb-2">
+          <h3 class="text-base font-semibold text-gray-900 truncate">
+            {{ account.displayName }}
+          </h3>
+          <span
+            class="text-xs font-medium px-2 py-1 rounded-full"
+            [class]="getAccountTypeClasses(account.accountType)"
+          >
+            {{ getAccountTypeName(account.accountType) }}
+          </span>
+        </div>
+        <div class="flex items-center gap-3 text-sm text-gray-600">
+          <span class="font-mono">#{{ account.accountNumber }}</span>
+          <div
+            class="flex items-center gap-1"
+            [class]="getAccountStatusClasses(account.status)"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full"
+              [class]="getStatusDotClasses(account.status)"
+            ></span>
+            {{ account.status }}
           </div>
         </div>
       </div>
+
+      <!-- Balance -->
+      <div class="text-center px-4">
+        <div class="text-xs text-gray-500 mb-1">Balance</div>
+        <div class="text-lg font-bold text-gray-900 font-mono">
+          ${{ account.initialBalance | number : "1.2-2" }}
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2">
+        <button
+          class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200 transition-colors duration-200"
+          (click)="showAccountDetails(account)"
+        >
+          Details
+        </button>
+        <button
+          class="px-3 py-2 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 flex items-center gap-1"
+          (click)="openTradingPlatform(account)"
+          [disabled]="!canTrade(account)"
+        >
+          <svg
+            class="w-3 h-3"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+            ></path>
+            <polyline points="15,3 21,3 21,9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          Trade
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>
     </div>
 
     <!-- Inactive Accounts -->
-    <div class="accounts-group" *ngIf="inactiveAccounts().length > 0">
-      <h2 class="group-title">Inactive Accounts</h2>
-      <div [class]="'accounts-' + viewMode()">
+    <div *ngIf="inactiveAccounts().length > 0">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        Inactive Accounts
+      </h2>
+<div
+  [class]="
+    viewMode() === 'grid'
+      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+      : 'flex flex-col gap-3'
+  "
+>
+  <div
+    *ngFor="let account of inactiveAccounts(); trackBy: trackByAccountId"
+    [class]="
+      viewMode() === 'grid'
+        ? 'bg-white border border-gray-200 rounded-xl p-6 opacity-75 hover:transform hover:-translate-y-1 transition-all duration-200 hover:shadow-lg'
+        : 'bg-white border border-gray-200 rounded-lg p-4 opacity-75 hover:shadow-md transition-all duration-200 max-h-[125px] flex items-center gap-4'
+    "
+  >
+    <!-- Grid View Content -->
+    <ng-container *ngIf="viewMode() === 'grid'">
+      <!-- Similar structure as active accounts but simplified -->
+      <div class="flex justify-between items-start mb-4">
+        <div class="flex-1">
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">
+            {{ account.displayName }}
+          </h3>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-600 font-mono"
+              >#{{ account.accountNumber }}</span
+            >
+            <span
+              class="text-xs font-medium px-2 py-1 rounded-full"
+              [class]="getAccountTypeClasses(account.accountType)"
+            >
+              {{ getAccountTypeName(account.accountType) }}
+            </span>
+          </div>
+        </div>
         <div
-          class="account-card inactive"
-          *ngFor="let account of inactiveAccounts(); trackBy: trackByAccountId"
+          class="flex items-center gap-2 text-sm font-medium"
+          [class]="getAccountStatusClasses(account.status)"
         >
-          <div class="account-header">
-            <div class="account-info">
-              <h3 class="account-name">{{ account.displayName }}</h3>
-              <div class="account-meta">
-                <span class="account-number">#{{ account.accountNumber }}</span>
-                <span
-                  class="account-type"
-                  [class]="'type-' + account.accountType"
-                >
-                  {{ getAccountTypeName(account.accountType) }}
-                </span>
-              </div>
-            </div>
-            <div
-              class="account-status"
-              [class]="'status-' + getAccountStatusInfo(account.status).color"
-            >
-              <span class="status-dot"></span>
-              {{ getAccountStatusInfo(account.status).label }}
-            </div>
-          </div>
+          <span
+            class="w-2 h-2 rounded-full"
+            [class]="getStatusDotClasses(account.status)"
+          ></span>
+          {{ account.status }}
+        </div>
+      </div>
 
-          <div class="account-balance">
-            <div class="balance-label">Balance</div>
-            <div class="balance-value">
-              {{
-                formatBalance(account.currentBalance || account.initialBalance)
-              }}
-            </div>
-          </div>
+      <div class="mb-4">
+        <div class="text-sm text-gray-600 mb-1">Balance</div>
+        <div class="text-2xl font-bold text-gray-900 font-mono">
+          ${{ account.initialBalance | number : "1.2-2" }}
+        </div>
+      </div>
 
-          <div class="account-actions">
-            <button class="btn-secondary" (click)="showAccountDetails(account)">
-              View Details
-            </button>
-            <button
-              class="btn-primary"
-              (click)="navigateToKYC()"
-              *ngIf="account.status === AccountStatus.VERIFICATION_REQUIRED"
-            >
-              Complete KYC
-            </button>
-          </div>
+      <div class="flex gap-3 mb-4">
+        <button
+          class="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium text-sm hover:bg-gray-200 transition-colors duration-200"
+          (click)="showAccountDetails(account)"
+        >
+          View Details
+        </button>
+        <button
+          class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium text-sm hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+          (click)="openTradingPlatform(account)"
+          [disabled]="!canTrade(account)"
+        >
+          <svg
+            class="w-4 h-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+            ></path>
+            <polyline points="15,3 21,3 21,9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          Start Trading
+        </button>
+      </div>
 
-          <div class="account-created">
-            Created {{ formatDate(account.createdAt) }}
+      <div class="text-xs text-gray-500 text-right">
+        Created {{ formatDate(account.createdAt) }}
+      </div>
+    </ng-container>
+
+    <!-- List View Content -->
+    <ng-container *ngIf="viewMode() === 'list'">
+      <!-- Account Info -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 mb-2">
+          <h3 class="text-base font-semibold text-gray-900 truncate">
+            {{ account.displayName }}
+          </h3>
+          <span
+            class="text-xs font-medium px-2 py-1 rounded-full"
+            [class]="getAccountTypeClasses(account.accountType)"
+          >
+            {{ getAccountTypeName(account.accountType) }}
+          </span>
+        </div>
+        <div class="flex items-center gap-3 text-sm text-gray-600">
+          <span class="font-mono">#{{ account.accountNumber }}</span>
+          <div
+            class="flex items-center gap-1"
+            [class]="getAccountStatusClasses(account.status)"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full"
+              [class]="getStatusDotClasses(account.status)"
+            ></span>
+            {{ account.status }}
           </div>
         </div>
       </div>
+
+      <!-- Balance -->
+      <div class="text-center px-4">
+        <div class="text-xs text-gray-500 mb-1">Balance</div>
+        <div class="text-lg font-bold text-gray-900 font-mono">
+          ${{ account.initialBalance | number : "1.2-2" }}
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2">
+        <button
+          class="px-3 py-2 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200 transition-colors duration-200"
+          (click)="showAccountDetails(account)"
+        >
+          Details
+        </button>
+        <button
+          class="px-3 py-2 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 flex items-center gap-1"
+          (click)="openTradingPlatform(account)"
+          [disabled]="!canTrade(account)"
+        >
+          <svg
+            class="w-3 h-3"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+            ></path>
+            <polyline points="15,3 21,3 21,9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+          Trade
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>
     </div>
   </div>
 
   <!-- Create Account Modal -->
-  <div class="modal-overlay" *ngIf="showCreateForm()" (click)="cancelCreate()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="modal-title">Create New Trading Account</h2>
-        <button class="btn-close" (click)="cancelCreate()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+  <div
+    class="fixed inset-0 bg-black/5 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+    *ngIf="showCreateForm()"
+    (click)="cancelCreate()"
+  >
+    <div
+      class="bg-white rounded-xl w-full max-w-md max-h-90vh overflow-y-auto shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        class="flex justify-between items-center p-6 border-b border-gray-200"
+      >
+        <h2 class="text-xl font-semibold text-gray-900">
+          Create New Trading Account
+        </h2>
+        <button
+          class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-1 rounded-md transition-colors duration-200"
+          (click)="cancelCreate()"
+        >
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -350,149 +642,42 @@
       <form
         [formGroup]="createAccountForm"
         (ngSubmit)="createAccount()"
-        class="create-form"
+        class="p-6"
       >
-        <!-- Account Type Selection -->
-        <div class="form-section">
-          <h3 class="section-title">Choose Account Type</h3>
-          <div class="account-type-options">
-            <label
-              *ngFor="
-                let config of [
-                  ACCOUNT_TYPE_CONFIG[AccountType.DEMO],
-                  ACCOUNT_TYPE_CONFIG[AccountType.REAL],
-                  ACCOUNT_TYPE_CONFIG[AccountType.PAPER]
-                ]
-              "
-              class="account-type-option"
-              [class.selected]="
-                createAccountForm.get('accountType')?.value === config.type
-              "
-              [class.recommended]="config.isRecommended"
-            >
-              <input
-                type="radio"
-                [value]="config.type"
-                formControlName="accountType"
-                class="radio-input"
-              />
-
-              <div class="option-content">
-                <div class="option-header">
-                  <span class="option-name">{{ config.name }}</span>
-                  <span class="recommended-badge" *ngIf="config.isRecommended"
-                    >Recommended</span
-                  >
-                </div>
-                <p class="option-description">{{ config.description }}</p>
-                <ul class="option-features">
-                  <li *ngFor="let feature of config.features">{{ feature }}</li>
-                </ul>
-              </div>
-            </label>
+        <div class="mb-6">
+          <label
+            for="displayName"
+            class="block text-sm font-medium text-gray-900 mb-2"
+          >
+            Account Name *
+          </label>
+          <input
+            id="displayName"
+            type="text"
+            formControlName="displayName"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 transition-colors duration-200 focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500 focus:ring-opacity-10"
+            [class.border-red-500]="hasFieldError('displayName')"
+            placeholder="Enter account name"
+          />
+          <div
+            class="text-red-500 text-xs mt-1"
+            *ngIf="hasFieldError('displayName')"
+          >
+            {{ getFieldError("displayName") }}
           </div>
         </div>
 
-        <!-- Account Details -->
-        <div class="form-section">
-          <h3 class="section-title">Account Details</h3>
-          <div class="form-grid">
-            <div class="form-field">
-              <label for="displayName" class="field-label"
-                >Account Name *</label
-              >
-              <input
-                id="displayName"
-                type="text"
-                formControlName="displayName"
-                class="field-input"
-                [class.error]="hasFieldError('displayName')"
-                placeholder="Enter account name"
-              />
-              <div class="field-error" *ngIf="hasFieldError('displayName')">
-                {{ getFieldError("displayName") }}
-              </div>
-            </div>
-
-            <div class="form-field">
-              <label for="initialBalance" class="field-label"
-                >Initial Balance *</label
-              >
-              <div class="input-group">
-                <span class="input-prefix">$</span>
-                <input
-                  id="initialBalance"
-                  type="number"
-                  formControlName="initialBalance"
-                  class="field-input"
-                  [class.error]="hasFieldError('initialBalance')"
-                  placeholder="10000"
-                />
-              </div>
-              <div class="field-error" *ngIf="hasFieldError('initialBalance')">
-                {{ getFieldError("initialBalance") }}
-              </div>
-            </div>
-
-            <div class="form-field">
-              <label for="maxLeverage" class="field-label"
-                >Max Leverage *</label
-              >
-              <select
-                id="maxLeverage"
-                formControlName="maxLeverage"
-                class="field-select"
-                [class.error]="hasFieldError('maxLeverage')"
-              >
-                <option value="1">1:1 (No Leverage)</option>
-                <option value="2">2:1</option>
-                <option value="5">5:1</option>
-                <option value="10">10:1</option>
-                <option value="20">20:1</option>
-                <option value="50">50:1</option>
-                <option value="100">100:1</option>
-              </select>
-              <div class="field-error" *ngIf="hasFieldError('maxLeverage')">
-                {{ getFieldError("maxLeverage") }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Trading Features -->
-        <div class="form-section">
-          <h3 class="section-title">Trading Features</h3>
-          <div class="checkbox-group">
-            <label class="checkbox-field">
-              <input
-                type="checkbox"
-                formControlName="enableSpotTrading"
-                class="checkbox-input"
-              />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">Enable Spot Trading</span>
-            </label>
-
-            <label class="checkbox-field">
-              <input
-                type="checkbox"
-                formControlName="enableFuturesTrading"
-                class="checkbox-input"
-              />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-label">Enable Futures Trading</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-          <button type="button" class="btn-secondary" (click)="cancelCreate()">
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-200 transition-colors duration-200"
+            (click)="cancelCreate()"
+          >
             Cancel
           </button>
           <button
             type="submit"
-            class="btn-primary"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
             [disabled]="!createAccountForm.valid || loading()"
           >
             <span *ngIf="!loading()">Create Account</span>
@@ -505,130 +690,197 @@
 
   <!-- Account Details Modal -->
   <div
-    class="modal-overlay"
+    class="fixed inset-0 bg-black/5 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
     *ngIf="selectedAccount()"
     (click)="closeAccountDetails()"
   >
-    <div class="modal-content large" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="modal-title">Account Details</h2>
-        <button class="btn-close" (click)="closeAccountDetails()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <div
+      class="bg-white rounded-xl w-full max-w-2xl max-h-90vh overflow-y-auto shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        class="flex justify-between items-center p-6 border-b border-gray-200"
+      >
+        <h2 class="text-xl font-semibold text-gray-900">Account Details</h2>
+        <button
+          class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-1 rounded-md transition-colors duration-200"
+          (click)="closeAccountDetails()"
+        >
+          <svg
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
       </div>
 
-      <div class="account-details" *ngIf="selectedAccount() as account">
-        <div class="details-grid">
-          <div class="detail-item">
-            <span class="detail-label">Account Name</span>
-            <span class="detail-value">{{ account.displayName }}</span>
+      <div class="p-6" *ngIf="selectedAccount() as account">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="flex flex-col gap-1">
+            <span
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Account Name</span
+            >
+            <span class="text-sm text-gray-900 font-medium">{{
+              account.displayName
+            }}</span>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Account Number</span>
-            <span class="detail-value">#{{ account.accountNumber }}</span>
+          <div class="flex flex-col gap-1">
+            <span
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Account Number</span
+            >
+            <span class="text-sm text-gray-900 font-medium font-mono"
+              >#{{ account.accountNumber }}</span
+            >
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Account Type</span>
-            <span class="detail-value">{{
+          <div class="flex flex-col gap-1">
+            <span
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Account Type</span
+            >
+            <span class="text-sm text-gray-900 font-medium">{{
               getAccountTypeName(account.accountType)
             }}</span>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Status</span>
+          <div class="flex flex-col gap-1">
             <span
-              class="detail-value"
-              [class]="'status-' + getAccountStatusInfo(account.status).color"
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Status</span
             >
-              {{ getAccountStatusInfo(account.status).label }}
+            <span
+              class="text-sm font-medium"
+              [class]="getAccountStatusClasses(account.status)"
+            >
+              {{ account.status }}
             </span>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Current Balance</span>
-            <span class="detail-value">{{
-              formatBalance(account.currentBalance || account.initialBalance)
-            }}</span>
+          <div class="flex flex-col gap-1">
+            <span
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Initial Balance</span
+            >
+            <span class="text-sm text-gray-900 font-medium font-mono"
+              >${{ account.initialBalance | number : "1.2-2" }}</span
+            >
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Initial Balance</span>
-            <span class="detail-value">{{
-              formatBalance(account.initialBalance)
-            }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Max Leverage</span>
-            <span class="detail-value">{{
+          <div class="flex flex-col gap-1">
+            <span
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Max Leverage</span
+            >
+            <span class="text-sm text-gray-900 font-medium">{{
               getLeverageText(account.maxLeverage)
             }}</span>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">Created</span>
-            <span class="detail-value">{{
+          <div class="flex flex-col gap-1">
+            <span
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Created</span
+            >
+            <span class="text-sm text-gray-900 font-medium">{{
               formatDate(account.createdAt)
             }}</span>
           </div>
-          <div class="detail-item" *ngIf="account.verifiedAt">
-            <span class="detail-label">Verified</span>
-            <span class="detail-value">{{
+          <div class="flex flex-col gap-1" *ngIf="account.verifiedAt">
+            <span
+              class="text-xs text-gray-600 uppercase tracking-wide font-medium"
+              >Verified</span
+            >
+            <span class="text-sm text-gray-900 font-medium">{{
               formatDate(account.verifiedAt)
             }}</span>
           </div>
         </div>
 
-        <div class="features-section">
-          <h4 class="features-title">Available Features</h4>
-          <div class="features-list">
+        <div class="mb-6">
+          <h4 class="text-base font-semibold text-gray-900 mb-3">
+            Available Features
+          </h4>
+          <div class="flex flex-col gap-3">
             <div
-              class="feature-item"
-              [class.enabled]="account.enableSpotTrading"
+              class="flex items-center gap-3 p-3 rounded-lg"
+              [class]="
+                account.enableSpotTrading ? 'bg-green-50/30' : 'bg-gray-50/10'
+              "
             >
               <svg
-                class="feature-icon"
+                class="w-4 h-4"
+                [class]="
+                  account.enableSpotTrading ? 'text-green-600' : 'text-gray-400'
+                "
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
+                stroke-width="2"
               >
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
               </svg>
-              <span>Spot Trading</span>
-              <span class="feature-status">{{
-                account.enableSpotTrading ? "Enabled" : "Disabled"
-              }}</span>
+              <span class="flex-1 text-sm text-gray-900">Spot Trading</span>
+              <span
+                class="text-xs font-medium"
+                [class]="
+                  account.enableSpotTrading ? 'text-green-600' : 'text-gray-500'
+                "
+              >
+                {{ account.enableSpotTrading ? "Enabled" : "Disabled" }}
+              </span>
             </div>
             <div
-              class="feature-item"
-              [class.enabled]="account.enableFuturesTrading"
+              class="flex items-center gap-3 p-3 rounded-lg"
+              [class]="
+                account.enableFuturesTrading
+                  ? 'bg-green-50/30'
+                  : 'bg-gray-50/10'
+              "
             >
               <svg
-                class="feature-icon"
+                class="w-4 h-4"
+                [class]="
+                  account.enableFuturesTrading
+                    ? 'text-green-600'
+                    : 'text-gray-400'
+                "
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
+                stroke-width="2"
               >
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
               </svg>
-              <span>Futures Trading</span>
-              <span class="feature-status">{{
-                account.enableFuturesTrading ? "Enabled" : "Disabled"
-              }}</span>
+              <span class="flex-1 text-sm text-gray-900">Futures Trading</span>
+              <span
+                class="text-xs font-medium"
+                [class]="
+                  account.enableFuturesTrading
+                    ? 'text-green-600'
+                    : 'text-gray-500'
+                "
+              >
+                {{ account.enableFuturesTrading ? "Enabled" : "Disabled" }}
+              </span>
             </div>
           </div>
         </div>
 
-        <div class="modal-actions">
+        <div class="flex justify-end pt-4 border-t border-gray-200">
           <button
-            class="btn-primary"
+            class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 flex items-center gap-2"
             (click)="openTradingPlatform(account)"
-            [disabled]="!tradingAccountService.canTrade(account)"
+            [disabled]="!canTrade(account)"
           >
             <svg
-              class="icon"
+              class="w-4 h-4"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
+              stroke-width="2"
             >
               <path
                 d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"

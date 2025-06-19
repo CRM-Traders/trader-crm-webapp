@@ -172,7 +172,7 @@ export const routes: Routes = [
         ],
       },
       {
-        path: 'traiding-accounts',
+        path: 'trading-accounts',
         loadComponent: () =>
           import(
             './features/client-portal/trading-accounts/trading-accounts.component'

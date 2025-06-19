@@ -56,7 +56,7 @@
               for="email"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Email
+              Email/Username
             </label>
             <div class="mt-1">
               <input
@@ -81,10 +81,10 @@
               class="mt-1 text-sm text-red-600 dark:text-red-400"
             >
               <span *ngIf="loginForm.get('email')?.errors?.['required']"
-                >Email is required</span
+                >Email/Username is required</span
               >
               <span *ngIf="loginForm.get('email')?.errors?.['email']"
-                >Please enter a valid email address</span
+                >Please enter a valid email address or username</span
               >
             </div>
           </div>
