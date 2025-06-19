@@ -92,7 +92,7 @@ export class TradingAccountService {
       return;
     }
 
-    window.open(`${environment.traidingRedirectUrl}/${key}`);
+    window.location.href = `${environment.traidingRedirectUrl}/${key}`;
   }
 
   /**
