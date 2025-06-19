@@ -63,7 +63,11 @@ export class NavigationService {
       label: 'Affiliate Clients',
       icon: 'traders',
       route: '/affiliate-clients',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserRole.SuperAdmin,
+        UserRole.Affiliate,
+        UserRole.AffiliateManager,
+      ],
     },
     {
       label: 'Affiliates',
@@ -118,19 +122,23 @@ export class NavigationService {
       label: 'API Docs',
       icon: 'api',
       route: '/api-docs',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserRole.SuperAdmin,
+        UserRole.Affiliate,
+        UserRole.AffiliateManager,
+      ],
     },
     {
       label: 'Traiding Accounts',
       icon: 'traders',
       route: '/traiding-accounts',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [UserRole.SuperAdmin, UserRole.Client],
     },
     {
       label: 'KYC',
       icon: 'kyc',
       route: '/kyc-verification',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [UserRole.SuperAdmin, UserRole.Client, UserRole.Lead],
     },
     {
       label: 'Sources',
