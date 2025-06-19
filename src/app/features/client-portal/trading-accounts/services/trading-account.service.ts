@@ -161,7 +161,7 @@ export class TradingAccountService {
   }
 
   setTraidingAccount(id: string) {
-    return this.http.post('traiding/api/users/set-trading-account', {
+    return this.http.post('identity/api/users/set-trading-account', {
       tradingAccountId: id,
     });
   }
