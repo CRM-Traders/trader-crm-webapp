@@ -681,7 +681,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
       id: this.desk.id,
       name: this.editForm.value.name.trim(),
       brandId: this.editForm.value.brandId,
-      type: this.editForm.value.type,
+      type: Number(this.editForm.value.type),
       language: this.editForm.value.language || null,
       isActive: this.editForm.value.isActive,
     };

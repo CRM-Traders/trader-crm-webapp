@@ -513,7 +513,7 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
     const deskData: DeskCreateRequest = {
       name: formValue.name.trim(),
       brandId: formValue.brandId,
-      type: formValue.type,
+      type: Number(formValue.type),
       language: formValue.language || null,
       isActive: formValue.isActive,
     };
