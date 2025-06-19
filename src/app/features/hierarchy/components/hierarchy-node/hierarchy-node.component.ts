@@ -22,7 +22,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
         <button
           *ngIf="node.hasChildren"
           (click)="onToggleClick($event)"
-          class="mr-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          class="mr-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600/20 transition-colors"
         >
           <svg
             class="w-4 h-4 transition-transform duration-200"
@@ -109,7 +109,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
               <!-- Role Badge for Members -->
               <span
                 *ngIf="node.type === 'member' && node.data?.role"
-                class="ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full"
+                class="ml-2 px-2 py-1 text-xs font-medium bg-blue-100/10 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 rounded-full"
               >
                 {{ getRoleDisplayName(node.data.role) }}
               </span>
@@ -121,7 +121,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
               class="ml-2 flex items-center space-x-2"
             >
               <span
-                class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full"
+                class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/10 px-2 py-1 rounded-full"
               >
                 {{ getChildrenCount() }}
               </span>
@@ -202,10 +202,6 @@ import { HierarchyService } from '../../services/hierarchy.service';
         @apply border-l border-gray-200 dark:border-gray-700 ml-3;
       }
 
-      .node-hover {
-        @apply hover:bg-gray-50 dark:hover:bg-gray-750;
-      }
-
       .node-selected {
         @apply bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500;
       }
@@ -243,7 +239,7 @@ export class HierarchyNodeComponent {
   getNodeClasses(): string {
     const baseClasses =
       'flex items-center py-2 px-3 rounded-lg cursor-pointer transition-all duration-200 group relative';
-    const hoverClasses = 'hover:bg-gray-50 dark:hover:bg-gray-750';
+    const hoverClasses = 'hover:bg-gray-500/10 dark:hover:bg-gray-750/20';
     const selectedClasses = this.isSelected
       ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500'
       : '';

@@ -1,5 +1,3 @@
-// src/app/features/clients/components/client-details/client-details.component.ts
-
 import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -11,6 +9,7 @@ import {
 import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalRef } from '../../shared/models/modals/modal.model';
+import { ModalService } from '../../shared/services/modals/modal.service';
 import { Client, ClientStatus } from '../clients/models/clients.model';
 import { ClientAccountsComponent } from './components/client-accounts/client-accounts.component';
 import { ClientCallHistoryComponent } from './components/client-call-history/client-call-history.component';
@@ -27,6 +26,9 @@ import { ClientsService } from '../clients/services/clients.service';
 // Import the notes service and model
 import { NotesService } from './components/client-notes/services/notes.service';
 import { ClientNote } from './components/client-notes/models/note.model';
+// Import callback creation modal
+import { CallbackCreationModalComponent } from './components/client-callbacks/components/callback-creation-modal/callback-creation-modal.component';
+import { NoteCreationModalComponent } from './components/client-notes/components/note-creation-modal/note-creation-modal.component';
 
 export enum ClientDetailSection {
   Profile = 'profile',
@@ -117,6 +119,7 @@ export enum ClientDetailSection {
             <div class="flex items-center space-x-3">
               <button
                 type="button"
+                (click)="openCallbackModal()"
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
               >
                 <svg
@@ -136,6 +139,7 @@ export enum ClientDetailSection {
               </button>
               <button
                 type="button"
+                (click)="openNoteModal()"
                 class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
                 <svg
@@ -484,7 +488,9 @@ export enum ClientDetailSection {
                     <div class="flex items-start">
                       <span class="mr-2">•</span>
                       <div class="flex-1">
-                        <p class="break-words">{{ getPreviewText(note.note) }}</p>
+                        <p class="break-words">
+                          {{ getPreviewText(note.note) }}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -699,6 +705,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
+  private modalService = inject(ModalService);
   private _service = inject(ClientsService);
   private notesService = inject(NotesService);
 
@@ -770,6 +777,62 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
         this.loadingPinnedNotes = false;
       });
+  }
+
+  openCallbackModal(): void {
+    const modalRef = this.modalService.open(
+      CallbackCreationModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        client: this.client,
+      }
+    );
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.alertService.success('Callback scheduled successfully!');
+          // Optionally refresh any callback-related data or navigate to callbacks section
+          // this.setActiveSection(ClientDetailSection.Callbacks);
+        }
+      },
+      () => {
+        // User dismissed the modal
+      }
+    );
+  }
+
+  openNoteModal(): void {
+    const modalRef = this.modalService.open(
+      NoteCreationModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        clientId: this.client.id,
+      }
+    );
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.alertService.success('Note added successfully!');
+          // Refresh pinned notes to show the new note if it's pinned
+          this.loadPinnedNotes();
+          // Optionally navigate to notes section
+          // this.setActiveSection(ClientDetailSection.Notes);
+        }
+      },
+      () => {
+        // User dismissed the modal
+      }
+    );
   }
 
   setActiveSection(section: ClientDetailSection): void {
