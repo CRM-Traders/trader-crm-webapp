@@ -656,7 +656,7 @@ export enum ClientDetailSection {
           ></app-client-trading-activity>
           <app-client-accounts
             *ngSwitchCase="'accounts'"
-            [clientId]="this.clientId"
+            [clientId]="this.client.userId"
           ></app-client-accounts>
           <app-client-callbacks
             *ngSwitchCase="'callbacks'"
@@ -747,7 +747,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       // Load pinned notes after client is loaded
       this.loadPinnedNotes();
     });
-    console.log(clientId)
+    console.log(clientId);
   }
 
   ngOnDestroy(): void {
