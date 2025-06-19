@@ -4,8 +4,14 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 
 import { AlertService } from '../../../../core/services/alert.service';
-import { AccountStatus, AccountType, CreateTradingAccountRequest, TradingAccount } from '../models/trading-account.model';
+import {
+  AccountStatus,
+  AccountType,
+  CreateTradingAccountRequest,
+  TradingAccount,
+} from '../models/trading-account.model';
 import { HttpService } from '../../../../core/services/http.service';
+import { environment } from '../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -78,7 +84,7 @@ export class TradingAccountService {
   /**
    * Navigate to trading platform for a specific account
    */
-  navigateToTradingPlatform(account: TradingAccount): void {
+  navigateToTradingPlatform(key: string, account: TradingAccount): void {
     if (account.status !== AccountStatus.ACTIVE) {
       this.alertService.warning(
         'Account must be active to access trading platform.'
@@ -86,9 +92,7 @@ export class TradingAccountService {
       return;
     }
 
-    // In a real implementation, you would pass account details to the trading platform
-    const tradingUrl = this.buildTradingPlatformUrl(account);
-    window.open(tradingUrl, '_blank', 'noopener,noreferrer');
+    window.open(`${environment.traidingRedirectUrl}/${key}`);
   }
 
   /**
@@ -156,18 +160,9 @@ export class TradingAccountService {
     this.getUserAccounts().subscribe();
   }
 
-  /**
-   * Build trading platform URL with account context
-   */
-  private buildTradingPlatformUrl(account: TradingAccount): string {
-    // This would be configured based on your trading platform
-    const baseUrl = 'https://trading.yourdomain.com';
-    const params = new URLSearchParams({
-      accountId: account.id,
-      accountNumber: account.accountNumber,
-      accountType: account.accountType.toString(),
+  setTraidingAccount(id: string) {
+    return this.http.post('traiding/api/users/set-trading-account', {
+      tradingAccountId: id,
     });
-
-    return `${baseUrl}?${params.toString()}`;
   }
 }

@@ -14,7 +14,12 @@ import { AlertService } from '../../../core/services/alert.service';
 import { LocalizationService } from '../../../core/services/localization.service';
 
 import { TradingAccountService } from './services/trading-account.service';
-import { AccountStatus, AccountType, CreateTradingAccountRequest, TradingAccount } from './models/trading-account.model';
+import {
+  AccountStatus,
+  AccountType,
+  CreateTradingAccountRequest,
+  TradingAccount,
+} from './models/trading-account.model';
 
 @Component({
   selector: 'app-trading-accounts',
@@ -134,8 +139,13 @@ export class TradingAccountsComponent implements OnInit {
       return;
     }
 
-    // Navigate to trading platform or implement your trading platform logic
-    this.router.navigate(['/trading-platform', account.id]);
+    this.tradingAccountService
+      .setTraidingAccount(account.id)
+      .subscribe((result: any) => {
+        if (result) {
+          this.tradingAccountService.navigateToTradingPlatform(result, account);
+        }
+      });
   }
 
   /**
@@ -250,7 +260,10 @@ export class TradingAccountsComponent implements OnInit {
    * Get total balance across all accounts
    */
   getTotalBalance(): number {
-    return this.accounts().reduce((total, account) => total + account.initialBalance, 0);
+    return this.accounts().reduce(
+      (total, account) => total + account.initialBalance,
+      0
+    );
   }
 
   /**
@@ -275,8 +288,10 @@ export class TradingAccountsComponent implements OnInit {
     const field = this.createAccountForm.get(fieldName);
     if (field?.errors) {
       if (field.errors['required']) return `${fieldName} is required`;
-      if (field.errors['minlength']) return `${fieldName} must be at least 3 characters`;
-      if (field.errors['maxlength']) return `${fieldName} must be no more than 50 characters`;
+      if (field.errors['minlength'])
+        return `${fieldName} must be at least 3 characters`;
+      if (field.errors['maxlength'])
+        return `${fieldName} must be no more than 50 characters`;
     }
     return '';
   }
