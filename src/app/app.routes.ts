@@ -103,7 +103,14 @@ export const routes: Routes = [
           import(
             './features/affiliate-portal/clients/affiliate-clients/affiliate-clients.component'
           ).then((m) => m.AffiliateClientsComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SuperAdmin,
+            UserRole.Affiliate,
+            UserRole.AffiliateManager,
+          ]),
+        ],
       },
       {
         path: 'affiliates',
@@ -159,7 +166,10 @@ export const routes: Routes = [
           import(
             './features/client-portal/client-kyc/client-kyc.component'
           ).then((m) => m.ClientKycComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([UserRole.SuperAdmin, UserRole.Client]),
+        ],
       },
       {
         path: 'traiding-accounts',
@@ -167,7 +177,10 @@ export const routes: Routes = [
           import(
             './features/client-portal/trading-accounts/trading-accounts.component'
           ).then((m) => m.TradingAccountsComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([UserRole.SuperAdmin, UserRole.Client]),
+        ],
       },
       {
         path: 'brands',
