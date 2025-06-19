@@ -33,4 +33,5 @@ export interface TradingAccount {
 
 export interface CreateTradingAccountRequest {
   displayName: string;
+  clientUserId: string;
 }

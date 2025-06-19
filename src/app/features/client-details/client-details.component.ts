@@ -644,43 +644,43 @@ export enum ClientDetailSection {
         <div [ngSwitch]="activeSection">
           <app-client-profile
             *ngSwitchCase="'profile'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-profile>
           <app-client-payments
             *ngSwitchCase="'payments'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-payments>
           <app-client-trading-activity
             *ngSwitchCase="'trading-activity'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-trading-activity>
           <app-client-accounts
             *ngSwitchCase="'accounts'"
-            [client]="client"
+            [clientId]="this.clientId"
           ></app-client-accounts>
           <app-client-callbacks
             *ngSwitchCase="'callbacks'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-callbacks>
           <app-client-files
             *ngSwitchCase="'files'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-files>
           <app-client-call-history
             *ngSwitchCase="'call-history'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-call-history>
           <app-client-notes
             *ngSwitchCase="'notes'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-notes>
           <app-client-feed
             *ngSwitchCase="'feed'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-feed>
           <app-client-referrals
             *ngSwitchCase="'referrals'"
-            [client]="client"
+            [client]="this.client"
           ></app-client-referrals>
         </div>
       </div>
@@ -714,7 +714,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   activeSection: ClientDetailSection = ClientDetailSection.Profile;
 
   client!: Client;
-
+  clientId!: string;
   // Pinned notes properties
   pinnedNotes: ClientNote[] = [];
   loadingPinnedNotes = false;
@@ -742,9 +742,12 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
     this._service.getClientById(clientId!).subscribe((result: Client) => {
       this.client = result;
+      this.clientId = result.id;
+      console.log('Client loaded:', this.client, result);
       // Load pinned notes after client is loaded
       this.loadPinnedNotes();
     });
+    console.log(clientId)
   }
 
   ngOnDestroy(): void {

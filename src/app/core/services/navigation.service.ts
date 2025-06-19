@@ -129,9 +129,9 @@ export class NavigationService {
       ],
     },
     {
-      label: 'Traiding Accounts',
+      label: 'Trading Accounts',
       icon: 'traders',
-      route: '/traiding-accounts',
+      route: '/trading-accounts',
       requiredRoles: [UserRole.SuperAdmin, UserRole.Client],
     },
     {

@@ -16,7 +16,7 @@ export class UnauthorizedComponent {
   private authService = inject(AuthService);
 
   navigateToDashboard(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/']);
   }
 
   logout(): void {

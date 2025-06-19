@@ -1,15 +1,10 @@
-// src/app/core/services/trading-account.service.ts
+// src/app/features/client-portal/trading-accounts/services/trading-account.service.ts
 
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, BehaviorSubject, tap, catchError, throwError } from 'rxjs';
-import {
-  TradingAccount,
-  CreateTradingAccountRequest,
-  TradingAccountStats,
-  AccountType,
-  AccountStatus,
-} from '../models/trading-account.model';
+import { Observable, tap, catchError, throwError } from 'rxjs';
+
 import { AlertService } from '../../../../core/services/alert.service';
+import { AccountStatus, AccountType, CreateTradingAccountRequest, TradingAccount } from '../models/trading-account.model';
 import { HttpService } from '../../../../core/services/http.service';
 
 @Injectable({
@@ -24,11 +19,9 @@ export class TradingAccountService {
   // Reactive state management
   private readonly _accounts = signal<TradingAccount[]>([]);
   private readonly _loading = signal<boolean>(false);
-  private readonly _stats = signal<TradingAccountStats | null>(null);
 
   readonly accounts = this._accounts.asReadonly();
   readonly loading = this._loading.asReadonly();
-  readonly stats = this._stats.asReadonly();
 
   /**
    * Get trading accounts for the current user
@@ -39,7 +32,6 @@ export class TradingAccountService {
     return this.http.get<TradingAccount[]>(`${this.baseEndpoint}/user`).pipe(
       tap((accounts) => {
         this._accounts.set(accounts);
-        this.calculateStats(accounts);
         this._loading.set(false);
       }),
       catchError((error) => {
@@ -64,11 +56,7 @@ export class TradingAccountService {
       tap((newAccount) => {
         const currentAccounts = this._accounts();
         this._accounts.set([...currentAccounts, newAccount]);
-        this.calculateStats(this._accounts());
         this._loading.set(false);
-        this.alertService.success(
-          `Trading account "${newAccount.displayName}" created successfully!`
-        );
       }),
       catchError((error) => {
         this._loading.set(false);
@@ -85,55 +73,6 @@ export class TradingAccountService {
    */
   getAccountById(id: string): Observable<TradingAccount> {
     return this.http.get<TradingAccount>(`${this.baseEndpoint}/${id}`);
-  }
-
-  /**
-   * Update a trading account
-   */
-  updateAccount(
-    id: string,
-    updates: Partial<TradingAccount>
-  ): Observable<TradingAccount> {
-    return this.http
-      .put<TradingAccount>(`${this.baseEndpoint}/${id}`, updates)
-      .pipe(
-        tap((updatedAccount) => {
-          const currentAccounts = this._accounts();
-          const updatedAccounts = currentAccounts.map((account) =>
-            account.id === id ? updatedAccount : account
-          );
-          this._accounts.set(updatedAccounts);
-          this.calculateStats(updatedAccounts);
-          this.alertService.success('Account updated successfully!');
-        }),
-        catchError((error) => {
-          this.alertService.error(
-            'Failed to update account. Please try again.'
-          );
-          return throwError(() => error);
-        })
-      );
-  }
-
-  /**
-   * Delete a trading account
-   */
-  deleteAccount(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseEndpoint}/${id}`).pipe(
-      tap(() => {
-        const currentAccounts = this._accounts();
-        const filteredAccounts = currentAccounts.filter(
-          (account) => account.id !== id
-        );
-        this._accounts.set(filteredAccounts);
-        this.calculateStats(filteredAccounts);
-        this.alertService.success('Account deleted successfully!');
-      }),
-      catchError((error) => {
-        this.alertService.error('Failed to delete account. Please try again.');
-        return throwError(() => error);
-      })
-    );
   }
 
   /**
@@ -191,10 +130,16 @@ export class TradingAccountService {
     }
   }
 
+  /**
+   * Check if account can trade
+   */
   canTrade(account: TradingAccount): boolean {
     return account.status === AccountStatus.ACTIVE;
   }
 
+  /**
+   * Format balance for display
+   */
   formatBalance(amount: number, currency: string = 'USD'): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -209,29 +154,6 @@ export class TradingAccountService {
    */
   refreshAccounts(): void {
     this.getUserAccounts().subscribe();
-  }
-
-  /**
-   * Calculate account statistics
-   */
-  private calculateStats(accounts: TradingAccount[]): void {
-    const activeAccounts = accounts.filter(
-      (acc) => acc.status === AccountStatus.ACTIVE
-    );
-    const totalBalance = accounts.reduce(
-      (sum, acc) => sum + (acc.currentBalance || acc.initialBalance),
-      0
-    );
-
-    const stats: TradingAccountStats = {
-      totalAccounts: accounts.length,
-      activeAccounts: activeAccounts.length,
-      totalBalance,
-      unrealizedPnL: 0, // This would come from trading data
-      realizedPnL: 0, // This would come from trading data
-    };
-
-    this._stats.set(stats);
   }
 
   /**

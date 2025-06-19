@@ -12,34 +12,26 @@ import {
 import { Router } from '@angular/router';
 import { AlertService } from '../../../core/services/alert.service';
 import { LocalizationService } from '../../../core/services/localization.service';
-import {
-  TradingAccount,
-  AccountStatus,
-  AccountType,
-  ACCOUNT_TYPE_CONFIG,
-  CreateTradingAccountRequest,
-} from './models/trading-account.model';
+
 import { TradingAccountService } from './services/trading-account.service';
+import { AccountStatus, AccountType, CreateTradingAccountRequest, TradingAccount } from './models/trading-account.model';
 
 @Component({
   selector: 'app-trading-accounts',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './trading-accounts.component.html',
-  styleUrl: './trading-accounts.component.scss',
 })
 export class TradingAccountsComponent implements OnInit {
-  tradingAccountService = inject(TradingAccountService);
+  private tradingAccountService = inject(TradingAccountService);
   private alertService = inject(AlertService);
   private localizationService = inject(LocalizationService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
 
   // Component state
-  readonly accounts = this.tradingAccountService.accounts;
-  readonly loading = this.tradingAccountService.loading;
-  readonly stats = this.tradingAccountService.stats;
-
+  readonly accounts = signal<TradingAccount[]>([]);
+  readonly loading = signal<boolean>(false);
   readonly showCreateForm = signal<boolean>(false);
   readonly selectedAccount = signal<TradingAccount | null>(null);
   readonly viewMode = signal<'grid' | 'list'>('grid');
@@ -58,11 +50,6 @@ export class TradingAccountsComponent implements OnInit {
 
   readonly hasAccounts = computed(() => this.accounts().length > 0);
 
-  // Constants for template
-  readonly AccountType = AccountType;
-  readonly AccountStatus = AccountStatus;
-  readonly ACCOUNT_TYPE_CONFIG = ACCOUNT_TYPE_CONFIG;
-
   constructor() {
     this.createAccountForm = this.fb.group({
       displayName: [
@@ -72,14 +59,6 @@ export class TradingAccountsComponent implements OnInit {
           Validators.minLength(3),
           Validators.maxLength(50),
         ],
-      ],
-      accountType: [AccountType.DEMO, [Validators.required]],
-      initialBalance: [10000, [Validators.required, Validators.min(1)]],
-      enableSpotTrading: [true],
-      enableFuturesTrading: [false],
-      maxLeverage: [
-        1,
-        [Validators.required, Validators.min(1), Validators.max(100)],
       ],
     });
   }
@@ -92,25 +71,18 @@ export class TradingAccountsComponent implements OnInit {
    * Load user's trading accounts
    */
   loadAccounts(): void {
+    this.loading.set(true);
     this.tradingAccountService.getUserAccounts().subscribe({
-      error: () => {
-        // Error handling is done in the service
+      next: (accounts) => {
+        this.accounts.set(accounts);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading accounts:', error);
+        this.alertService.error('Failed to load trading accounts');
+        this.loading.set(false);
       },
     });
-  }
-
-  /**
-   * Open trading platform for account
-   */
-  openTradingPlatform(account: TradingAccount): void {
-    if (!this.tradingAccountService.canTrade(account)) {
-      this.alertService.warning(
-        'Account must be active to access trading platform.'
-      );
-      return;
-    }
-
-    this.tradingAccountService.navigateToTradingPlatform(account);
   }
 
   /**
@@ -120,22 +92,22 @@ export class TradingAccountsComponent implements OnInit {
     if (this.createAccountForm.valid) {
       const formValue = this.createAccountForm.value;
       const request: CreateTradingAccountRequest = {
-        userId: '', // This would be set by the backend based on auth token
         displayName: formValue.displayName,
-        accountType: formValue.accountType,
-        initialBalance: formValue.initialBalance,
-        enableSpotTrading: formValue.enableSpotTrading,
-        enableFuturesTrading: formValue.enableFuturesTrading,
-        maxLeverage: formValue.maxLeverage,
       };
 
+      this.loading.set(true);
       this.tradingAccountService.createAccount(request).subscribe({
         next: () => {
           this.showCreateForm.set(false);
           this.resetForm();
+          this.loadAccounts(); // Reload accounts
+          this.alertService.success('Trading account created successfully');
+          this.loading.set(false);
         },
-        error: () => {
-          // Error handling is done in the service
+        error: (error) => {
+          console.error('Error creating account:', error);
+          this.alertService.error('Failed to create trading account');
+          this.loading.set(false);
         },
       });
     } else {
@@ -152,27 +124,91 @@ export class TradingAccountsComponent implements OnInit {
   }
 
   /**
+   * Open trading platform for account
+   */
+  openTradingPlatform(account: TradingAccount): void {
+    if (!this.canTrade(account)) {
+      this.alertService.warning(
+        'Account must be active to access trading platform.'
+      );
+      return;
+    }
+
+    // Navigate to trading platform or implement your trading platform logic
+    this.router.navigate(['/trading-platform', account.id]);
+  }
+
+  /**
+   * Check if account can trade
+   */
+  canTrade(account: TradingAccount): boolean {
+    return account.status === AccountStatus.ACTIVE;
+  }
+
+  /**
    * Get account type display name
    */
   getAccountTypeName(type: AccountType): string {
-    return this.tradingAccountService.getAccountTypeInfo(type);
+    switch (type) {
+      case AccountType.DEMO:
+        return 'Demo Account';
+      case AccountType.REAL:
+        return 'Live Account';
+      case AccountType.PAPER:
+        return 'Paper Trading';
+      default:
+        return 'Unknown';
+    }
   }
 
   /**
-   * Get account status information
+   * Get account type CSS classes
    */
-  getAccountStatusInfo(status: AccountStatus): {
-    label: string;
-    color: string;
-  } {
-    return this.tradingAccountService.getAccountStatusInfo(status);
+  getAccountTypeClasses(type: AccountType): string {
+    switch (type) {
+      case AccountType.DEMO:
+        return 'bg-blue-100 text-blue-800';
+      case AccountType.REAL:
+        return 'bg-green-100 text-green-800';
+      case AccountType.PAPER:
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   }
 
   /**
-   * Format balance for display
+   * Get account status CSS classes
    */
-  formatBalance(amount: number): string {
-    return this.tradingAccountService.formatBalance(amount);
+  getAccountStatusClasses(status: AccountStatus): string {
+    switch (status) {
+      case AccountStatus.ACTIVE:
+        return 'text-green-600';
+      case AccountStatus.PENDING:
+        return 'text-yellow-600';
+      case AccountStatus.SUSPENDED:
+      case AccountStatus.CLOSED:
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
+    }
+  }
+
+  /**
+   * Get status dot CSS classes
+   */
+  getStatusDotClasses(status: AccountStatus): string {
+    switch (status) {
+      case AccountStatus.ACTIVE:
+        return 'bg-green-600';
+      case AccountStatus.PENDING:
+        return 'bg-yellow-600';
+      case AccountStatus.SUSPENDED:
+      case AccountStatus.CLOSED:
+        return 'bg-red-600';
+      default:
+        return 'bg-gray-600';
+    }
   }
 
   /**
@@ -207,14 +243,14 @@ export class TradingAccountsComponent implements OnInit {
    * Refresh accounts data
    */
   refreshAccounts(): void {
-    this.tradingAccountService.refreshAccounts();
+    this.loadAccounts();
   }
 
   /**
-   * Navigate to KYC verification
+   * Get total balance across all accounts
    */
-  navigateToKYC(): void {
-    this.router.navigate(['/kyc-verification']);
+  getTotalBalance(): number {
+    return this.accounts().reduce((total, account) => total + account.initialBalance, 0);
   }
 
   /**
@@ -239,12 +275,8 @@ export class TradingAccountsComponent implements OnInit {
     const field = this.createAccountForm.get(fieldName);
     if (field?.errors) {
       if (field.errors['required']) return `${fieldName} is required`;
-      if (field.errors['minlength']) return `${fieldName} is too short`;
-      if (field.errors['maxlength']) return `${fieldName} is too long`;
-      if (field.errors['min'])
-        return `${fieldName} must be greater than ${field.errors['min'].min}`;
-      if (field.errors['max'])
-        return `${fieldName} must be less than ${field.errors['max'].max}`;
+      if (field.errors['minlength']) return `${fieldName} must be at least 3 characters`;
+      if (field.errors['maxlength']) return `${fieldName} must be no more than 50 characters`;
     }
     return '';
   }
@@ -255,11 +287,6 @@ export class TradingAccountsComponent implements OnInit {
   private resetForm(): void {
     this.createAccountForm.reset({
       displayName: '',
-      accountType: AccountType.DEMO,
-      initialBalance: 10000,
-      enableSpotTrading: true,
-      enableFuturesTrading: false,
-      maxLeverage: 1,
     });
   }
 

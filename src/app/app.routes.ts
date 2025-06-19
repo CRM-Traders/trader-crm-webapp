@@ -13,6 +13,14 @@ export const routes: Routes = [
     canActivate: [publicGuard],
   },
   {
+    path: 'auth/confirm',
+    loadComponent: () =>
+      import('./features/auth/confirm-auth/confirm-auth.component').then(
+        (m) => m.ConfirmAuthComponent
+      ),
+    canActivate: [publicGuard],
+  },
+  {
     path: 'auth/unauthorized',
     loadComponent: () =>
       import('./features/auth/unauthorized/unauthorized.component').then(
@@ -172,7 +180,7 @@ export const routes: Routes = [
         ],
       },
       {
-        path: 'traiding-accounts',
+        path: 'trading-accounts',
         loadComponent: () =>
           import(
             './features/client-portal/trading-accounts/trading-accounts.component'
