@@ -36,10 +36,12 @@ export interface EmployeeSearchParams {
 })
 export class EmployeeApiService {
   private httpService = inject(HttpService);
-  private readonly baseUrl = 'identity/api/employees';
+  private readonly baseUrl = 'identity/api/workers';
 
   getAllEmployees(): Observable<Employee[]> {
-    return this.httpService.get<Employee[]>(`${this.baseUrl}`);
+    return this.httpService.get<Employee[]>(
+      `${this.baseUrl}/get-employees?roles=27&roles=22`
+    );
   }
 
   getEmployeeById(employeeId: string): Observable<Employee> {
