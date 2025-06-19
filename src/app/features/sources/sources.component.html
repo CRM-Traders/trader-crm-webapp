@@ -1,0 +1,262 @@
+<div class="transition-colors">
+  <!-- Header Section -->
+  <div class="mb-8">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Domain Sources
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+          Manage and monitor your active domain sources
+        </p>
+      </div>
+      <button
+        (click)="refreshDomains()"
+        [disabled]="loading()"
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        <svg
+          class="w-4 h-4 mr-2"
+          [class.animate-spin]="loading()"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="flex justify-center items-center py-12">
+    <div
+      class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"
+    ></div>
+    <span class="ml-3 text-gray-600 dark:text-gray-400"
+      >Loading domains...</span
+    >
+  </div>
+
+  <!-- Error State -->
+  <div
+    *ngIf="error() && !loading()"
+    class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
+  >
+    <div class="flex items-center">
+      <svg
+        class="w-5 h-5 text-red-500 mr-3"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      <div>
+        <p class="text-red-800 dark:text-red-200 font-medium">{{ error() }}</p>
+        <button
+          (click)="refreshDomains()"
+          class="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 underline"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Domains Grid -->
+  <div
+    *ngIf="!loading() && !error() && domains().length > 0"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+  >
+    <div
+      *ngFor="let domain of domains(); trackBy: trackByDomain"
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 group"
+    >
+      <!-- Domain Header -->
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center"
+          >
+            <svg
+              class="w-5 h-5 text-blue-600 dark:text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3
+              class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate"
+            >
+              {{ getDomainName(domain) }}
+            </h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              Active Source
+            </p>
+          </div>
+        </div>
+
+        <!-- Status Indicator -->
+        <div class="flex items-center">
+          <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span
+            class="ml-2 text-xs text-green-600 dark:text-green-400 font-medium"
+            >Online</span
+          >
+        </div>
+      </div>
+
+      <!-- Domain URL -->
+      <div class="mb-4">
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3 border">
+          <code class="text-sm text-gray-800 dark:text-gray-200 break-all">{{
+            domain
+          }}</code>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-2">
+        <button
+          (click)="openDomain(domain)"
+          class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+        >
+          <svg
+            class="w-4 h-4 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
+          </svg>
+          Visit
+        </button>
+        <button
+          (click)="copyToClipboard(domain)"
+          class="flex-1 inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+        >
+          <svg
+            class="w-4 h-4 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+            />
+          </svg>
+          Copy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="!loading() && !error() && domains().length === 0"
+    class="text-center py-12"
+  >
+    <div
+      class="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center"
+    >
+      <svg
+        class="w-10 h-10 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"
+        />
+      </svg>
+    </div>
+    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+      No domains found
+    </h3>
+    <p class="text-gray-500 dark:text-gray-400 mb-4">
+      There are no domain sources available at the moment.
+    </p>
+    <button
+      (click)="refreshDomains()"
+      class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+    >
+      <svg
+        class="w-4 h-4 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+        />
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Summary Stats -->
+  <div
+    *ngIf="!loading() && !error() && domains().length > 0"
+    class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="text-center">
+        <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+          {{ domains().length }}
+        </div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+          Total Domains
+        </div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+          {{ domains().length }}
+        </div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+          Active Sources
+        </div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+          {{ getUniqueSubdomains() }}
+        </div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">
+          Unique Subdomains
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

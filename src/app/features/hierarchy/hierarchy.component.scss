@@ -1,0 +1,313 @@
+/* src/app/features/hierarchy/hierarchy.component.scss */
+
+.hierarchy-container {
+  @apply min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors;
+}
+
+.hierarchy-header {
+  @apply mb-8;
+}
+
+.hierarchy-title {
+  @apply text-2xl font-bold text-gray-900 dark:text-gray-100;
+}
+
+.hierarchy-subtitle {
+  @apply text-sm text-gray-600 dark:text-gray-400 mt-1;
+}
+
+.hierarchy-actions {
+  @apply flex items-center gap-3;
+}
+
+.action-button {
+  @apply px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors;
+}
+
+.action-button-secondary {
+  @apply text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-blue-500;
+}
+
+.action-button-primary {
+  @apply text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 focus:ring-blue-500;
+}
+
+.search-container {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
+}
+
+.search-input {
+  @apply block w-full !pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors;
+}
+
+.search-results {
+  @apply space-y-2 max-h-40 overflow-y-auto;
+}
+
+.search-result-item {
+  @apply p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors;
+}
+
+.stats-grid {
+  @apply grid grid-cols-1 md:grid-cols-4 gap-4;
+}
+
+.stat-card {
+  @apply text-center p-4 rounded-lg;
+}
+
+.stat-card-blue {
+  @apply bg-blue-50 dark:bg-blue-900/20;
+}
+
+.stat-card-green {
+  @apply bg-green-50 dark:bg-green-900/20;
+}
+
+.stat-card-purple {
+  @apply bg-purple-50 dark:bg-purple-900/20;
+}
+
+.stat-card-orange {
+  @apply bg-orange-50 dark:bg-orange-900/20;
+}
+
+.stat-value {
+  @apply text-2xl font-bold;
+}
+
+.stat-value-blue {
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.stat-value-green {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.stat-value-purple {
+  @apply text-purple-600 dark:text-purple-400;
+}
+
+.stat-value-orange {
+  @apply text-orange-600 dark:text-orange-400;
+}
+
+.stat-label {
+  @apply text-sm text-gray-600 dark:text-gray-400;
+}
+
+.tree-container {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
+}
+
+.loading-state {
+  @apply text-center py-12;
+}
+
+.loading-spinner {
+  @apply inline-flex items-center;
+}
+
+.empty-state {
+  @apply text-center py-12;
+}
+
+.empty-state-icon {
+  @apply mx-auto h-12 w-12 text-gray-400;
+}
+
+.empty-state-title {
+  @apply mt-2 text-sm font-medium text-gray-900 dark:text-gray-100;
+}
+
+.empty-state-description {
+  @apply mt-1 text-sm text-gray-500 dark:text-gray-400;
+}
+
+.tree-nodes {
+  @apply space-y-1;
+}
+
+.node-container {
+  @apply transition-all duration-200;
+}
+
+.node-container.highlight {
+  @apply bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-400;
+  animation: highlight-pulse 2s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Hierarchy Node Specific Styles */
+.hierarchy-node {
+  @apply transition-all duration-200;
+}
+
+.node-header {
+  @apply flex items-center py-2 px-3 rounded-lg cursor-pointer transition-all duration-200 group relative;
+}
+
+.node-header:hover {
+  @apply bg-gray-50 dark:bg-gray-750;
+}
+
+.node-header.selected {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500;
+}
+
+.node-header.inactive {
+  @apply opacity-60;
+}
+
+.expand-button {
+  @apply p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors;
+}
+
+.expand-icon {
+  @apply w-4 h-4 transition-transform duration-200;
+}
+
+.expand-icon.expanded {
+  @apply rotate-90;
+}
+
+.node-icon {
+  @apply p-2 rounded-lg mr-3 flex-shrink-0;
+}
+
+.node-icon.brand {
+  @apply text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30;
+}
+
+.node-icon.desk {
+  @apply text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30;
+}
+
+.node-icon.department {
+  @apply text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30;
+}
+
+.node-icon.team {
+  @apply text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30;
+}
+
+.node-icon.member {
+  @apply text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30;
+}
+
+.node-content {
+  @apply flex-1 min-w-0;
+}
+
+.node-name {
+  @apply font-medium truncate;
+}
+
+.node-name.brand {
+  @apply text-gray-900 dark:text-gray-100 text-base;
+}
+
+.node-name.desk {
+  @apply text-gray-800 dark:text-gray-200 text-sm;
+}
+
+.node-name.department {
+  @apply text-gray-700 dark:text-gray-300 text-sm;
+}
+
+.node-name.team {
+  @apply text-gray-600 dark:text-gray-400 text-sm;
+}
+
+.node-name.member {
+  @apply text-gray-500 dark:text-gray-500 text-sm;
+}
+
+.status-badge {
+  @apply ml-2 px-2 py-1 text-xs font-medium rounded-full;
+}
+
+.status-badge.active {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+}
+
+.status-badge.inactive {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+}
+
+.role-badge {
+  @apply ml-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full;
+}
+
+.children-count {
+  @apply text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full;
+}
+
+.secondary-info {
+  @apply text-xs text-gray-500 dark:text-gray-400 mt-1 truncate;
+}
+
+.node-actions {
+  @apply ml-2 opacity-0 group-hover:opacity-100 transition-opacity;
+}
+
+.children-container {
+  @apply border-l border-gray-200 dark:border-gray-700 ml-3 transition-all duration-300 ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hierarchy-header {
+    @apply mb-6;
+  }
+
+  .hierarchy-actions {
+    @apply flex-col gap-2;
+  }
+
+  .stats-grid {
+    @apply grid-cols-2;
+  }
+
+  .node-header {
+    @apply py-3;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .node-container,
+  .hierarchy-node,
+  .expand-icon,
+  .children-container {
+    @apply transition-none;
+  }
+
+  .node-container.highlight {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .node-header {
+    @apply border border-gray-400;
+  }
+
+  .node-header:hover {
+    @apply border-gray-600;
+  }
+
+  .node-header.selected {
+    @apply border-blue-600 border-2;
+  }
+}

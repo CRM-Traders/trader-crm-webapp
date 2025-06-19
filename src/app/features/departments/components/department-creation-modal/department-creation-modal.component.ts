@@ -64,48 +64,6 @@ interface DeskDropdownResponse {
       <!-- Modal Body -->
       <div class="px-6 py-6">
         <form [formGroup]="departmentForm" class="space-y-6">
-          <!-- Department Name -->
-          <div>
-            <label
-              for="name"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Department Name <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              formControlName="name"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              [class.border-red-500]="
-                departmentForm.get('name')?.invalid &&
-                departmentForm.get('name')?.touched
-              "
-              [class.focus:ring-red-500]="
-                departmentForm.get('name')?.invalid &&
-                departmentForm.get('name')?.touched
-              "
-              placeholder="Enter department name"
-            />
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                departmentForm.get('name')?.invalid &&
-                departmentForm.get('name')?.touched
-              "
-            >
-              <span *ngIf="departmentForm.get('name')?.errors?.['required']">
-                Department name is required
-              </span>
-              <span *ngIf="departmentForm.get('name')?.errors?.['minlength']">
-                Department name must be at least 2 characters long
-              </span>
-              <span *ngIf="departmentForm.get('name')?.errors?.['maxlength']">
-                Department name cannot exceed 100 characters
-              </span>
-            </p>
-          </div>
-
           <!-- Desk Selection -->
           <div class="relative">
             <label
@@ -145,7 +103,7 @@ interface DeskDropdownResponse {
             <!-- Dropdown Panel -->
             <div
               *ngIf="deskDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+              class="absolute !z-[99] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
             >
               <!-- Search Input -->
               <div class="p-3 border-b border-gray-200 dark:border-gray-700">
@@ -166,7 +124,7 @@ interface DeskDropdownResponse {
               >
                 <div
                   *ngFor="let desk of availableDesks"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  class="px-3 py-2 hover:bg-gray-100/30 dark:hover:bg-gray-700/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                   (click)="selectDesk(desk)"
                 >
                   <div class="flex flex-col">
@@ -224,6 +182,48 @@ interface DeskDropdownResponse {
             >
               <span *ngIf="departmentForm.get('deskId')?.errors?.['required']">
                 Desk selection is required
+              </span>
+            </p>
+          </div>
+
+          <!-- Department Name -->
+          <div>
+            <label
+              for="name"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Department Name <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              formControlName="name"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              [class.border-red-500]="
+                departmentForm.get('name')?.invalid &&
+                departmentForm.get('name')?.touched
+              "
+              [class.focus:ring-red-500]="
+                departmentForm.get('name')?.invalid &&
+                departmentForm.get('name')?.touched
+              "
+              placeholder="Enter department name"
+            />
+            <p
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+              *ngIf="
+                departmentForm.get('name')?.invalid &&
+                departmentForm.get('name')?.touched
+              "
+            >
+              <span *ngIf="departmentForm.get('name')?.errors?.['required']">
+                Department name is required
+              </span>
+              <span *ngIf="departmentForm.get('name')?.errors?.['minlength']">
+                Department name must be at least 2 characters long
+              </span>
+              <span *ngIf="departmentForm.get('name')?.errors?.['maxlength']">
+                Department name cannot exceed 100 characters
               </span>
             </p>
           </div>

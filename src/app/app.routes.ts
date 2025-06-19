@@ -12,7 +12,6 @@ export const routes: Routes = [
       ),
     canActivate: [publicGuard],
   },
-
   {
     path: 'auth/unauthorized',
     loadComponent: () =>
@@ -64,6 +63,14 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
+        path: 'clients/:id',
+        loadComponent: () =>
+          import('./features/client-details/client-details.component').then(
+            (m) => m.ClientDetailsComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
+      {
         path: 'workers',
         loadComponent: () =>
           import('./features/workers/workers.component').then(
@@ -96,7 +103,14 @@ export const routes: Routes = [
           import(
             './features/affiliate-portal/clients/affiliate-clients/affiliate-clients.component'
           ).then((m) => m.AffiliateClientsComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserRole.SuperAdmin,
+            UserRole.Affiliate,
+            UserRole.AffiliateManager,
+          ]),
+        ],
       },
       {
         path: 'affiliates',
@@ -152,7 +166,10 @@ export const routes: Routes = [
           import(
             './features/client-portal/client-kyc/client-kyc.component'
           ).then((m) => m.ClientKycComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([UserRole.SuperAdmin, UserRole.Client]),
+        ],
       },
       {
         path: 'traiding-accounts',
@@ -160,7 +177,10 @@ export const routes: Routes = [
           import(
             './features/client-portal/trading-accounts/trading-accounts.component'
           ).then((m) => m.TradingAccountsComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([UserRole.SuperAdmin, UserRole.Client]),
+        ],
       },
       {
         path: 'brands',
@@ -191,6 +211,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/teams/teams.component').then(
             (m) => m.TeamsComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
+      {
+        path: 'hierarchy',
+        loadComponent: () =>
+          import('./features/hierarchy/hierarchy.component').then(
+            (m) => m.HierarchyComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
+      {
+        path: 'sources',
+        loadComponent: () =>
+          import('./features/sources/sources.component').then(
+            (m) => m.SourcesComponent
           ),
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },

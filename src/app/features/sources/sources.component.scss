@@ -1,0 +1,35 @@
+// Custom styles for Sources component
+// Most styling is handled by Tailwind CSS classes in the template
+
+.domain-card {
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.status-indicator {
+  &.online {
+    animation: pulse 2s infinite;
+  }
+}
+
+// Ensure code blocks break properly on small screens
+code {
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+// Custom animation for loading spinner
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Smooth transitions for better UX
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
