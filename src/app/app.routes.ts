@@ -13,7 +13,7 @@ export const routes: Routes = [
     canActivate: [publicGuard],
   },
   {
-    path: 'auth/confirm/:authKey',
+    path: 'auth/confirm/:id',
     loadComponent: () =>
       import('./features/auth/confirm-auth/confirm-auth.component').then(
         (m) => m.ConfirmAuthComponent

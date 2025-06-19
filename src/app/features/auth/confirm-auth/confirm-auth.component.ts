@@ -28,7 +28,7 @@ export class ConfirmAuthComponent implements OnInit {
   }
 
   private processAuthConfirmation(): void {
-    const authKey = this._route.snapshot.queryParams['authKey'];
+    const authKey = this._route.snapshot.paramMap.get('id');
 
     if (!authKey) {
       this.handleError('No authentication key provided.');
