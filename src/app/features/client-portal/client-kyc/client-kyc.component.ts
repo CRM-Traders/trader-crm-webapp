@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlertService } from '../../../core/services/alert.service';
 import { HttpService } from '../../../core/services/http.service';
-import { HttpHeaders } from '@angular/common/http';
 
 export interface KycProcessInitResponse {
   kycProcessId: string;
@@ -138,13 +137,9 @@ export class ClientKycComponent implements OnInit {
   private readonly _initializing = signal<boolean>(false);
   private readonly _kycStatus = signal<ClientKycStatus | null>(null);
   private readonly _activeProcess = signal<ActiveKycProcess | null>(null);
-  private readonly _selectedIdOption = signal<'national-id' | 'passport'>(
-    'national-id'
-  );
+  private readonly _selectedIdOption = signal<'national-id' | 'passport'>('national-id');
 
-  private readonly _uploads = signal<
-    Record<KycDocumentType, DocumentUploadState>
-  >({
+  private readonly _uploads = signal<Record<KycDocumentType, DocumentUploadState>>({
     [KycDocumentType.FacePhoto]: {
       type: KycDocumentType.FacePhoto,
       file: null,
@@ -200,7 +195,7 @@ export class ClientKycComponent implements OnInit {
   // Computed properties
   readonly currentUserName = computed(() => {
     const status = this._kycStatus();
-    return status ? `${status.firstName} ${status.lastName}` : '';
+    return status ? `${status.firstName} ${status.lastName}`.trim() : '';
   });
 
   readonly isKycCompleted = computed(() => {
@@ -229,7 +224,7 @@ export class ClientKycComponent implements OnInit {
 
   readonly uploadProgress = computed(() => {
     const uploads = this._uploads();
-    const requiredUploads = this._selectedIdOption() === 'national-id' ? 3 : 2; // FacePhoto + (2 ID sides OR passport)
+    const requiredUploads = this._selectedIdOption() === 'national-id' ? 3 : 2;
 
     let completed = 0;
     if (uploads[KycDocumentType.FacePhoto].uploaded) completed++;
@@ -257,19 +252,15 @@ export class ClientKycComponent implements OnInit {
     this._initializing.set(true);
 
     try {
-      // Start or get existing KYC process
       const processResponse = await this.httpService
         .post<KycProcessInitResponse>('identity/api/kyc/process', {})
         .toPromise();
 
       if (processResponse) {
-        // Fetch current status
         await this.loadKycStatus();
       }
     } catch (error) {
-      this.alertService.error(
-        'Failed to initialize KYC process. Please try again.'
-      );
+      this.alertService.error('Failed to initialize KYC process. Please try again.');
     } finally {
       this._initializing.set(false);
     }
@@ -286,24 +277,16 @@ export class ClientKycComponent implements OnInit {
       if (statusResponse) {
         this._kycStatus.set(statusResponse);
         this._activeProcess.set(statusResponse.activeProcess);
-
-        // Update upload states based on existing documents
-        this.updateUploadStatesFromDocuments(
-          statusResponse.activeProcess?.documents || []
-        );
+        this.updateUploadStatesFromDocuments(statusResponse.activeProcess?.documents || []);
       }
     } catch (error) {
-      this.alertService.error(
-        'Failed to load KYC status. Please refresh the page.'
-      );
+      this.alertService.error('Failed to load KYC status. Please refresh the page.');
     } finally {
       this._loading.set(false);
     }
   }
 
-  private updateUploadStatesFromDocuments(
-    documents: ClientKycDocument[]
-  ): void {
+  private updateUploadStatesFromDocuments(documents: ClientKycDocument[]): void {
     const currentUploads = { ...this._uploads() };
 
     documents.forEach((doc) => {
@@ -321,6 +304,44 @@ export class ClientKycComponent implements OnInit {
 
   onIdOptionChange(option: 'national-id' | 'passport'): void {
     this._selectedIdOption.set(option);
+
+    // Clear uploads for the non-selected option to prevent confusion
+    const currentUploads = { ...this._uploads() };
+
+    if (option === 'national-id') {
+      // Clear passport upload if switching to national ID
+      if (!currentUploads[KycDocumentType.Passport].uploaded) {
+        currentUploads[KycDocumentType.Passport] = {
+          type: KycDocumentType.Passport,
+          file: null,
+          uploading: false,
+          uploaded: false,
+          error: null,
+        };
+      }
+    } else {
+      // Clear national ID uploads if switching to passport
+      if (!currentUploads[KycDocumentType.FrontNationalId].uploaded) {
+        currentUploads[KycDocumentType.FrontNationalId] = {
+          type: KycDocumentType.FrontNationalId,
+          file: null,
+          uploading: false,
+          uploaded: false,
+          error: null,
+        };
+      }
+      if (!currentUploads[KycDocumentType.BackNationalId].uploaded) {
+        currentUploads[KycDocumentType.BackNationalId] = {
+          type: KycDocumentType.BackNationalId,
+          file: null,
+          uploading: false,
+          uploaded: false,
+          error: null,
+        };
+      }
+    }
+
+    this._uploads.set(currentUploads);
   }
 
   onFileSelected(event: Event, documentType: KycDocumentType): void {
@@ -329,37 +350,29 @@ export class ClientKycComponent implements OnInit {
 
     if (!file) return;
 
-    // Validate file
     if (!this.validateFile(file, documentType)) {
       input.value = '';
       return;
     }
 
-    // Update upload state
     const currentUploads = { ...this._uploads() };
     currentUploads[documentType] = {
       ...currentUploads[documentType],
       file: file,
       error: null,
+      uploaded: false, // Reset uploaded state when new file is selected
     };
     this._uploads.set(currentUploads);
   }
 
   private validateFile(file: File, documentType: KycDocumentType): boolean {
-    // Check file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       this.alertService.error('File size must be less than 10MB');
       return false;
     }
 
-    // Check file type
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg',
-      'image/png',
-      'application/pdf',
-    ];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
       this.alertService.error('Only JPEG, PNG, and PDF files are allowed');
       return false;
@@ -375,7 +388,6 @@ export class ClientKycComponent implements OnInit {
       return;
     }
 
-    // Update upload state
     const currentUploads = { ...this._uploads() };
     currentUploads[documentType] = {
       ...currentUploads[documentType],
@@ -385,37 +397,27 @@ export class ClientKycComponent implements OnInit {
     this._uploads.set(currentUploads);
 
     try {
-      // Convert file to base64
-
       const fileTypeString = this.mapDocumentTypeToFileType(documentType);
-
       const formData = new FormData();
       formData.append('KycProcessIdOrToken', this._activeProcess()!.id);
       formData.append('FileType', fileTypeString);
       formData.append('File', uploadState.file);
 
       const result = await this.httpService
-        .postForm<KycUploadResponse>(
-          'identity/api/kyc/upload',
-          formData,
-          undefined
-        )
+        .postForm<KycUploadResponse>('identity/api/kyc/upload', formData, undefined)
         .toPromise();
+
       if (result) {
-        // Update upload state
         currentUploads[documentType] = {
           ...currentUploads[documentType],
           uploading: false,
           uploaded: true,
           documentId: result.documentId,
+          file: null, // Clear file after successful upload
         };
         this._uploads.set(currentUploads);
 
-        this.alertService.success(
-          `${this.getDocumentTypeLabel(documentType)} uploaded successfully`
-        );
-
-        // Reload status to get updated information
+        this.alertService.success(`${this.getDocumentTypeLabel(documentType)} uploaded successfully`);
         await this.loadKycStatus();
       }
     } catch (error) {
@@ -426,47 +428,19 @@ export class ClientKycComponent implements OnInit {
       };
       this._uploads.set(currentUploads);
 
-      this.alertService.error(
-        `Failed to upload ${this.getDocumentTypeLabel(documentType)}`
-      );
+      this.alertService.error(`Failed to upload ${this.getDocumentTypeLabel(documentType)}`);
     }
-  }
-
-  private convertFileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = () => {
-        const result = reader.result as string;
-        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64Data = result.split(',')[1];
-        resolve(base64Data);
-      };
-
-      reader.onerror = () => {
-        reject(new Error('Failed to convert file to base64'));
-      };
-
-      reader.readAsDataURL(file);
-    });
   }
 
   private mapDocumentTypeToFileType(documentType: KycDocumentType): string {
     switch (documentType) {
-      case KycDocumentType.FacePhoto:
-        return '4';
-      case KycDocumentType.FrontNationalId:
-        return '1';
-      case KycDocumentType.BackNationalId:
-        return '2';
-      case KycDocumentType.Passport:
-        return '3';
-      case KycDocumentType.ProofOfAddress:
-        return '5';
-      case KycDocumentType.Other:
-        return '99';
-      default:
-        return '99';
+      case KycDocumentType.FacePhoto: return '4';
+      case KycDocumentType.FrontNationalId: return '1';
+      case KycDocumentType.BackNationalId: return '2';
+      case KycDocumentType.Passport: return '3';
+      case KycDocumentType.ProofOfAddress: return '5';
+      case KycDocumentType.Other: return '99';
+      default: return '99';
     }
   }
 
@@ -480,88 +454,53 @@ export class ClientKycComponent implements OnInit {
       error: null,
     };
     this._uploads.set(currentUploads);
-
-    // Clear file input
-    const fileInput = document.querySelector(
-      `input[data-document-type="${documentType}"]`
-    ) as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
   }
 
   getDocumentTypeLabel(type: KycDocumentType): string {
     switch (type) {
-      case KycDocumentType.FrontNationalId:
-        return 'National ID (Front)';
-      case KycDocumentType.BackNationalId:
-        return 'National ID (Back)';
-      case KycDocumentType.Passport:
-        return 'Passport';
-      case KycDocumentType.FacePhoto:
-        return 'Selfie Photo';
-      case KycDocumentType.ProofOfAddress:
-        return 'Proof of Address';
-      case KycDocumentType.Other:
-        return 'Other Document';
-      default:
-        return 'Unknown';
+      case KycDocumentType.FrontNationalId: return 'National ID (Front)';
+      case KycDocumentType.BackNationalId: return 'National ID (Back)';
+      case KycDocumentType.Passport: return 'Passport';
+      case KycDocumentType.FacePhoto: return 'Selfie Photo';
+      case KycDocumentType.ProofOfAddress: return 'Proof of Address';
+      case KycDocumentType.Other: return 'Other Document';
+      default: return 'Unknown';
     }
   }
 
   getStatusLabel(status: KycStatus): string {
     switch (status) {
-      case KycStatus.NotStarted:
-        return 'Not Started';
-      case KycStatus.InProgress:
-        return 'In Progress';
-      case KycStatus.DocumentsUploaded:
-        return 'Documents Uploaded';
-      case KycStatus.UnderReview:
-        return 'Under Review';
-      case KycStatus.Verified:
-        return 'Verified';
-      case KycStatus.Rejected:
-        return 'Rejected';
-      default:
-        return 'Unknown';
+      case KycStatus.NotStarted: return 'Not Started';
+      case KycStatus.InProgress: return 'In Progress';
+      case KycStatus.DocumentsUploaded: return 'Documents Uploaded';
+      case KycStatus.UnderReview: return 'Under Review';
+      case KycStatus.Verified: return 'Verified';
+      case KycStatus.Rejected: return 'Rejected';
+      default: return 'Unknown';
     }
   }
 
   getStatusColor(status: KycStatus): string {
     switch (status) {
-      case KycStatus.NotStarted:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
-      case KycStatus.InProgress:
-        return 'bg-blue-100 text-blue-800 border-blue-300';
-      case KycStatus.DocumentsUploaded:
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
-      case KycStatus.UnderReview:
-        return 'bg-orange-100 text-orange-800 border-orange-300';
-      case KycStatus.Verified:
-        return 'bg-green-100 text-green-800 border-green-300';
-      case KycStatus.Rejected:
-        return 'bg-red-100 text-red-800 border-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-300';
+      case KycStatus.NotStarted: return 'bg-gray-100 text-gray-800';
+      case KycStatus.InProgress: return 'bg-blue-100 text-blue-800';
+      case KycStatus.DocumentsUploaded: return 'bg-yellow-100 text-yellow-800';
+      case KycStatus.UnderReview: return 'bg-orange-100 text-orange-800';
+      case KycStatus.Verified: return 'bg-green-100 text-green-800';
+      case KycStatus.Rejected: return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   }
 
   async submitForReview(): Promise<void> {
     if (!this.canSubmitForReview()) {
-      this.alertService.warning(
-        'Please upload all required documents before submitting for review'
-      );
+      this.alertService.warning('Please upload all required documents before submitting for review');
       return;
     }
 
     try {
       this._loading.set(true);
-
-      // Submit for review - this might be an endpoint to change status to UnderReview
-      // For now, we'll just reload the status
       await this.loadKycStatus();
-
       this.alertService.success('Documents submitted for review successfully');
     } catch (error) {
       this.alertService.error('Failed to submit documents for review');
@@ -587,7 +526,7 @@ export class ClientKycComponent implements OnInit {
     if (bytes === 0) return '0 Bytes';
 
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
