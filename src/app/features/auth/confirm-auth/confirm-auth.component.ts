@@ -41,7 +41,6 @@ export class ConfirmAuthComponent implements OnInit {
       .confirmAuth(authKey)
       .pipe(
         catchError((error) => {
-          console.error('Auth confirmation failed:', error);
           this.handleError(
             error.message || 'Authentication failed. Please try again.'
           );
@@ -78,9 +77,9 @@ export class ConfirmAuthComponent implements OnInit {
     this.statusMessage.set('Authentication failed');
 
     // Redirect to login page after a delay
-    setTimeout(() => {
-      this._router.navigate(['/auth/login']);
-    }, 3000);
+    // setTimeout(() => {
+    //   this._router.navigate(['/auth/login']);
+    // }, 3000);
   }
 
   // Method to manually redirect to login (for user action)
