@@ -10,7 +10,7 @@ import { ThemeToggleComponent } from '../../../shared/components/theme-toggle/th
   standalone: true,
   imports: [CommonModule, ThemeToggleComponent],
   templateUrl: './confirm-auth.component.html',
-  styleUrls: ['./confirm-auth.component.css'],
+  styleUrls: ['./confirm-auth.component.scss'],
 })
 export class ConfirmAuthComponent implements OnInit {
   private _authService = inject(AuthService);
