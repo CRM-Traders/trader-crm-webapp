@@ -1,8 +1,9 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import {
+  HttpClientModule,
   provideHttpClient,
   withFetch,
   withInterceptors,
@@ -18,5 +19,6 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       withInterceptors([securityHeadersInterceptor, authInterceptor])
     ),
+    importProvidersFrom(HttpClientModule),
   ],
 };
