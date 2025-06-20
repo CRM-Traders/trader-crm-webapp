@@ -1,0 +1,158 @@
+// wallet-transaction-modal.component.scss
+
+.modal-backdrop {
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal-content {
+  animation: slideIn 0.15s ease-out;
+  transform-origin: center;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// Quick amount buttons hover effects
+.quick-amount-btn {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Account info card
+.account-info-card {
+  transition: all 0.2s ease-in-out;
+  border-left: 4px solid transparent;
+
+  &.selected {
+    border-left-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+}
+
+// Form input focus styles
+.form-input {
+  transition: all 0.2s ease-in-out;
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+}
+
+// Amount input special styling
+.amount-input {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+
+  &::placeholder {
+    font-weight: normal;
+  }
+}
+
+// Currency symbol styling
+.currency-symbol {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+// Submit button loading state
+.submit-btn {
+  position: relative;
+  overflow: hidden;
+
+  &:disabled {
+    pointer-events: none;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// Balance warning animation
+.balance-warning {
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+
+  .quick-amounts-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .amount-input {
+    font-size: 1rem;
+  }
+}
+
+// Dark mode specific enhancements
+@media (prefers-color-scheme: dark) {
+  .account-info-card.selected {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+
+  .currency-symbol {
+    color: #9ca3af;
+  }
+}
+
+// Success state animation
+.success-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}

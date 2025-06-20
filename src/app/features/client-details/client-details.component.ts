@@ -29,6 +29,7 @@ import { ClientNote } from './components/client-notes/models/note.model';
 // Import callback creation modal
 import { CallbackCreationModalComponent } from './components/client-callbacks/components/callback-creation-modal/callback-creation-modal.component';
 import { NoteCreationModalComponent } from './components/client-notes/components/note-creation-modal/note-creation-modal.component';
+import { UsersService } from './services/user.service';
 
 export enum ClientDetailSection {
   Profile = 'profile',
@@ -286,11 +287,24 @@ export enum ClientDetailSection {
                 <div class="flex justify-between items-center">
                   <span class="text-gray-500 dark:text-gray-400">Phone:</span>
                   <div class="flex items-center">
-                    <span class="text-gray-900 dark:text-white mr-2">{{
-                      client.telephone || 'Not provided'
-                    }}</span>
-                    <button class="text-gray-400 hover:text-gray-600">
+                    <span class="text-gray-900 dark:text-white mr-2">
+                      <span *ngIf="phoneLoading" class="inline-flex items-center">
+                        <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"></div>
+                        Loading...
+                      </span>
+                      <span *ngIf="!phoneLoading">
+                        {{ showPhone ? (client.telephone || 'Not provided') : (phoneFetched ? maskPhone(client.telephone ?? undefined) : 'Hidden') }}
+                      </span>
+                    </span>
+                    <button
+                      class="text-gray-400 hover:text-gray-600 transition-colors"
+                      (click)="togglePhoneVisibility()"
+                      [disabled]="phoneLoading"
+                      [title]="showPhone ? 'Hide phone number' : 'Show phone number'"
+                    >
+                      <!-- Show eye icon when hidden, eye-off when visible -->
                       <svg
+                        *ngIf="!showPhone"
                         class="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
@@ -309,17 +323,44 @@ export enum ClientDetailSection {
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                         ></path>
                       </svg>
+                      <svg
+                        *ngIf="showPhone"
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+                        ></path>
+                      </svg>
                     </button>
                   </div>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-gray-500 dark:text-gray-400">Email:</span>
                   <div class="flex items-center">
-                    <span class="text-gray-900 dark:text-white mr-2">{{
-                      client.email
-                    }}</span>
-                    <button class="text-gray-400 hover:text-gray-600">
+                    <span class="text-gray-900 dark:text-white mr-2 break-all">
+                      <span *ngIf="emailLoading" class="inline-flex items-center">
+                        <div class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"></div>
+                        Loading...
+                      </span>
+                      <span *ngIf="!emailLoading">
+                        {{ showEmail ? client.email : (emailFetched ? maskEmail(client.email) : 'Hidden') }}
+                      </span>
+                    </span>
+                    <button
+                      class="text-gray-400 hover:text-gray-600 transition-colors"
+                      (click)="toggleEmailVisibility()"
+                      [disabled]="emailLoading"
+                      [title]="showEmail ? 'Hide email address' : 'Show email address'"
+                    >
+                      <!-- Show eye icon when hidden, eye-off when visible -->
                       <svg
+                        *ngIf="!showEmail"
                         class="w-4 h-4"
                         fill="none"
                         stroke="currentColor"
@@ -336,6 +377,20 @@ export enum ClientDetailSection {
                           stroke-linejoin="round"
                           stroke-width="2"
                           d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        ></path>
+                      </svg>
+                      <svg
+                        *ngIf="showEmail"
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
                         ></path>
                       </svg>
                     </button>
@@ -707,6 +762,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
   private _service = inject(ClientsService);
+  private _userService = inject(UsersService);
   private notesService = inject(NotesService);
 
   private destroy$ = new Subject<void>();
@@ -718,6 +774,14 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   // Pinned notes properties
   pinnedNotes: ClientNote[] = [];
   loadingPinnedNotes = false;
+
+  // Visibility properties for email and phone
+  showEmail = false;
+  showPhone = false;
+  emailLoading = false;
+  phoneLoading = false;
+  emailFetched = false;
+  phoneFetched = false;
 
   navigationSections = [
     { key: ClientDetailSection.Profile, label: 'Profile' },
@@ -742,12 +806,10 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
     this._service.getClientById(clientId!).subscribe((result: Client) => {
       this.client = result;
-      this.clientId = result.id;
       console.log('Client loaded:', this.client, result);
       // Load pinned notes after client is loaded
       this.loadPinnedNotes();
     });
-    console.log(clientId);
   }
 
   ngOnDestroy(): void {
@@ -780,6 +842,101 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
         this.loadingPinnedNotes = false;
       });
+  }
+
+  // Email visibility methods
+  toggleEmailVisibility(): void {
+    if (!this.showEmail && !this.emailFetched) {
+      // Fetch email when showing for the first time
+      this.emailLoading = true;
+      this._userService.getEmail(this.client.userId).subscribe(
+        (email) => {
+          this.client.email = email.email;
+          this.emailFetched = true;
+          this.emailLoading = false;
+          this.showEmail = true;
+          console.log('Client email loaded:', this.client.email);
+        },
+        (error) => {
+          console.error('Error loading client email:', error);
+          this.emailLoading = false;
+          // Still show the toggle even if fetch failed
+          this.showEmail = true;
+        }
+      );
+    } else {
+      this.showEmail = !this.showEmail;
+    }
+  }
+
+  maskEmail(email: string | undefined): string {
+    if (!email) return 'Not provided';
+    const parts = email.split('@');
+    if (parts.length !== 2) return '***@***.***';
+
+    const username = parts[0];
+    const domain = parts[1];
+
+    // Mask username (show first 2 chars if longer than 4, otherwise show 1 char)
+    const maskedUsername = username.length > 4
+      ? username.substring(0, 2) + '*'.repeat(username.length - 2)
+      : username.substring(0, 1) + '*'.repeat(username.length - 1);
+
+    // Mask domain
+    const domainParts = domain.split('.');
+    const maskedDomain = domainParts.map((part, index) =>
+      index === domainParts.length - 1 ? part : '*'.repeat(part.length)
+    ).join('.');
+
+    return `${maskedUsername}@${maskedDomain}`;
+  }
+
+  // Phone visibility methods
+  togglePhoneVisibility(): void {
+    if (!this.showPhone && !this.phoneFetched) {
+      // Fetch phone when showing for the first time
+      this.phoneLoading = true;
+      this._userService.getPhone(this.client.userId).subscribe(
+        (phone) => {
+          this.client.telephone = phone.phoneNumber;
+          this.phoneFetched = true;
+          this.phoneLoading = false;
+          this.showPhone = true;
+          console.log('Client phone loaded:', this.client.telephone);
+        },
+        (error) => {
+          console.error('Error loading client phone:', error);
+          this.phoneLoading = false;
+          // Still show the toggle even if fetch failed
+          this.showPhone = true;
+        }
+      );
+    } else {
+      this.showPhone = !this.showPhone;
+    }
+  }
+
+  maskPhone(phone: string | undefined): string {
+    if (!phone) return 'Not provided';
+
+    // Remove all non-digit characters to work with clean number
+    const cleanPhone = phone.replace(/\D/g, '');
+
+    if (cleanPhone.length < 4) {
+      return '*'.repeat(phone.length);
+    }
+
+    // Show last 4 digits, mask the rest
+    const lastFour = cleanPhone.slice(-4);
+    const maskedPart = '*'.repeat(cleanPhone.length - 4);
+
+    // Try to preserve original formatting if possible
+    if (phone.includes('-') || phone.includes(' ') || phone.includes('(')) {
+      // For formatted numbers, just replace digits with * except last 4
+      return phone.replace(/\d(?=.*\d{4})/g, '*');
+    }
+
+    return maskedPart + lastFour;
   }
 
   openCallbackModal(): void {

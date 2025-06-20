@@ -1,0 +1,168 @@
+
+<div *ngIf="isVisible" class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center" (click)="onModalClose()">
+  <div class="modal-content bg-white dark:bg-gray-800 rounded-lg w-full max-w-md mx-4 overflow-hidden" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+      <div>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+          {{ transactionType === 'deposit' ? 'Add Deposit' : 'Process Withdrawal' }}
+        </h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          {{ transactionType === 'deposit' ? 'Add funds to trading account' : 'Withdraw funds from trading account' }}
+        </p>
+      </div>
+      <button
+        type="button"
+        (click)="onModalClose()"
+        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingAccounts" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <span class="ml-2 text-gray-600 dark:text-gray-400">Loading accounts...</span>
+    </div>
+
+    <!-- Transaction Form -->
+    <div *ngIf="!loadingAccounts" class="p-6">
+      <form [formGroup]="transactionForm" (ngSubmit)="submitTransaction()">
+
+        <!-- Trading Account Selection -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Trading Account <span class="text-red-500">*</span>
+          </label>
+          <select
+            formControlName="tradingAccountId"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+          >
+            <option value="">Select Trading Account</option>
+            <option *ngFor="let account of tradingAccounts" [value]="account.id">
+              {{ account.accountNumber }} - {{ account.displayName }}
+            </option>
+          </select>
+          <div *ngIf="transactionForm.get('tradingAccountId')?.invalid && transactionForm.get('tradingAccountId')?.touched"
+               class="mt-1 text-sm text-red-600 dark:text-red-400">
+            Please select a trading account.
+          </div>
+        </div>
+
+        <!-- Currency -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Currency <span class="text-red-500">*</span>
+          </label>
+          <select
+            formControlName="currency"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+          >
+            <option value="">Select Currency</option>
+            <option *ngFor="let currency of supportedCurrencies" [value]="currency">
+              {{ currency }}
+            </option>
+          </select>
+          <div *ngIf="transactionForm.get('currency')?.invalid && transactionForm.get('currency')?.touched"
+               class="mt-1 text-sm text-red-600 dark:text-red-400">
+            Please select a currency.
+          </div>
+        </div>
+
+        <!-- Amount -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Amount <span class="text-red-500">*</span>
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span class="text-gray-500 dark:text-gray-400 sm:text-sm">{{ getCurrencySymbol() }}</span>
+            </div>
+            <input
+              type="number"
+              formControlName="amount"
+              step="0.01"
+              min="0.01"
+              class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              placeholder="0.00"
+            />
+          </div>
+
+          <!-- Validation Messages -->
+          <div *ngIf="transactionForm.get('amount')?.invalid && transactionForm.get('amount')?.touched"
+               class="mt-1 text-sm text-red-600 dark:text-red-400">
+            <div *ngIf="transactionForm.get('amount')?.errors?.['required']">
+              Amount is required.
+            </div>
+            <div *ngIf="transactionForm.get('amount')?.errors?.['min']">
+              Amount must be greater than 0.
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Amount Buttons -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Quick Amounts
+          </label>
+          <div class="grid grid-cols-4 gap-2">
+            <button
+              *ngFor="let amount of quickAmounts"
+              type="button"
+              (click)="setQuickAmount(amount)"
+              class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            >
+              {{ formatCurrency(amount) }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-3">
+          <button
+            type="button"
+            (click)="onModalClose()"
+            class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            [disabled]="transactionForm.invalid || loading"
+            class="px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            [ngClass]="{
+              'bg-green-600 hover:bg-green-700 focus:ring-green-500': transactionType === 'deposit',
+              'bg-red-600 hover:bg-red-700 focus:ring-red-500': transactionType === 'withdraw'
+            }"
+          >
+            <span *ngIf="loading" class="inline-flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Processing...
+            </span>
+            <span *ngIf="!loading">
+              {{ transactionType === 'deposit' ? 'Process Deposit' : 'Process Withdrawal' }}
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- No Accounts State -->
+    <div *ngIf="!loadingAccounts && tradingAccounts.length === 0" class="p-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No trading accounts</h3>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        This client has no trading accounts available for transactions.
+      </p>
+    </div>
+  </div>
+</div>
