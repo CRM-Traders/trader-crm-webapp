@@ -1,4 +1,4 @@
-// src/app/core/services/hierarchy.service.ts
+// src/app/features/hierarchy/services/hierarchy.service.ts
 
 import { Injectable, inject } from '@angular/core';
 import { Observable, BehaviorSubject, map } from 'rxjs';
@@ -44,8 +44,8 @@ export class HierarchyService {
   }
 
   private brandToNode(brand: HierarchyBrand, level: number): HierarchyNode {
-    const children = brand.desks.map((desk) =>
-      this.deskToNode(desk, level + 1)
+    const children = brand.offices.map((office) =>
+      this.officeToNode(office, level + 1)
     );
 
     return {
@@ -61,9 +61,27 @@ export class HierarchyService {
     };
   }
 
+  private officeToNode(office: any, level: number): HierarchyNode {
+    const children = office.desks.map((desk: any) =>
+      this.deskToNode(desk, level + 1)
+    );
+
+    return {
+      id: office.id,
+      name: office.name,
+      type: 'office',
+      isActive: office.isActive,
+      expanded: office.expanded || false,
+      level,
+      hasChildren: children.length > 0,
+      children,
+      data: { country: office.country },
+    };
+  }
+
   private deskToNode(desk: any, level: number): HierarchyNode {
-    const children = desk.departments.map((dept: any) =>
-      this.departmentToNode(dept, level + 1)
+    const children = desk.teams.map((team: any) =>
+      this.teamToNode(team, level + 1)
     );
 
     return {
@@ -76,23 +94,6 @@ export class HierarchyService {
       hasChildren: children.length > 0,
       children,
       data: { type: desk.type, language: desk.language },
-    };
-  }
-
-  private departmentToNode(department: any, level: number): HierarchyNode {
-    const children = department.teams.map((team: any) =>
-      this.teamToNode(team, level + 1)
-    );
-
-    return {
-      id: department.id,
-      name: department.name,
-      type: 'department',
-      isActive: department.isActive,
-      expanded: department.expanded || false,
-      level,
-      hasChildren: children.length > 0,
-      children,
     };
   }
 
@@ -205,7 +206,7 @@ export class HierarchyService {
           }
         }
 
-        if (node.type === 'brand' && node.data) {
+        if ((node.type === 'brand' || node.type === 'office') && node.data) {
           if (node.data.country?.toLowerCase().includes(query.toLowerCase())) {
             matches.push('country');
           }
@@ -240,8 +241,8 @@ export class HierarchyService {
   getNodeIcon(type: string): string {
     const icons: Record<string, string> = {
       brand: 'building-office',
+      office: 'building-office-2',
       desk: 'computer-desktop',
-      department: 'user-group',
       team: 'users',
       member: 'user',
     };

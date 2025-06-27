@@ -1,0 +1,457 @@
+// src/app/features/offices/offices.component.scss
+
+// Animation for side panel
+.side-panel-overlay {
+  z-index: 50; // High z-index to ensure it overlays everything
+  animation: slide-in 0.3s ease-out;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+
+  // Ensure proper scrolling on mobile
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+// Mobile overlay for backdrop
+.mobile-overlay {
+  z-index: 40; // Below the side panel but above the content
+}
+
+// Grid container responsive adjustments
+.grid-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+// Table wrapper to prevent overflow
+.table-wrapper {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+// Loading spinner animation
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Details panel spacing
+.details-section {
+  & > div {
+    padding-bottom: 1.25rem;
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+}
+
+// Office-specific styling
+.office-status-badge {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.office-card {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.office-country-badge {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.office-desks-badge {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.office-brand-badge {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Statistics cards enhancement
+.stats-card {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .stats-icon {
+    transition: all 0.3s ease;
+  }
+
+  &:hover .stats-icon {
+    transform: scale(1.1);
+  }
+}
+
+// Action buttons styling
+.action-button {
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// Modal enhancements
+.modal-header {
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.modal-content {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+// Form styling improvements
+.form-field {
+  transition: all 0.2s ease;
+
+  &:focus-within {
+    transform: translateY(-1px);
+  }
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+
+  .dark & {
+    color: #d1d5db;
+  }
+}
+
+// Grid customizations for offices
+.offices-grid {
+  .grid-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .grid-row {
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f8fafc;
+      transform: scale(1.005);
+    }
+  }
+
+  .office-name-cell {
+    font-weight: 600;
+    color: #1e40af;
+
+    &:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Badge styling for different desk counts
+.desks-count-badge {
+  &.has-desks {
+    background-color: #f3e8ff;
+    color: #7c3aed;
+  }
+
+  &.no-desks {
+    background-color: #f3f4f6;
+    color: #6b7280;
+  }
+}
+
+// Country badge styling
+.country-badge {
+  background-color: #dbeafe;
+  color: #1e40af;
+
+  svg {
+    opacity: 0.8;
+  }
+}
+
+// Brand badge styling
+.brand-badge {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .stats-card {
+    padding: 1rem;
+
+    .stats-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  .action-button {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .office-badges {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+// Dark mode enhancements
+.dark {
+  .office-card {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-color: #374151;
+  }
+
+  .stats-card {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-color: #374151;
+
+    &:hover {
+      border-color: #4b5563;
+    }
+  }
+
+  .offices-grid {
+    .grid-header {
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      border-color: #374151;
+    }
+
+    .grid-row:hover {
+      background-color: #1f2937;
+    }
+  }
+
+  .desks-count-badge {
+    &.has-desks {
+      background-color: #581c87;
+      color: #e9d5ff;
+    }
+
+    &.no-desks {
+      background-color: #374151;
+      color: #9ca3af;
+    }
+  }
+
+  .country-badge {
+    background-color: #1e3a8a;
+    color: #bfdbfe;
+  }
+
+  .brand-badge {
+    background-color: #78350f;
+    color: #fde68a;
+  }
+}
+
+// Custom dropdown styling
+.custom-dropdown {
+  position: relative;
+
+  .dropdown-button {
+    cursor: pointer;
+    position: relative;
+
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
+  }
+
+  .dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0.25rem;
+    z-index: 10;
+    max-height: 16rem;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dropdown-search {
+    position: sticky;
+    top: 0;
+    background-color: inherit;
+    padding: 0.75rem;
+    border-bottom: 1px solid;
+  }
+
+  .dropdown-list {
+    max-height: 12rem;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  }
+
+  .dropdown-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out;
+
+    &:hover {
+      background-color: #f3f4f6;
+
+      .dark & {
+        background-color: #374151;
+      }
+    }
+  }
+}
+
+// Delete modal warning styling
+.delete-warning {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  background-color: #fef3c7;
+  border-radius: 0.375rem;
+  color: #92400e;
+
+  svg {
+    flex-shrink: 0;
+    margin-right: 0.25rem;
+  }
+
+  .dark & {
+    background-color: #451a03;
+    color: #fbbf24;
+  }
+}
+
+// Empty state styling
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+
+  svg {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    color: #9ca3af;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+
+    .dark & {
+      color: #f3f4f6;
+    }
+  }
+
+  p {
+    color: #6b7280;
+
+    .dark & {
+      color: #9ca3af;
+    }
+  }
+}
+
+// Import/Export button states
+.import-export-buttons {
+  .import-button,
+  .export-button {
+    position: relative;
+    overflow: hidden;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &.loading {
+      &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        animation: loading-shimmer 1.5s infinite;
+      }
+    }
+  }
+}
+
+@keyframes loading-shimmer {
+  to {
+    left: 100%;
+  }
+}

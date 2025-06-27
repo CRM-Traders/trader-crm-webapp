@@ -14,6 +14,7 @@ import {
   TeamStatsMetaData,
   TeamDropdownResponse,
   TeamsListRequest,
+  DeskDropdownResponse,
 } from '../models/team.model';
 
 @Injectable({
@@ -52,10 +53,10 @@ export class TeamsService {
     );
   }
 
-  // Method to get departments dropdown for team creation/editing
-  getDepartmentsDropdown(request: any): Observable<any> {
-    return this.httpService.post<any>(
-      'identity/api/departments/dropdown',
+  // Method to get desks dropdown for team creation/editing
+  getDesksDropdown(request: any): Observable<DeskDropdownResponse> {
+    return this.httpService.post<DeskDropdownResponse>(
+      'identity/api/desks/dropdown',
       request
     );
   }

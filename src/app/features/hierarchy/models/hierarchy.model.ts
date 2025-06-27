@@ -1,4 +1,4 @@
-// src/app/core/models/hierarchy.model.ts
+// src/app/features/hierarchy/models/hierarchy.model.ts
 
 export interface HierarchyMember {
   userId: string;
@@ -16,21 +16,22 @@ export interface HierarchyTeam {
   expanded?: boolean;
 }
 
-export interface HierarchyDepartment {
-  id: string;
-  name: string;
-  isActive: boolean;
-  teams: HierarchyTeam[];
-  expanded?: boolean;
-}
-
 export interface HierarchyDesk {
   id: string;
   name: string;
   type: number;
   language: string | null;
   isActive: boolean;
-  departments: HierarchyDepartment[];
+  teams: HierarchyTeam[];
+  expanded?: boolean;
+}
+
+export interface HierarchyOffice {
+  id: string;
+  name: string;
+  country: string;
+  isActive: boolean;
+  desks: HierarchyDesk[];
   expanded?: boolean;
 }
 
@@ -39,7 +40,7 @@ export interface HierarchyBrand {
   name: string;
   country: string;
   isActive: boolean;
-  desks: HierarchyDesk[];
+  offices: HierarchyOffice[];
   expanded?: boolean;
 }
 
@@ -50,7 +51,7 @@ export interface HierarchyResponse {
 export interface HierarchyNode {
   id: string;
   name: string;
-  type: 'brand' | 'desk' | 'department' | 'team' | 'member';
+  type: 'brand' | 'office' | 'desk' | 'team' | 'member';
   isActive: boolean;
   expanded?: boolean;
   level: number;

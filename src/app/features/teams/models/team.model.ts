@@ -2,10 +2,10 @@ export interface Team {
   id: string;
   name: string;
   isActive: boolean;
-  departmentId: string;
-  departmentName: string;
   deskId: string;
   deskName: string;
+  officeId: string;
+  officeName: string;
   brandId: string;
   brandName: string;
   createdAt: Date;
@@ -16,14 +16,14 @@ export interface Team {
 
 export interface TeamCreateRequest {
   name: string;
-  departmentId: string;
+  deskId: string;
   isActive?: boolean;
 }
 
 export interface TeamUpdateRequest {
   id: string;
   name: string;
-  departmentId: string;
+  deskId: string;
   isActive: boolean;
 }
 
@@ -59,7 +59,7 @@ export interface TeamImportResponse {
 
 export interface TeamImportResult {
   name: string;
-  departmentName: string;
+  deskName: string;
   isActive: boolean;
   teamId: string;
 }
@@ -67,11 +67,27 @@ export interface TeamImportResult {
 export interface TeamDropdownItem {
   id: string;
   value: string;
-  departmentName: string;
+  deskName: string;
 }
 
 export interface TeamDropdownResponse {
   items: TeamDropdownItem[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface DeskDropdownItem {
+  id: string;
+  value: string;
+  officeName: string;
+  language: string | null;
+  type: number;
+}
+
+export interface DeskDropdownResponse {
+  items: DeskDropdownItem[];
   totalCount: number;
   pageIndex: number;
   pageSize: number;

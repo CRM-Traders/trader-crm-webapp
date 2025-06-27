@@ -54,14 +54,14 @@ export class TeamsComponent implements OnInit, OnDestroy {
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
-      field: 'departmentName',
-      header: 'Department',
+      field: 'deskName',
+      header: 'Desk',
       sortable: true,
       filterable: true,
     },
     {
-      field: 'deskName',
-      header: 'Desk',
+      field: 'officeName',
+      header: 'Office',
       sortable: true,
       filterable: true,
     },

@@ -9,64 +9,67 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
-import { DesksService } from './services/desks.service';
-import { Desk } from './models/desk.model';
+import { OfficesService } from './services/offices.service';
+import { Office } from './models/office.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
-import { LanguageService } from '../../core/services/language.service';
+import { CountryService } from '../../core/services/country.service';
 import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
-import { DeskCreationModalComponent } from './components/desk-creation-modal/desk-creation-modal.component';
-import { DeskDetailsModalComponent } from './components/desk-details-modal/desk-details-modal.component';
+import { OfficeCreationModalComponent } from './components/office-creation-modal/office-creation-modal.component';
+import { OfficeDetailsModalComponent } from './components/office-details-modal/office-details-modal.component';
 
 @Component({
-  selector: 'app-desks',
+  selector: 'app-offices',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
-  templateUrl: './desks.component.html',
-  styleUrls: ['./desks.component.scss'],
+  templateUrl: './officies.component.html',
+  styleUrls: ['./officies.component.scss'],
 })
-export class DesksComponent implements OnInit, OnDestroy {
-  private desksService = inject(DesksService);
+export class OfficesComponent implements OnInit, OnDestroy {
+  private officesService = inject(OfficesService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
-  private languageService = inject(LanguageService);
+  private countryService = inject(CountryService);
 
   private destroy$ = new Subject<void>();
-  gridId = 'desks-grid';
+  gridId = 'offices-grid';
 
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
-  @ViewChild('typeCell', { static: true })
-  typeCellTemplate!: TemplateRef<any>;
-  @ViewChild('languageCell', { static: true })
-  languageCellTemplate!: TemplateRef<any>;
+  @ViewChild('countryCell', { static: true })
+  countryCellTemplate!: TemplateRef<any>;
+  @ViewChild('desksCountCell', { static: true })
+  desksCountCellTemplate!: TemplateRef<any>;
 
   importLoading = false;
   showDeleteModal = false;
-  deskToDelete: Desk | null = null;
+  officeToDelete: Office | null = null;
   totalCount = 0;
   activeCount = 0;
-
-  private readonly deskTypes = [
-    { value: 0, label: 'Sales' },
-    { value: 1, label: 'Retention' },
-  ];
+  totalDesks = 0;
 
   gridColumns: GridColumn[] = [
     {
       field: 'name',
-      header: 'Desk Name',
+      header: 'Office Name',
       sortable: true,
       filterable: true,
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
-      field: 'officeName',
-      header: 'Office',
+      field: 'country',
+      header: 'Country',
+      sortable: true,
+      filterable: true,
+      cellTemplate: null, // Will be set in ngOnInit
+    },
+    {
+      field: 'brandName',
+      header: 'Brand',
       sortable: true,
       filterable: true,
     },
@@ -77,25 +80,11 @@ export class DesksComponent implements OnInit, OnDestroy {
       filterable: true,
     },
     {
-      field: 'type',
-      header: 'Type',
+      field: 'desksCount',
+      header: 'Desks',
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
-    },
-    {
-      field: 'language',
-      header: 'Language',
-      sortable: true,
-      filterable: true,
-      cellTemplate: null, // Will be set in ngOnInit
-    },
-    {
-      field: 'teamsCount',
-      header: 'Teams',
-      sortable: true,
-      filterable: true,
-      selector: (row: Desk) => row.teamsCount || 0,
     },
     {
       field: 'createdAt',
@@ -110,7 +99,7 @@ export class DesksComponent implements OnInit, OnDestroy {
       header: 'Created By',
       sortable: true,
       filterable: true,
-      selector: (row: Desk) => row.createdBy || 'System',
+      selector: (row: Office) => row.createdBy || 'System',
     },
     {
       field: 'lastModifiedAt',
@@ -119,7 +108,7 @@ export class DesksComponent implements OnInit, OnDestroy {
       filterable: true,
       type: 'date',
       format: 'short',
-      selector: (row: Desk) => row.lastModifiedAt || null,
+      selector: (row: Office) => row.lastModifiedAt || null,
     },
   ];
 
@@ -128,27 +117,30 @@ export class DesksComponent implements OnInit, OnDestroy {
       id: 'view',
       label: 'View Details',
       icon: 'view',
-      action: (item: Desk) => this.openDetailsModal(item),
+      action: (item: Office) => this.openDetailsModal(item),
     },
     {
       id: 'edit',
       label: 'Edit',
       icon: 'edit',
-      action: (item: Desk) => this.openDetailsModal(item),
+      action: (item: Office) => this.openDetailsModal(item),
     },
     {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
-      action: (item: Desk) => this.confirmDelete(item),
+      action: (item: Office) => this.confirmDelete(item),
     },
   ];
+
+  countries: { [key: string]: string } = {};
 
   constructor() {}
 
   ngOnInit(): void {
     this.initializeGridTemplates();
-    this.loadDeskStatistics();
+    this.loadOfficeStatistics();
+    this.loadCountries();
   }
 
   ngOnDestroy(): void {
@@ -164,55 +156,65 @@ export class DesksComponent implements OnInit, OnDestroy {
       statusColumn.cellTemplate = this.statusCellTemplate;
     }
 
-    const typeColumn = this.gridColumns.find((col) => col.field === 'type');
-    if (typeColumn) {
-      typeColumn.cellTemplate = this.typeCellTemplate;
+    const countryColumn = this.gridColumns.find(
+      (col) => col.field === 'country'
+    );
+    if (countryColumn) {
+      countryColumn.cellTemplate = this.countryCellTemplate;
     }
 
-    const languageColumn = this.gridColumns.find(
-      (col) => col.field === 'language'
+    const desksCountColumn = this.gridColumns.find(
+      (col) => col.field === 'desksCount'
     );
-    if (languageColumn) {
-      languageColumn.cellTemplate = this.languageCellTemplate;
+    if (desksCountColumn) {
+      desksCountColumn.cellTemplate = this.desksCountCellTemplate;
     }
   }
 
-  private loadDeskStatistics(): void {
-    this.desksService
-      .getDeskStats()
+  private loadOfficeStatistics(): void {
+    this.officesService
+      .getOfficeStats()
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading desk statistics:', error);
+          console.error('Error loading office statistics:', error);
           this.totalCount = 0;
           this.activeCount = 0;
+          this.totalDesks = 0;
           return of(null);
         })
       )
       .subscribe((stats: any) => {
         if (stats) {
-          this.totalCount = stats.value.totalDesks;
-          this.activeCount = stats.value.activeDesks;
+          this.totalCount = stats.value.totalOffices;
+          this.activeCount = stats.value.activeOffices;
+          this.totalDesks = stats.value.totalDesks;
         }
       });
   }
 
-  getTypeLabel(type: number): string {
-    const typeInfo = this.deskTypes.find((t) => t.value === type);
-    return typeInfo ? typeInfo.label : `Type ${type}`;
+  private loadCountries(): void {
+    this.countryService
+      .getCountries()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((countries) => {
+        this.countries = countries.reduce((acc, country) => {
+          acc[country.code] = country.name;
+          return acc;
+        }, {} as { [key: string]: string });
+      });
   }
 
-  getLanguageLabel(languageCode: string): string {
-    const language = this.languageService.getLanguageByKey(languageCode);
-    return language || languageCode.toUpperCase();
+  getCountryName(countryCode: string): string {
+    return this.countries[countryCode] || countryCode;
   }
 
-  onRowClick(desk: Desk): void {
-    this.openDetailsModal(desk);
+  onRowClick(office: Office): void {
+    this.openDetailsModal(office);
   }
 
   openCreateModal(): void {
-    const modalRef = this.modalService.open(DeskCreationModalComponent, {
+    const modalRef = this.modalService.open(OfficeCreationModalComponent, {
       size: 'lg',
       centered: true,
       closable: true,
@@ -222,7 +224,7 @@ export class DesksComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           this.refreshSpecificGrid();
-          this.loadDeskStatistics();
+          this.loadOfficeStatistics();
         }
       },
       () => {}
@@ -236,16 +238,16 @@ export class DesksComponent implements OnInit, OnDestroy {
     window.dispatchEvent(event);
   }
 
-  openDetailsModal(desk: Desk): void {
+  openDetailsModal(office: Office): void {
     const modalRef = this.modalService.open(
-      DeskDetailsModalComponent,
+      OfficeDetailsModalComponent,
       {
         size: 'lg',
         centered: true,
         closable: true,
       },
       {
-        desk: desk,
+        office: office,
       }
     );
 
@@ -253,7 +255,7 @@ export class DesksComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           this.refreshSpecificGrid();
-          this.loadDeskStatistics();
+          this.loadOfficeStatistics();
         }
       },
       () => {
@@ -262,44 +264,44 @@ export class DesksComponent implements OnInit, OnDestroy {
     );
   }
 
-  confirmDelete(desk: Desk): void {
-    this.deskToDelete = desk;
+  confirmDelete(office: Office): void {
+    this.officeToDelete = office;
     this.showDeleteModal = true;
   }
 
   cancelDelete(): void {
     this.showDeleteModal = false;
-    this.deskToDelete = null;
+    this.officeToDelete = null;
   }
 
-  deleteDesk(): void {
-    if (!this.deskToDelete) return;
+  deleteOffice(): void {
+    if (!this.officeToDelete) return;
 
-    this.desksService
-      .deleteDesk(this.deskToDelete.id)
+    this.officesService
+      .deleteOffice(this.officeToDelete.id)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
           if (error.status === 409) {
             this.alertService.error(
-              'Cannot delete desk with associated dependencies'
+              'Cannot delete office with existing desks or dependencies'
             );
           } else {
-            this.alertService.error('Failed to delete desk');
+            this.alertService.error('Failed to delete office');
           }
-          console.error('Error deleting desk:', error);
+          console.error('Error deleting office:', error);
           return of(null);
         }),
         finalize(() => {
           this.showDeleteModal = false;
-          this.deskToDelete = null;
+          this.officeToDelete = null;
         })
       )
       .subscribe((result) => {
         if (result !== null) {
-          this.alertService.success('Desk deleted successfully');
+          this.alertService.success('Office deleted successfully');
           this.refreshSpecificGrid();
-          this.loadDeskStatistics();
+          this.loadOfficeStatistics();
         }
       });
   }
@@ -315,13 +317,13 @@ export class DesksComponent implements OnInit, OnDestroy {
   private importFile(file: File): void {
     this.importLoading = true;
 
-    this.desksService
-      .importDesks(file)
+    this.officesService
+      .importOffices(file)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          this.alertService.error('Failed to import desks');
-          console.error('Error importing desks:', error);
+          this.alertService.error('Failed to import offices');
+          console.error('Error importing offices:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -331,7 +333,7 @@ export class DesksComponent implements OnInit, OnDestroy {
           const message = `Import completed: ${response.successCount} successful, ${response.failureCount} failed`;
           this.alertService.success(message);
           this.refreshSpecificGrid();
-          this.loadDeskStatistics();
+          this.loadOfficeStatistics();
         }
       });
   }
@@ -343,13 +345,13 @@ export class DesksComponent implements OnInit, OnDestroy {
       globalFilter: options.globalFilter,
     };
 
-    this.desksService
-      .exportDesks(request)
+    this.officesService
+      .exportOffices(request)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          this.alertService.error('Failed to export desks');
-          console.error('Error exporting desks:', error);
+          this.alertService.error('Failed to export offices');
+          console.error('Error exporting offices:', error);
           return of(null);
         })
       )
@@ -358,7 +360,9 @@ export class DesksComponent implements OnInit, OnDestroy {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `desks_${new Date().toISOString().split('T')[0]}.csv`;
+          link.download = `offices_${
+            new Date().toISOString().split('T')[0]
+          }.csv`;
           link.click();
           window.URL.revokeObjectURL(url);
           this.alertService.success('Export completed successfully');
@@ -367,7 +371,7 @@ export class DesksComponent implements OnInit, OnDestroy {
   }
 
   downloadTemplate(): void {
-    this.desksService
+    this.officesService
       .downloadImportTemplate()
       .pipe(
         takeUntil(this.destroy$),
@@ -388,7 +392,7 @@ export class DesksComponent implements OnInit, OnDestroy {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = 'desks-import-template.xlsx';
+          a.download = 'offices-import-template.xlsx';
           document.body.appendChild(a);
           a.click();
           window.URL.revokeObjectURL(url);
