@@ -26,4 +26,5 @@ export enum UserRole {
   Worker = 'Worker',
   Operator = 'Operator',
   SuperAdmin = 'SuperAdmin',
+  MrRobot = 'MrRobot',
 }

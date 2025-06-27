@@ -1,4 +1,4 @@
-// src/app/features/clients/components/client-details/sections/client-accounts/client-accounts.component.ts
+// Updated client-accounts.component.ts with portfolio modal integration
 
 import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -13,26 +13,14 @@ import { Subject, takeUntil } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminTradingAccountService } from './services/admin-trading-accounts.service';
 import { AccountStatus, AccountType, CreateTradingAccountRequest, TradingAccount } from './models/trading-account.model';
+import { PortfolioComponent } from './modals/portfolio/portfolio.component';
 
 @Component({
   selector: 'app-client-accounts',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PortfolioComponent],
   templateUrl: './client-accounts.component.html',
-  styles: [
-    `
-      :host {
-        display: block;
-        width: 100%;
-      }
-      .modal-backdrop {
-        @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center;
-      }
-      .modal-content {
-        @apply bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4;
-      }
-    `,
-  ],
+  styleUrls: ['./client-accounts.component.scss'],
 })
 export class ClientAccountsComponent implements OnInit, OnDestroy {
   @Input() clientId!: string;
@@ -46,6 +34,10 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   showCreateModal = false;
   searchTerm = '';
   Math = Math;
+
+  // Portfolio modal state
+  showPortfolioModal = false;
+  selectedAccountId: string | null = null;
 
   // Expose enums to template
   AccountType = AccountType;
@@ -144,8 +136,9 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (newAccount) => {
-            this.alertService.success(`Trading account "${newAccount.displayName}" created successfully`);
+            this.alertService.success(`Trading account created successfully`);
             this.toggleCreateModal();
+            this.loadAccounts(); // Refresh accounts after creation
           },
           error: (error) => {
             console.error('Error creating account:', error);
@@ -199,6 +192,29 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
     if (this.clientId) {
       this.adminTradingAccountService.refreshAccounts(this.clientId);
     }
+  }
+
+  // Portfolio Modal Methods
+  openPortfolioModal(account: TradingAccount): void {
+    console.log('Opening portfolio modal for account:', account.accountNumber);
+    // Ensure clean state
+    this.closePortfolioModal();
+
+    // Small delay to ensure clean state
+    setTimeout(() => {
+      this.selectedAccountId = account.id;
+      this.showPortfolioModal = true;
+      console.log('Portfolio modal state:', {
+        showPortfolioModal: this.showPortfolioModal,
+        selectedAccountId: this.selectedAccountId
+      });
+    }, 50);
+  }
+
+  closePortfolioModal(): void {
+    console.log('Closing portfolio modal');
+    this.showPortfolioModal = false;
+    this.selectedAccountId = null;
   }
 
   // Utility methods

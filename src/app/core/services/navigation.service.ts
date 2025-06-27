@@ -34,17 +34,23 @@ export class NavigationService {
       requiredRoles: [UserRole.SuperAdmin],
     },
     {
+      label: 'offices',
+      icon: 'offices',
+      route: '/offices',
+      requiredRoles: [UserRole.SuperAdmin],
+    },
+    {
       label: 'Desks',
       icon: 'desks',
       route: '/desks',
       requiredRoles: [UserRole.SuperAdmin],
     },
-    {
-      label: 'Departments',
-      icon: 'departaments',
-      route: '/departments',
-      requiredRoles: [UserRole.SuperAdmin],
-    },
+    // {
+    //   label: 'Departments',
+    //   icon: 'departaments',
+    //   route: '/departments',
+    //   requiredRoles: [UserRole.SuperAdmin],
+    // },
     {
       label: 'Teams',
       icon: 'teams',

@@ -26,23 +26,13 @@ import {
 } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
-import { TeamCreateRequest, TeamCreateResponse } from '../../models/team.model';
+import {
+  TeamCreateRequest,
+  TeamCreateResponse,
+  DeskDropdownItem,
+  DeskDropdownResponse,
+} from '../../models/team.model';
 import { TeamsService } from '../../services/teams.service';
-
-interface DepartmentDropdownItem {
-  id: string;
-  value: string;
-  deskName: string;
-  isActive: boolean;
-}
-
-interface DepartmentDropdownResponse {
-  items: DepartmentDropdownItem[];
-  totalCount: number;
-  pageIndex: number;
-  pageSize: number;
-  totalPages: number;
-}
 
 @Component({
   selector: 'app-team-creation-modal',
@@ -99,13 +89,13 @@ interface DepartmentDropdownResponse {
             </p>
           </div>
 
-          <!-- Department Selection -->
+          <!-- Desk Selection -->
           <div class="relative">
             <label
-              for="departmentId"
+              for="deskId"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Department <span class="text-red-500">*</span>
+              Desk <span class="text-red-500">*</span>
             </label>
 
             <!-- Custom Dropdown Button -->
@@ -113,15 +103,15 @@ interface DepartmentDropdownResponse {
               type="button"
               class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
               [class.border-red-500]="
-                teamForm.get('departmentId')?.invalid &&
-                teamForm.get('departmentId')?.touched
+                teamForm.get('deskId')?.invalid &&
+                teamForm.get('deskId')?.touched
               "
-              (click)="toggleDepartmentDropdown()"
+              (click)="toggleDeskDropdown()"
             >
-              <span class="truncate">{{ getSelectedDepartmentName() }}</span>
+              <span class="truncate">{{ getSelectedDeskName() }}</span>
               <svg
                 class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="departmentDropdownOpen"
+                [class.rotate-180]="deskDropdownOpen"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -137,43 +127,46 @@ interface DepartmentDropdownResponse {
 
             <!-- Dropdown Panel -->
             <div
-              *ngIf="departmentDropdownOpen"
+              *ngIf="deskDropdownOpen"
               class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
             >
               <!-- Search Input -->
               <div class="p-3 border-b border-gray-200 dark:border-gray-700">
                 <input
-                  #departmentSearchInput
+                  #deskSearchInput
                   type="text"
-                  placeholder="Search departments..."
+                  placeholder="Search desks..."
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onDepartmentSearch($event)"
-                  [value]="departmentSearchTerm"
+                  (input)="onDeskSearch($event)"
+                  [value]="deskSearchTerm"
                 />
               </div>
 
-              <!-- Departments List -->
+              <!-- Desks List -->
               <div
                 class="max-h-48 overflow-y-auto"
-                (scroll)="onDepartmentDropdownScroll($event)"
+                (scroll)="onDeskDropdownScroll($event)"
               >
                 <div
-                  *ngFor="let department of availableDepartments"
+                  *ngFor="let desk of availableDesks"
                   class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
-                  (click)="selectDepartment(department)"
+                  (click)="selectDesk(desk)"
                 >
                   <div class="flex flex-col">
-                    <span class="font-medium">{{ department.value }}</span>
+                    <span class="font-medium">{{ desk.value }}</span>
                     <span class="text-xs text-gray-500 dark:text-gray-400">
-                      Desk: {{ department.deskName }} |
-                      {{ department.isActive ? 'Active' : 'Inactive' }}
+                      Office: {{ desk.officeName }}
+                      <span *ngIf="desk.language">
+                        | Language: {{ desk.language }}</span
+                      >
+                      | Type: {{ desk.type }}
                     </span>
                   </div>
                 </div>
 
                 <!-- Loading indicator -->
                 <div
-                  *ngIf="departmentLoading"
+                  *ngIf="deskLoading"
                   class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
                   <svg
@@ -199,12 +192,10 @@ interface DepartmentDropdownResponse {
 
                 <!-- No results -->
                 <div
-                  *ngIf="
-                    !departmentLoading && availableDepartments.length === 0
-                  "
+                  *ngIf="!deskLoading && availableDesks.length === 0"
                   class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
-                  No departments found
+                  No desks found
                 </div>
               </div>
             </div>
@@ -213,12 +204,12 @@ interface DepartmentDropdownResponse {
             <p
               class="mt-1 text-sm text-red-600 dark:text-red-400"
               *ngIf="
-                teamForm.get('departmentId')?.invalid &&
-                teamForm.get('departmentId')?.touched
+                teamForm.get('deskId')?.invalid &&
+                teamForm.get('deskId')?.touched
               "
             >
-              <span *ngIf="teamForm.get('departmentId')?.errors?.['required']">
-                Department selection is required
+              <span *ngIf="teamForm.get('deskId')?.errors?.['required']">
+                Desk selection is required
               </span>
             </p>
           </div>
@@ -296,8 +287,8 @@ interface DepartmentDropdownResponse {
 })
 export class TeamCreationModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
-  @ViewChild('departmentSearchInput', { static: false })
-  departmentSearchInput!: ElementRef;
+  @ViewChild('deskSearchInput', { static: false })
+  deskSearchInput!: ElementRef;
 
   private fb = inject(FormBuilder);
   private teamsService = inject(TeamsService);
@@ -306,16 +297,16 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
 
   isSubmitting = false;
   teamForm: FormGroup;
-  availableDepartments: DepartmentDropdownItem[] = [];
+  availableDesks: DeskDropdownItem[] = [];
 
-  // Department dropdown state
-  departmentSearchTerm = '';
-  departmentPageIndex = 0;
-  departmentPageSize = 20;
-  departmentTotalCount = 0;
-  departmentLoading = false;
-  departmentHasNextPage = false;
-  departmentDropdownOpen = false;
+  // Desk dropdown state
+  deskSearchTerm = '';
+  deskPageIndex = 0;
+  deskPageSize = 20;
+  deskTotalCount = 0;
+  deskLoading = false;
+  deskHasNextPage = false;
+  deskDropdownOpen = false;
 
   constructor() {
     this.teamForm = this.fb.group({
@@ -327,15 +318,15 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
           Validators.maxLength(100),
         ],
       ],
-      departmentId: ['', [Validators.required]],
-      departmentSearch: [''],
+      deskId: ['', [Validators.required]],
+      deskSearch: [''],
       isActive: [true],
     });
   }
 
   ngOnInit(): void {
     this.initializeSearchObservable();
-    this.loadInitialDepartments();
+    this.loadInitialDesks();
   }
 
   ngOnDestroy(): void {
@@ -345,52 +336,52 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
 
   private initializeSearchObservable(): void {
     this.teamForm
-      .get('departmentSearch')
+      .get('deskSearch')
       ?.valueChanges.pipe(
         debounceTime(300),
         distinctUntilChanged(),
         takeUntil(this.destroy$)
       )
       .subscribe((searchTerm: string) => {
-        this.departmentSearchTerm = searchTerm || '';
-        this.resetDepartmentDropdown();
-        this.loadDepartments();
+        this.deskSearchTerm = searchTerm || '';
+        this.resetDeskDropdown();
+        this.loadDesks();
       });
   }
 
-  private loadInitialDepartments(): void {
-    this.resetDepartmentDropdown();
-    this.loadDepartments();
+  private loadInitialDesks(): void {
+    this.resetDeskDropdown();
+    this.loadDesks();
   }
 
-  private resetDepartmentDropdown(): void {
-    this.departmentPageIndex = 0;
-    this.availableDepartments = [];
-    this.departmentHasNextPage = false;
+  private resetDeskDropdown(): void {
+    this.deskPageIndex = 0;
+    this.availableDesks = [];
+    this.deskHasNextPage = false;
   }
 
-  private loadDepartments(): void {
-    if (this.departmentLoading) return;
+  private loadDesks(): void {
+    if (this.deskLoading) return;
 
-    this.departmentLoading = true;
+    this.deskLoading = true;
     const request = {
-      brandId: null,
-      pageIndex: this.departmentPageIndex,
-      pageSize: this.departmentPageSize,
+      officeId: null,
+      pageIndex: this.deskPageIndex,
+      pageSize: this.deskPageSize,
       sortField: 'name',
       sortDirection: 'asc',
       visibleColumns: ['array', 'null'],
-      globalFilter: this.departmentSearchTerm,
+      globalFilter: this.deskSearchTerm,
       filters: null,
     };
 
     this.teamsService
-      .getDepartmentsDropdown(request)
+      .getDesksDropdown(request)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading departments:', error);
-          this.alertService.error('Failed to load departments');
+          console.error('Error loading desks:', error);
+          this.alertService.error('Failed to load desks');
           return of({
             items: [],
             totalCount: 0,
@@ -400,23 +391,20 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
           });
         })
       )
-      .subscribe((response: DepartmentDropdownResponse) => {
-        if (this.departmentPageIndex === 0) {
-          this.availableDepartments = response.items;
+      .subscribe((response: DeskDropdownResponse) => {
+        if (this.deskPageIndex === 0) {
+          this.availableDesks = response.items;
         } else {
-          this.availableDepartments = [
-            ...this.availableDepartments,
-            ...response.items,
-          ];
+          this.availableDesks = [...this.availableDesks, ...response.items];
         }
 
-        this.departmentTotalCount = response.totalCount;
-        this.departmentHasNextPage = response.pageIndex < response.totalPages;
-        this.departmentLoading = false;
+        this.deskTotalCount = response.totalCount;
+        this.deskHasNextPage = response.pageIndex < response.totalPages;
+        this.deskLoading = false;
       });
   }
 
-  onDepartmentDropdownScroll(event: any): void {
+  onDeskDropdownScroll(event: any): void {
     const element = event.target;
     const threshold = 100;
 
@@ -424,39 +412,37 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
       element.scrollTop + element.clientHeight >=
       element.scrollHeight - threshold
     ) {
-      this.loadMoreDepartments();
+      this.loadMoreDesks();
     }
   }
 
-  private loadMoreDepartments(): void {
-    if (this.departmentHasNextPage && !this.departmentLoading) {
-      this.departmentPageIndex++;
-      this.loadDepartments();
+  private loadMoreDesks(): void {
+    if (this.deskHasNextPage && !this.deskLoading) {
+      this.deskPageIndex++;
+      this.loadDesks();
     }
   }
 
-  onDepartmentSearch(event: any): void {
+  onDeskSearch(event: any): void {
     const searchTerm = event.target.value;
-    this.teamForm.patchValue({ departmentSearch: searchTerm });
+    this.teamForm.patchValue({ deskSearch: searchTerm });
   }
 
-  toggleDepartmentDropdown(): void {
-    this.departmentDropdownOpen = !this.departmentDropdownOpen;
+  toggleDeskDropdown(): void {
+    this.deskDropdownOpen = !this.deskDropdownOpen;
   }
 
-  selectDepartment(department: DepartmentDropdownItem): void {
-    this.teamForm.patchValue({ departmentId: department.id });
-    this.departmentDropdownOpen = false;
+  selectDesk(desk: DeskDropdownItem): void {
+    this.teamForm.patchValue({ deskId: desk.id });
+    this.deskDropdownOpen = false;
   }
 
-  getSelectedDepartmentName(): string {
-    const selectedDepartmentId = this.teamForm.get('departmentId')?.value;
-    const selectedDepartment = this.availableDepartments.find(
-      (department) => department.id === selectedDepartmentId
+  getSelectedDeskName(): string {
+    const selectedDeskId = this.teamForm.get('deskId')?.value;
+    const selectedDesk = this.availableDesks.find(
+      (desk) => desk.id === selectedDeskId
     );
-    return selectedDepartment
-      ? selectedDepartment.value
-      : 'Select a department';
+    return selectedDesk ? selectedDesk.value : 'Select a desk';
   }
 
   onSubmit(): void {
@@ -472,7 +458,7 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
 
     const teamData: TeamCreateRequest = {
       name: formValue.name.trim(),
-      departmentId: formValue.departmentId,
+      deskId: formValue.deskId,
       isActive: formValue.isActive,
     };
 
@@ -488,7 +474,7 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
             );
           } else if (error.status === 409) {
             this.alertService.error(
-              'A team with this name already exists in this department.'
+              'A team with this name already exists in this desk.'
             );
           } else {
             this.alertService.error('Failed to create team. Please try again.');

@@ -199,6 +199,14 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
+        path: 'offices',
+        loadComponent: () =>
+          import('./features/officies/officies.component').then(
+            (m) => m.OfficesComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
+      {
         path: 'desks',
         loadComponent: () =>
           import('./features/desks/desks.component').then(
@@ -206,14 +214,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
-      {
-        path: 'departments',
-        loadComponent: () =>
-          import('./features/departments/departments.component').then(
-            (m) => m.DepartmentsComponent
-          ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      },
+      // {
+      //   path: 'departments',
+      //   loadComponent: () =>
+      //     import('./features/departments/departments.component').then(
+      //       (m) => m.DepartmentsComponent
+      //     ),
+      //   canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      // },
       {
         path: 'teams',
         loadComponent: () =>

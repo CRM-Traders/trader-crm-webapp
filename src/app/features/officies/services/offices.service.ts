@@ -1,72 +1,63 @@
+// src/app/features/offices/services/offices.service.ts
+
 import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
 import { HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
-  Desk,
-  DeskCreateRequest,
-  DeskUpdateRequest,
-  DeskCreateResponse,
-  DeskImportResponse,
-  DeskStats,
-  DeskStatsMetaData,
-  DeskDropdownResponse,
-  DesksGridRequest,
-  OfficeDropdownRequest,
+  Office,
+  OfficeCreateRequest,
+  OfficeUpdateRequest,
+  OfficeCreateResponse,
+  OfficeImportResponse,
+  OfficeStatsMetaData,
   OfficeDropdownResponse,
-} from '../models/desk.model';
+  OfficesListRequest,
+} from '../models/office.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class DesksService {
+export class OfficesService {
   private httpService = inject(HttpService);
-  private readonly apiPath = 'identity/api/desks';
-  private readonly officesApiPath = 'identity/api/offices';
+  private readonly apiPath = 'identity/api/offices';
 
-  getDeskById(id: string): Observable<Desk> {
-    return this.httpService.get<Desk>(`${this.apiPath}/${id}`);
+  getOfficeById(id: string): Observable<Office> {
+    return this.httpService.get<Office>(`${this.apiPath}/${id}`);
   }
 
-  createDesk(request: DeskCreateRequest): Observable<DeskCreateResponse> {
-    return this.httpService.post<DeskCreateResponse>(this.apiPath, request);
+  createOffice(request: OfficeCreateRequest): Observable<OfficeCreateResponse> {
+    return this.httpService.post<OfficeCreateResponse>(this.apiPath, request);
   }
 
-  updateDesk(request: DeskUpdateRequest): Observable<void> {
+  updateOffice(request: OfficeUpdateRequest): Observable<void> {
     return this.httpService.put<void>(`${this.apiPath}/${request.id}`, request);
   }
 
-  deleteDesk(id: string): Observable<void> {
+  deleteOffice(id: string): Observable<void> {
     return this.httpService.delete<void>(`${this.apiPath}/${id}`);
   }
 
-  getDeskStats(): Observable<DeskStatsMetaData> {
-    return this.httpService.get<DeskStatsMetaData>(
-      `${this.apiPath}/desks-stat`
+  getOfficeStats(): Observable<OfficeStatsMetaData> {
+    return this.httpService.get<OfficeStatsMetaData>(
+      `${this.apiPath}/offices-stat`
     );
   }
 
-  getDeskDropdown(request: DesksGridRequest): Observable<DeskDropdownResponse> {
-    return this.httpService.post<DeskDropdownResponse>(
+  getOfficeDropdown(
+    request: OfficesListRequest
+  ): Observable<OfficeDropdownResponse> {
+    return this.httpService.post<OfficeDropdownResponse>(
       `${this.apiPath}/dropdown`,
       request
     );
   }
 
-  getOfficesDropdown(
-    request: OfficeDropdownRequest
-  ): Observable<OfficeDropdownResponse> {
-    return this.httpService.post<OfficeDropdownResponse>(
-      `${this.officesApiPath}/dropdown`,
-      request
-    );
-  }
-
-  importDesks(file: File): Observable<DeskImportResponse> {
+  importOffices(file: File): Observable<OfficeImportResponse> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.httpService.post<DeskImportResponse>(
+    return this.httpService.post<OfficeImportResponse>(
       `${this.apiPath}/import`,
       formData
     );
@@ -87,7 +78,7 @@ export class DesksService {
     );
   }
 
-  exportDesks(request: any): Observable<Blob> {
+  exportOffices(request: any): Observable<Blob> {
     const headers = new HttpHeaders({
       Accept: 'text/csv',
     });

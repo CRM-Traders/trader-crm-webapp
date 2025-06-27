@@ -1,4 +1,4 @@
-// src/app/features/hierarchy/hierarchy-node.component.ts
+// src/app/features/hierarchy/components/hierarchy-node/hierarchy-node.component.ts
 
 import { CommonModule } from '@angular/common';
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
@@ -51,6 +51,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
+            <!-- Brand Icon -->
             <path
               *ngIf="node.type === 'brand'"
               stroke-linecap="round"
@@ -58,6 +59,15 @@ import { HierarchyService } from '../../services/hierarchy.service';
               stroke-width="2"
               d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
             ></path>
+            <!-- Office Icon -->
+            <path
+              *ngIf="node.type === 'office'"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 21h18M3 10h18M12 2l7 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1V6l7-4zM12 6v4m0 4v4"
+            ></path>
+            <!-- Desk Icon -->
             <path
               *ngIf="node.type === 'desk'"
               stroke-linecap="round"
@@ -65,13 +75,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
               stroke-width="2"
               d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
             ></path>
-            <path
-              *ngIf="node.type === 'department'"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-            ></path>
+            <!-- Team Icon -->
             <path
               *ngIf="node.type === 'team'"
               stroke-linecap="round"
@@ -79,6 +83,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
               stroke-width="2"
               d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
             ></path>
+            <!-- Member Icon -->
             <path
               *ngIf="node.type === 'member'"
               stroke-linecap="round"
@@ -251,9 +256,9 @@ export class HierarchyNodeComponent {
   getIconClasses(): string {
     const typeColors = {
       brand: 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30',
+      office:
+        'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30',
       desk: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30',
-      department:
-        'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30',
       team: 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30',
       member:
         'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-900/30',
@@ -269,8 +274,8 @@ export class HierarchyNodeComponent {
     const baseClasses = 'font-medium truncate';
     const typeClasses = {
       brand: 'text-gray-900 dark:text-gray-100 text-base',
-      desk: 'text-gray-800 dark:text-gray-200 text-sm',
-      department: 'text-gray-700 dark:text-gray-300 text-sm',
+      office: 'text-gray-800 dark:text-gray-200 text-sm',
+      desk: 'text-gray-700 dark:text-gray-300 text-sm',
       team: 'text-gray-600 dark:text-gray-400 text-sm',
       member: 'text-gray-500 dark:text-gray-500 text-sm',
     };
@@ -293,6 +298,7 @@ export class HierarchyNodeComponent {
   getSecondaryInfo(): string {
     switch (this.node.type) {
       case 'brand':
+      case 'office':
         return this.node.data?.country || '';
       case 'desk':
         return this.node.data?.language
@@ -310,9 +316,9 @@ export class HierarchyNodeComponent {
 
     const count = this.node.children.length;
     const typeMap = {
-      brand: count === 1 ? 'desk' : 'desks',
-      desk: count === 1 ? 'dept' : 'depts',
-      department: count === 1 ? 'team' : 'teams',
+      brand: count === 1 ? 'office' : 'offices',
+      office: count === 1 ? 'desk' : 'desks',
+      desk: count === 1 ? 'team' : 'teams',
       team: count === 1 ? 'member' : 'members',
     };
 

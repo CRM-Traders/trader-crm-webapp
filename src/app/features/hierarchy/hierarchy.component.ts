@@ -199,6 +199,18 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
               <div class="text-sm text-gray-600 dark:text-gray-400">Brands</div>
             </div>
             <div
+              class="text-center p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg"
+            >
+              <div
+                class="text-2xl font-bold text-indigo-600 dark:text-indigo-400"
+              >
+                {{ hierarchyStats()!.offices }}
+              </div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">
+                Offices
+              </div>
+            </div>
+            <div
               class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg"
             >
               <div
@@ -207,18 +219,6 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
                 {{ hierarchyStats()!.desks }}
               </div>
               <div class="text-sm text-gray-600 dark:text-gray-400">Desks</div>
-            </div>
-            <div
-              class="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg"
-            >
-              <div
-                class="text-2xl font-bold text-purple-600 dark:text-purple-400"
-              >
-                {{ hierarchyStats()!.departments }}
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                Departments
-              </div>
             </div>
             <div
               class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg"
@@ -339,8 +339,8 @@ export class HierarchyComponent implements OnInit, OnDestroy {
     if (!nodes.length) return null;
 
     let brands = 0;
+    let offices = 0;
     let desks = 0;
-    let departments = 0;
     let teams = 0;
     let members = 0;
 
@@ -350,11 +350,11 @@ export class HierarchyComponent implements OnInit, OnDestroy {
           case 'brand':
             brands++;
             break;
+          case 'office':
+            offices++;
+            break;
           case 'desk':
             desks++;
-            break;
-          case 'department':
-            departments++;
             break;
           case 'team':
             teams++;
@@ -370,7 +370,7 @@ export class HierarchyComponent implements OnInit, OnDestroy {
     }
 
     countNodes(nodes);
-    return { brands, desks, departments, teams, members };
+    return { brands, offices, desks, teams, members };
   });
 
   ngOnInit() {
