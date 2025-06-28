@@ -47,14 +47,14 @@ export class OfficeRulesService {
     return this.httpService.delete<void>(`${this.apiPath}/${id}`);
   }
 
-  getRulesList(
-    request: OfficeRulesListRequest
-  ): Observable<OfficeRulesListResponse> {
-    return this.httpService.post<OfficeRulesListResponse>(
-      this.apiPath,
-      request
-    );
-  }
+  // getRulesList(
+  //   request: OfficeRulesListRequest
+  // ): Observable<OfficeRulesListResponse> {
+  //   return this.httpService.post<OfficeRulesListResponse>(
+  //     this.apiPath,
+  //     request
+  //   );
+  // }
 
   getRuleCategories(): Observable<RuleCategory[]> {
     // Provide fallback data if API fails
@@ -100,7 +100,9 @@ export class OfficeRulesService {
 
   getOfficeManager(officeId: string): Observable<OfficeManager | null> {
     return this.httpService
-      .get<OfficeManager>(`identity/api/offices/${officeId}/manager`)
+      .get<OfficeManager>(
+        `identity/api/userorganizations/by-organization?entityId=${officeId}`
+      )
       .pipe(catchError(() => of(null)));
   }
 
@@ -120,7 +122,6 @@ export class OfficeRulesService {
     );
   }
 
-  // Fixed endpoint - try different possible endpoints
   getAvailableOperators(): Observable<OperatorDropdownItem[]> {
     return this.httpService
       .get<OperatorDropdownItem[]>(
@@ -128,38 +129,9 @@ export class OfficeRulesService {
       )
       .pipe(
         catchError(() =>
-          // Try alternative endpoint
           this.httpService
             .get<OperatorDropdownItem[]>('identity/api/operators/dropdown')
-            .pipe(
-              catchError(() =>
-                // Provide fallback empty array if both fail
-                of([])
-              )
-            )
-        )
-      );
-  }
-
-  // Add method to get filter data for rules
-  getRuleFilterData(officeId: string): Observable<{
-    countries: string[];
-    languages: string[];
-    affiliateReferrals: string[];
-  }> {
-    return this.httpService
-      .get<{
-        countries: string[];
-        languages: string[];
-        affiliateReferrals: string[];
-      }>(`${this.apiPath}/filter-data/${officeId}`)
-      .pipe(
-        catchError(() =>
-          of({
-            countries: [],
-            languages: [],
-            affiliateReferrals: [],
-          })
+            .pipe(catchError(() => of([])))
         )
       );
   }
