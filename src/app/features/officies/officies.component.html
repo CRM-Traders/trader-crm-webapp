@@ -1,4 +1,4 @@
-<!-- src/app/features/offices/offices.component.html -->
+<!-- src/app/features/offices/offices.component.html - Updated with double-click functionality -->
 
 <div class="general-container bg-white">
   <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -8,7 +8,8 @@
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Offices</h1>
           <p class="mt-2 text-sm text-gray-700">
-            Manage office locations and their configurations
+            Manage office locations and their configurations. Double-click any
+            office to access its rules management.
           </p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-3">
@@ -33,58 +34,6 @@
             </svg>
             Create Office
           </button>
-
-          <!-- Download Template Button -->
-          <button
-            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            (click)="downloadTemplate()"
-          >
-            <svg
-              class="mr-2 -ml-1 h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-              />
-            </svg>
-            Download Template
-          </button>
-
-          <!-- Import Button -->
-          <button
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            [disabled]="importLoading"
-            (click)="fileInput.click()"
-          >
-            <svg
-              class="mr-2 -ml-1 h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            Import
-          </button>
-          <input
-            #fileInput
-            type="file"
-            hidden
-            accept=".csv,.xlsx,.xls"
-            (change)="onFileSelected($event)"
-          />
         </div>
       </div>
     </div>
@@ -166,6 +115,7 @@
             [showFilters]="true"
             emptyMessage="No offices found"
             (rowClick)="onRowClick($event)"
+            (rowDoubleClick)="onRowDoubleClick($event)"
             (export)="onExport($event)"
           >
             <ng-template #statusCell let-value="value">

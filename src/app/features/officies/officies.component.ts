@@ -1,3 +1,5 @@
+// src/app/features/officies/officies.component.ts - Updated with double-click navigation
+
 import {
   Component,
   OnInit,
@@ -8,6 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { OfficesService } from './services/offices.service';
 import { Office } from './models/office.model';
@@ -34,6 +37,7 @@ export class OfficesComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
   private countryService = inject(CountryService);
+  private router = inject(Router);
 
   private destroy$ = new Subject<void>();
   gridId = 'offices-grid';
@@ -65,7 +69,7 @@ export class OfficesComponent implements OnInit, OnDestroy {
       header: 'Country',
       sortable: true,
       filterable: true,
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
     },
     {
       field: 'brandName',
@@ -84,7 +88,7 @@ export class OfficesComponent implements OnInit, OnDestroy {
       header: 'Desks',
       sortable: true,
       filterable: true,
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
     },
     {
       field: 'createdAt',
@@ -118,6 +122,12 @@ export class OfficesComponent implements OnInit, OnDestroy {
       label: 'View Details',
       icon: 'view',
       action: (item: Office) => this.openDetailsModal(item),
+    },
+    {
+      id: 'rules',
+      label: 'Office Rules',
+      icon: 'rules',
+      action: (item: Office) => this.navigateToOfficeRules(item),
     },
     {
       id: 'edit',
@@ -209,8 +219,28 @@ export class OfficesComponent implements OnInit, OnDestroy {
     return this.countries[countryCode] || countryCode;
   }
 
+  /**
+   * Handles single-click events on office rows to display detailed information
+   */
   onRowClick(office: Office): void {
     this.openDetailsModal(office);
+  }
+
+  /**
+   * Handles double-click events on office rows to navigate to office rules management
+   */
+  onRowDoubleClick(office: any): void {
+    this.navigateToOfficeRules(office);
+  }
+
+  /**
+   * Opens a new browser tab to display the office rules management interface
+   */
+  private navigateToOfficeRules(office: Office): void {
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/offices', office.id, 'rules'])
+    );
+    window.open(url, '_blank');
   }
 
   openCreateModal(): void {
