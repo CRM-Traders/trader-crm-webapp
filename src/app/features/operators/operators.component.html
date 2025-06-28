@@ -1,0 +1,270 @@
+<!-- src/app/features/operators/operators.component.html -->
+
+<div class="general-container bg-white">
+  <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-6">
+      <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Operators</h1>
+          <p class="mt-2 text-sm text-gray-700">
+            Manage your operators and their information
+          </p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex gap-3">
+          <!-- Create Operator Button -->
+          <button
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            (click)="openRegistrationModal()"
+          >
+            <svg
+              class="mr-2 -ml-1 h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+              />
+            </svg>
+            New Operator
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <!-- Total Operators Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-600">Total Operators</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">
+              {{ statistics?.totalOperators || 0 }}
+            </p>
+          </div>
+          <div class="ml-4 p-3 bg-blue-50 rounded-lg">
+            <svg
+              class="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Operators Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-600">Active Operators</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">
+              {{ statistics?.activeOperators || 0 }}
+            </p>
+          </div>
+          <div class="ml-4 p-3 bg-emerald-50 rounded-lg">
+            <svg
+              class="w-6 h-6 text-emerald-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Departments Count -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-600">Departments</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">
+              {{ statistics?.operatorsByDepartment?.length || 0 }}
+            </p>
+          </div>
+          <div class="ml-4 p-3 bg-purple-50 rounded-lg">
+            <svg
+              class="w-6 h-6 text-purple-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roles Count -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-600">Roles</p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">
+              {{ statistics?.operatorsByRole?.length || 0 }}
+            </p>
+          </div>
+          <div class="ml-4 p-3 bg-orange-50 rounded-lg">
+            <svg
+              class="w-6 h-6 text-orange-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="relative">
+      <!-- Grid Container -->
+      <div
+        class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-300/30"
+      >
+        <div class="overflow-x-auto">
+          <app-grid
+            gridId="operators-grid"
+            [endpoint]="'identity/api/operators/grid'"
+            [columns]="gridColumns"
+            [actions]="gridActions"
+            [sortable]="true"
+            [enableContextMenu]="true"
+            [exportable]="true"
+            [selectable]="true"
+            [showColumnSelector]="true"
+            [showFilters]="true"
+            emptyMessage="No operators found"
+            (rowClick)="onRowClick($event)"
+            (export)="onExport($event)"
+            (refresh)="refreshGrid()"
+          >
+            <!-- Custom Branch Type Cell Template -->
+            <ng-template #branchTypeCell let-value="value">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="returnBranchType(value)"
+              >
+                {{ returnBranchTypeLables(value) }}
+              </span>
+            </ng-template>
+
+            <!-- Custom User Type Cell Template -->
+            <ng-template #userTypeCell let-value="value">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="returnUserTypeColors(value)"
+              >
+                {{ returnUserTypeLabels(value) }}
+              </span>
+            </ng-template>
+          </app-grid>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteModal" class="fixed z-50 inset-0 overflow-y-auto">
+    <div
+      class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+    >
+      <div class="fixed inset-0 transition-opacity -z-1" aria-hidden="true">
+        <div class="absolute inset-0 bg-black/30 -z-1"></div>
+      </div>
+
+      <span
+        class="hidden sm:inline-block sm:align-middle sm:h-screen"
+        aria-hidden="true"
+        >&#8203;</span
+      >
+
+      <div
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+      >
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div
+              class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
+            >
+              <svg
+                class="h-6 w-6 text-red-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Delete Operator
+              </h3>
+              <div class="mt-2">
+                <p class="text-sm text-gray-500">
+                  Are you sure you want to delete
+                  <strong>{{ operatorToDelete?.userFullName }}</strong
+                  >? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button
+            type="button"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+            (click)="deleteOperator()"
+          >
+            Delete
+          </button>
+          <button
+            type="button"
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+            (click)="cancelDelete()"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
