@@ -187,7 +187,6 @@ export class OfficesComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading office statistics:', error);
           this.totalCount = 0;
           this.activeCount = 0;
           this.totalDesks = 0;

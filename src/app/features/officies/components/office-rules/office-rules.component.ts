@@ -17,6 +17,8 @@ import { OfficeRulesService } from '../../services/office-rules.service';
 import { OfficesService } from '../../services/offices.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { ModalService } from '../../../../shared/services/modals/modal.service';
+import { CountryService } from '../../../../core/services/country.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { GridComponent } from '../../../../shared/components/grid/grid.component';
 
 import {
@@ -205,69 +207,6 @@ import { CreateRuleModalComponent } from '../create-rule-modal/create-rule-modal
                 Add Rule
               </button>
             </div>
-
-            <!-- Search Filters -->
-            <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >Country</label
-                >
-                <select
-                  [(ngModel)]="countryFilter"
-                  (ngModelChange)="applyFilters()"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Any</option>
-                  <option
-                    *ngFor="let country of availableCountries"
-                    [value]="country"
-                  >
-                    {{ country }}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >Language</label
-                >
-                <select
-                  [(ngModel)]="languageFilter"
-                  (ngModelChange)="applyFilters()"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Any</option>
-                  <option
-                    *ngFor="let language of availableLanguages"
-                    [value]="language"
-                  >
-                    {{ language }}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >Affiliate referral</label
-                >
-                <select
-                  [(ngModel)]="affiliateReferralFilter"
-                  (ngModelChange)="applyFilters()"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Any</option>
-                  <option
-                    *ngFor="let referral of availableAffiliateReferrals"
-                    [value]="referral"
-                  >
-                    {{ referral }}
-                  </option>
-                </select>
-              </div>
-            </div>
           </div>
 
           <!-- Rules Grid -->
@@ -282,7 +221,7 @@ import { CreateRuleModalComponent } from '../create-rule-modal/create-rule-modal
               [exportable]="false"
               [selectable]="false"
               [showColumnSelector]="false"
-              [showFilters]="false"
+              [showFilters]="true"
               emptyMessage="No rules found"
               (rowClick)="onRuleClick($event)"
             >
@@ -333,16 +272,6 @@ import { CreateRuleModalComponent } from '../create-rule-modal/create-rule-modal
               </ng-template>
             </app-grid>
           </div>
-        </div>
-
-        <!-- Reset Filters -->
-        <div class="mt-4 flex justify-end" *ngIf="hasActiveFilters()">
-          <button
-            (click)="resetFilters()"
-            class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-          >
-            Reset Filters
-          </button>
         </div>
       </div>
     </div>
@@ -461,6 +390,8 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private officeRulesService = inject(OfficeRulesService);
   private officesService = inject(OfficesService);
+  private countryService = inject(CountryService);
+  private languageService = inject(LanguageService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
   private destroy$ = new Subject<void>();
@@ -482,14 +413,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   loading = false;
   gridId = 'office-rules-grid';
 
-  // Filter properties
-  countryFilter = '';
-  languageFilter = '';
-  affiliateReferralFilter = '';
-  availableCountries: string[] = [];
-  availableLanguages: string[] = [];
-  availableAffiliateReferrals: string[] = [];
-
   // Delete modal
   showDeleteModal = false;
   ruleToDelete: OfficeRule | null = null;
@@ -501,12 +424,21 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   types: RuleType[] = [];
   operators: OperatorDropdownItem[] = [];
 
+  // Filter options
+  availableCountries: { label: string; value: string }[] = [];
+  availableLanguages: { label: string; value: string }[] = [];
+  availableCategories: { label: string; value: string }[] = [];
+  availablePriorities: { label: string; value: string }[] = [];
+  availableTypes: { label: string; value: string }[] = [];
+  availableAffiliateReferrals: { label: string; value: string }[] = [];
+
   gridColumns: GridColumn[] = [
     {
       field: 'name',
       header: 'Rule Name',
       sortable: true,
       filterable: true,
+      filterType: 'text',
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
@@ -514,6 +446,8 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       header: 'Category',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
       cellTemplate: null,
     },
     {
@@ -521,6 +455,8 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       header: 'Priority',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
       cellTemplate: null,
     },
     {
@@ -528,6 +464,8 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       header: 'Type',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
       cellTemplate: null,
     },
     {
@@ -535,18 +473,31 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       header: 'Country',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: this.availableCountries,
     },
     {
       field: 'language',
       header: 'Language',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
+    },
+    {
+      field: 'affiliateReferrals',
+      header: 'Affiliate Referral',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [],
     },
     {
       field: 'operatorsCount',
       header: 'Operators',
       sortable: true,
       filterable: true,
+      filterType: 'text',
       cellTemplate: null,
     },
     {
@@ -554,6 +505,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       header: 'Status',
       sortable: true,
       filterable: true,
+      filterType: 'boolean',
       cellTemplate: null,
     },
   ];
@@ -653,6 +605,8 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       priorities: this.officeRulesService.getRulePriorities(),
       types: this.officeRulesService.getRuleTypes(),
       operators: this.officeRulesService.getAvailableOperators(),
+      countries: this.countryService.getCountries(),
+      filterData: this.officeRulesService.getRuleFilterData(this.officeId),
     })
       .pipe(
         takeUntil(this.destroy$),
@@ -663,6 +617,12 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
             priorities: [],
             types: [],
             operators: [],
+            countries: [],
+            filterData: {
+              countries: [],
+              languages: [],
+              affiliateReferrals: [],
+            },
           });
         })
       )
@@ -671,54 +631,115 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
         this.priorities = data.priorities;
         this.types = data.types;
         this.operators = data.operators;
+
+        // Prepare filter options for grid columns
+        this.prepareFilterOptions(data);
+        this.updateGridColumnFilterOptions();
+
+        console.log('Loaded lookup data:', {
+          categoriesCount: this.categories.length,
+          prioritiesCount: this.priorities.length,
+          typesCount: this.types.length,
+          operatorsCount: this.operators.length,
+        });
       });
   }
 
-  getGridRequestBody(): any {
-    const filters: any = {
-      objectId: this.officeId,
-    };
+  private prepareFilterOptions(data: any): void {
+    // Categories
+    this.availableCategories = this.categories.map((cat: any) => ({
+      label: cat.name,
+      value: cat.id.toString(),
+    }));
 
-    if (this.countryFilter) {
-      filters.country = this.countryFilter;
-    }
-    if (this.languageFilter) {
-      filters.language = this.languageFilter;
-    }
-    if (this.affiliateReferralFilter) {
-      filters.affiliateReferrals = this.affiliateReferralFilter;
-    }
+    // Priorities
+    this.availablePriorities = this.priorities.map((priority: any) => ({
+      label: priority.name,
+      value: priority.id.toString(),
+    }));
 
-    return {
-      pageIndex: 1,
-      pageSize: 100,
-      filters: {
-        additional_properties: Object.keys(filters).map((key) => ({
-          field: key,
-          operator: 'equals',
-          value: filters[key],
-        })),
-      },
-    };
-  }
+    // Types
+    this.availableTypes = this.types.map((type: any) => ({
+      label: type.name,
+      value: type.id.toString(),
+    }));
 
-  applyFilters(): void {
-    this.refreshGrid();
-  }
+    // Countries - combine from country service and filter data
+    const countryNames = new Set([
+      ...data.countries.map((c: any) => c.name),
+      ...data.filterData.countries,
+    ]);
+    this.availableCountries = Array.from(countryNames).map((country) => ({
+      label: country,
+      value: country,
+    }));
 
-  hasActiveFilters(): boolean {
-    return !!(
-      this.countryFilter ||
-      this.languageFilter ||
-      this.affiliateReferralFilter
+    // Languages - combine from language service and filter data
+    const languages = this.languageService.getAllLanguages();
+    const languageNames = new Set([
+      ...languages.map((l) => l.value),
+      ...data.filterData.languages,
+    ]);
+    this.availableLanguages = Array.from(languageNames).map((language) => ({
+      label: language,
+      value: language,
+    }));
+
+    // Affiliate Referrals
+    this.availableAffiliateReferrals = data.filterData.affiliateReferrals.map(
+      (referral: string) => ({
+        label: referral,
+        value: referral,
+      })
     );
   }
 
-  resetFilters(): void {
-    this.countryFilter = '';
-    this.languageFilter = '';
-    this.affiliateReferralFilter = '';
-    this.refreshGrid();
+  private updateGridColumnFilterOptions(): void {
+    // Update category column filter options
+    const categoryColumn = this.gridColumns.find(
+      (col) => col.field === 'category'
+    );
+    if (categoryColumn) {
+      categoryColumn.filterOptions = this.availableCategories;
+    }
+
+    // Update priority column filter options
+    const priorityColumn = this.gridColumns.find(
+      (col) => col.field === 'priority'
+    );
+    if (priorityColumn) {
+      priorityColumn.filterOptions = this.availablePriorities;
+    }
+
+    // Update type column filter options
+    const typeColumn = this.gridColumns.find((col) => col.field === 'type');
+    if (typeColumn) {
+      typeColumn.filterOptions = this.availableTypes;
+    }
+
+    // Update country column filter options
+    const countryColumn = this.gridColumns.find(
+      (col) => col.field === 'country'
+    );
+    if (countryColumn) {
+      countryColumn.filterOptions = this.availableCountries;
+    }
+
+    // Update language column filter options
+    const languageColumn = this.gridColumns.find(
+      (col) => col.field === 'language'
+    );
+    if (languageColumn) {
+      languageColumn.filterOptions = this.availableLanguages;
+    }
+
+    // Update affiliate referrals column filter options
+    const affiliateColumn = this.gridColumns.find(
+      (col) => col.field === 'affiliateReferrals'
+    );
+    if (affiliateColumn) {
+      affiliateColumn.filterOptions = this.availableAffiliateReferrals;
+    }
   }
 
   private refreshGrid(): void {
@@ -756,6 +777,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           this.refreshGrid();
+          this.loadLookupData(); // Reload filter data after creating a rule
         }
       },
       () => {}
@@ -784,6 +806,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           this.refreshGrid();
+          this.loadLookupData(); // Reload filter data after editing a rule
         }
       },
       () => {}
@@ -818,6 +841,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
         next: () => {
           this.alertService.success('Rule deleted successfully');
           this.refreshGrid();
+          this.loadLookupData(); // Reload filter data after deleting a rule
         },
         error: (error) => {
           this.alertService.error('Failed to delete rule');
