@@ -478,7 +478,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   private createRule(formValue: any): void {
     const request: OfficeRuleCreateRequest = {
       ruleName: formValue.ruleName.trim(),
-      category: 1, // Default category
+      category: 0,
       priority: parseInt(formValue.priority),
       type: parseInt(formValue.type),
       objectId: this.officeId,

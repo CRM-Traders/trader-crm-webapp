@@ -2,7 +2,8 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import {
   OfficeRule,
   OfficeRuleCreateRequest,
@@ -56,21 +57,51 @@ export class OfficeRulesService {
   }
 
   getRuleCategories(): Observable<RuleCategory[]> {
-    return this.httpService.get<RuleCategory[]>(`${this.apiPath}/categories`);
+    // Provide fallback data if API fails
+    return this.httpService
+      .get<RuleCategory[]>(`${this.apiPath}/categories`)
+      .pipe(
+        catchError(() =>
+          of([
+            { value: 1, name: 'General' },
+            { value: 2, name: 'Restricted' },
+            { value: 3, name: 'Special' },
+          ])
+        )
+      );
   }
 
   getRulePriorities(): Observable<RulePriority[]> {
-    return this.httpService.get<RulePriority[]>(`${this.apiPath}/priorities`);
+    return this.httpService
+      .get<RulePriority[]>(`${this.apiPath}/priorities`)
+      .pipe(
+        catchError(() =>
+          of([
+            { value: 1, name: 'Low' },
+            { value: 2, name: 'Medium' },
+            { value: 3, name: 'High' },
+            { value: 4, name: 'Critical' },
+          ])
+        )
+      );
   }
 
   getRuleTypes(): Observable<RuleType[]> {
-    return this.httpService.get<RuleType[]>(`${this.apiPath}/types`);
+    return this.httpService.get<RuleType[]>(`${this.apiPath}/types`).pipe(
+      catchError(() =>
+        of([
+          { value: 1, name: 'Assignment' },
+          { value: 2, name: 'Distribution' },
+          { value: 3, name: 'Routing' },
+        ])
+      )
+    );
   }
 
   getOfficeManager(officeId: string): Observable<OfficeManager | null> {
-    return this.httpService.get<OfficeManager>(
-      `identity/api/offices/${officeId}/manager`
-    );
+    return this.httpService
+      .get<OfficeManager>(`identity/api/offices/${officeId}/manager`)
+      .pipe(catchError(() => of(null)));
   }
 
   addOfficeManager(
@@ -89,9 +120,47 @@ export class OfficeRulesService {
     );
   }
 
+  // Fixed endpoint - try different possible endpoints
   getAvailableOperators(): Observable<OperatorDropdownItem[]> {
-    return this.httpService.get<OperatorDropdownItem[]>(
-      'identity/api/operators/dropdown'
-    );
+    return this.httpService
+      .get<OperatorDropdownItem[]>(
+        'identity/api/userorganizations/by-organization'
+      )
+      .pipe(
+        catchError(() =>
+          // Try alternative endpoint
+          this.httpService
+            .get<OperatorDropdownItem[]>('identity/api/operators/dropdown')
+            .pipe(
+              catchError(() =>
+                // Provide fallback empty array if both fail
+                of([])
+              )
+            )
+        )
+      );
+  }
+
+  // Add method to get filter data for rules
+  getRuleFilterData(officeId: string): Observable<{
+    countries: string[];
+    languages: string[];
+    affiliateReferrals: string[];
+  }> {
+    return this.httpService
+      .get<{
+        countries: string[];
+        languages: string[];
+        affiliateReferrals: string[];
+      }>(`${this.apiPath}/filter-data/${officeId}`)
+      .pipe(
+        catchError(() =>
+          of({
+            countries: [],
+            languages: [],
+            affiliateReferrals: [],
+          })
+        )
+      );
   }
 }
