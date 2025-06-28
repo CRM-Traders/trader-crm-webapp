@@ -207,6 +207,14 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
+        path: 'offices/:id/rules',
+        loadComponent: () =>
+          import(
+            './features/officies/components/office-rules/office-rules.component'
+          ).then((m) => m.OfficeRulesComponent),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
+      {
         path: 'desks',
         loadComponent: () =>
           import('./features/desks/desks.component').then(
