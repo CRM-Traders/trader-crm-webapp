@@ -91,12 +91,6 @@ export class NavigationService {
       route: '/operators',
       requiredRoles: [UserRole.SuperAdmin],
     },
-    {
-      label: 'Workers',
-      icon: 'workers',
-      route: '/workers',
-      requiredRoles: [UserRole.SuperAdmin],
-    },
     // {
     //   label: 'Support',
     //   icon: 'support',

@@ -88,14 +88,6 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
-        path: 'workers',
-        loadComponent: () =>
-          import('./features/workers/workers.component').then(
-            (m) => m.WorkersComponent
-          ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      },
-      {
         path: 'tickets',
         loadComponent: () =>
           import('./features/tickets/tickets.component').then(
