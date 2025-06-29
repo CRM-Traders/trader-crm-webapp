@@ -44,9 +44,9 @@ export interface OperatorUpdateRequest {
 }
 
 export interface OperatorRole {
-  roleId: string;
-  name: string;
-  departmentId: string;
+  id: string;
+  value: string;
+  department: string;
 }
 
 export interface OperatorRoleCreateRequest {
@@ -101,6 +101,40 @@ export interface DepartmentSearchResponse {
   totalPages: number;
   hasPreviousPage: boolean;
   hasNextPage: boolean;
+}
+
+export interface BranchDropdownItem {
+  id: string;
+  value: string;
+  brandName?: string;
+  country?: string;
+  officeName?: string;
+  language?: string;
+  type?: number;
+  deskName?: string;
+}
+
+export interface BranchDropdownResponse {
+  items: BranchDropdownItem[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface BranchSearchParams {
+  pageIndex?: number;
+  pageSize?: number;
+  sortField?: string | null;
+  sortDirection?: 'asc' | 'desc' | null;
+  visibleColumns?: string[] | null;
+  globalFilter?: string | null;
+  filters?: Record<string, any> | null;
+  brandId?: string | null;
+  officeId?: string | null;
+  deskId?: string | null;
 }
 
 export enum BranchType {

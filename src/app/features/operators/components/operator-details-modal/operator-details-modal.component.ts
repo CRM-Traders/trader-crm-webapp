@@ -141,9 +141,9 @@ import {
                       </option>
                       <option
                         *ngFor="let role of availableRoles"
-                        [value]="role.roleId"
+                        [value]="role.id"
                       >
-                        {{ role.name }}
+                        {{ role.value }}
                       </option>
                     </select>
                   </div>
@@ -668,7 +668,7 @@ export class OperatorDetailsModalComponent implements OnInit, OnDestroy {
         this.availableRoles = roles;
         // If editing and current role is not in the new list, reset it
         const currentRoleId = this.editForm.get('roleId')?.value;
-        if (currentRoleId && !roles.find((r) => r.roleId === currentRoleId)) {
+        if (currentRoleId && !roles.find((r) => r.id === currentRoleId)) {
           this.editForm.patchValue({ roleId: '' });
         }
       },

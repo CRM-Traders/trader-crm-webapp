@@ -27,6 +27,17 @@ import {
   DropdownSearchResponse,
 } from '../../../../shared/components/filterable-dropdown/filterable-dropdown.component';
 
+interface BranchDropdownItem {
+  id: string;
+  value: string;
+  brandName?: string;
+  country?: string;
+  officeName?: string;
+  language?: string;
+  type?: number;
+  deskName?: string;
+}
+
 @Component({
   selector: 'app-operator-registration-modal',
   standalone: true,
@@ -154,46 +165,57 @@ import {
                   id="password"
                   formControlName="password"
                   placeholder="Password"
-                  class="w-full px-3 py-2 pr-10 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  class="w-full px-3 py-2 pr-20 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   [class.border-red-500]="
                     registrationForm.get('password')?.invalid &&
                     registrationForm.get('password')?.touched
                   "
                 />
-                <button
-                  type="button"
-                  class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  (click)="togglePasswordVisibility()"
-                >
-                  <svg
-                    class="h-5 w-5 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                <div class="absolute inset-y-0 right-0 flex items-center">
+                  <button
+                    type="button"
+                    class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 border-r border-gray-300 dark:border-gray-600"
+                    (click)="generatePassword()"
+                    title="Generate Password"
                   >
-                    <path
-                      *ngIf="!showPassword"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      *ngIf="!showPassword"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                    <path
-                      *ngIf="showPassword"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                    />
-                  </svg>
-                </button>
+                    Gen
+                  </button>
+                  <button
+                    type="button"
+                    class="px-2 flex items-center"
+                    (click)="togglePasswordVisibility()"
+                    title="Toggle Password Visibility"
+                  >
+                    <svg
+                      class="h-4 w-4 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        *ngIf="!showPassword"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        *ngIf="!showPassword"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                      <path
+                        *ngIf="showPassword"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
@@ -352,11 +374,8 @@ import {
                 <option value="">
                   -- {{ availableRoles.length ? 'Select' : 'No items' }} --
                 </option>
-                <option
-                  *ngFor="let role of availableRoles"
-                  [value]="role.roleId"
-                >
-                  {{ role.name }}
+                <option *ngFor="let role of availableRoles" [value]="role.id">
+                  {{ role.value }}
                 </option>
               </select>
               <p
@@ -422,16 +441,27 @@ import {
                   registrationForm.get('branchId')?.invalid &&
                   registrationForm.get('branchId')?.touched
                 "
-                [disabled]="!registrationForm.get('branchType')?.value"
+                [disabled]="
+                  !registrationForm.get('branchType')?.value || loadingBranches
+                "
               >
                 <option value="">
                   {{
                     registrationForm.get('branchType')?.value
-                      ? '-- Select --'
+                      ? loadingBranches
+                        ? 'Loading...'
+                        : availableBranches.length
+                        ? '-- Select --'
+                        : 'No branches available'
                       : 'Select branch type first'
                   }}
                 </option>
-                <!-- Branch options would be populated based on branchType -->
+                <option
+                  *ngFor="let branch of availableBranches"
+                  [value]="branch.id"
+                >
+                  {{ getBranchDisplayText(branch) }}
+                </option>
               </select>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
@@ -511,8 +541,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
   isSubmitting = false;
   showPassword = false;
+  loadingBranches = false;
   registrationForm: FormGroup;
   availableRoles: OperatorRole[] = [];
+  availableBranches: BranchDropdownItem[] = [];
 
   BranchType = BranchType;
   UserType = UserType;
@@ -555,33 +587,103 @@ export class OperatorRegistrationModalComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Initialize component
+    // Initialize component and set up form change listeners
+    this.setupFormChangeListeners();
+  }
+
+  private setupFormChangeListeners(): void {
+    // Listen to department changes via form control value changes
+    this.registrationForm
+      .get('departmentId')
+      ?.valueChanges.subscribe((value) => {
+        console.log('Department form control changed:', value);
+        this.handleDepartmentChange(value);
+      });
+
+    // Listen to branch type changes via form control value changes
+    this.registrationForm.get('branchType')?.valueChanges.subscribe((value) => {
+      console.log('Branch type form control changed:', value);
+      this.handleBranchTypeChange(value);
+    });
+  }
+
+  private handleDepartmentChange(departmentId: any): void {
+    console.log('Handling department change:', departmentId);
+
+    // Clear existing roles first
+    this.availableRoles = [];
+    this.registrationForm.patchValue({ roleId: '' }, { emitEvent: false });
+
+    if (departmentId) {
+      this.loadRolesForDepartment(departmentId);
+    }
+  }
+
+  private handleBranchTypeChange(branchType: any): void {
+    console.log('Handling branch type change:', branchType);
+
+    // Reset branch selection when branch type changes
+    this.registrationForm.patchValue({ branchId: '' }, { emitEvent: false });
+    this.availableBranches = [];
+
+    if (branchType !== '' && branchType !== null && branchType !== undefined) {
+      this.loadBranchesForType(parseInt(branchType));
+    }
   }
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
 
-  onDepartmentChange(departmentId: any): void {
-    if (departmentId) {
-      this.loadRolesForDepartment(departmentId);
-    } else {
-      this.availableRoles = [];
-      this.registrationForm.patchValue({ roleId: '' });
+  generatePassword(): void {
+    const length = 12;
+    const charset =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+
+    // Ensure at least one character from each type
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*';
+
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+
+    // Fill the rest with random characters
+    for (let i = password.length; i < length; i++) {
+      password += charset[Math.floor(Math.random() * charset.length)];
     }
+
+    // Shuffle the password
+    password = password
+      .split('')
+      .sort(() => Math.random() - 0.5)
+      .join('');
+
+    this.registrationForm.patchValue({ password });
+    this.showPassword = true; // Show the generated password
+  }
+
+  onDepartmentChange(departmentId: any): void {
+    // This method is kept for compatibility with the filterable dropdown's valueChange event
+    console.log('Department valueChange event:', departmentId);
+    this.handleDepartmentChange(departmentId);
   }
 
   onBranchTypeChange(): void {
-    // Reset branch selection when branch type changes
-    this.registrationForm.patchValue({ branchId: '' });
-    // Load branches based on selected branch type
-    // This would typically call a service to get branches
+    // This method is kept for compatibility with the select element's change event
+    const branchType = this.registrationForm.get('branchType')?.value;
+    console.log('Branch type change event:', branchType);
+    this.handleBranchTypeChange(branchType);
   }
 
   private loadRolesForDepartment(departmentId: string): void {
     this.operatorsService.getOperatorRolesByDepartment(departmentId).subscribe({
-      next: (roles) => {
-        this.availableRoles = roles;
+      next: (roles: any) => {
+        this.availableRoles = roles.items;
         // Reset role selection when department changes
         this.registrationForm.patchValue({ roleId: '' });
       },
@@ -591,6 +693,67 @@ export class OperatorRegistrationModalComponent implements OnInit {
         this.registrationForm.patchValue({ roleId: '' });
       },
     });
+  }
+
+  private loadBranchesForType(branchType: BranchType): void {
+    this.loadingBranches = true;
+    let observable: Observable<any>;
+
+    switch (branchType) {
+      case BranchType.Office:
+        observable = this.operatorsService.getOfficesDropdown();
+        break;
+      case BranchType.Desk:
+        observable = this.operatorsService.getDesksDropdown();
+        break;
+      case BranchType.Team:
+        observable = this.operatorsService.getTeamsDropdown();
+        break;
+      case BranchType.Brand:
+        observable = this.operatorsService.getBrandsDropdown();
+        break;
+      default:
+        this.loadingBranches = false;
+        return;
+    }
+
+    observable.subscribe({
+      next: (response) => {
+        this.availableBranches = response.items || [];
+        this.loadingBranches = false;
+      },
+      error: (error) => {
+        console.error('Error loading branches:', error);
+        this.availableBranches = [];
+        this.loadingBranches = false;
+        this.alertService.error('Failed to load branches');
+      },
+    });
+  }
+
+  getBranchDisplayText(branch: BranchDropdownItem): string {
+    const branchType = parseInt(this.registrationForm.get('branchType')?.value);
+
+    switch (branchType) {
+      case BranchType.Brand:
+        return `${branch.value}${
+          branch.brandName ? ` - ${branch.brandName}` : ''
+        }${branch.country ? ` (${branch.country})` : ''}`;
+      case BranchType.Office:
+        return `${branch.value}${
+          branch.officeName ? ` - ${branch.officeName}` : ''
+        }${branch.language ? ` - ${branch.language}` : ''}`;
+      case BranchType.Desk:
+        return `${branch.value}${
+          branch.deskName ? ` - ${branch.deskName}` : ''
+        }`;
+      case BranchType.Team:
+        return `${branch.value}${
+          branch.deskName ? ` - ${branch.deskName}` : ''
+        }`;
+      default:
+        return branch.value;
+    }
   }
 
   onSubmit() {

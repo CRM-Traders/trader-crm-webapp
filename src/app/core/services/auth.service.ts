@@ -222,6 +222,7 @@ export class AuthService implements OnDestroy {
     localStorage.removeItem(this.ROLE_KEY);
     localStorage.removeItem(this.EXPIRATION_KEY);
     localStorage.removeItem(this.NAME_KEY);
+    this.clearBrandSelection();
   }
 
   private initTokenRefresh(): void {
@@ -260,5 +261,17 @@ export class AuthService implements OnDestroy {
     if (timeUntilExpiry < refreshThreshold) {
       this.refreshToken().subscribe();
     }
+  }
+
+  hasSelectedBrand(): boolean {
+    return localStorage.getItem('brand-selected') === 'true';
+  }
+
+  markBrandAsSelected(): void {
+    localStorage.setItem('brand-selected', 'true');
+  }
+
+  clearBrandSelection(): void {
+    localStorage.removeItem('brand-selected');
   }
 }

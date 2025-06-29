@@ -15,6 +15,27 @@ import {
   DepartmentSearchResponse,
 } from '../models/operators.model';
 
+interface BranchDropdownResponse {
+  items: BranchDropdownItem[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+interface BranchDropdownItem {
+  id: string;
+  value: string;
+  brandName?: string;
+  country?: string;
+  officeName?: string;
+  language?: string;
+  type?: number;
+  deskName?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -23,6 +44,10 @@ export class OperatorsService {
   private readonly apiPath = 'identity/api/operators';
   private readonly rolesApiPath = 'identity/api/operatorroles';
   private readonly departmentsApiPath = 'identity/api/departments';
+  private readonly brandsApiPath = 'identity/api/brands';
+  private readonly officesApiPath = 'identity/api/offices';
+  private readonly teamsApiPath = 'identity/api/teams';
+  private readonly desksApiPath = 'identity/api/desks';
 
   getOperatorById(id: string): Observable<Operator> {
     return this.httpService.get<Operator>(`${this.apiPath}/${id}`);
@@ -67,9 +92,13 @@ export class OperatorsService {
   getOperatorRolesByDepartment(
     departmentId: string
   ): Observable<OperatorRole[]> {
-    return this.httpService.get<OperatorRole[]>(
-      `${this.rolesApiPath}?departmentId=${departmentId}`
-    );
+    const requestBody = {
+      departmentId: departmentId,
+      pageIndex: 0,
+      pageSize: 100,
+    };
+
+    return this.httpService.post(`${this.rolesApiPath}/dropdown`, requestBody);
   }
 
   // Departments dropdown
@@ -89,6 +118,78 @@ export class OperatorsService {
       queryParams.toString() ? '?' + queryParams.toString() : ''
     }`;
     return this.httpService.post<DepartmentSearchResponse>(url, {});
+  }
+
+  // Branch dropdown methods based on branch type
+  getBrandsDropdown(params: any = {}): Observable<BranchDropdownResponse> {
+    const requestBody = {
+      pageIndex: params.pageIndex || 0,
+      pageSize: params.pageSize || 50,
+      sortField: params.sortField || null,
+      sortDirection: params.sortDirection || null,
+      visibleColumns: params.visibleColumns || null,
+      globalFilter: params.globalFilter || null,
+      filters: params.filters || null,
+    };
+
+    return this.httpService.post<BranchDropdownResponse>(
+      `${this.brandsApiPath}/dropdown`,
+      requestBody
+    );
+  }
+
+  getOfficesDropdown(params: any = {}): Observable<BranchDropdownResponse> {
+    const requestBody = {
+      brandId: params.brandId || null,
+      pageIndex: params.pageIndex || 0,
+      pageSize: params.pageSize || 50,
+      sortField: params.sortField || null,
+      sortDirection: params.sortDirection || null,
+      visibleColumns: params.visibleColumns || null,
+      globalFilter: params.globalFilter || null,
+      filters: params.filters || null,
+    };
+
+    return this.httpService.post<BranchDropdownResponse>(
+      `${this.officesApiPath}/dropdown`,
+      requestBody
+    );
+  }
+
+  getTeamsDropdown(params: any = {}): Observable<BranchDropdownResponse> {
+    const requestBody = {
+      deskId: params.deskId || null,
+      pageIndex: params.pageIndex || 0,
+      pageSize: params.pageSize || 50,
+      sortField: params.sortField || null,
+      sortDirection: params.sortDirection || null,
+      visibleColumns: params.visibleColumns || null,
+      globalFilter: params.globalFilter || null,
+      filters: params.filters || null,
+    };
+
+    return this.httpService.post<BranchDropdownResponse>(
+      `${this.teamsApiPath}/dropdown`,
+      requestBody
+    );
+  }
+
+  getDesksDropdown(params: any = {}): Observable<BranchDropdownResponse> {
+    const requestBody = {
+      officeId: params.officeId || null,
+      pageIndex: params.pageIndex || 0,
+      pageSize: params.pageSize || 50,
+      sortField: params.sortField || null,
+      sortDirection: params.sortDirection || null,
+      visibleColumns: params.visibleColumns || null,
+      globalFilter: params.globalFilter || null,
+      filters: params.filters || null,
+    };
+
+    return this.httpService.post<BranchDropdownResponse>(
+      `${this.desksApiPath}/dropdown`,
+      requestBody
+    );
   }
 
   // Export operators

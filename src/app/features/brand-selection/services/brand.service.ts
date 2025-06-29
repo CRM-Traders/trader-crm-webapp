@@ -1,0 +1,95 @@
+import { Injectable, inject } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { BrandDropdownResponse, SetBrandResponse } from '../models/brand.model';
+import { AlertService } from '../../../core/services/alert.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { HttpService } from '../../../core/services/http.service';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class BrandService {
+  private http = inject(HttpService);
+  private authService = inject(AuthService);
+  private alertService = inject(AlertService);
+
+  getBrands(
+    pageIndex: number = 0,
+    pageSize: number = 50
+  ): Observable<BrandDropdownResponse> {
+    const body = {
+      pageIndex,
+      pageSize,
+      sortField: null,
+      sortDirection: null,
+      visibleColumns: ['array', null],
+      globalFilter: null,
+      filters: null,
+    };
+
+    return this.http
+      .post<BrandDropdownResponse>('identity/api/brands/dropdown', body)
+      .pipe(
+        catchError((error) => {
+          this.alertService.error('Failed to load brands. Please try again.');
+          return throwError(() => new Error('Failed to load brands'));
+        })
+      );
+  }
+
+  setBrandId(selectedBrandId: string): Observable<SetBrandResponse> {
+    const body = { selectedBrandId };
+
+    return this.http
+      .post<SetBrandResponse>('identity/api/brands/set-brand-id', body)
+      .pipe(
+        tap((response) => {
+          // Update stored tokens if provided in response
+          if (response.accessToken && response.refreshToken) {
+            this.updateAuthData(response);
+          }
+
+          // Mark brand as selected
+          this.authService.markBrandAsSelected();
+
+          this.alertService.success('Brand selected successfully');
+        }),
+        catchError((error) => {
+          this.alertService.error('Failed to set brand. Please try again.');
+          return throwError(() => new Error('Failed to set brand'));
+        })
+      );
+  }
+
+  private updateAuthData(response: SetBrandResponse): void {
+    // Update localStorage with new tokens if provided
+    if (response.accessToken) {
+      localStorage.setItem(
+        'iFC03fkUWhcdYGciaclPyeqySdQE6qCd',
+        response.accessToken
+      );
+    }
+    if (response.refreshToken) {
+      localStorage.setItem(
+        'LXP6usaZ340gDciGr69MQpPwpEdvPj9M',
+        response.refreshToken
+      );
+    }
+    if (response.role) {
+      localStorage.setItem('9JeQyQTsI03hbuMtl9tR1TjbOFGWf54p', response.role);
+    }
+    if (response.exp) {
+      localStorage.setItem(
+        'z6ipay7ciaSpZQbb6cDLueVAAs0WtRjs',
+        response.exp.toString()
+      );
+    }
+    if (response.name) {
+      localStorage.setItem(
+        'amskskwmwi7ciaSpZQbb6cDLueVAAs0WtRjs',
+        response.name
+      );
+    }
+  }
+}
