@@ -13,6 +13,11 @@ import {
   OperatorStatistics,
   DepartmentSearchParams,
   DepartmentSearchResponse,
+  OperatorDepartmentRoleAssignRequest,
+  OperatorDepartmentRoleRemoveRequest,
+  UserOrganizationAssignRequest,
+  UserOrganizationReassignRequest,
+  UserProfileUpdateRequest,
 } from '../models/operators.model';
 
 interface BranchDropdownResponse {
@@ -221,6 +226,57 @@ export class OperatorsService {
         responseType: 'blob' as 'json',
         headers,
       }
+    );
+  }
+
+  updateUserProfile(
+    userId: string,
+    request: UserProfileUpdateRequest
+  ): Observable<void> {
+    return this.httpService.put<void>(`identity/api/users/${userId}`, request);
+  }
+
+  // User organization management
+  assignUserOrganization(
+    request: UserOrganizationAssignRequest
+  ): Observable<{ userOrganizationId: string }> {
+    return this.httpService.post<{ userOrganizationId: string }>(
+      'identity/api/userorganizations/assign',
+      request
+    );
+  }
+
+  reassignUserOrganization(
+    id: string,
+    request: UserOrganizationReassignRequest
+  ): Observable<void> {
+    return this.httpService.put<void>(
+      `identity/api/userorganizations/${id}/reassign`,
+      request
+    );
+  }
+
+  removeUserOrganization(userId: string): Observable<void> {
+    return this.httpService.delete<void>(
+      `identity/api/userorganizations/users/${userId}`
+    );
+  }
+
+  assignOperatorDepartmentRole(
+    request: OperatorDepartmentRoleAssignRequest
+  ): Observable<{ id: string }> {
+    return this.httpService.post<{ id: string }>(
+      'identity/api/operatordepartmentroles/assign',
+      request
+    );
+  }
+
+  removeOperatorDepartmentRole(
+    request: OperatorDepartmentRoleRemoveRequest
+  ): Observable<void> {
+    return this.httpService.deleteWithBody<void>(
+      'identity/api/operatordepartmentroles/remove',
+      request
     );
   }
 }

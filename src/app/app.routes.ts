@@ -239,14 +239,14 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
-      // {
-      //   path: 'departments',
-      //   loadComponent: () =>
-      //     import('./features/departments/departments.component').then(
-      //       (m) => m.DepartmentsComponent
-      //     ),
-      //   canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      // },
+      {
+        path: 'salerules',
+        loadComponent: () =>
+          import('./features/sales-rules/sales-rules.component').then(
+            (m) => m.SalesRulesComponent
+          ),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
       {
         path: 'teams',
         loadComponent: () =>
