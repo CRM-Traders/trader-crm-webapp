@@ -1,0 +1,157 @@
+// src/app/features/operators/components/operator-details-page/operator-details-page.component.scss
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+}
+
+// Animation for hover effects
+.transition-colors {
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+// Button hover animations
+button:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease;
+}
+
+// Card hover effects
+.bg-gray-50:hover {
+  background-color: #f8fafc;
+  transition: background-color 0.2s ease;
+}
+
+// Loading spinner
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive grid adjustments
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+// Form styling enhancements
+.form-input {
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Status badge animations
+.inline-flex {
+  &.px-2\.5 {
+    animation: fadeIn 0.3s ease-in;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// Copy button feedback
+.copy-feedback {
+  animation: pulse 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// Tab navigation styling
+.border-b-2 {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    border-bottom-width: 2px;
+  }
+}
+
+// Section content animations
+.fade-in {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Card shadow enhancements
+.rounded-lg {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+
+  &:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease;
+  }
+}
+
+// Dark mode enhancements
+@media (prefers-color-scheme: dark) {
+  .dark\:bg-gray-900 {
+    background-color: #111827;
+  }
+
+  .dark\:bg-gray-800 {
+    background-color: #1f2937;
+  }
+
+  .dark\:text-white {
+    color: #ffffff;
+  }
+
+  .dark\:text-gray-400 {
+    color: #9ca3af;
+  }
+}
