@@ -32,7 +32,6 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { Router } from '@angular/router';
-import { OperatorDetailsModalComponent } from './components/operator-details-modal/operator-details-modal.component';
 import { OperatorRegistrationModalComponent } from './components/operator-registration-modal/operator-registration-modal.component';
 
 @Component({
@@ -193,13 +192,12 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading operator statistics:', error);
           return of(null);
         })
       )
-      .subscribe((statistics) => {
+      .subscribe((statistics: any) => {
         if (statistics) {
-          this.statistics = statistics;
+          this.statistics = statistics.value;
         }
       });
   }
@@ -209,28 +207,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   }
 
   openOperatorDetailsModal(operator: Operator): void {
-    const modalRef = this.modalService.open(
-      OperatorDetailsModalComponent,
-      {
-        size: 'xl',
-        centered: true,
-        closable: true,
-      },
-      {
-        operator: operator,
-      }
-    );
-
-    modalRef.result.then(
-      (result) => {
-        if (result) {
-          this.refreshGrid();
-        }
-      },
-      () => {
-        // Modal dismissed
-      }
-    );
+    this.router.navigate(['/operators', operator.id, 'profile']);
   }
 
   confirmDelete(operator: Operator): void {

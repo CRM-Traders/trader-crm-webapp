@@ -57,20 +57,8 @@ export interface OperatorRoleCreateRequest {
 export interface OperatorStatistics {
   totalOperators: number;
   activeOperators: number;
-  operatorsByDepartment: DepartmentOperatorCount[];
-  operatorsByRole: RoleOperatorCount[];
-}
-
-export interface DepartmentOperatorCount {
-  departmentId: string;
-  departmentName: string;
-  operatorCount: number;
-}
-
-export interface RoleOperatorCount {
-  roleId: string;
-  roleName: string;
-  operatorCount: number;
+  operatorsByDepartmentCount: number;
+  operatorsByRoleCount: number;
 }
 
 export interface OperatorsListRequest {

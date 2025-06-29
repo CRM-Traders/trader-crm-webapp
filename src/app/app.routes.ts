@@ -154,6 +154,14 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
       },
       {
+        path: 'operators/:id/profile',
+        loadComponent: () =>
+          import(
+            './features/operators/components/operator-details-page/operator-details-page.component'
+          ).then((m) => m.OperatorDetailsPageComponent),
+        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      },
+      {
         path: 'communications',
         loadComponent: () =>
           import('./features/communications/communications.component').then(

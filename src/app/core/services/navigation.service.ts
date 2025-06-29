@@ -57,24 +57,22 @@ export class NavigationService {
       route: '/teams',
       requiredRoles: [UserRole.SuperAdmin],
     },
-
     {
       label: 'Clients',
       icon: 'traders',
       route: '/clients',
       requiredRoles: [UserRole.SuperAdmin],
     },
-
-    {
-      label: 'Affiliate Clients',
-      icon: 'traders',
-      route: '/affiliate-clients',
-      requiredRoles: [
-        UserRole.SuperAdmin,
-        UserRole.Affiliate,
-        UserRole.AffiliateManager,
-      ],
-    },
+    // {
+    //   label: 'Affiliate Clients',
+    //   icon: 'traders',
+    //   route: '/affiliate-clients',
+    //   requiredRoles: [
+    //     UserRole.SuperAdmin,
+    //     UserRole.Affiliate,
+    //     UserRole.AffiliateManager,
+    //   ],
+    // },
     {
       label: 'Affiliates',
       icon: 'affiliates',
@@ -99,31 +97,30 @@ export class NavigationService {
       route: '/workers',
       requiredRoles: [UserRole.SuperAdmin],
     },
-    {
-      label: 'Support',
-      icon: 'support',
-      route: '/communications',
-      requiredRoles: [UserRole.SuperAdmin],
-    },
-    {
-      label: 'Chat',
-      icon: 'chat',
-      route: '/employee-chat',
-      requiredRoles: [UserRole.SuperAdmin],
-    },
-    {
-      label: 'Tickets',
-      icon: 'tickets',
-      route: '/tickets',
-      requiredRoles: [UserRole.SuperAdmin],
-    },
+    // {
+    //   label: 'Support',
+    //   icon: 'support',
+    //   route: '/communications',
+    //   requiredRoles: [UserRole.SuperAdmin],
+    // },
+    // {
+    //   label: 'Chat',
+    //   icon: 'chat',
+    //   route: '/employee-chat',
+    //   requiredRoles: [UserRole.SuperAdmin],
+    // },
+    // {
+    //   label: 'Tickets',
+    //   icon: 'tickets',
+    //   route: '/tickets',
+    //   requiredRoles: [UserRole.SuperAdmin],
+    // },
     {
       label: 'Calendar',
       icon: 'calendar',
       route: '/calendar',
       requiredRoles: [UserRole.SuperAdmin],
     },
-
     {
       label: 'Documents',
       icon: 'documents',
@@ -140,18 +137,18 @@ export class NavigationService {
         UserRole.AffiliateManager,
       ],
     },
-    {
-      label: 'Trading Accounts',
-      icon: 'traders',
-      route: '/trading-accounts',
-      requiredRoles: [UserRole.SuperAdmin, UserRole.Client],
-    },
-    {
-      label: 'KYC',
-      icon: 'kyc',
-      route: '/kyc-verification',
-      requiredRoles: [UserRole.SuperAdmin, UserRole.Client, UserRole.Lead],
-    },
+    // {
+    //   label: 'Trading Accounts',
+    //   icon: 'traders',
+    //   route: '/trading-accounts',
+    //   requiredRoles: [UserRole.SuperAdmin, UserRole.Client],
+    // },
+    // {
+    //   label: 'KYC',
+    //   icon: 'kyc',
+    //   route: '/kyc-verification',
+    //   requiredRoles: [UserRole.SuperAdmin, UserRole.Client, UserRole.Lead],
+    // },
     {
       label: 'Sources',
       icon: 'sources',
