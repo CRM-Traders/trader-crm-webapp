@@ -70,8 +70,8 @@ export class LoginComponent {
           this.requiresTwoFactor = true;
           this.userId = result.userId;
         } else if (result.accessToken) {
-          // Login successful
-          this.router.navigateByUrl('/');
+          // Login successful - redirect to brand selection
+          this.router.navigate(['/auth/brand-selection']);
         }
         this.isLoading = false;
       },
@@ -96,7 +96,7 @@ export class LoginComponent {
       .subscribe(
         (result: any) => {
           if (result.accessToken) {
-            this.router.navigateByUrl('/');
+            this.router.navigate(['/auth/brand-selection']);
           } else {
             this.errorMessage =
               'Two-factor authentication failed. Please try again.';

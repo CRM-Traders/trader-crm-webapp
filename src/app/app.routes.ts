@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { publicGuard } from './core/guards/public.guard';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
 import { UserRole } from './core/models/roles.model';
+import { brandSelectionGuard } from './core/guards/brand.guard';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,14 @@ export const routes: Routes = [
         (m) => m.UnauthorizedComponent
       ),
     canActivate: [authGuard],
+  },
+  {
+    path: 'auth/brand-selection',
+    loadComponent: () =>
+      import('./features/brand-selection/brand-selection.component').then(
+        (m) => m.BrandSelectionComponent
+      ),
+    canActivate: [brandSelectionGuard],
   },
 
   // Auth With Layout
