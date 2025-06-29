@@ -131,31 +131,31 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   ];
 
   gridActions: GridAction[] = [
-    {
-      id: 'view',
-      label: 'View Details',
-      icon: 'view',
-      action: (item: Operator) => this.openOperatorDetailsModal(item),
-    },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Operator) => this.openOperatorDetailsModal(item),
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      action: (item: Operator) => this.confirmDelete(item),
-    },
-    {
-      id: 'permissions',
-      label: 'Permissions',
-      icon: 'permission',
-      type: 'primary',
-      action: (item) => this.openPermissionDialog(item),
-    },
+    // {
+    //   id: 'view',
+    //   label: 'View Details',
+    //   icon: 'view',
+    //   action: (item: Operator) => this.openOperatorDetailsModal(item),
+    // },
+    // {
+    //   id: 'edit',
+    //   label: 'Edit',
+    //   icon: 'edit',
+    //   action: (item: Operator) => this.openOperatorDetailsModal(item),
+    // },
+    // {
+    //   id: 'delete',
+    //   label: 'Delete',
+    //   icon: 'delete',
+    //   action: (item: Operator) => this.confirmDelete(item),
+    // },
+    // {
+    //   id: 'permissions',
+    //   label: 'Permissions',
+    //   icon: 'permission',
+    //   type: 'primary',
+    //   action: (item) => this.openPermissionDialog(item),
+    // },
   ];
 
   constructor() {}

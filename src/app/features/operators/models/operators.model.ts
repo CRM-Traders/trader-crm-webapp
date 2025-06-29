@@ -19,6 +19,20 @@ export interface Operator {
   createdBy: string;
   lastModifiedAt: string | null;
   lastModifiedBy: string | null;
+  branches?: OperatorBranch[];
+  departments?: OperatorDepartment[];
+}
+
+export interface OperatorBranch {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export interface OperatorDepartment {
+  operatorDepartmentRoleId: string;
+  departmentName: string;
+  roleName: string;
 }
 
 export interface OperatorCreateRequest {
@@ -154,6 +168,36 @@ export enum UserType {
   RetentionAgent = 19,
   SupportAgent = 20,
   AffiliateManager = 21,
+}
+
+export interface UserProfileUpdateRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  countryCode: string;
+}
+
+export interface UserOrganizationAssignRequest {
+  userId: string;
+  level: number;
+  entityId: string;
+}
+
+export interface UserOrganizationReassignRequest {
+  userOrganizationId: string;
+  newLevel: number;
+  newEntityId: string;
+}
+
+export interface OperatorDepartmentRoleAssignRequest {
+  operatorId: string;
+  operatorRoleId: string;
+}
+
+export interface OperatorDepartmentRoleRemoveRequest {
+  operatorId: string;
+  operatorRoleId: string;
 }
 
 export const BranchTypeLabels: Record<BranchType, string> = {

@@ -1,5 +1,3 @@
-// src/app/features/operators/components/operator-details-page/operator-details-page.component.ts
-
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -8,12 +6,13 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Subject, takeUntil, catchError, of } from 'rxjs';
+import { Subject, takeUntil, catchError, of, switchMap } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { ModalService } from '../../../../shared/services/modals/modal.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { OperatorsService } from '../../services/operators.service';
 import { UsersService } from '../../../client-details/services/user.service';
+import { CountryService } from '../../../../core/services/country.service';
 import {
   Operator,
   OperatorUpdateRequest,
@@ -24,13 +23,19 @@ import {
   UserTypeLabels,
   UserTypeColors,
   OperatorRole,
+  UserProfileUpdateRequest,
+  UserOrganizationAssignRequest,
+  OperatorDepartmentRoleAssignRequest,
+  OperatorBranch,
+  OperatorDepartment,
 } from '../../models/operators.model';
+import { Country } from '../../../../core/models/country.model';
 
 export enum OperatorDetailSection {
   Profile = 'profile',
-  Permissions = 'permissions',
-  ActivityLog = 'activity-log',
   Departments = 'departments',
+  Branches = 'branches',
+  ActivityLog = 'activity-log',
   Settings = 'settings',
 }
 
@@ -89,12 +94,6 @@ export enum OperatorDetailSection {
                   [ngClass]="UserTypeColors[operator.userType]"
                 >
                   {{ UserTypeLabels[operator.userType] }}
-                </span>
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  [ngClass]="BranchTypeColors[operator.branchType]"
-                >
-                  {{ BranchTypeLabels[operator.branchType] }}
                 </span>
               </div>
             </div>
@@ -161,55 +160,55 @@ export enum OperatorDetailSection {
               </div>
             </div>
 
-            <!-- Department -->
+            <!-- Departments -->
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                Department
+                Departments
               </div>
               <div class="font-semibold text-gray-900 dark:text-white">
-                {{ operator.departmentName || 'Not assigned' }}
+                {{ operator.departments?.length || 0 }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">
-                ID: {{ operator.departmentId }}
+                {{ getDepartmentsSummary() }}
               </div>
             </div>
 
-            <!-- Role -->
+            <!-- Primary Role -->
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                Role
+                Primary Role
               </div>
               <div class="font-semibold text-gray-900 dark:text-white">
                 {{ operator.roleName || 'Not assigned' }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">
-                ID: {{ operator.roleId }}
+                {{ operator.departmentName }}
               </div>
             </div>
 
-            <!-- Branch Type -->
+            <!-- Branches -->
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                Branch Type
+                Branches
               </div>
               <div class="font-semibold text-gray-900 dark:text-white">
-                {{ BranchTypeLabels[operator.branchType] }}
+                {{ operator.branches?.length || 0 }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">
-                {{ operator.branchTypeName }}
+                {{ getBranchesSummary() }}
               </div>
             </div>
 
-            <!-- Branch -->
+            <!-- Primary Branch -->
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
               <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                Branch
+                Primary Branch
               </div>
               <div class="font-semibold text-gray-900 dark:text-white">
                 {{ operator.branchName || 'Not assigned' }}
               </div>
               <div class="text-xs text-gray-500 dark:text-gray-400">
-                ID: {{ operator.branchId }}
+                {{ BranchTypeLabels[operator.branchType] }}
               </div>
             </div>
 
@@ -227,361 +226,91 @@ export enum OperatorDetailSection {
             </div>
           </div>
 
-          <!-- Personal Information & System Details -->
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <!-- Personal Information -->
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h3
-                class="text-sm font-semibold text-gray-900 dark:text-white mb-3"
+          <!-- Navigation Tabs -->
+          <div class="sticky top-0 z-10 bg-white">
+            <div
+              class="flex justify-center flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700"
+            >
+              <button
+                *ngFor="let section of navigationSections"
+                type="button"
+                class="px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors"
+                [ngClass]="{
+                  'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20':
+                    activeSection === section.key,
+                  'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600':
+                    activeSection !== section.key
+                }"
+                (click)="setActiveSection(section.key)"
               >
-                Personal Information
-              </h3>
-              <div class="space-y-2 text-sm">
-                <div class="flex justify-between">
-                  <span class="text-gray-500 dark:text-gray-400"
-                    >Full Name:</span
-                  >
-                  <span class="text-gray-900 dark:text-white">{{
-                    operator.userFullName
-                  }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-500 dark:text-gray-400">Email:</span>
-                  <div class="flex items-center">
-                    <span class="text-gray-900 dark:text-white mr-2 break-all">
-                      <span
-                        *ngIf="emailLoading"
-                        class="inline-flex items-center"
-                      >
-                        <div
-                          class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"
-                        ></div>
-                        Loading...
-                      </span>
-                      <span *ngIf="!emailLoading">
-                        {{
-                          showEmail
-                            ? operatorEmail
-                            : emailFetched
-                            ? maskEmail(operatorEmail)
-                            : 'Hidden'
-                        }}
-                      </span>
-                    </span>
-                    <button
-                      class="text-gray-400 hover:text-gray-600 transition-colors"
-                      (click)="toggleEmailVisibility()"
-                      [disabled]="emailLoading"
-                      [title]="
-                        showEmail ? 'Hide email address' : 'Show email address'
-                      "
+                <div class="flex items-center">
+                  <ng-container [ngSwitch]="section.key">
+                    <!-- Profile Icon -->
+                    <svg
+                      *ngSwitchCase="'profile'"
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        *ngIf="!showEmail"
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        ></path>
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        ></path>
-                      </svg>
-                      <svg
-                        *ngIf="showEmail"
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                        ></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-500 dark:text-gray-400">Phone:</span>
-                  <div class="flex items-center">
-                    <span class="text-gray-900 dark:text-white mr-2">
-                      <span
-                        *ngIf="phoneLoading"
-                        class="inline-flex items-center"
-                      >
-                        <div
-                          class="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"
-                        ></div>
-                        Loading...
-                      </span>
-                      <span *ngIf="!phoneLoading">
-                        {{
-                          showPhone
-                            ? operatorPhone || 'Not provided'
-                            : phoneFetched
-                            ? maskPhone(operatorPhone)
-                            : 'Hidden'
-                        }}
-                      </span>
-                    </span>
-                    <button
-                      class="text-gray-400 hover:text-gray-600 transition-colors"
-                      (click)="togglePhoneVisibility()"
-                      [disabled]="phoneLoading"
-                      [title]="
-                        showPhone ? 'Hide phone number' : 'Show phone number'
-                      "
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      ></path>
+                    </svg>
+                    <!-- Departments Icon -->
+                    <svg
+                      *ngSwitchCase="'departments'"
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        *ngIf="!showPhone"
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                        ></path>
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        ></path>
-                      </svg>
-                      <svg
-                        *ngIf="showPhone"
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                        ></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-500 dark:text-gray-400">User ID:</span>
-                  <div class="flex items-center">
-                    <span
-                      class="text-gray-900 dark:text-white mr-2 font-mono"
-                      >{{ operator.userId }}</span
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                      ></path>
+                    </svg>
+                    <!-- Branches Icon -->
+                    <svg
+                      *ngSwitchCase="'branches'"
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                    <button
-                      class="text-gray-400 hover:text-gray-600"
-                      (click)="copyToClipboard(operator.userId)"
-                      title="Copy User ID"
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      ></path>
+                    </svg>
+                    <!-- Default Icon for other sections -->
+                    <svg
+                      *ngSwitchDefault
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        ></path>
-                      </svg>
-                    </button>
-                  </div>
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                  </ng-container>
+                  {{ section.label }}
                 </div>
-              </div>
-            </div>
-
-            <!-- Hierarchy Information -->
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h3
-                class="text-sm font-semibold text-gray-900 dark:text-white mb-3"
-              >
-                Hierarchy Information
-              </h3>
-              <div class="space-y-3 text-sm">
-                <div>
-                  <div class="text-gray-500 dark:text-gray-400 mb-1">
-                    Department
-                  </div>
-                  <div class="text-gray-900 dark:text-white">
-                    {{ operator.departmentName || 'Not assigned' }}
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
-                    ID: {{ operator.departmentId }}
-                  </div>
-                </div>
-                <div>
-                  <div class="text-gray-500 dark:text-gray-400 mb-1">Role</div>
-                  <div class="text-gray-900 dark:text-white">
-                    {{ operator.roleName || 'Not assigned' }}
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
-                    ID: {{ operator.roleId }}
-                  </div>
-                </div>
-                <div>
-                  <div class="text-gray-500 dark:text-gray-400 mb-1">
-                    Branch
-                  </div>
-                  <div class="text-gray-900 dark:text-white">
-                    {{ operator.branchName || 'Not assigned' }}
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
-                    Type: {{ BranchTypeLabels[operator.branchType] }} | ID:
-                    {{ operator.branchId }}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Audit Information -->
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-              <h3
-                class="text-sm font-semibold text-gray-900 dark:text-white mb-3"
-              >
-                Audit Information
-              </h3>
-              <div class="space-y-3 text-sm">
-                <div>
-                  <div class="text-gray-500 dark:text-gray-400 mb-1">
-                    Created
-                  </div>
-                  <div class="text-gray-900 dark:text-white">
-                    {{ operator.createdAt | date : 'medium' }}
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
-                    by {{ operator.createdBy }}
-                  </div>
-                </div>
-                <div *ngIf="operator.lastModifiedAt">
-                  <div class="text-gray-500 dark:text-gray-400 mb-1">
-                    Last Modified
-                  </div>
-                  <div class="text-gray-900 dark:text-white">
-                    {{ operator.lastModifiedAt | date : 'medium' }}
-                  </div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400">
-                    by {{ operator.lastModifiedBy }}
-                  </div>
-                </div>
-                <div *ngIf="!operator.lastModifiedAt">
-                  <div class="text-gray-500 dark:text-gray-400 mb-1">
-                    Last Modified
-                  </div>
-                  <div class="text-gray-900 dark:text-white">
-                    Never modified
-                  </div>
-                </div>
-              </div>
+              </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Navigation Tabs -->
-      <div class="sticky top-0 z-10 bg-white">
-        <div
-          class="flex justify-center flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700"
-        >
-          <button
-            *ngFor="let section of navigationSections"
-            type="button"
-            class="px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors"
-            [ngClass]="{
-              'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20':
-                activeSection === section.key,
-              'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600':
-                activeSection !== section.key
-            }"
-            (click)="setActiveSection(section.key)"
-          >
-            <div class="flex items-center">
-              <ng-container [ngSwitch]="section.key">
-                <!-- Profile Icon -->
-                <svg
-                  *ngSwitchCase="'profile'"
-                  class="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  ></path>
-                </svg>
-                <!-- Permissions Icon -->
-                <svg
-                  *ngSwitchCase="'permissions'"
-                  class="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  ></path>
-                </svg>
-                <!-- Activity Log Icon -->
-                <svg
-                  *ngSwitchCase="'activity-log'"
-                  class="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-                <!-- Default Icon for other sections -->
-                <svg
-                  *ngSwitchDefault
-                  class="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  ></path>
-                </svg>
-              </ng-container>
-              {{ section.label }}
-            </div>
-          </button>
         </div>
       </div>
 
@@ -600,7 +329,7 @@ export enum OperatorDetailSection {
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <!-- Operator Information Form -->
+              <!-- Personal Information Form -->
               <div
                 class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
               >
@@ -608,7 +337,7 @@ export enum OperatorDetailSection {
                   <h3
                     class="text-lg font-semibold text-gray-900 dark:text-white"
                   >
-                    Operator Information
+                    Personal Information
                   </h3>
                   <button
                     type="button"
@@ -633,7 +362,99 @@ export enum OperatorDetailSection {
                   </button>
                 </div>
 
-                <form [formGroup]="profileForm" class="space-y-6">
+                <form [formGroup]="profileForm" class="space-y-4">
+                  <!-- First Name and Last Name -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        First Name <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        formControlName="firstName"
+                        [readonly]="!isEditingProfile"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        [class.bg-gray-50]="!isEditingProfile"
+                        [class.dark:bg-gray-800]="!isEditingProfile"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Last Name <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        formControlName="lastName"
+                        [readonly]="!isEditingProfile"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        [class.bg-gray-50]="!isEditingProfile"
+                        [class.dark:bg-gray-800]="!isEditingProfile"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Email -->
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Email <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      formControlName="email"
+                      [readonly]="!isEditingProfile"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      [class.bg-gray-50]="!isEditingProfile"
+                      [class.dark:bg-gray-800]="!isEditingProfile"
+                    />
+                  </div>
+
+                  <!-- Phone Number -->
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      formControlName="phoneNumber"
+                      [readonly]="!isEditingProfile"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      [class.bg-gray-50]="!isEditingProfile"
+                      [class.dark:bg-gray-800]="!isEditingProfile"
+                    />
+                  </div>
+
+                  <!-- Country -->
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Country <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                      formControlName="countryCode"
+                      [disabled]="!isEditingProfile"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      [class.bg-gray-50]="!isEditingProfile"
+                      [class.dark:bg-gray-800]="!isEditingProfile"
+                    >
+                      <option value="">-- Select Country --</option>
+                      <option
+                        *ngFor="let country of countries$ | async"
+                        [value]="country.code"
+                      >
+                        {{ country.name }}
+                      </option>
+                    </select>
+                  </div>
+
                   <!-- User Type -->
                   <div>
                     <label
@@ -718,74 +539,6 @@ export enum OperatorDetailSection {
                     </select>
                   </div>
 
-                  <!-- Department -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Department
-                    </label>
-                    <input
-                      type="text"
-                      [value]="operator.departmentName || 'Not assigned'"
-                      readonly
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    />
-                  </div>
-
-                  <!-- Role -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Role
-                    </label>
-                    <input
-                      type="text"
-                      [value]="operator.roleName || 'Not assigned'"
-                      readonly
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    />
-                  </div>
-
-                  <!-- Branch Type -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Branch Type
-                    </label>
-                    <select
-                      formControlName="branchType"
-                      [disabled]="!isEditingProfile"
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                      [class.bg-gray-50]="!isEditingProfile"
-                      [class.dark:bg-gray-800]="!isEditingProfile"
-                    >
-                      <option [value]="BranchType.Office">Office</option>
-                      <option [value]="BranchType.Desk">Desk</option>
-                      <option [value]="BranchType.Team">Team</option>
-                      <option [value]="BranchType.Brand">Brand</option>
-                    </select>
-                  </div>
-
-                  <!-- Branch -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Branch
-                    </label>
-                    <input
-                      type="text"
-                      formControlName="branchId"
-                      [readonly]="!isEditingProfile"
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                      [class.bg-gray-50]="!isEditingProfile"
-                      [class.dark:bg-gray-800]="!isEditingProfile"
-                    />
-                  </div>
-
                   <!-- Action Buttons for Profile -->
                   <div
                     *ngIf="isEditingProfile"
@@ -801,9 +554,10 @@ export enum OperatorDetailSection {
                     <button
                       type="button"
                       (click)="saveProfileInfo()"
-                      class="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                      [disabled]="profileForm.invalid || isSavingProfile"
+                      class="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Save Changes
+                      {{ isSavingProfile ? 'Saving...' : 'Save Changes' }}
                     </button>
                   </div>
                 </form>
@@ -897,42 +651,34 @@ export enum OperatorDetailSection {
                       <label
                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                       >
-                        Department ID
+                        Created
                       </label>
                       <input
                         type="text"
-                        [value]="operator.departmentId"
+                        [value]="operator.createdAt | date : 'medium'"
                         readonly
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 font-mono text-sm"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800"
                       />
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        by {{ operator.createdBy }}
+                      </p>
                     </div>
 
-                    <div>
+                    <div *ngIf="operator.lastModifiedAt">
                       <label
                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                       >
-                        Role ID
+                        Last Modified
                       </label>
                       <input
                         type="text"
-                        [value]="operator.roleId"
+                        [value]="operator.lastModifiedAt | date : 'medium'"
                         readonly
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 font-mono text-sm"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800"
                       />
-                    </div>
-
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                      >
-                        Branch ID
-                      </label>
-                      <input
-                        type="text"
-                        [value]="operator.branchId"
-                        readonly
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 font-mono text-sm"
-                      />
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        by {{ operator.lastModifiedBy }}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -940,39 +686,86 @@ export enum OperatorDetailSection {
             </div>
           </div>
 
-          <!-- Permissions Section -->
-          <!-- <div *ngSwitchCase="'permissions'">
-            <div class="max-w-6xl mx-auto">
-              <div class="text-center py-12">
-                <svg
-                  class="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  ></path>
-                </svg>
-                <h3
-                  class="mt-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Permissions Management
-                </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Manage operator permissions and access rights.
-                </p>
-                <div class="mt-6">
+          <!-- Departments Section -->
+          <div *ngSwitchCase="'departments'" class="max-w-6xl mx-auto">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Department Assignments
+              </h2>
+              <p class="text-gray-600 dark:text-gray-400">
+                Manage operator department and role assignments
+              </p>
+            </div>
+
+            <!-- Add Department Form -->
+            <div
+              class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
+            >
+              <h3
+                class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+              >
+                Add Department
+              </h3>
+              <form [formGroup]="departmentForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Department <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                      formControlName="departmentId"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      (change)="onDepartmentChange($event.target)"
+                    >
+                      <option value="">-- Select --</option>
+                      <option
+                        *ngFor="let dept of availableDepartments"
+                        [value]="dept.id"
+                      >
+                        {{ dept.value }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Role <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                      formControlName="roleId"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      [disabled]="!availableRoles.length"
+                    >
+                      <option value="">
+                        {{
+                          availableRoles.length
+                            ? '-- Select --'
+                            : '-- No items --'
+                        }}
+                      </option>
+                      <option
+                        *ngFor="let role of availableRoles"
+                        [value]="role.id"
+                      >
+                        {{ role.value }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex justify-end">
                   <button
                     type="button"
-                    (click)="managePermissions()"
-                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    (click)="addDepartment()"
+                    [disabled]="departmentForm.invalid || isAddingDepartment"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <svg
-                      class="-ml-1 mr-2 h-5 w-5"
+                      class="w-4 h-4 mr-2"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -981,132 +774,236 @@ export enum OperatorDetailSection {
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        d="M12 4v16m8-8H4"
                       ></path>
                     </svg>
-                    Manage Permissions
+                    {{ isAddingDepartment ? 'Adding...' : 'Add Department' }}
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
-          </div> -->
 
-          <!-- Activity Log Section -->
-          <!-- <div *ngSwitchCase="'activity-log'">
-            <div class="max-w-6xl mx-auto">
-              <div class="text-center py-12">
-                <svg
-                  class="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  ></path>
-                </svg>
-                <h3
-                  class="mt-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Activity Log
+            <!-- Departments List -->
+            <div
+              class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+            >
+              <div
+                class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+              >
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  Assigned Departments
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  View operator activity history and login records.
-                </p>
-                <div class="mt-6">
+              </div>
+              <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                <div
+                  *ngFor="let dept of operator.departments"
+                  class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                >
+                  <div>
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      {{ dept.departmentName }}
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Role: {{ dept.roleName }}
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    (click)="removeDepartment(dept.operatorDepartmentRoleId)"
+                    class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                    title="Remove Department"
                   >
-                    Coming Soon
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      ></path>
+                    </svg>
                   </button>
                 </div>
-              </div>
-            </div>
-          </div> -->
-
-          <!-- Departments Section -->
-          <div *ngSwitchCase="'departments'">
-            <div class="max-w-6xl mx-auto">
-              <div class="text-center py-12">
-                <svg
-                  class="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <div
+                  *ngIf="
+                    !operator.departments || operator.departments.length === 0
+                  "
+                  class="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  ></path>
-                </svg>
-                <h3
-                  class="mt-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Department Management
-                </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Manage operator department assignments and roles.
-                </p>
-                <div class="mt-6">
-                  <button
-                    type="button"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Coming Soon
-                  </button>
+                  No departments assigned yet
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Settings Section -->
-          <!-- <div *ngSwitchCase="'settings'">
-            <div class="max-w-6xl mx-auto">
-              <div class="text-center py-12">
-                <svg
-                  class="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  ></path>
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  ></path>
-                </svg>
-                <h3
-                  class="mt-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Operator Settings
-                </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Configure operator preferences and settings.
-                </p>
-                <div class="mt-6">
+          <!-- Branches Section -->
+          <div *ngSwitchCase="'branches'" class="max-w-6xl mx-auto">
+            <div class="mb-6">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Branch Assignments
+              </h2>
+              <p class="text-gray-600 dark:text-gray-400">
+                Manage operator branch assignments
+              </p>
+            </div>
+
+            <!-- Add Branch Form -->
+            <div
+              class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
+            >
+              <h3
+                class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+              >
+                Add Branch
+              </h3>
+              <form [formGroup]="branchForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Branch Type <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                      formControlName="branchType"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      (change)="onBranchTypeChange()"
+                    >
+                      <option value="">-- Select --</option>
+                      <option [value]="BranchType.Office">Office</option>
+                      <option [value]="BranchType.Desk">Desk</option>
+                      <option [value]="BranchType.Team">Team</option>
+                      <option [value]="BranchType.Brand">Brand</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Branch <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                      formControlName="branchId"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      [disabled]="
+                        !branchForm.get('branchType')?.value || loadingBranches
+                      "
+                    >
+                      <option value="">
+                        {{
+                          branchForm.get('branchType')?.value
+                            ? loadingBranches
+                              ? 'Loading...'
+                              : availableBranches.length
+                              ? '-- Select --'
+                              : 'No branches available'
+                            : 'Select branch type first'
+                        }}
+                      </option>
+                      <option
+                        *ngFor="let branch of availableBranches"
+                        [value]="branch.id"
+                      >
+                        {{ branch.value }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex justify-end">
                   <button
                     type="button"
-                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    (click)="addBranch()"
+                    [disabled]="branchForm.invalid || isAddingBranch"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Coming Soon
+                    <svg
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                      ></path>
+                    </svg>
+                    {{ isAddingBranch ? 'Adding...' : 'Add Branch' }}
                   </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Branches List -->
+            <div
+              class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+            >
+              <div
+                class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+              >
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                  Assigned Branches
+                </h3>
+              </div>
+              <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                <div
+                  *ngFor="let branch of operator.branches"
+                  class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                >
+                  <div>
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Type: {{ branch.type }}
+                    </p>
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
+                      Branch: {{ branch.name }}
+                    </p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      ID: {{ branch.id }}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="removeBranch(branch.id)"
+                    class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                    title="Remove Branch"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+                <div
+                  *ngIf="!operator.branches || operator.branches.length === 0"
+                  class="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+                >
+                  No branches assigned yet
                 </div>
               </div>
             </div>
-          </div> -->
+          </div>
         </div>
       </div>
     </div>
@@ -1132,6 +1029,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private operatorsService = inject(OperatorsService);
   private userService = inject(UsersService);
+  private countryService = inject(CountryService);
 
   private destroy$ = new Subject<void>();
 
@@ -1139,19 +1037,21 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   operator!: Operator;
   operatorId!: string;
 
-  // Visibility properties for email and phone
-  showEmail = false;
-  showPhone = false;
-  emailLoading = false;
-  phoneLoading = false;
-  emailFetched = false;
-  phoneFetched = false;
-  operatorEmail = '';
-  operatorPhone = '';
-
   // Form properties
   profileForm: FormGroup;
+  departmentForm: FormGroup;
+  branchForm: FormGroup;
   isEditingProfile = false;
+  isSavingProfile = false;
+  isAddingDepartment = false;
+  isAddingBranch = false;
+  loadingBranches = false;
+
+  // Data properties
+  countries$ = this.countryService.getCountries();
+  availableDepartments: any[] = [];
+  availableRoles: OperatorRole[] = [];
+  availableBranches: any[] = [];
 
   // Constants
   BranchType = BranchType;
@@ -1163,15 +1063,26 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   navigationSections = [
     { key: OperatorDetailSection.Profile, label: 'Profile' },
-    //{ key: OperatorDetailSection.Permissions, label: 'Permissions' },
-    //{ key: OperatorDetailSection.ActivityLog, label: 'Activity Log' },
     { key: OperatorDetailSection.Departments, label: 'Departments' },
-    //{ key: OperatorDetailSection.Settings, label: 'Settings' },
+    { key: OperatorDetailSection.Branches, label: 'Branches' },
   ];
 
   constructor() {
     this.profileForm = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      phoneNumber: [''],
+      countryCode: ['', Validators.required],
       userType: ['', Validators.required],
+    });
+
+    this.departmentForm = this.fb.group({
+      departmentId: ['', Validators.required],
+      roleId: ['', Validators.required],
+    });
+
+    this.branchForm = this.fb.group({
       branchType: ['', Validators.required],
       branchId: ['', Validators.required],
     });
@@ -1187,6 +1098,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
     this.operatorId = operatorId;
     this.loadOperatorDetails();
+    this.loadDepartments();
   }
 
   ngOnDestroy(): void {
@@ -1209,7 +1121,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       .subscribe((operator) => {
         if (operator) {
           this.operator = operator;
-          this.operatorEmail = operator.userEmail;
           this.initializeForms();
           console.log('Operator loaded:', this.operator);
         }
@@ -1218,101 +1129,59 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   private initializeForms(): void {
     if (this.operator) {
+      // Parse full name into first and last name
+      const names = this.operator.userFullName.split(' ');
+      const firstName = names[0] || '';
+      const lastName = names.slice(1).join(' ') || '';
+
       this.profileForm.patchValue({
+        firstName: firstName,
+        lastName: lastName,
+        email: this.operator.userEmail,
+        phoneNumber: '', // Will be loaded separately if needed
+        countryCode: '', // Will be loaded separately if needed
         userType: this.operator.userType,
-        branchType: this.operator.branchType,
-        branchId: this.operator.branchId,
       });
+
+      // Load user details for phone and country
+      this.loadUserDetails();
     }
   }
 
-  // Email visibility methods
-  toggleEmailVisibility(): void {
-    if (!this.showEmail && !this.emailFetched) {
-      // Fetch email when showing for the first time
-      this.emailLoading = true;
-      this.userService.getEmail(this.operator.userId).subscribe(
-        (email) => {
-          this.operatorEmail = email.email;
-          this.emailFetched = true;
-          this.emailLoading = false;
-          this.showEmail = true;
-          console.log('Operator email loaded:', this.operatorEmail);
-        },
-        (error) => {
-          console.error('Error loading operator email:', error);
-          this.emailLoading = false;
-          this.showEmail = true;
-        }
-      );
-    } else {
-      this.showEmail = !this.showEmail;
-    }
+  private loadUserDetails(): void {
+    // Load email
+    this.userService.getEmail(this.operator.userId).subscribe(
+      (email) => {
+        this.profileForm.patchValue({ email: email.email });
+      },
+      (error) => {
+        console.error('Error loading email:', error);
+      }
+    );
+
+    // Load phone
+    this.userService.getPhone(this.operator.userId).subscribe(
+      (phone) => {
+        this.profileForm.patchValue({ phoneNumber: phone.phoneNumber });
+      },
+      (error) => {
+        console.error('Error loading phone:', error);
+      }
+    );
+
+    // TODO: Load country when endpoint is available
+    // For now, defaulting to empty
   }
 
-  maskEmail(email: string | undefined): string {
-    if (!email) return 'Not provided';
-    const parts = email.split('@');
-    if (parts.length !== 2) return '***@***.***';
-
-    const username = parts[0];
-    const domain = parts[1];
-
-    const maskedUsername =
-      username.length > 4
-        ? username.substring(0, 2) + '*'.repeat(username.length - 2)
-        : username.substring(0, 1) + '*'.repeat(username.length - 1);
-
-    const domainParts = domain.split('.');
-    const maskedDomain = domainParts
-      .map((part, index) =>
-        index === domainParts.length - 1 ? part : '*'.repeat(part.length)
-      )
-      .join('.');
-
-    return `${maskedUsername}@${maskedDomain}`;
-  }
-
-  // Phone visibility methods
-  togglePhoneVisibility(): void {
-    if (!this.showPhone && !this.phoneFetched) {
-      this.phoneLoading = true;
-      this.userService.getPhone(this.operator.userId).subscribe(
-        (phone) => {
-          this.operatorPhone = phone.phoneNumber;
-          this.phoneFetched = true;
-          this.phoneLoading = false;
-          this.showPhone = true;
-          console.log('Operator phone loaded:', this.operatorPhone);
-        },
-        (error) => {
-          console.error('Error loading operator phone:', error);
-          this.phoneLoading = false;
-          this.showPhone = true;
-        }
-      );
-    } else {
-      this.showPhone = !this.showPhone;
-    }
-  }
-
-  maskPhone(phone: string | undefined): string {
-    if (!phone) return 'Not provided';
-
-    const cleanPhone = phone.replace(/\D/g, '');
-
-    if (cleanPhone.length < 4) {
-      return '*'.repeat(phone.length);
-    }
-
-    const lastFour = cleanPhone.slice(-4);
-    const maskedPart = '*'.repeat(cleanPhone.length - 4);
-
-    if (phone.includes('-') || phone.includes(' ') || phone.includes('(')) {
-      return phone.replace(/\d(?=.*\d{4})/g, '*');
-    }
-
-    return maskedPart + lastFour;
+  private loadDepartments(): void {
+    this.operatorsService.getDepartmentsDropdown({ pageSize: 100 }).subscribe(
+      (response) => {
+        this.availableDepartments = response.items;
+      },
+      (error) => {
+        console.error('Error loading departments:', error);
+      }
+    );
   }
 
   setActiveSection(section: OperatorDetailSection): void {
@@ -1328,16 +1197,31 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       : fullName.substring(0, 2).toUpperCase();
   }
 
+  getDepartmentsSummary(): string {
+    const count = this.operator.departments?.length || 0;
+    if (count === 0) return 'No departments';
+    if (count === 1) return '1 department';
+    return `${count} departments`;
+  }
+
+  getBranchesSummary(): string {
+    const count = this.operator.branches?.length || 0;
+    if (count === 0) return 'No branches';
+    if (count === 1) return '1 branch';
+    return `${count} branches`;
+  }
+
+  getRoleName(operatorDepartmentRoleId: string): string {
+    // TODO: Implement role name lookup
+    return 'Role';
+  }
+
   goBack(): void {
     this.router.navigate(['/operators']);
   }
 
   changePassword(): void {
     this.alertService.info('Change password functionality coming soon');
-  }
-
-  managePermissions(): void {
-    this.alertService.info('Permissions management functionality coming soon');
   }
 
   refreshData(): void {
@@ -1363,32 +1247,189 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   saveProfileInfo(): void {
     if (this.profileForm.valid) {
-      const updateRequest: OperatorUpdateRequest = {
-        id: this.operator.id,
-        userType: this.profileForm.value.userType,
-        branchType: this.profileForm.value.branchType,
-        branchId: this.profileForm.value.branchId,
+      this.isSavingProfile = true;
+
+      // Update user profile
+      const profileRequest: UserProfileUpdateRequest = {
+        firstName: this.profileForm.value.firstName,
+        lastName: this.profileForm.value.lastName,
+        email: this.profileForm.value.email,
+        phoneNumber: this.profileForm.value.phoneNumber || '',
+        countryCode: this.profileForm.value.countryCode,
       };
 
       this.operatorsService
-        .updateOperator(updateRequest)
+        .updateUserProfile(this.operator.userId, profileRequest)
         .pipe(
+          switchMap(() => {
+            // Update operator user type if changed
+            if (this.profileForm.value.userType !== this.operator.userType) {
+              const updateRequest: OperatorUpdateRequest = {
+                id: this.operator.id,
+                userType: this.profileForm.value.userType,
+              };
+              return this.operatorsService.updateOperator(updateRequest);
+            }
+            return of(null);
+          }),
           takeUntil(this.destroy$),
           catchError((error) => {
-            this.alertService.error('Failed to update operator profile');
-            console.error('Error updating operator:', error);
+            this.alertService.error('Failed to update profile');
+            console.error('Error updating profile:', error);
+            this.isSavingProfile = false;
             return of(null);
           })
         )
         .subscribe((result) => {
-          if (result !== null) {
-            this.alertService.success('Operator profile updated successfully');
+          if (result) {
+            this.alertService.success('Profile updated successfully');
             this.isEditingProfile = false;
+            this.isSavingProfile = false;
             this.loadOperatorDetails(); // Refresh data
           }
         });
     } else {
       this.alertService.error('Please fill in all required fields');
     }
+  }
+
+  onDepartmentChange(departmentId: any): void {
+    this.availableRoles = [];
+    this.departmentForm.patchValue({ roleId: '' });
+
+    if (departmentId.value) {
+      this.operatorsService
+        .getOperatorRolesByDepartment(departmentId.value)
+        .subscribe({
+          next: (roles: any) => {
+            this.availableRoles = roles.items;
+          },
+          error: (error) => {
+            console.error('Error loading roles:', error);
+            this.availableRoles = [];
+          },
+        });
+    }
+  }
+
+  addDepartment(): void {
+    if (this.departmentForm.valid) {
+      this.isAddingDepartment = true;
+
+      const request: OperatorDepartmentRoleAssignRequest = {
+        operatorId: this.operator.id,
+        operatorRoleId: this.departmentForm.value.roleId,
+      };
+
+      this.operatorsService
+        .assignOperatorDepartmentRole(request)
+        .pipe(
+          takeUntil(this.destroy$),
+          catchError((error) => {
+            this.alertService.error('Failed to add department');
+            console.error('Error adding department:', error);
+            this.isAddingDepartment = false;
+            return of(null);
+          })
+        )
+        .subscribe((result) => {
+          if (result) {
+            this.alertService.success('Department added successfully');
+            this.isAddingDepartment = false;
+            this.departmentForm.reset();
+            this.loadOperatorDetails(); // Refresh data
+          }
+        });
+    }
+  }
+
+  removeDepartment(operatorDepartmentRoleId: string): void {
+    // TODO: Need to implement this based on the API
+    this.alertService.info('Remove department functionality coming soon');
+  }
+
+  // Branch management methods
+  onBranchTypeChange(): void {
+    const branchType = this.branchForm.get('branchType')?.value;
+    this.branchForm.patchValue({ branchId: '' });
+    this.availableBranches = [];
+
+    if (branchType !== '' && branchType !== null && branchType !== undefined) {
+      this.loadBranchesForType(parseInt(branchType));
+    }
+  }
+
+  private loadBranchesForType(branchType: BranchType): void {
+    this.loadingBranches = true;
+    let observable;
+
+    switch (branchType) {
+      case BranchType.Office:
+        observable = this.operatorsService.getOfficesDropdown();
+        break;
+      case BranchType.Desk:
+        observable = this.operatorsService.getDesksDropdown();
+        break;
+      case BranchType.Team:
+        observable = this.operatorsService.getTeamsDropdown();
+        break;
+      case BranchType.Brand:
+        observable = this.operatorsService.getBrandsDropdown();
+        break;
+      default:
+        this.loadingBranches = false;
+        return;
+    }
+
+    observable.subscribe({
+      next: (response) => {
+        this.availableBranches = response.items || [];
+        this.loadingBranches = false;
+      },
+      error: (error) => {
+        console.error('Error loading branches:', error);
+        this.availableBranches = [];
+        this.loadingBranches = false;
+        this.alertService.error('Failed to load branches');
+      },
+    });
+  }
+
+  addBranch(): void {
+    if (this.branchForm.valid) {
+      this.isAddingBranch = true;
+
+      const request: UserOrganizationAssignRequest = {
+        userId: this.operator.userId,
+        level: parseInt(this.branchForm.value.branchType),
+        entityId: this.branchForm.value.branchId,
+      };
+
+      this.operatorsService
+        .assignUserOrganization(request)
+        .pipe(
+          takeUntil(this.destroy$),
+          catchError((error) => {
+            this.alertService.error('Failed to add branch');
+            console.error('Error adding branch:', error);
+            this.isAddingBranch = false;
+            return of(null);
+          })
+        )
+        .subscribe((result) => {
+          if (result) {
+            this.alertService.success('Branch added successfully');
+            this.isAddingBranch = false;
+            this.branchForm.reset();
+            this.loadOperatorDetails(); // Refresh data
+          }
+        });
+    }
+  }
+
+  removeBranch(branchId: string): void {
+    this.operatorsService.removeUserOrganization(branchId).subscribe();
+    // TODO: Need to implement this based on the API
+    // this.alertService.info('Remove branch functionality coming soon');
   }
 }

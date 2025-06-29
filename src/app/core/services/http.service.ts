@@ -97,4 +97,19 @@ export class HttpService {
       headers: headers,
     });
   }
+
+  deleteWithBody<T>(
+    endpoint: string,
+    body: any,
+    params?: HttpParams,
+    headers?: HttpHeaders
+  ): Observable<T> {
+    const options = {
+      headers: headers,
+      params: params,
+      body: body,
+    };
+
+    return this._http.delete<T>(`${this._apiUrl}/${endpoint}`, options);
+  }
 }
