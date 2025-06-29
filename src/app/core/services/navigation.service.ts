@@ -45,16 +45,16 @@ export class NavigationService {
       route: '/desks',
       requiredRoles: [UserRole.SuperAdmin],
     },
-    // {
-    //   label: 'Departments',
-    //   icon: 'departaments',
-    //   route: '/departments',
-    //   requiredRoles: [UserRole.SuperAdmin],
-    // },
     {
       label: 'Teams',
       icon: 'teams',
       route: '/teams',
+      requiredRoles: [UserRole.SuperAdmin],
+    },
+    {
+      label: 'Sales Rules',
+      icon: 'salerule',
+      route: '/salerules',
       requiredRoles: [UserRole.SuperAdmin],
     },
     {
@@ -63,16 +63,6 @@ export class NavigationService {
       route: '/clients',
       requiredRoles: [UserRole.SuperAdmin],
     },
-    // {
-    //   label: 'Affiliate Clients',
-    //   icon: 'traders',
-    //   route: '/affiliate-clients',
-    //   requiredRoles: [
-    //     UserRole.SuperAdmin,
-    //     UserRole.Affiliate,
-    //     UserRole.AffiliateManager,
-    //   ],
-    // },
     {
       label: 'Affiliates',
       icon: 'affiliates',
@@ -91,24 +81,6 @@ export class NavigationService {
       route: '/operators',
       requiredRoles: [UserRole.SuperAdmin],
     },
-    // {
-    //   label: 'Support',
-    //   icon: 'support',
-    //   route: '/communications',
-    //   requiredRoles: [UserRole.SuperAdmin],
-    // },
-    // {
-    //   label: 'Chat',
-    //   icon: 'chat',
-    //   route: '/employee-chat',
-    //   requiredRoles: [UserRole.SuperAdmin],
-    // },
-    // {
-    //   label: 'Tickets',
-    //   icon: 'tickets',
-    //   route: '/tickets',
-    //   requiredRoles: [UserRole.SuperAdmin],
-    // },
     {
       label: 'Calendar',
       icon: 'calendar',
@@ -121,28 +93,6 @@ export class NavigationService {
       route: '/documents',
       requiredRoles: [UserRole.SuperAdmin],
     },
-    {
-      label: 'API Docs',
-      icon: 'api',
-      route: '/api-docs',
-      requiredRoles: [
-        UserRole.SuperAdmin,
-        UserRole.Affiliate,
-        UserRole.AffiliateManager,
-      ],
-    },
-    // {
-    //   label: 'Trading Accounts',
-    //   icon: 'traders',
-    //   route: '/trading-accounts',
-    //   requiredRoles: [UserRole.SuperAdmin, UserRole.Client],
-    // },
-    // {
-    //   label: 'KYC',
-    //   icon: 'kyc',
-    //   route: '/kyc-verification',
-    //   requiredRoles: [UserRole.SuperAdmin, UserRole.Client, UserRole.Lead],
-    // },
     {
       label: 'Sources',
       icon: 'sources',
