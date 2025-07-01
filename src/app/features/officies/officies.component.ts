@@ -118,21 +118,15 @@ export class OfficesComponent implements OnInit, OnDestroy {
 
   gridActions: GridAction[] = [
     {
-      id: 'view',
-      label: 'View Details',
-      icon: 'view',
-      action: (item: Office) => this.openDetailsModal(item),
-    },
-    {
       id: 'rules',
       label: 'Office Rules',
       icon: 'rules',
       action: (item: Office) => this.navigateToOfficeRules(item),
     },
     {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
+      id: 'view',
+      label: 'View Details',
+      icon: 'view',
       action: (item: Office) => this.openDetailsModal(item),
     },
     {
