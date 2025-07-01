@@ -106,20 +106,20 @@ export class BrandsComponent implements OnInit, OnDestroy {
       icon: 'view',
       action: (item: Brand) => this.openDetailsModal(item),
     },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Brand) => this.openDetailsModal(item),
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      disabled: (item: Brand) =>
-        item.departmentsCount !== undefined && item.departmentsCount > 0,
-      action: (item: Brand) => this.confirmDelete(item),
-    },
+    // {
+    //   id: 'edit',
+    //   label: 'Edit',
+    //   icon: 'edit',
+    //   action: (item: Brand) => this.openDetailsModal(item),
+    // },
+    // {
+    //   id: 'delete',
+    //   label: 'Delete',
+    //   icon: 'delete',
+    //   disabled: (item: Brand) =>
+    //     item.departmentsCount !== undefined && item.departmentsCount > 0,
+    //   action: (item: Brand) => this.confirmDelete(item),
+    // },
   ];
 
   constructor() {}

@@ -236,16 +236,27 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       manager: this.officeRulesService
         .getOfficeManager(this.officeId)
         .pipe(catchError(() => of(null))),
+      // Load operators for this specific office/branch
+      operators: this.officeRulesService
+        .getBranchOperators(this.officeId)
+        .pipe(catchError(() => of([]))),
     })
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => (this.loading = false))
       )
       .subscribe({
-        next: ({ office, manager }) => {
+        next: ({ office, manager, operators }) => {
           this.office = office;
           this.manager = manager;
           this.hasManager = !!manager;
+          this.operators = operators;
+
+          console.log('Loaded office data:', {
+            office: office?.name,
+            hasManager: this.hasManager,
+            operatorsCount: this.operators.length,
+          });
         },
         error: (error) => {
           this.alertService.error('Failed to load office data');
@@ -254,12 +265,12 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Update the loadLookupData method to remove operators loading from there
   private loadLookupData(): void {
     forkJoin({
       categories: this.officeRulesService.getRuleCategories(),
       priorities: this.officeRulesService.getRulePriorities(),
       types: this.officeRulesService.getRuleTypes(),
-      operators: this.officeRulesService.getAvailableOperators(),
       countries: this.countryService.getCountries(),
     })
       .pipe(
@@ -270,13 +281,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
             categories: [],
             priorities: [],
             types: [],
-            operators: [],
             countries: [],
-            filterData: {
-              countries: [],
-              languages: [],
-              affiliateReferrals: [],
-            },
           });
         })
       )
@@ -284,7 +289,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
         this.categories = data.categories;
         this.priorities = data.priorities;
         this.types = data.types;
-        this.operators = data.operators;
 
         this.prepareFilterOptions(data);
         this.updateGridColumnFilterOptions();
@@ -293,7 +297,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
           categoriesCount: this.categories.length,
           prioritiesCount: this.priorities.length,
           typesCount: this.types.length,
-          operatorsCount: this.operators.length,
         });
       });
   }
@@ -527,21 +530,33 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       () => {}
     );
   }
-
   removeManager(): void {
     if (!this.manager) return;
 
-    this.officeRulesService
-      .removeOfficeManager(this.officeId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.alertService.success('Manager removed successfully');
-          this.loadOfficeData();
-        },
-        error: (error) => {
-          this.alertService.error('Failed to remove manager');
-        },
-      });
+    if (
+      confirm(
+        `Are you sure you want to remove ${this.manager.operatorName} as office manager?`
+      )
+    ) {
+      this.loading = true;
+      this.officeRulesService
+        .removeOfficeManager(this.officeId)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => (this.loading = false))
+        )
+        .subscribe({
+          next: () => {
+            this.alertService.success('Manager removed successfully');
+            this.loadOfficeData(); // Reload to refresh manager and operators list
+          },
+          error: (error) => {
+            console.error('Failed to remove manager:', error);
+            this.alertService.error(
+              'Failed to remove manager. Please try again.'
+            );
+          },
+        });
+    }
   }
 }
