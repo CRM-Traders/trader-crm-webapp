@@ -22,6 +22,18 @@ export interface OfficeRule {
   updatedAt: string | null;
 }
 
+export interface OfficeManager {
+  id: string;
+  operatorId: string;
+  operatorName: string;
+  operatorFullName: string;
+  operatorEmail: string;
+  branchType: number;
+  branchTypeName: string;
+  branchId: string;
+  createdAt: string;
+}
+
 export interface OfficeRuleOperator {
   id: string;
   userId: string;

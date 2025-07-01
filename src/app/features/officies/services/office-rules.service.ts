@@ -2,7 +2,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
-import { Observable, of } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
   OfficeRule,
@@ -19,17 +19,26 @@ import {
   OperatorDropdownItem,
 } from '../models/office-rules.model';
 
-// New interfaces for the API
-export interface UserOrganizationAssignRequest {
-  userId: string;
-  level: number;
-  entityId: string;
+// Manager API interfaces
+export interface OperatorManagerRequest {
+  operatorId: string;
+  branchType: number;
+  branchId: string;
 }
 
-export interface UserOrganizationAssignResponse {
-  userOrganizationId: string;
+export interface OperatorManagerResponse {
+  value: {
+    operatorManagerId: string;
+  };
+  isSuccess: boolean;
+  isFailure: boolean;
+  error: string | null;
+  errorCode: string | null;
+  validationErrors: string[] | null;
+  metadata: any | null;
 }
 
+// Branch operators interfaces
 export interface BranchOperatorsRequest {
   entityId: string;
   pageIndex?: number;
@@ -63,7 +72,9 @@ export interface BranchOperatorsResponse {
 export class OfficeRulesService {
   private httpService = inject(HttpService);
   private readonly apiPath = 'identity/api/rules';
+  private readonly operatorManagerPath = 'identity/api/operatormanager';
 
+  // Rule management methods
   createRule(
     request: OfficeRuleCreateRequest
   ): Observable<OfficeRuleCreateResponse> {
@@ -91,9 +102,9 @@ export class OfficeRulesService {
       .pipe(
         catchError(() =>
           of([
-            { value: 1, name: 'General' },
-            { value: 2, name: 'Restricted' },
-            { value: 3, name: 'Special' },
+            { value: 0, name: 'Office' },
+            { value: 1, name: 'Desk' },
+            { value: 2, name: 'Team' },
           ])
         )
       );
@@ -126,73 +137,74 @@ export class OfficeRulesService {
     );
   }
 
-  // Updated method to get office manager using the correct endpoint
-  getOfficeManager(officeId: string): Observable<OfficeManager | null> {
+  // Get all office managers - returns array of managers
+  getOfficeManagers(officeId: string): Observable<OfficeManager[]> {
+    // First try to get managers by branch ID
     return this.httpService
-      .get<any[]>(
-        `identity/api/userorganizations/by-organization?entityId=${officeId}`
+      .get<OfficeManager[]>(
+        `${this.operatorManagerPath}/get-manager-by-branch-id?BranchId=${officeId}`
       )
       .pipe(
         map((managers) => {
-          // Assuming the API returns an array of managers
-          // Filter for office-level managers (you may need to adjust based on your business logic)
-          const officeManager = managers.find((m) => m.level === 3); // Assuming level 3 is office manager
-
-          if (officeManager) {
-            return {
-              id: officeManager.id,
-              userId: officeManager.userId,
-              operatorName:
-                officeManager.operatorName || officeManager.fullName,
-              operatorEmail:
-                officeManager.operatorEmail || officeManager.email || '',
-              isValidOperator: true,
-            };
+          // Ensure we always return an array
+          if (Array.isArray(managers)) {
+            return managers;
+          } else if (managers) {
+            // If single manager is returned, wrap in array
+            return [managers];
           }
-          return null;
+          return [];
         }),
-        catchError(() => of(null))
+        catchError((error) => {
+          // If endpoint doesn't exist or returns 404, try single manager endpoint
+          if (error.status === 404 || error.status === 405) {
+            return this.getSingleOfficeManager(officeId).pipe(
+              map((manager) => (manager ? [manager] : []))
+            );
+          }
+          return of([]);
+        })
       );
   }
 
-  // Method to assign a user as office manager
-  assignOfficeManager(
-    officeId: string,
-    userId: string
-  ): Observable<UserOrganizationAssignResponse> {
-    const request: UserOrganizationAssignRequest = {
-      userId: userId,
-      level: 3, // Office level (adjust based on your hierarchy)
-      entityId: officeId,
-    };
-
-    return this.httpService.post<UserOrganizationAssignResponse>(
-      'identity/api/userorganizations/assign',
-      request
-    );
+  // Fallback method to get single manager if multiple managers endpoint doesn't exist
+  private getSingleOfficeManager(
+    officeId: string
+  ): Observable<OfficeManager | null> {
+    return this.httpService
+      .get<OfficeManager>(
+        `${this.operatorManagerPath}/get-manager-by-branch-id?BranchId=${officeId}`
+      )
+      .pipe(catchError(() => of(null)));
   }
 
-  // Updated method to add office manager
+  // Add office manager
   addOfficeManager(
     officeId: string,
     request: AddManagerRequest
   ): Observable<void> {
-    return this.assignOfficeManager(officeId, request.operatorId).pipe(
-      map(() => void 0)
-    );
+    const managerRequest: OperatorManagerRequest = {
+      operatorId: request.operatorId,
+      branchType: 1, // 1 for office
+      branchId: officeId,
+    };
+
+    return this.httpService
+      .post<OperatorManagerResponse>(this.operatorManagerPath, managerRequest)
+      .pipe(
+        map((response) => {
+          if (response.isFailure) {
+            throw new Error(response.error || 'Failed to add manager');
+          }
+          return void 0;
+        })
+      );
   }
 
-  removeOfficeManager(officeId: string) {
-    return this.getOfficeManager(officeId).pipe(
-      map((manager) => {
-        if (manager && manager.id) {
-          return this.httpService.delete<void>(
-            `identity/api/userorganizations/${manager.id}`
-          );
-        }
-        throw new Error('No manager found to remove');
-      }),
-      catchError(() => of(void 0))
+  // Remove specific office manager by manager ID
+  removeOfficeManager(managerId: string): Observable<void> {
+    return this.httpService.delete<void>(
+      `${this.operatorManagerPath}/${managerId}`
     );
   }
 
@@ -230,10 +242,41 @@ export class OfficeRulesService {
       );
   }
 
-  // Legacy method for backward compatibility
-  getAvailableOperators(): Observable<OperatorDropdownItem[]> {
-    // This should be called with a specific branch ID
-    // For now, returning empty array as it needs context
-    return of([]);
+  // Get all available operators
+  getAvailableOperators(
+    pageIndex: number = 0,
+    pageSize: number = 100,
+    searchTerm: string = ''
+  ): Observable<OperatorDropdownItem[]> {
+    const request = {
+      pageIndex: pageIndex,
+      pageSize: pageSize,
+      sortField: '',
+      sortDirection: 'asc',
+      globalFilter: searchTerm,
+    };
+
+    return this.httpService
+      .post<any>('identity/api/operators/dropdown', request)
+      .pipe(
+        map((response) => {
+          return response.items.map((operator: any) => ({
+            id: operator.id,
+            value: operator.value || operator.fullName,
+            email: operator.email || operator.username,
+          }));
+        }),
+        catchError((error) => {
+          console.error('Error fetching operators:', error);
+          return of([]);
+        })
+      );
+  }
+
+  // Check if operator is already a manager for any office
+  isOperatorManager(operatorId: string): Observable<boolean> {
+    // This would need a specific endpoint from backend
+    // For now, returning false
+    return of(false);
   }
 }

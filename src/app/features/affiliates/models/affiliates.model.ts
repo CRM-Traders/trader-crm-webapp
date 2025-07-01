@@ -19,6 +19,7 @@ export interface AffiliateCreateRequest {
   email: string;
   phone?: string;
   website?: string;
+  secretKey: string;
 }
 
 export interface AffiliateCreateResponse {
