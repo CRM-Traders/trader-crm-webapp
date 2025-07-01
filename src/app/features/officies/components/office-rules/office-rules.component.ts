@@ -66,11 +66,16 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
 
   officeId!: string;
   office: Office | null = null;
-  manager: OfficeManager | null = null;
-  hasManager = false;
+  managers: OfficeManager[] = []; // Changed to array
   loading = false;
   gridId = 'office-rules-grid';
 
+  // Manager deletion state
+  showDeleteManagerModal = false;
+  managerToDelete: OfficeManager | null = null;
+  deletingManager = false;
+
+  // Rule deletion state
   showDeleteModal = false;
   ruleToDelete: OfficeRule | null = null;
   deletingRule = false;
@@ -79,6 +84,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   priorities: RulePriority[] = [];
   types: RuleType[] = [];
   operators: OperatorDropdownItem[] = [];
+  allOperators: OperatorDropdownItem[] = [];
 
   availableCountries: { label: string; value: string }[] = [];
   availableLanguages: { label: string; value: string }[] = [];
@@ -187,6 +193,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       if (this.officeId) {
         this.loadOfficeData();
         this.loadLookupData();
+        this.loadAllOperators();
       } else {
         this.alertService.error('Office ID is required');
         this.navigateBack();
@@ -233,10 +240,9 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
     this.loading = true;
     forkJoin({
       office: this.officesService.getOfficeById(this.officeId),
-      manager: this.officeRulesService
-        .getOfficeManager(this.officeId)
-        .pipe(catchError(() => of(null))),
-      // Load operators for this specific office/branch
+      managers: this.officeRulesService
+        .getOfficeManagers(this.officeId)
+        .pipe(catchError(() => of([]))),
       operators: this.officeRulesService
         .getBranchOperators(this.officeId)
         .pipe(catchError(() => of([]))),
@@ -246,26 +252,42 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
         finalize(() => (this.loading = false))
       )
       .subscribe({
-        next: ({ office, manager, operators }) => {
+        next: ({ office, managers, operators }) => {
           this.office = office;
-          this.manager = manager;
-          this.hasManager = !!manager;
+          this.managers = managers;
           this.operators = operators;
 
           console.log('Loaded office data:', {
             office: office?.name,
-            hasManager: this.hasManager,
+            managersCount: this.managers.length,
             operatorsCount: this.operators.length,
+            managers: managers,
           });
         },
         error: (error) => {
+          console.error('Failed to load office data:', error);
           this.alertService.error('Failed to load office data');
           this.navigateBack();
         },
       });
   }
 
-  // Update the loadLookupData method to remove operators loading from there
+  private loadAllOperators(): void {
+    this.officeRulesService
+      .getAvailableOperators(0, 100)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading all operators:', error);
+          return of([]);
+        })
+      )
+      .subscribe((operators) => {
+        this.allOperators = operators;
+        console.log('Loaded all operators:', operators.length);
+      });
+  }
+
   private loadLookupData(): void {
     forkJoin({
       categories: this.officeRulesService.getRuleCategories(),
@@ -302,56 +324,34 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   }
 
   private prepareFilterOptions(data: any): void {
-    // Categories
     this.availableCategories = this.categories.map((cat: any) => ({
       label: cat.name,
-      value: cat.id.toString(),
+      value: cat.value.toString(),
     }));
 
-    // Priorities
     this.availablePriorities = this.priorities.map((priority: any) => ({
       label: priority.name,
-      value: priority.id.toString(),
+      value: priority.value.toString(),
     }));
 
-    // Types
     this.availableTypes = this.types.map((type: any) => ({
       label: type.name,
-      value: type.id.toString(),
+      value: type.value.toString(),
     }));
 
-    // Countries - combine from country service and filter data
-    const countryNames = new Set([
-      ...data.countries.map((c: any) => c.name),
-      ...data.filterData.countries,
-    ]);
-    this.availableCountries = Array.from(countryNames).map((country) => ({
-      label: country,
-      value: country,
+    this.availableCountries = data.countries.map((country: any) => ({
+      label: country.name,
+      value: country.code,
     }));
 
-    // Languages - combine from language service and filter data
     const languages = this.languageService.getAllLanguages();
-    const languageNames = new Set([
-      ...languages.map((l) => l.value),
-      ...data.filterData.languages,
-    ]);
-    this.availableLanguages = Array.from(languageNames).map((language) => ({
-      label: language,
-      value: language,
+    this.availableLanguages = languages.map((lang) => ({
+      label: lang.value,
+      value: lang.key,
     }));
-
-    // Affiliate Referrals
-    this.availableAffiliateReferrals = data.filterData.affiliateReferrals.map(
-      (referral: string) => ({
-        label: referral,
-        value: referral,
-      })
-    );
   }
 
   private updateGridColumnFilterOptions(): void {
-    // Update category column filter options
     const categoryColumn = this.gridColumns.find(
       (col) => col.field === 'category'
     );
@@ -359,7 +359,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       categoryColumn.filterOptions = this.availableCategories;
     }
 
-    // Update priority column filter options
     const priorityColumn = this.gridColumns.find(
       (col) => col.field === 'priority'
     );
@@ -367,13 +366,11 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       priorityColumn.filterOptions = this.availablePriorities;
     }
 
-    // Update type column filter options
     const typeColumn = this.gridColumns.find((col) => col.field === 'type');
     if (typeColumn) {
       typeColumn.filterOptions = this.availableTypes;
     }
 
-    // Update country column filter options
     const countryColumn = this.gridColumns.find(
       (col) => col.field === 'country'
     );
@@ -381,7 +378,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       countryColumn.filterOptions = this.availableCountries;
     }
 
-    // Update language column filter options
     const languageColumn = this.gridColumns.find(
       (col) => col.field === 'language'
     );
@@ -389,7 +385,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       languageColumn.filterOptions = this.availableLanguages;
     }
 
-    // Update affiliate referrals column filter options
     const affiliateColumn = this.gridColumns.find(
       (col) => col.field === 'affiliateReferrals'
     );
@@ -433,7 +428,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           this.refreshGrid();
-          this.loadLookupData(); // Reload filter data after creating a rule
+          this.loadLookupData();
         }
       },
       () => {}
@@ -462,7 +457,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           this.refreshGrid();
-          this.loadLookupData(); // Reload filter data after editing a rule
+          this.loadLookupData();
         }
       },
       () => {}
@@ -497,7 +492,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
         next: () => {
           this.alertService.success('Rule deleted successfully');
           this.refreshGrid();
-          this.loadLookupData(); // Reload filter data after deleting a rule
+          this.loadLookupData();
         },
         error: (error) => {
           this.alertService.error('Failed to delete rule');
@@ -506,6 +501,12 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   }
 
   openAddManagerModal(): void {
+    // Filter out operators who are already managers
+    const existingManagerIds = this.managers.map((m: any) => m.operatorId);
+    const availableOperators = (
+      this.operators.length > 0 ? this.operators : this.allOperators
+    ).filter((op) => !existingManagerIds.includes(op.id));
+
     const modalRef = this.modalService.open(
       AddManagerModalComponent,
       {
@@ -516,8 +517,8 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       {
         officeId: this.officeId,
         officeName: this.office?.name || '',
-        currentManager: this.manager,
-        operators: this.operators,
+        currentManager: null, // No current manager when adding to multiple
+        operators: availableOperators,
       }
     );
 
@@ -530,33 +531,51 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       () => {}
     );
   }
-  removeManager(): void {
-    if (!this.manager) return;
 
-    if (
-      confirm(
-        `Are you sure you want to remove ${this.manager.operatorName} as office manager?`
+  confirmRemoveManager(manager: OfficeManager): void {
+    this.managerToDelete = manager;
+    this.showDeleteManagerModal = true;
+  }
+
+  cancelRemoveManager(): void {
+    this.showDeleteManagerModal = false;
+    this.managerToDelete = null;
+  }
+
+  removeManager(): void {
+    if (!this.managerToDelete) return;
+
+    this.deletingManager = true;
+    this.officeRulesService
+      .removeOfficeManager(this.managerToDelete.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.deletingManager = false;
+          this.showDeleteManagerModal = false;
+          this.managerToDelete = null;
+        })
       )
-    ) {
-      this.loading = true;
-      this.officeRulesService
-        .removeOfficeManager(this.officeId)
-        .pipe(
-          takeUntil(this.destroy$),
-          finalize(() => (this.loading = false))
-        )
-        .subscribe({
-          next: () => {
-            this.alertService.success('Manager removed successfully');
-            this.loadOfficeData(); // Reload to refresh manager and operators list
-          },
-          error: (error) => {
-            console.error('Failed to remove manager:', error);
-            this.alertService.error(
-              'Failed to remove manager. Please try again.'
-            );
-          },
-        });
-    }
+      .subscribe({
+        next: () => {
+          this.alertService.success('Manager removed successfully');
+          this.loadOfficeData();
+        },
+        error: (error) => {
+          console.error('Failed to remove manager:', error);
+          this.alertService.error(
+            'Failed to remove manager. Please try again.'
+          );
+        },
+      });
+  }
+
+  // Helper methods
+  get hasManagers(): boolean {
+    return this.managers.length > 0;
+  }
+
+  get managerNames(): string {
+    return this.managers.map((m) => m.operatorName).join(', ');
   }
 }

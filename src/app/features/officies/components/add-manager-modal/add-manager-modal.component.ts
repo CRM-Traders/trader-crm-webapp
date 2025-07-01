@@ -324,6 +324,7 @@ export class AddManagerModalComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.isSubmitting = false;
+          // Handle specific error cases
           if (error.status === 400) {
             this.alertService.error(
               'Invalid operator selected. Please try again.'
@@ -332,8 +333,11 @@ export class AddManagerModalComponent implements OnInit, OnDestroy {
             this.alertService.error('The selected operator was not found.');
           } else if (error.status === 409) {
             this.alertService.error(
-              'This operator is already assigned as a manager elsewhere.'
+              'This operator is already assigned as a manager for another office.'
             );
+          } else if (error.message) {
+            // If the service throws an error with a message
+            this.alertService.error(error.message);
           } else {
             this.alertService.error(
               'Failed to assign manager. Please try again.'
@@ -353,9 +357,7 @@ export class AddManagerModalComponent implements OnInit, OnDestroy {
             : 'operator';
 
           this.alertService.success(
-            this.currentManager
-              ? `Manager changed successfully to ${operatorName}!`
-              : `Manager ${operatorName} assigned successfully!`
+            `Manager ${operatorName} assigned successfully!`
           );
           this.modalRef.close(true);
         }

@@ -290,6 +290,72 @@ import { AffiliatesService } from '../../services/affiliates.service';
                 >
               </p>
             </div>
+
+            <!-- Secret Key Field -->
+            <div>
+              <label
+                for="secretKey"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Secret Key <span class="text-red-500">*</span>
+              </label>
+              <div class="flex space-x-2">
+                <input
+                  type="text"
+                  id="secretKey"
+                  formControlName="secretKey"
+                  class="flex-1 px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors font-mono"
+                  [class.border-red-500]="
+                    registrationForm.get('secretKey')?.invalid &&
+                    registrationForm.get('secretKey')?.touched
+                  "
+                  [class.focus:ring-red-500]="
+                    registrationForm.get('secretKey')?.invalid &&
+                    registrationForm.get('secretKey')?.touched
+                  "
+                  placeholder="Enter or generate secret key"
+                />
+                <button
+                  type="button"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center space-x-2"
+                  (click)="generateSecretKey()"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    ></path>
+                  </svg>
+                  <span>Generate</span>
+                </button>
+              </div>
+              <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                The secret key should be 14 characters long
+              </p>
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  registrationForm.get('secretKey')?.invalid &&
+                  registrationForm.get('secretKey')?.touched
+                "
+              >
+                <span
+                  *ngIf="registrationForm.get('secretKey')?.errors?.['required']"
+                  >Secret key is required</span
+                >
+                <span
+                  *ngIf="registrationForm.get('secretKey')?.errors?.['minlength'] || registrationForm.get('secretKey')?.errors?.['maxlength']"
+                  >Secret key must be exactly 14 characters</span
+                >
+              </p>
+            </div>
           </form>
         </div>
 
@@ -563,11 +629,39 @@ export class AffiliateRegistrationModalComponent {
       name: ['', Validators.required],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
-      username: ['', Validators.required], // Added username field
+      username: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       website: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+      secretKey: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(14),
+          Validators.maxLength(14),
+        ],
+      ],
     });
+  }
+
+  generateSecretKey(): void {
+    const characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
+    let secretKey = '';
+
+    // Generate a 14-character secret key
+    for (let i = 0; i < 14; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      secretKey += characters[randomIndex];
+    }
+
+    // Set the generated secret key to the form control
+    this.registrationForm.patchValue({
+      secretKey: secretKey,
+    });
+
+    // Mark the field as touched to show validation
+    this.registrationForm.get('secretKey')?.markAsTouched();
   }
 
   onSubmit() {
@@ -583,10 +677,11 @@ export class AffiliateRegistrationModalComponent {
       name: this.registrationForm.value.name,
       firstName: this.registrationForm.value.firstName,
       lastName: this.registrationForm.value.lastName,
-      username: this.registrationForm.value.username, // Include username
+      username: this.registrationForm.value.username,
       email: this.registrationForm.value.email,
       phone: this.registrationForm.value.phone || undefined,
       website: this.registrationForm.value.website || undefined,
+      secretKey: this.registrationForm.value.secretKey,
     };
 
     this.affiliatesService.createAffiliate(affiliateData).subscribe({
