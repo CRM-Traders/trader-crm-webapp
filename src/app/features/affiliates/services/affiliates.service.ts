@@ -82,4 +82,29 @@ export class AffiliatesService {
   getActiveAffiliates() {
     return this.httpService.get(`identity/api/users/get-active-users?role=5`);
   }
+
+  generateClientDocumentation(
+    affiliateId: string,
+    language: string = 'en',
+    includeCodeExamples: boolean = true
+  ): Observable<Blob> {
+    const body = {
+      affiliateId,
+      language,
+      includeCodeExamples,
+    };
+
+    const headers = new HttpHeaders({
+      Accept: 'application/pdf',
+    });
+
+    return this.httpService['_http'].post<Blob>(
+      `${this.httpService['_apiUrl']}/identity/api/affiliate/clients/generate-documentation`,
+      body,
+      {
+        responseType: 'blob' as 'json',
+        headers,
+      }
+    );
+  }
 }

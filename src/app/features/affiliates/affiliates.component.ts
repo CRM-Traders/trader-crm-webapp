@@ -141,6 +141,13 @@ export class AffiliatesComponent implements OnInit {
       type: 'primary',
       action: (item) => this.openPermissionDialog(item),
     },
+    {
+      id: 'integration',
+      label: 'Integration Document',
+      icon: 'documents',
+      type: 'primary',
+      action: (item) => this.downloadIntegrationDoc(item.id),
+    },
   ];
 
   constructor() {
@@ -390,6 +397,30 @@ export class AffiliatesComponent implements OnInit {
         // Modal dismissed
       }
     );
+  }
+
+  downloadIntegrationDoc(affiliateId: string): void {
+    this.affiliatesService.generateClientDocumentation(affiliateId).pipe(
+      takeUntil(this.destroy$),
+      catchError((error) => {
+        this.alertService.error('Failed to download integration document');
+        console.error('Error downloading integration document:', error);
+        return of(null);
+      })
+    ).subscribe((response) => {
+      if (response) {
+        const url = window.URL.createObjectURL(response);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `integration_document_${affiliateId}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.alertService.success('Integration document downloaded successfully!');
+      }
+    }
+    )
   }
 
   downloadTemplate(): void {
