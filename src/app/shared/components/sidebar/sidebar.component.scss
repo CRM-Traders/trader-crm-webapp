@@ -16,7 +16,8 @@ aside {
   position: relative;
 
   &:hover {
-    background-color: #f3f4f6;
+  background-color: rgba(219, 234, 254, 0.2);
+
   }
 
   &.collapsed {
@@ -33,6 +34,8 @@ aside {
 
     .icon-img {
       transition: transform 0.2s ease;
+      filter: invert(80%) sepia(29%) saturate(806%) hue-rotate(182deg)
+        brightness(103%) contrast(96%);
     }
   }
 
@@ -42,14 +45,13 @@ aside {
 }
 
 .active-nav-item {
-  background-color: rgba(219, 234, 254, 0.8);
-  color: #2563eb;
+  background-color: rgba(219, 234, 254, 0.2);
+  color: #ffffff;
   font-weight: 500;
-  border-left: 4px solid #2563eb;
 
   .icon-img {
-    filter: invert(32%) sepia(96%) saturate(1868%) hue-rotate(218deg)
-      brightness(97%) contrast(101%);
+    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(93deg)
+      brightness(103%) contrast(40%);
   }
 
   .dark & {

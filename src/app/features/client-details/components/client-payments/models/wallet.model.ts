@@ -1,5 +1,18 @@
 // models/wallet.model.ts
 
+export interface Wallet {
+  id: string;
+  currency: string;
+  balance: number;
+  availableBalance: number;
+  lockedBalance: number;
+  tradingAccountId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  lastTransactionAt?: string;
+}
+
 export interface DepositRequest {
   tradingAccountId: string;
   currency: string;

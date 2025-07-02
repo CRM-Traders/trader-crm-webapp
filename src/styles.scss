@@ -1,5 +1,5 @@
 @use "tailwindcss" as *;
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 // Comprehensive Color System with CSS Custom Properties
 :root {
   // === LIGHT MODE COLORS ===
@@ -10,7 +10,7 @@
   --primary-200: #bfdbfe;
   --primary-300: #93c5fd;
   --primary-400: #60a5fa;
-  --primary-500: #3b82f6;  // Main brand
+  --primary-500: #3b82f6; // Main brand
   --primary-600: #2563eb;
   --primary-700: #1d4ed8;
   --primary-800: #1e40af;
@@ -81,6 +81,8 @@
   --surface-tertiary: #f3f4f6;
   --surface-elevated: #ffffff;
 
+  --bg-navbar: #155dfc; // Light navbar background
+
   // Text Colors
   --text-primary: #111827;
   --text-secondary: #374151;
@@ -95,9 +97,12 @@
 
   // Shadow Colors
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 // === DARK MODE COLOR OVERRIDES ===
@@ -108,8 +113,8 @@
   --primary-200: #1e3a8a;
   --primary-300: #1d4ed8;
   --primary-400: #2563eb;
-  --primary-500: #3b82f6;  // Keep main brand consistent
-  --primary-600: #60a5fa;  // Brighter for better contrast
+  --primary-500: #3b82f6; // Keep main brand consistent
+  --primary-600: #60a5fa; // Brighter for better contrast
   --primary-700: #93c5fd;
   --primary-800: #bfdbfe;
   --primary-900: #dbeafe;
@@ -120,70 +125,77 @@
   --secondary-200: #0891b2;
   --secondary-300: #0ea5e9;
   --secondary-400: #38bdf8;
-  --secondary-500: #0ea5e9;  // Main secondary
+  --secondary-500: #0ea5e9; // Main secondary
   --secondary-600: #38bdf8;
   --secondary-700: #7dd3fc;
   --secondary-800: #bae6fd;
   --secondary-900: #e0f2fe;
 
   // Accent Colors (vibrant and modern for dark mode)
-  --accent-purple-500: #a855f7;   // More vibrant purple
-  --accent-purple-600: #c084fc;   // Lighter for contrast
-  --accent-pink-500: #f472b6;     // Brighter pink
-  --accent-pink-600: #f9a8d4;     // Even lighter
-  --accent-orange-500: #fb923c;   // Warmer orange
-  --accent-orange-600: #fdba74;   // Lighter orange
-  --accent-teal-500: #14b8a6;     // Keep vibrant teal
-  --accent-teal-600: #2dd4bf;     // Brighter teal
+  --accent-purple-500: #a855f7; // More vibrant purple
+  --accent-purple-600: #c084fc; // Lighter for contrast
+  --accent-pink-500: #f472b6; // Brighter pink
+  --accent-pink-600: #f9a8d4; // Even lighter
+  --accent-orange-500: #fb923c; // Warmer orange
+  --accent-orange-600: #fdba74; // Lighter orange
+  --accent-teal-500: #14b8a6; // Keep vibrant teal
+  --accent-teal-600: #2dd4bf; // Brighter teal
 
   // Semantic Colors (balanced for lighter dark backgrounds)
   --success-50: #134e4a;
   --success-100: #0f766e;
-  --success-500: #10b981;     // Emerald green - vibrant but not harsh
-  --success-600: #34d399;     // Brighter for good visibility
+  --success-500: #10b981; // Emerald green - vibrant but not harsh
+  --success-600: #34d399; // Brighter for good visibility
   --success-700: #6ee7b7;
 
   --warning-50: #713f12;
   --warning-100: #a16207;
-  --warning-500: #f59e0b;     // Keep amber
-  --warning-600: #fbbf24;     // Brighter amber
+  --warning-500: #f59e0b; // Keep amber
+  --warning-600: #fbbf24; // Brighter amber
   --warning-700: #fcd34d;
 
   --error-50: #7f1d1d;
   --error-100: #991b1b;
-  --error-500: #f87171;      // Softer red for dark mode
-  --error-600: #fca5a5;      // Even softer
+  --error-500: #f87171; // Softer red for dark mode
+  --error-600: #fca5a5; // Even softer
   --error-700: #fecaca;
 
   --info-50: #164e63;
   --info-100: #0891b2;
-  --info-500: #06b6d4;       // Cyan
-  --info-600: #22d3ee;       // Brighter cyan
+  --info-500: #06b6d4; // Cyan
+  --info-600: #22d3ee; // Brighter cyan
   --info-700: #67e8f9;
 
   // Balanced Dark Surface Colors (much lighter)
-  --surface-primary: #1e293b;      // Slate-800 - much lighter base
-  --surface-secondary: #334155;    // Slate-700 - lighter secondary
-  --surface-tertiary: #475569;     // Slate-600 - even lighter
-  --surface-elevated: #374151;     // Slate-700 variant for cards
+  // --surface-primary: #1e293b;      // Slate-800 - much lighter base
+  --surface-primary: #30415d; // Slate-800 - much lighter base
+  --surface-secondary: #394d6e; // Slate-700 - lighter secondary
+  // --surface-tertiary: #475569;     // Slate-600 - even lighter
+  --surface-tertiary: #1e293b; // Slate-600 - even lighter
+  --surface-elevated: #374151; // Slate-700 variant for cards
+
+  --bg-navbar: #30415d; // Light navbar background
 
   // Balanced Text Colors
-  --text-primary: #f1f5f9;         // Slate-100 - softer white
-  --text-secondary: #cbd5e1;       // Slate-300 - readable gray
-  --text-tertiary: #94a3b8;        // Slate-400 - medium gray
-  --text-disabled: #64748b;        // Slate-500 - muted
-  --text-inverse: #1e293b;         // Matches surface primary
+  --text-primary: #f1f5f9; // Slate-100 - softer white
+  --text-secondary: #cbd5e1; // Slate-300 - readable gray
+  --text-tertiary: #94a3b8; // Slate-400 - medium gray
+  --text-disabled: #64748b; // Slate-500 - muted
+  --text-inverse: #1e293b; // Matches surface primary
 
   // Lighter Border Colors
-  --border-primary: #64748b;       // Slate-500 - more visible
-  --border-secondary: #94a3b8;     // Slate-400 - lighter
+  --border-primary: #64748b; // Slate-500 - more visible
+  --border-secondary: #94a3b8; // Slate-400 - lighter
   --border-focus: var(--primary-500); // Keep original primary
 
   // Balanced Shadow Colors for dark mode
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3),
+    0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4),
+    0 10px 10px -5px rgba(0, 0, 0, 0.3);
 
   // Balanced dark mode enhancements
   --glass-bg: rgba(51, 65, 85, 0.8);
@@ -201,7 +213,7 @@ body {
   background-color: var(--surface-primary);
   color: var(--text-primary);
   transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
-              color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    color 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // Smooth transitions for theme switching
@@ -209,34 +221,66 @@ body {
 *::before,
 *::after {
   transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
-              color 300ms cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 // === COMPONENT STYLES ===
 
 // Background Classes
-.bg-primary { background-color: var(--primary-500) !important; }
-.bg-primary-light { background-color: var(--primary-100) !important; }
-.bg-primary-dark { background-color: var(--primary-700) !important; }
+.bg-primary {
+  background-color: var(--primary-500) !important;
+}
+.bg-primary-light {
+  background-color: var(--primary-100) !important;
+}
+.bg-primary-dark {
+  background-color: var(--primary-700) !important;
+}
 
-.bg-secondary { background-color: var(--secondary-500) !important; }
-.bg-accent-purple { background-color: var(--accent-purple-500) !important; }
-.bg-accent-pink { background-color: var(--accent-pink-500) !important; }
-.bg-accent-orange { background-color: var(--accent-orange-500) !important; }
-.bg-accent-teal { background-color: var(--accent-teal-500) !important; }
+.bg-secondary {
+  background-color: var(--secondary-500) !important;
+}
+.bg-accent-purple {
+  background-color: var(--accent-purple-500) !important;
+}
+.bg-accent-pink {
+  background-color: var(--accent-pink-500) !important;
+}
+.bg-accent-orange {
+  background-color: var(--accent-orange-500) !important;
+}
+.bg-accent-teal {
+  background-color: var(--accent-teal-500) !important;
+}
 
-.bg-success { background-color: var(--success-500) !important; }
-.bg-warning { background-color: var(--warning-500) !important; }
-.bg-error { background-color: var(--error-500) !important; }
-.bg-info { background-color: var(--info-500) !important; }
+.bg-success {
+  background-color: var(--success-500) !important;
+}
+.bg-warning {
+  background-color: var(--warning-500) !important;
+}
+.bg-error {
+  background-color: var(--error-500) !important;
+}
+.bg-info {
+  background-color: var(--info-500) !important;
+}
 
 // Surface Classes
-.bg-surface { background-color: var(--surface-primary) !important; }
-.bg-surface-secondary { background-color: var(--surface-secondary) !important; }
-.bg-surface-tertiary { background-color: var(--surface-tertiary) !important; }
-.bg-surface-elevated { background-color: var(--surface-elevated) !important; }
+.bg-surface {
+  background-color: var(--surface-primary) !important;
+}
+.bg-surface-secondary {
+  background-color: var(--surface-secondary) !important;
+}
+.bg-surface-tertiary {
+  background-color: var(--surface-tertiary) !important;
+}
+.bg-surface-elevated {
+  background-color: var(--surface-elevated) !important;
+}
 
 // Glass effect for dark mode
 .bg-glass {
@@ -247,31 +291,71 @@ body {
 }
 
 // Text Color Classes
-.text-primary-color { color: var(--primary-500) !important; }
-.text-secondary-color { color: var(--secondary-500) !important; }
-.text-accent-purple { color: var(--accent-purple-500) !important; }
-.text-accent-pink { color: var(--accent-pink-500) !important; }
-.text-accent-orange { color: var(--accent-orange-500) !important; }
-.text-accent-teal { color: var(--accent-teal-500) !important; }
+.text-primary-color {
+  color: var(--primary-500) !important;
+}
+.text-secondary-color {
+  color: var(--secondary-500) !important;
+}
+.text-accent-purple {
+  color: var(--accent-purple-500) !important;
+}
+.text-accent-pink {
+  color: var(--accent-pink-500) !important;
+}
+.text-accent-orange {
+  color: var(--accent-orange-500) !important;
+}
+.text-accent-teal {
+  color: var(--accent-teal-500) !important;
+}
 
-.text-success { color: var(--success-600) !important; }
-.text-warning { color: var(--warning-600) !important; }
-.text-error { color: var(--error-600) !important; }
-.text-info { color: var(--info-600) !important; }
+.text-success {
+  color: var(--success-600) !important;
+}
+.text-warning {
+  color: var(--warning-600) !important;
+}
+.text-error {
+  color: var(--error-600) !important;
+}
+.text-info {
+  color: var(--info-600) !important;
+}
 
 // Override existing Tailwind classes
-.bg-white { background-color: var(--surface-primary) !important; }
-.bg-gray-50 { background-color: var(--surface-secondary) !important; }
-.bg-gray-100 { background-color: var(--surface-tertiary) !important; }
+.bg-white {
+  background-color: var(--surface-primary) !important;
+}
+.bg-gray-50 {
+  background-color: var(--surface-secondary) !important;
+}
+.bg-gray-100 {
+  background-color: var(--surface-tertiary) !important;
+}
 
-.text-gray-900 { color: var(--text-primary) !important; }
-.text-gray-800 { color: var(--text-primary) !important; }
-.text-gray-700 { color: var(--text-secondary) !important; }
-.text-gray-600 { color: var(--text-secondary) !important; }
-.text-gray-500 { color: var(--text-tertiary) !important; }
+.text-gray-900 {
+  color: var(--text-primary) !important;
+}
+.text-gray-800 {
+  color: var(--text-primary) !important;
+}
+.text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+.text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+.text-gray-500 {
+  color: var(--text-tertiary) !important;
+}
 
-.border-gray-200 { border-color: var(--border-primary) !important; }
-.border-gray-300 { border-color: var(--border-secondary) !important; }
+.border-gray-200 {
+  border-color: var(--border-primary) !important;
+}
+.border-gray-300 {
+  border-color: var(--border-secondary) !important;
+}
 
 // === BUTTONS ===
 .btn {
@@ -296,35 +380,45 @@ body {
     background-color: var(--primary-600);
     box-shadow: var(--glow-primary);
   }
-  &:active { background-color: var(--primary-700); }
+  &:active {
+    background-color: var(--primary-700);
+  }
 }
 
 .btn-secondary {
   background-color: var(--secondary-500);
   color: white;
 
-  &:hover { background-color: var(--secondary-600); }
+  &:hover {
+    background-color: var(--secondary-600);
+  }
 }
 
 .btn-success {
   background-color: var(--success-500);
   color: white;
 
-  &:hover { background-color: var(--success-600); }
+  &:hover {
+    background-color: var(--success-600);
+  }
 }
 
 .btn-warning {
   background-color: var(--warning-500);
   color: white;
 
-  &:hover { background-color: var(--warning-600); }
+  &:hover {
+    background-color: var(--warning-600);
+  }
 }
 
 .btn-error {
   background-color: var(--error-500);
   color: white;
 
-  &:hover { background-color: var(--error-600); }
+  &:hover {
+    background-color: var(--error-600);
+  }
 }
 
 .btn-outline {
@@ -459,13 +553,25 @@ select {
 }
 
 // === UTILITY CLASSES ===
-.shadow-sm { box-shadow: var(--shadow-sm); }
-.shadow-md { box-shadow: var(--shadow-md); }
-.shadow-lg { box-shadow: var(--shadow-lg); }
-.shadow-xl { box-shadow: var(--shadow-xl); }
+.shadow-sm {
+  box-shadow: var(--shadow-sm);
+}
+.shadow-md {
+  box-shadow: var(--shadow-md);
+}
+.shadow-lg {
+  box-shadow: var(--shadow-lg);
+}
+.shadow-xl {
+  box-shadow: var(--shadow-xl);
+}
 
-.glow-primary { box-shadow: var(--glow-primary); }
-.glow-accent { box-shadow: var(--glow-accent); }
+.glow-primary {
+  box-shadow: var(--glow-primary);
+}
+.glow-accent {
+  box-shadow: var(--glow-accent);
+}
 
 // === SCROLLBARS ===
 ::-webkit-scrollbar {
@@ -493,7 +599,7 @@ select {
 }
 
 body {
-  font-family: 'Nunito Sans', sans-serif;
+  font-family: "Nunito Sans", sans-serif;
   overflow: hidden !important;
 }
 
@@ -515,4 +621,67 @@ button {
   height: calc(100vh - 110px);
   overflow-y: auto;
   border-radius: 10px;
+}
+
+.bg-navbar {
+  background-color: var(--bg-navbar);
+  color: var(--text-inverse);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-item {
+  color: var(--text-secondary);
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+
+  &:hover {
+    background-color: var(--surface-tertiary);
+    color: var(--text-primary);
+    transform: translateX(2px);
+  }
+
+  &.active {
+    background: linear-gradient(
+      135deg,
+      var(--primary-100) 0%,
+      var(--primary-200) 100%
+    );
+    color: var(--primary-700);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+.sidebar {
+  background: linear-gradient(
+    180deg,
+    var(--primary-500) 0%,
+    var(--primary-700) 100%
+  );
+  color: white;
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow-xl), var(--glow-primary);
+}
+
+.sidebar-item {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  margin: 0.25rem 0;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateX(4px);
+  }
+
+  &.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
 }

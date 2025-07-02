@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { WalletService } from '../../services/wallet.service';
-import { DepositRequest, TradingAccountSummary, TransactionType, WithdrawRequest } from '../../models/wallet.model';
+import { DepositRequest, TradingAccountSummary, TransactionType, Wallet, WithdrawRequest } from '../../models/wallet.model';
 import { AdminTradingAccountService } from '../../../client-accounts/services/admin-trading-accounts.service';
 import { TradingAccount } from '../../../client-accounts/models/trading-account.model';
 
@@ -17,7 +17,7 @@ import { TradingAccount } from '../../../client-accounts/models/trading-account.
   styleUrls: ['./wallet-transaction-modal.component.scss'],
 })
 export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnChanges {
-   @Input() isVisible = false;
+  @Input() isVisible = false;
   @Input() clientId: string | null = null;
   @Input() transactionType: TransactionType = 'deposit';
   @Output() onClose = new EventEmitter<void>();
@@ -30,7 +30,10 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
 
   transactionForm!: FormGroup;
   quickAmounts = [100, 500, 1000, 5000];
-  supportedCurrencies = ['USD', 'EUR', 'GBP', 'BTC', 'ETH'];
+  
+  // Wallet-related properties
+  availableWallets: Wallet[] = [];
+  loadingWallets = false;
 
   ngOnInit(): void {
     this.initializeForm();
@@ -51,12 +54,11 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
 
     if (visibilityChanged || clientChanged) {
       if (this.isVisible && this.clientId) {
-        console.log('Loading trading accounts for wallet modal, client:', this.clientId);
         this.loadTradingAccounts();
         this.resetForm();
       } else if (!this.isVisible) {
-        console.log('Clearing wallet modal state');
         this.resetForm();
+        this.clearWalletData();
       }
     }
   }
@@ -79,12 +81,31 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
     return this.tradingAccounts.find(account => account.id === selectedId) || null;
   }
 
+  get availableCurrencies(): string[] {
+    return this.availableWallets.map(wallet => wallet.currency);
+  }
+
+  get hasWallets(): boolean {
+    return this.availableWallets.length > 0;
+  }
+
   private initializeForm(): void {
     this.transactionForm = this.fb.group({
       tradingAccountId: ['', Validators.required],
-      currency: ['USD', Validators.required],
+      currency: ['', Validators.required],
       amount: ['', [Validators.required, Validators.min(0.01)]],
     });
+
+    // Watch for trading account changes to load wallets
+    this.transactionForm.get('tradingAccountId')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((accountId: string) => {
+        if (accountId) {
+          this.loadWalletsForAccount(accountId);
+        } else {
+          this.clearWalletData();
+        }
+      });
   }
 
   private loadTradingAccounts(): void {
@@ -100,11 +121,53 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
       });
   }
 
+  private loadWalletsForAccount(accountId: string): void {
+    if (!accountId) {
+      this.clearWalletData();
+      return;
+    }
+
+    this.loadingWallets = true;
+    
+    this.walletService
+      .getWalletsByTradingAccount(accountId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (wallets: any[]) => {
+          this.availableWallets = wallets;
+          this.loadingWallets = false;
+          
+          // Reset currency selection when wallets change
+          this.transactionForm.get('currency')?.setValue('');
+          
+          // If only one currency available, auto-select it
+          if (wallets.length === 1) {
+            this.transactionForm.get('currency')?.setValue(wallets[0].currency);
+          }
+          
+          console.log('Loaded wallets for account:', accountId, wallets);
+        },
+        error: (error: any) => {
+          console.error('Error loading wallets for account:', error);
+          this.clearWalletData();
+          this.loadingWallets = false;
+        },
+      });
+  }
+
+  private clearWalletData(): void {
+    this.availableWallets = [];
+    this.loadingWallets = false;
+    if (this.transactionForm) {
+      this.transactionForm.get('currency')?.setValue('');
+    }
+  }
+
   private resetForm(): void {
     if (this.transactionForm) {
       this.transactionForm.reset({
         tradingAccountId: '',
-        currency: 'USD',
+        currency: '',
         amount: ''
       });
     }
@@ -116,6 +179,12 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
     }
 
     const formValue = this.transactionForm.value;
+    const selectedWallet = this.availableWallets.find(w => w.currency === formValue.currency);
+    
+    if (!selectedWallet) {
+      console.error('Selected currency wallet not found');
+      return;
+    }
 
     if (this.transactionType === 'deposit') {
       const request: DepositRequest = {
@@ -137,6 +206,13 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
           },
         });
     } else {
+      // For withdrawals, check if sufficient balance
+      if (selectedWallet.balance < parseFloat(formValue.amount)) {
+        console.error('Insufficient balance for withdrawal');
+        // You might want to show an error message to the user
+        return;
+      }
+
       const request: WithdrawRequest = {
         tradingAccountId: formValue.tradingAccountId,
         currency: formValue.currency,
@@ -173,18 +249,44 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
       'JPY': '¥',
       'AUD': 'A$',
       'CAD': 'C$',
+      'ADA': '₳',
+      'DOT': '●',
+      'SOL': '◎',
+      'AVAX': '🔺',
+      'MATIC': '⬟',
+      'LINK': '🔗',
+      'UNI': '🦄'
     };
-    return symbols[currency] || '';
+    return symbols[currency] || currency;
+  }
+
+  getWalletBalance(): number {
+    const selectedCurrency = this.transactionForm?.get('currency')?.value;
+    const wallet = this.availableWallets.find(w => w.currency === selectedCurrency);
+    return wallet ? wallet.balance : 0;
+  }
+
+  getMaxWithdrawAmount(): number {
+    return this.getWalletBalance();
+  }
+
+  setMaxAmount(): void {
+    if (this.transactionType === 'withdraw') {
+      const maxAmount = this.getMaxWithdrawAmount();
+      this.transactionForm.get('amount')?.setValue(maxAmount);
+    }
   }
 
   onModalClose(): void {
     console.log('Closing wallet transaction modal');
     this.resetForm();
+    this.clearWalletData();
     this.onClose.emit();
   }
 
   // Utility methods
-  formatCurrency(amount: number, currency: string = 'USD'): string {
-    return this.walletService.formatCurrency(amount, currency);
+  formatCurrency(amount: number, currency?: string): string {
+    const curr = currency || this.transactionForm?.get('currency')?.value || 'USD';
+    return this.walletService.formatCurrency(amount, curr);
   }
 }

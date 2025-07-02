@@ -79,14 +79,12 @@
 
   <!-- Accounts Grid -->
   <div *ngIf="!loading" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <!-- Existing header section -->
+    <!-- Header section -->
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Trading Accounts</h3>
-        <!-- Add hint about double-click -->
         <div class="flex items-center space-x-3">
-          <p class="text-xs text-gray-500 dark:text-gray-400">Double-click an account to view portfolio</p>
-          <!-- Your existing search and buttons -->
+          <p class="text-xs text-gray-500 dark:text-gray-400">Double-click to view portfolio • Right-click for more options</p>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +125,7 @@
       </div>
     </div>
 
-    <!-- Table with Double-Click Support -->
+    <!-- Table with Right-Click Support -->
     <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/30">
         <thead class="bg-gray-50 dark:bg-gray-900/20">
@@ -144,11 +142,12 @@
           </tr>
         </thead>
         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30">
-          <!-- Add double-click handler and cursor pointer -->
+          <!-- Table rows with context menu support -->
           <tr *ngFor="let account of filteredAccounts"
               class="hover:bg-gray-50 dark:hover:bg-gray-700/5 cursor-pointer transition-colors"
               (dblclick)="openPortfolioModal(account)"
-              title="Double-click to view portfolio">
+              (contextmenu)="showContextMenu($event, account)"
+              title="Double-click to view portfolio • Right-click for more options">
 
             <!-- Account -->
             <td class="px-6 py-4 whitespace-nowrap">
@@ -161,7 +160,6 @@
               <div class="text-xs text-gray-500 dark:text-gray-400">{{ account.displayName }}</div>
             </td>
 
-            <!-- All your existing table cells remain the same -->
             <!-- Type -->
             <td class="px-6 py-4 whitespace-nowrap">
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -224,59 +222,66 @@
               </ng-template>
             </td>
 
-            <!-- Actions - Prevent double-click propagation -->
+            <!-- Actions - Context Menu Trigger -->
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" (click)="$event.stopPropagation()" (dblclick)="$event.stopPropagation()">
-              <div class="flex items-center space-x-2">
-                <!-- Portfolio Button -->
-                <button
-                  type="button"
-                  (click)="openPortfolioModal(account)"
-                  class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                  title="View Portfolio"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                  </svg>
-                </button>
+              <div class="flex items-center justify-center">
+                <!-- Status Actions (inline for quick access) -->
+                <div class="flex items-center space-x-2 mr-3">
+                  <!-- Activate/Deactivate -->
+                  <button
+                    *ngIf="account.status !== AccountStatus.ACTIVE"
+                    type="button"
+                    (click)="activateAccount(account)"
+                    class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors"
+                    title="Activate Account"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </button>
 
-                <!-- Activate/Deactivate -->
-                <button
-                  *ngIf="account.status !== AccountStatus.ACTIVE"
-                  type="button"
-                  (click)="activateAccount(account)"
-                  class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                  title="Activate Account"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </button>
+                  <!-- Suspend -->
+                  <button
+                    *ngIf="account.status === AccountStatus.ACTIVE"
+                    type="button"
+                    (click)="suspendAccount(account)"
+                    class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+                    title="Suspend Account"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
+                    </svg>
+                  </button>
 
-                <!-- Suspend -->
-                <button
-                  *ngIf="account.status === AccountStatus.ACTIVE"
-                  type="button"
-                  (click)="suspendAccount(account)"
-                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                  title="Suspend Account"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
-                  </svg>
-                </button>
+                  <!-- Deactivate -->
+                  <button
+                    *ngIf="account.status === AccountStatus.ACTIVE"
+                    type="button"
+                    (click)="deactivateAccount(account)"
+                    class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 transition-colors"
+                    title="Deactivate Account"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </button>
+                </div>
 
-                <!-- Deactivate -->
-                <button
-                  *ngIf="account.status === AccountStatus.ACTIVE"
-                  type="button"
-                  (click)="deactivateAccount(account)"
-                  class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300"
-                  title="Deactivate Account"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </button>
+                <!-- More Actions Menu Button -->
+                <div class="relative">
+                  <button
+                    type="button"
+                    (click)="toggleAccountMenu(account, $event)"
+                    class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full p-1 transition-colors"
+                    title="More actions"
+                    [attr.aria-expanded]="selectedMenuAccount?.id === account.id"
+                    aria-haspopup="true"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </td>
           </tr>
@@ -309,6 +314,92 @@
       </table>
     </div>
   </div>
+</div>
+
+<!-- Context Menu -->
+<div *ngIf="showContextMenuFlag" 
+     class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 min-w-[180px]"
+     [style.left.px]="contextMenuPosition.x"
+     [style.top.px]="contextMenuPosition.y"
+     (click)="$event.stopPropagation()">
+  
+  <button
+    type="button"
+    (click)="contextMenuAction('portfolio')"
+    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
+  >
+    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+    </svg>
+    <span>View Portfolio</span>
+  </button>
+
+  <button
+    type="button"
+    (click)="contextMenuAction('wallets')"
+    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
+  >
+    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+    </svg>
+    <span>Manage Wallets</span>
+  </button>
+
+  <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
+
+  <button
+    type="button"
+    (click)="contextMenuAction('addWallet')"
+    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
+  >
+    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+    </svg>
+    <span>Add New Wallet</span>
+  </button>
+</div>
+
+<!-- Dropdown Menu -->
+<div *ngIf="selectedMenuAccount" 
+     class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 min-w-[180px]"
+     [style.left.px]="dropdownPosition.x"
+     [style.top.px]="dropdownPosition.y"
+     (click)="$event.stopPropagation()">
+  
+  <button
+    type="button"
+    (click)="dropdownAction('portfolio')"
+    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
+  >
+    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+    </svg>
+    <span>View Portfolio</span>
+  </button>
+
+  <button
+    type="button"
+    (click)="dropdownAction('wallets')"
+    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
+  >
+    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+    </svg>
+    <span>Manage Wallets</span>
+  </button>
+
+  <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
+
+  <button
+    type="button"
+    (click)="dropdownAction('addWallet')"
+    class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
+  >
+    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+    </svg>
+    <span>Add New Wallet</span>
+  </button>
 </div>
 
 <!-- Create Account Modal -->
@@ -376,3 +467,19 @@
   [tradingAccountId]="selectedAccountId"
   (onClose)="closePortfolioModal()">
 </app-portfolio>
+
+<!-- Wallet Management Modal -->
+<app-wallet-modal
+  [isVisible]="showWalletModal"
+  [tradingAccountId]="selectedWalletAccountId"
+  [accountNumber]="selectedAccountNumber"
+  (onClose)="closeWalletModal()">
+</app-wallet-modal>
+
+<!-- Add Wallet Modal -->
+<app-add-wallet-modal
+  [isVisible]="showAddWalletModal"
+  [tradingAccountId]="selectedAddWalletAccountId"
+  (onClose)="closeAddWalletModal()"
+  (onWalletCreated)="onWalletCreated()">
+</app-add-wallet-modal>

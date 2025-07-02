@@ -10,6 +10,7 @@ import {
   WalletTransaction,
   TradingAccountSummary
 } from '../models/wallet.model';
+import { Wallet } from '../../client-accounts/models/wallet.model';
 
 @Injectable({
   providedIn: 'root',
@@ -19,11 +20,14 @@ export class WalletService {
   private alertService = inject(AlertService);
 
   private readonly baseEndpoint = 'wallets/api/Wallets';
+  private readonly tradingBaseEndpoint = 'traiding/api/Wallets';
 
   // Reactive state management
   private readonly _loading = signal<boolean>(false);
   private readonly _tradingAccounts = signal<TradingAccountSummary[]>([]);
   private readonly _recentTransaction = signal<WalletTransaction | null>(null);
+
+  private readonly _selectedAccountWallets = signal<Wallet[]>([]);
 
   readonly loading = this._loading.asReadonly();
   readonly tradingAccounts = this._tradingAccounts.asReadonly();
@@ -57,6 +61,29 @@ export class WalletService {
       );
   }
 
+    getWalletsByTradingAccount(tradingAccountId: string): Observable<Wallet[]> {
+    console.log('WalletService: Getting wallets for trading account:', tradingAccountId);
+    this._loading.set(true);
+
+    return this.http
+      .get<Wallet[]>(`${this.tradingBaseEndpoint}/${tradingAccountId}`)
+      .pipe(
+        tap((wallets) => {
+          console.log('WalletService: Wallets loaded for account:', wallets);
+          this._selectedAccountWallets.set(wallets);
+          this._loading.set(false);
+        }),
+        catchError((error) => {
+          console.error('WalletService: Error loading wallets:', error);
+          this._loading.set(false);
+          this.alertService.error(
+            'Failed to load wallets. Please try again.'
+          );
+          return throwError(() => error);
+        })
+      );
+  }
+
   /**
    * Process deposit transaction
    */
@@ -65,7 +92,7 @@ export class WalletService {
     this._loading.set(true);
 
     return this.http
-      .post<WalletTransaction>(`${this.baseEndpoint}/deposit`, request)
+      .post<WalletTransaction>(`${this.tradingBaseEndpoint}/deposit`, request)
       .pipe(
         tap((transaction) => {
           console.log('WalletService: Deposit successful:', transaction);
@@ -94,7 +121,7 @@ export class WalletService {
     this._loading.set(true);
 
     return this.http
-      .post<WalletTransaction>(`${this.baseEndpoint}/withdraw`, request)
+      .post<WalletTransaction>(`${this.tradingBaseEndpoint}/withdraw`, request)
       .pipe(
         tap((transaction) => {
           console.log('WalletService: Withdrawal successful:', transaction);
@@ -114,6 +141,8 @@ export class WalletService {
         })
       );
   }
+
+  
 
   /**
    * Clear recent transaction

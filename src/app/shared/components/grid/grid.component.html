@@ -1,7 +1,7 @@
 <!-- src/app/shared/components/grid/grid.component.html -->
 <div
   #gridContainer
-  class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-300/30 overflow-hidden"
+  class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 overflow-hidden"
 >
   <!-- Grid Header -->
   <div
@@ -68,34 +68,6 @@
         </div>
       </button>
 
-      <!-- Column Selector Button -->
-      <!-- <button
-        *ngIf="showColumnSelector"
-        (click)="toggleColumnSelector()"
-        class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        [ngClass]="{
-          'bg-blue-50': isColumnSelectorVisible && !isDarkMode,
-          'bg-blue-900/20': isColumnSelectorVisible && isDarkMode
-        }"
-      >
-        <div class="flex items-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 mr-1"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h7"
-            />
-          </svg>
-          <span>Columns</span>
-        </div>
-      </button> -->
       <div class="relative inline-block">
         <!-- Column Selector Button -->
         <button
@@ -155,44 +127,6 @@
           ></app-grid-column-selector>
         </div>
       </div>
-      <!-- Export Button -->
-      <!-- <div *ngIf="exportable" class="relative inline-block">
-        <button
-          class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
-          (click)="toggleExportMenu()"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 mr-1"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          <span>Export</span>
-        </button>
-
-        <div
-          *ngIf="isExportOpen"
-          class="origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
-        >
-          <div class="py-1">
-            <button
-              *ngFor="let type of exportTypes"
-              (click)="exportData(type.value)"
-              class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
-            >
-              Export as {{ type.label }}
-            </button>
-          </div>
-        </div>
-      </div> -->
 
       <!-- Refresh Button -->
       <button
@@ -219,6 +153,52 @@
     </div>
   </div>
 
+  <!-- Bulk Actions Bar -->
+  <div
+    *ngIf="selectable && selectedItems.length > 0 && bulkActions.length > 0"
+    class="px-4 py-3 bg-blue-50 dark:bg-blue-900/10 flex items-center justify-between"
+  >
+    <div class="flex items-center">
+      <span class="text-sm font-medium text-blue-900 dark:text-blue-400">
+        {{ selectedItems.length }} item{{ selectedItems.length === 1 ? '' : 's' }} selected
+      </span>
+      <button
+        (click)="clearSelection()"
+        class="ml-3 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 focus:outline-none"
+      >
+        Clear
+      </button>
+    </div>
+    
+    <div class="flex items-center space-x-2">
+      <ng-container *ngFor="let action of bulkActions">
+        <button
+          *ngIf="!action.visible"
+          (click)="onBulkActionExecuted(action)"
+          [disabled]="action.disabled"
+          class="px-3 py-1.5 text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200"
+          [ngClass]="{
+            'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500': action.type === 'danger' && !action.disabled,
+            'bg-red-300 text-red-500 cursor-not-allowed': action.type === 'danger' && action.disabled,
+            'bg-yellow-600 hover:bg-yellow-700 text-white focus:ring-yellow-500': action.type === 'warning' && !action.disabled,
+            'bg-yellow-300 text-yellow-500 cursor-not-allowed': action.type === 'warning' && action.disabled,
+            'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500': (action.type === 'primary' || !action.type) && !action.disabled,
+            'bg-blue-300 text-blue-500 cursor-not-allowed': (action.type === 'primary' || !action.type) && action.disabled,
+            'bg-gray-200 hover:bg-gray-300 text-gray-700 focus:ring-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700 dark:text-gray-200': action.type === 'secondary' && !action.disabled,
+            'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500': action.type === 'secondary' && action.disabled
+          }"
+        >
+          <div class="flex items-center">
+            <ng-container *ngIf="action.icon">
+              <i [class]="action.icon" class="mr-1.5"></i>
+            </ng-container>
+            {{ action.label }}
+          </div>
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
   <!-- Filters Section -->
   <div
     *ngIf="isFilterVisible"
@@ -230,18 +210,6 @@
       (filterChange)="onFilterChange($event)"
     ></app-grid-filter>
   </div>
-
-  <!-- Column Selector Section -->
-  <!-- <div
-    *ngIf="isColumnSelectorVisible"
-    class="p-4 border-b border-gray-300/30 bg-gray-50"
-  >
-    <app-grid-column-selector
-      [columns]="columns"
-      [gridId]="gridId"
-      (columnsChange)="onColumnVisibilityChange($event)"
-    ></app-grid-column-selector>
-  </div> -->
 
   <!-- Grid Content -->
   <div class="overflow-x-auto">
@@ -431,6 +399,9 @@
             *ngFor="let item of pagedData"
             (dblclick)="onRowClick(item, $event)"
             (contextmenu)="onRowRightClick(item, $event)"
+            [ngClass]="{
+              'bg-blue-50 dark:bg-blue-900/10': selectedItems.includes(item)
+            }"
           >
             <!-- Checkbox Column -->
             <td *ngIf="selectable" class="px-6 py-4 whitespace-nowrap">

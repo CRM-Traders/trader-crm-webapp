@@ -22,7 +22,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
         <button
           *ngIf="node.hasChildren"
           (click)="onToggleClick($event)"
-          class="mr-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600/20 transition-colors"
+          class="!mr-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600/20 transition-colors"
         >
           <svg
             class="w-4 h-4 transition-transform duration-200"
