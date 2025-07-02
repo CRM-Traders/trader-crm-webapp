@@ -137,6 +137,27 @@ export class ClientsComponent implements OnInit {
     },
   ];
 
+  gridBulkActions: GridAction[] = [
+    {
+      id: 'bulk-activate',
+      label: 'Activate Selected',
+      icon: 'fas fa-check-circle',
+      type: 'primary',
+      action: (items: Client[]) => this.bulkActivateClients(items),
+      visible: false,
+      disabled: false,
+    },
+    {
+      id: 'bulk-assign-affiliate',
+      label: 'Assign Affiliate',
+      icon: 'fas fa-user-tie',
+      type: 'primary',
+      action: (items: Client[]) => this.bulkAssignAffiliate(items),
+      visible: false,
+      disabled: false,
+    }
+];
+
   gridActions: GridAction[] = [
     {
       id: 'view',
@@ -198,6 +219,22 @@ export class ClientsComponent implements OnInit {
       this.activeCount = result.activeUsersTotalCount;
     });
   }
+
+   private bulkActivateClients(clients: Client[]): void {
+
+   }
+
+   private bulkAssignAffiliate(clients: Client[]): void {
+
+   }
+
+  onBulkActionExecuted(event: { action: GridAction; items: any[] }): void {
+  // Handle bulk action execution
+}
+
+onSelectionChange(selectedItems: any[]): void {
+  // Update selection state and action availability
+}
 
   onRowClick(client: Client): void {
     this.openClientDetailsModal(client);

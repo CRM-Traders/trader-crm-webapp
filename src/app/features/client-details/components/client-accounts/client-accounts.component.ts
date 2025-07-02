@@ -1,4 +1,4 @@
-// Updated client-accounts.component.ts with portfolio modal integration
+// Updated client-accounts.component.ts with separated wallet modals
 
 import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -12,13 +12,27 @@ import {
 import { Subject, takeUntil } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AdminTradingAccountService } from './services/admin-trading-accounts.service';
-import { AccountStatus, AccountType, CreateTradingAccountRequest, TradingAccount } from './models/trading-account.model';
+import {
+  AccountStatus,
+  AccountType,
+  CreateTradingAccountRequest,
+  TradingAccount,
+} from './models/trading-account.model';
 import { PortfolioComponent } from './modals/portfolio/portfolio.component';
+import { WalletModalComponent } from './modals/wallet-modal/wallet-modal.component';
+import { AddWalletModalComponent } from './modals/add-wallet-modal/add-wallet-modal.component';
 
 @Component({
   selector: 'app-client-accounts',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PortfolioComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    PortfolioComponent,
+    WalletModalComponent,
+    AddWalletModalComponent,
+  ],
   templateUrl: './client-accounts.component.html',
   styleUrls: ['./client-accounts.component.scss'],
 })
@@ -39,6 +53,25 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   showPortfolioModal = false;
   selectedAccountId: string | null = null;
 
+  // Wallet modal state (for managing existing wallets)
+  showWalletModal = false;
+  selectedWalletAccountId: string | null = null;
+  selectedAccountNumber: string = '';
+
+  // Add wallet modal state (for creating new wallets)
+  showAddWalletModal = false;
+  selectedAddWalletAccountId: string | null = null;
+  selectedAddWalletAccountNumber: string = '';
+
+  // Context menu state
+  showContextMenuFlag = false;
+  contextMenuPosition = { x: 0, y: 0 };
+  contextMenuAccount: TradingAccount | null = null;
+
+  // Dropdown menu state
+  selectedMenuAccount: TradingAccount | null = null;
+  dropdownPosition = { x: 0, y: 0 };
+
   // Expose enums to template
   AccountType = AccountType;
   AccountStatus = AccountStatus;
@@ -46,6 +79,12 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   constructor() {
     this.accountForm = this.fb.group({
       displayName: ['', [Validators.required, Validators.minLength(3)]],
+    });
+
+    // Close menus when clicking outside
+    document.addEventListener('click', (event) => {
+      this.hideContextMenu();
+      this.hideDropdownMenu();
     });
   }
 
@@ -58,6 +97,10 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    // Remove document click listener
+    document.removeEventListener('click', this.hideContextMenu);
+    document.removeEventListener('click', this.hideDropdownMenu);
   }
 
   // Getters for reactive data
@@ -79,7 +122,9 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
       (account) =>
         account.accountNumber.toLowerCase().includes(term) ||
         account.displayName.toLowerCase().includes(term) ||
-        this.getAccountTypeInfo(account.accountType).toLowerCase().includes(term) ||
+        this.getAccountTypeInfo(account.accountType)
+          .toLowerCase()
+          .includes(term) ||
         account.status.toLowerCase().includes(term)
     );
   }
@@ -96,7 +141,9 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   }
 
   getActiveAccountsCount(): number {
-    return this.accounts.filter((account) => account.status === AccountStatus.ACTIVE).length;
+    return this.accounts.filter(
+      (account) => account.status === AccountStatus.ACTIVE
+    ).length;
   }
 
   getTotalBalance(): number {
@@ -106,12 +153,16 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   }
 
   getVerifiedAccountsCount(): number {
-    return this.accounts.filter((account) => account.verifiedAt !== null).length;
+    return this.accounts.filter((account) => account.verifiedAt !== null)
+      .length;
   }
 
   getAverageMaxLeverage(): number {
     if (this.accounts.length === 0) return 0;
-    const total = this.accounts.reduce((sum, account) => sum + account.maxLeverage, 0);
+    const total = this.accounts.reduce(
+      (sum, account) => sum + account.maxLeverage,
+      0
+    );
     return total / this.accounts.length;
   }
 
@@ -196,25 +247,206 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
 
   // Portfolio Modal Methods
   openPortfolioModal(account: TradingAccount): void {
-    console.log('Opening portfolio modal for account:', account.accountNumber);
-    // Ensure clean state
     this.closePortfolioModal();
 
     // Small delay to ensure clean state
     setTimeout(() => {
       this.selectedAccountId = account.id;
       this.showPortfolioModal = true;
-      console.log('Portfolio modal state:', {
-        showPortfolioModal: this.showPortfolioModal,
-        selectedAccountId: this.selectedAccountId
-      });
     }, 50);
   }
 
   closePortfolioModal(): void {
-    console.log('Closing portfolio modal');
     this.showPortfolioModal = false;
     this.selectedAccountId = null;
+  }
+
+  // Wallet Modal Methods (for managing existing wallets)
+  openWalletModal(account: TradingAccount): void {
+    this.closeWalletModal();
+
+    // Small delay to ensure clean state
+    setTimeout(() => {
+      this.selectedWalletAccountId = account.id;
+      this.selectedAccountNumber = account.accountNumber;
+      this.showWalletModal = true;
+    }, 50);
+  }
+
+  closeWalletModal(): void {
+    this.showWalletModal = false;
+    this.selectedWalletAccountId = null;
+    this.selectedAccountNumber = '';
+  }
+
+  // Add Wallet Modal Methods (for creating new wallets)
+  openAddWalletModal(account: TradingAccount): void {
+    this.closeAddWalletModal();
+
+    // Small delay to ensure clean state
+    setTimeout(() => {
+      this.selectedAddWalletAccountId = account.id;
+      this.selectedAddWalletAccountNumber = account.accountNumber;
+      this.showAddWalletModal = true;
+    }, 50);
+  }
+
+  closeAddWalletModal(): void {
+    this.showAddWalletModal = false;
+    this.selectedAddWalletAccountId = null;
+    this.selectedAddWalletAccountNumber = '';
+  }
+
+  // Handle wallet creation success
+  onWalletCreated(): void {
+    // You can add any additional logic here if needed
+    // For example, refresh wallet data or show success message
+    console.log('Wallet created successfully');
+  }
+
+  // Context Menu Methods
+  showContextMenu(event: MouseEvent, account: TradingAccount): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.hideDropdownMenu(); // Close dropdown if open
+
+    this.contextMenuAccount = account;
+    this.contextMenuPosition = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+    this.showContextMenuFlag = true;
+
+    // Adjust position if menu would go off screen
+    setTimeout(() => {
+      this.adjustContextMenuPosition();
+    }, 0);
+  }
+
+  hideContextMenu(): void {
+    this.showContextMenuFlag = false;
+    this.contextMenuAccount = null;
+  }
+
+  contextMenuAction(action: string): void {
+    if (!this.contextMenuAccount) return;
+
+    const account = this.contextMenuAccount;
+    this.hideContextMenu();
+
+    switch (action) {
+      case 'portfolio':
+        this.openPortfolioModal(account);
+        break;
+      case 'wallets':
+        this.openWalletModal(account);
+        break;
+      case 'addWallet':
+        this.openAddWalletModal(account);
+        break;
+    }
+  }
+
+  // Dropdown Menu Methods
+  toggleAccountMenu(account: TradingAccount, event: MouseEvent): void {
+    event.stopPropagation();
+
+    this.hideContextMenu(); // Close context menu if open
+
+    if (this.selectedMenuAccount?.id === account.id) {
+      this.hideDropdownMenu();
+      return;
+    }
+
+    this.selectedMenuAccount = account;
+    const buttonRect = (event.target as HTMLElement).getBoundingClientRect();
+    this.dropdownPosition = {
+      x: buttonRect.right - 180, // Position dropdown to the left of the button
+      y: buttonRect.bottom + 5,
+    };
+
+    // Adjust position if menu would go off screen
+    setTimeout(() => {
+      this.adjustDropdownPosition();
+    }, 0);
+  }
+
+  hideDropdownMenu(): void {
+    this.selectedMenuAccount = null;
+  }
+
+  dropdownAction(action: string): void {
+    if (!this.selectedMenuAccount) return;
+
+    const account = this.selectedMenuAccount;
+    this.hideDropdownMenu();
+
+    switch (action) {
+      case 'portfolio':
+        this.openPortfolioModal(account);
+        break;
+      case 'wallets':
+        this.openWalletModal(account);
+        break;
+      case 'addWallet':
+        this.openAddWalletModal(account);
+        break;
+    }
+  }
+
+  // Menu Position Adjustment Methods
+  private adjustContextMenuPosition(): void {
+    const menu = document.querySelector(
+      '.fixed.bg-white.dark\\:bg-gray-800'
+    ) as HTMLElement;
+    if (!menu) return;
+
+    const menuRect = menu.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    let { x, y } = this.contextMenuPosition;
+
+    // Adjust horizontal position
+    if (x + menuRect.width > windowWidth) {
+      x = windowWidth - menuRect.width - 10;
+    }
+
+    // Adjust vertical position
+    if (y + menuRect.height > windowHeight) {
+      y = windowHeight - menuRect.height - 10;
+    }
+
+    this.contextMenuPosition = { x: Math.max(10, x), y: Math.max(10, y) };
+  }
+
+  private adjustDropdownPosition(): void {
+    const dropdown = document.querySelector(
+      '.fixed.bg-white.dark\\:bg-gray-800'
+    ) as HTMLElement;
+    if (!dropdown) return;
+
+    const dropdownRect = dropdown.getBoundingClientRect();
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    let { x, y } = this.dropdownPosition;
+
+    // Adjust horizontal position
+    if (x + dropdownRect.width > windowWidth) {
+      x = windowWidth - dropdownRect.width - 10;
+    }
+    if (x < 10) {
+      x = 10;
+    }
+
+    // Adjust vertical position
+    if (y + dropdownRect.height > windowHeight) {
+      y = windowHeight - dropdownRect.height - 10;
+    }
+
+    this.dropdownPosition = { x, y: Math.max(10, y) };
   }
 
   // Utility methods
@@ -222,7 +454,10 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
     return this.adminTradingAccountService.getAccountTypeInfo(accountType);
   }
 
-  getAccountStatusInfo(status: AccountStatus): { label: string; color: string } {
+  getAccountStatusInfo(status: AccountStatus): {
+    label: string;
+    color: string;
+  } {
     return this.adminTradingAccountService.getAccountStatusInfo(status);
   }
 

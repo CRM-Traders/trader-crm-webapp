@@ -13,7 +13,7 @@ export class PortfolioService {
   private http = inject(HttpService);
   private alertService = inject(AlertService);
 
-  private readonly baseEndpoint = 'wallets/api/Wallets';
+  private readonly baseEndpoint = 'traiding/api/Wallets';
 
   // Reactive state management
   private readonly _portfolio = signal<Portfolio | null>(null);
