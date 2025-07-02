@@ -1,0 +1,134 @@
+// wallet-modal.component.scss
+
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Custom scrollbar for webkit browsers
+.modal-content ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content ::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-700;
+  border-radius: 3px;
+}
+
+.modal-content ::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 dark:bg-gray-500;
+  border-radius: 3px;
+}
+
+.modal-content ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500 dark:bg-gray-400;
+}
+
+// Ensure proper hover states for table rows
+.wallet-table-row {
+  transition: background-color 0.15s ease-in-out;
+}
+
+// Button hover effects
+.action-button {
+  transition: all 0.15s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Form input focus states
+.wallet-form-input {
+  transition: all 0.2s ease-in-out;
+  
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+}
+
+// Loading spinner
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+  }
+  
+  .wallet-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .wallet-table {
+    font-size: 0.875rem;
+  }
+}
+
+// Dark mode specific adjustments
+@media (prefers-color-scheme: dark) {
+  .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .modal-content {
+    border: 2px solid;
+  }
+  
+  .action-button {
+    border-width: 2px;
+  }
+}
+
+// Print styles
+@media print {
+  .modal-backdrop,
+  .action-button {
+    display: none !important;
+  }
+}

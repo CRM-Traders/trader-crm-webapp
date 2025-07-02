@@ -59,6 +59,7 @@ export class GridComponent implements OnInit, OnDestroy {
   @Input() data: any[] = [];
   @Input() columns: GridColumn[] = [];
   @Input() actions: GridAction[] = [];
+  @Input() bulkActions: GridAction[] = []; // New input for bulk actions
   @Input() endpoint: string = '';
   @Input() emptyMessage: string = 'No records found';
   @Input() showFilters: boolean = true;
@@ -79,6 +80,10 @@ export class GridComponent implements OnInit, OnDestroy {
     action: GridAction;
     item: any;
   }>();
+  @Output() bulkActionExecuted = new EventEmitter<{
+    action: GridAction;
+    items: any[];
+  }>(); // New output for bulk actions
   @Output() contextMenuOpened = new EventEmitter<GridContextMenuEvent>();
   @Output() selectionChange = new EventEmitter<any[]>();
   @Output() sortChange = new EventEmitter<GridSort>();
@@ -301,6 +306,25 @@ export class GridComponent implements OnInit, OnDestroy {
     this.contextMenuVisible = false;
   }
 
+  onBulkActionExecuted(action: GridAction): void {
+    if (this.selectedItems.length === 0) {
+      return;
+    }
+
+    this.bulkActionExecuted.emit({ 
+      action, 
+      items: [...this.selectedItems] 
+    });
+
+    // Execute the action
+    if (action.action) {
+      action.action(this.selectedItems, action);
+    }
+
+    // Optionally clear selection after bulk action
+    // this.clearSelection();
+  }
+
   onContextMenuActionExecuted(action: GridAction): void {
     this.onActionExecuted(action, this.contextMenuItem);
   }
@@ -314,7 +338,7 @@ export class GridComponent implements OnInit, OnDestroy {
       this.selectedItems = this.selectedItems.filter((i) => i !== item);
     }
 
-    this.selectAll = this.selectedItems.length === this.data.length;
+    this.updateSelectAllState();
     this.selectionChange.emit(this.selectedItems);
   }
 
@@ -324,12 +348,28 @@ export class GridComponent implements OnInit, OnDestroy {
     this.selectAll = checked;
 
     if (checked) {
-      this.selectedItems = [...this.data];
+      this.selectedItems = [...this.pagedData];
     } else {
       this.selectedItems = [];
     }
 
     this.selectionChange.emit(this.selectedItems);
+  }
+
+  clearSelection(): void {
+    this.selectedItems = [];
+    this.selectAll = false;
+    this.selectionChange.emit(this.selectedItems);
+  }
+
+  private updateSelectAllState(): void {
+    const currentPageItems = this.pagedData;
+    const selectedItemsOnCurrentPage = this.selectedItems.filter(item => 
+      currentPageItems.includes(item)
+    );
+    
+    this.selectAll = currentPageItems.length > 0 && 
+                     selectedItemsOnCurrentPage.length === currentPageItems.length;
   }
 
   onGlobalFilterChange(event: Event): void {
@@ -350,6 +390,9 @@ export class GridComponent implements OnInit, OnDestroy {
     if (this.endpoint) {
       this.fetchData();
     }
+
+    // Clear selection when filtering
+    this.clearSelection();
   }
 
   onSortChange(column: GridColumn): void {
@@ -389,6 +432,9 @@ export class GridComponent implements OnInit, OnDestroy {
     if (this.endpoint) {
       this.fetchData();
     }
+
+    // Update select all state when page changes
+    this.updateSelectAllState();
   }
 
   onPageSizeChange(pageSize: number): void {
@@ -409,6 +455,9 @@ export class GridComponent implements OnInit, OnDestroy {
     if (this.endpoint) {
       this.fetchData();
     }
+
+    // Update select all state when page size changes
+    this.updateSelectAllState();
   }
 
   handlePageSizeChange(event: Event): void {
@@ -428,6 +477,9 @@ export class GridComponent implements OnInit, OnDestroy {
       this.processLocalData();
       this.pageChange.emit(this.pagination);
     }
+
+    // Update select all state when page size changes
+    this.updateSelectAllState();
   }
 
   toggleFilters(): void {
@@ -445,6 +497,9 @@ export class GridComponent implements OnInit, OnDestroy {
 
       this.fetchData();
     }
+
+    // Clear selection when filtering
+    this.clearSelection();
   }
 
   toggleColumnSelector(): void {
@@ -489,6 +544,9 @@ export class GridComponent implements OnInit, OnDestroy {
         pageSize: currentPageSize,
       });
     }
+
+    // Clear selection when refreshing
+    this.clearSelection();
   }
 
   getSortHeaderClass(column: GridColumn): string {
