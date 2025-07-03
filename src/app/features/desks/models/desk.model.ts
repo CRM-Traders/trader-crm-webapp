@@ -2,8 +2,8 @@ export interface Desk {
   id: string;
   name: string;
   isActive: boolean;
-  officeId: string;
-  officeName: string;
+  brandId: string;
+  brandName: string;
   language: string | null;
   type: number;
   teamsCount: number;
@@ -15,7 +15,7 @@ export interface Desk {
 
 export interface DeskCreateRequest {
   name: string;
-  officeId: string;
+  brandId: string;
   language?: string | null;
   type?: number;
   isActive?: boolean;
@@ -24,7 +24,7 @@ export interface DeskCreateRequest {
 export interface DeskUpdateRequest {
   id: string;
   name: string;
-  officeId: string;
+  brandId: string;
   language?: string | null;
   type: number;
   isActive: boolean;
@@ -62,7 +62,7 @@ export interface DeskImportResponse {
 
 export interface DeskImportResult {
   name: string;
-  officeName: string;
+  brandName: string;
   language: string | null;
   type: number;
   isActive: boolean;
@@ -72,7 +72,7 @@ export interface DeskImportResult {
 export interface DeskDropdownItem {
   id: string;
   value: string;
-  officeName: string;
+  brandName: string;
   language: string | null;
   type: number;
 }

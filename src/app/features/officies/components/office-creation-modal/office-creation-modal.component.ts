@@ -95,160 +95,6 @@ import { Country } from '../../../../core/models/country.model';
             </p>
           </div>
 
-          <!-- Country Selection -->
-          <div>
-            <label
-              for="country"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Country <span class="text-red-500">*</span>
-            </label>
-            <select
-              id="country"
-              formControlName="country"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              [class.border-red-500]="
-                officeForm.get('country')?.invalid &&
-                officeForm.get('country')?.touched
-              "
-            >
-              <option value="">Select a country</option>
-              <option
-                *ngFor="let country of availableCountries"
-                [value]="country.code"
-              >
-                {{ country.name }}
-              </option>
-            </select>
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                officeForm.get('country')?.invalid &&
-                officeForm.get('country')?.touched
-              "
-            >
-              <span *ngIf="officeForm.get('country')?.errors?.['required']">
-                Country selection is required
-              </span>
-            </p>
-          </div>
-
-          <!-- Brand Selection -->
-          <div class="relative">
-            <label
-              for="brandId"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Brand <span class="text-red-500">*</span>
-            </label>
-
-            <!-- Custom Dropdown Button -->
-            <button
-              type="button"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              [class.border-red-500]="
-                officeForm.get('brandId')?.invalid &&
-                officeForm.get('brandId')?.touched
-              "
-              (click)="toggleBrandDropdown()"
-            >
-              <span class="truncate">{{ getSelectedBrandName() }}</span>
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="brandDropdownOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Dropdown Panel -->
-            <div
-              *ngIf="brandDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-            >
-              <!-- Search Input -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  #brandSearchInput
-                  type="text"
-                  placeholder="Search brands..."
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onBrandSearch($event)"
-                  [value]="brandSearchTerm"
-                />
-              </div>
-
-              <!-- Brands List -->
-              <div
-                class="max-h-48 overflow-y-auto"
-                (scroll)="onBrandDropdownScroll($event)"
-              >
-                <div
-                  *ngFor="let brand of availableBrands"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
-                  (click)="selectBrand(brand)"
-                >
-                  {{ brand.value }}
-                </div>
-
-                <!-- Loading indicator -->
-                <div
-                  *ngIf="brandLoading"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  <svg
-                    class="animate-spin h-4 w-4 mx-auto"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </div>
-
-                <!-- No results -->
-                <div
-                  *ngIf="!brandLoading && availableBrands.length === 0"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No brands found
-                </div>
-              </div>
-            </div>
-
-            <!-- Validation Error -->
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                officeForm.get('brandId')?.invalid &&
-                officeForm.get('brandId')?.touched
-              "
-            >
-              <span *ngIf="officeForm.get('brandId')?.errors?.['required']">
-                Brand selection is required
-              </span>
-            </p>
-          </div>
-
           <!-- Is Active Checkbox -->
           <div>
             <div class="flex items-center">
@@ -356,9 +202,6 @@ export class OfficeCreationModalComponent implements OnInit, OnDestroy {
           Validators.maxLength(100),
         ],
       ],
-      country: ['', [Validators.required]],
-      brandId: ['', [Validators.required]],
-      brandSearch: [''],
       isActive: [true],
     });
   }
@@ -507,7 +350,6 @@ export class OfficeCreationModalComponent implements OnInit, OnDestroy {
     const officeData: OfficeCreateRequest = {
       name: formValue.name.trim(),
       country: formValue.country,
-      brandId: formValue.brandId,
       isActive: formValue.isActive,
     };
 

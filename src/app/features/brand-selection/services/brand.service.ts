@@ -29,11 +29,11 @@ export class BrandService {
     };
 
     return this.http
-      .post<BrandDropdownResponse>('identity/api/brands/dropdown', body)
+      .post<BrandDropdownResponse>('identity/api/offices/dropdown', body)
       .pipe(
         catchError((error) => {
-          this.alertService.error('Failed to load brands. Please try again.');
-          return throwError(() => new Error('Failed to load brands'));
+          this.alertService.error('Failed to load offices. Please try again.');
+          return throwError(() => new Error('Failed to load offices'));
         })
       );
   }
@@ -42,7 +42,7 @@ export class BrandService {
     const body = { selectedBrandId };
 
     return this.http
-      .post<SetBrandResponse>('identity/api/brands/set-brand-id', body)
+      .post<SetBrandResponse>('identity/api/offices/set-office-id', body)
       .pipe(
         tap((response) => {
           // Update stored tokens if provided in response
@@ -50,14 +50,14 @@ export class BrandService {
             this.updateAuthData(response);
           }
 
-          // Mark brand as selected
+          // Mark office as selected
           this.authService.markBrandAsSelected();
 
-          this.alertService.success('Brand selected successfully');
+          this.alertService.success('Office selected successfully');
         }),
         catchError((error) => {
-          this.alertService.error('Failed to set brand. Please try again.');
-          return throwError(() => new Error('Failed to set brand'));
+          this.alertService.error('Failed to set office. Please try again.');
+          return throwError(() => new Error('Failed to set office'));
         })
       );
   }

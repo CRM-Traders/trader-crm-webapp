@@ -16,6 +16,28 @@ export interface HierarchyTeam {
   expanded?: boolean;
 }
 
+export interface HierarchyResponse {
+  offices: HierarchyOffice[];
+}
+
+export interface HierarchyOffice {
+  id: string;
+  name: string;
+  country: string;
+  isActive: boolean;
+  brands: HierarchyBrand[];
+  expanded?: boolean;
+}
+
+export interface HierarchyBrand {
+  id: string;
+  name: string;
+  country: string;
+  isActive: boolean;
+  desks: HierarchyDesk[];
+  expanded?: boolean;
+}
+
 export interface HierarchyDesk {
   id: string;
   name: string;
@@ -26,32 +48,10 @@ export interface HierarchyDesk {
   expanded?: boolean;
 }
 
-export interface HierarchyOffice {
-  id: string;
-  name: string;
-  country: string;
-  isActive: boolean;
-  desks: HierarchyDesk[];
-  expanded?: boolean;
-}
-
-export interface HierarchyBrand {
-  id: string;
-  name: string;
-  country: string;
-  isActive: boolean;
-  offices: HierarchyOffice[];
-  expanded?: boolean;
-}
-
-export interface HierarchyResponse {
-  brands: HierarchyBrand[];
-}
-
 export interface HierarchyNode {
   id: string;
   name: string;
-  type: 'brand' | 'office' | 'desk' | 'team' | 'member';
+  type:  'office' | 'brand' | 'desk' | 'team' | 'member';
   isActive: boolean;
   expanded?: boolean;
   level: number;

@@ -15,6 +15,7 @@ import {
   BrandDropdownResponse,
   BrandDropdownRequest,
 } from '../models/brand.model';
+import { OfficeDropdownResponse, OfficesListRequest } from '../../officies/models/office.model';
 
 @Injectable({
   providedIn: 'root',
@@ -59,6 +60,15 @@ export class BrandsService {
       request
     );
   }
+
+    getOfficeDropdown(
+      request: OfficesListRequest
+    ): Observable<OfficeDropdownResponse> {
+      return this.httpService.post<OfficeDropdownResponse>(
+        `identity/api/offices/dropdown`,
+        request
+      );
+    }
 
   importBrands(file: File): Observable<BrandImportResponse> {
     const formData = new FormData();
