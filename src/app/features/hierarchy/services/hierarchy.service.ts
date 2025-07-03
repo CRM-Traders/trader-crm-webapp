@@ -8,6 +8,7 @@ import {
   HierarchyNode,
   HierarchySearchResult,
   UserRole,
+  HierarchyOffice,
 } from '../models/hierarchy.model';
 import { HttpService } from '../../../core/services/http.service';
 
@@ -32,38 +33,20 @@ export class HierarchyService {
   loadHierarchy(): Observable<HierarchyNode[]> {
     return this.getHierarchy().pipe(
       map((response) => {
-        const nodes = this.transformToNodes(response.brands);
+        const nodes = this.transformToNodes(response.offices);
         this.hierarchySubject.next(nodes);
         return nodes;
       })
     );
   }
 
-  private transformToNodes(brands: HierarchyBrand[]): HierarchyNode[] {
-    return brands.map((brand) => this.brandToNode(brand, 0));
+  private transformToNodes(officies: HierarchyOffice[]): HierarchyNode[] {
+    return officies.map((office) => this.brandToNode(office, 0));
   }
 
-  private brandToNode(brand: HierarchyBrand, level: number): HierarchyNode {
-    const children = brand.offices.map((office) =>
+  private brandToNode(office: HierarchyOffice, level: number): HierarchyNode {
+    const children = office.brands.map((office) =>
       this.officeToNode(office, level + 1)
-    );
-
-    return {
-      id: brand.id,
-      name: brand.name,
-      type: 'brand',
-      isActive: brand.isActive,
-      expanded: brand.expanded || false,
-      level,
-      hasChildren: children.length > 0,
-      children,
-      data: { country: brand.country },
-    };
-  }
-
-  private officeToNode(office: any, level: number): HierarchyNode {
-    const children = office.desks.map((desk: any) =>
-      this.deskToNode(desk, level + 1)
     );
 
     return {
@@ -76,6 +59,24 @@ export class HierarchyService {
       hasChildren: children.length > 0,
       children,
       data: { country: office.country },
+    };
+  }
+
+  private officeToNode(brand: any, level: number): HierarchyNode {
+    const children = brand.desks.map((desk: any) =>
+      this.deskToNode(desk, level + 1)
+    );
+
+    return {
+      id: brand.id,
+      name: brand.name,
+      type: 'brand',
+      isActive: brand.isActive,
+      expanded: brand.expanded || false,
+      level,
+      hasChildren: children.length > 0,
+      children,
+      data: { country: brand.country },
     };
   }
 

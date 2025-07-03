@@ -1,10 +1,10 @@
-export interface Brand {
+export interface Office {
   id: string;
   value: string;
 }
 
 export interface BrandDropdownResponse {
-  items: Brand[];
+  items: Office[];
   totalCount: number;
   pageIndex: number;
   pageSize: number;

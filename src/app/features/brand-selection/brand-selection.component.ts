@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, finalize, of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle.component';
-import { Brand } from './models/brand.model';
+import { Office } from './models/brand.model';
 import { BrandService } from './services/brand.service';
 
 @Component({
@@ -24,7 +24,7 @@ import { BrandService } from './services/brand.service';
           <h1
             class="text-3xl font-extrabold text-gray-900 dark:text-white mb-4"
           >
-            Select Your Brand
+            Select Your Office
           </h1>
           <p class="text-lg text-gray-600 dark:text-gray-300">
             Choose the brand you want to work with to continue to your dashboard
@@ -84,7 +84,7 @@ import { BrandService } from './services/brand.service';
           </div>
         </div>
 
-        <!-- Brand Grid -->
+        <!-- Office Grid -->
         <div
           *ngIf="!isLoading() && !errorMessage() && brands().length > 0"
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -150,7 +150,7 @@ import { BrandService } from './services/brand.service';
               </h3>
 
               <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Brand ID: {{ brand.id }}
+                Office ID: {{ brand.id }}
               </p>
 
               <div class="flex items-center justify-between">
@@ -219,7 +219,7 @@ export class BrandSelectionComponent implements OnInit {
   // Reactive state using signals
   readonly isLoading = signal<boolean>(true);
   readonly isSelectingBrand = signal<boolean>(false);
-  readonly brands = signal<Brand[]>([]);
+  readonly brands = signal<Office[]>([]);
   readonly errorMessage = signal<string>('');
   readonly selectedBrandId = signal<string>('');
 
@@ -259,7 +259,7 @@ export class BrandSelectionComponent implements OnInit {
       });
   }
 
-  selectBrand(brand: Brand): void {
+  selectBrand(brand: Office): void {
     if (this.isSelectingBrand()) {
       return; // Prevent multiple selections
     }
@@ -297,7 +297,7 @@ export class BrandSelectionComponent implements OnInit {
     this.authService.logout();
   }
 
-  trackByBrandId(index: number, brand: Brand): string {
+  trackByBrandId(index: number, brand: Office): string {
     return brand.id;
   }
 }

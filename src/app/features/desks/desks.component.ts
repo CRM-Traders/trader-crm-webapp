@@ -65,8 +65,8 @@ export class DesksComponent implements OnInit, OnDestroy {
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
-      field: 'officeName',
-      header: 'Office',
+      field: 'brandName',
+      header: 'Brand',
       sortable: true,
       filterable: true,
     },
@@ -111,15 +111,6 @@ export class DesksComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       selector: (row: Desk) => row.createdBy || 'System',
-    },
-    {
-      field: 'lastModifiedAt',
-      header: 'Last Modified',
-      sortable: true,
-      filterable: true,
-      type: 'date',
-      format: 'short',
-      selector: (row: Desk) => row.lastModifiedAt || null,
     },
   ];
 
@@ -293,6 +284,8 @@ export class DesksComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.showDeleteModal = false;
           this.deskToDelete = null;
+          this.refreshSpecificGrid();
+          this.loadDeskStatistics();
         })
       )
       .subscribe((result) => {

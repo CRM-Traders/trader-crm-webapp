@@ -1,6 +1,6 @@
 // src/app/features/brands/components/brand-details-modal/brand-details-modal.component.ts
 
-import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -10,6 +10,8 @@ import {
 } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
+import { CountryService } from '../../../../core/services/country.service';
+import { Country } from '../../../../core/models/country.model';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import { BrandsService } from '../../services/brands.service';
 import { Brand, BrandUpdateRequest } from '../../models/brand.model';
@@ -85,6 +87,99 @@ import { Brand, BrandUpdateRequest } from '../../models/brand.model';
                 </span>
               </div>
 
+              <!-- Country Selection -->
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Country
+                </label>
+                <div *ngIf="isEditing" class="relative">
+                  <!-- Custom Dropdown Button -->
+                  <button
+                    type="button"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
+                    [class.border-red-500]="
+                      editForm.get('country')?.invalid &&
+                      editForm.get('country')?.touched
+                    "
+                    (click)="toggleCountryDropdown()"
+                  >
+                    <span class="truncate">{{ getSelectedCountryName() }}</span>
+                    <svg
+                      class="w-4 h-4 ml-2 transition-transform"
+                      [class.rotate-180]="countryDropdownOpen"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      ></path>
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Panel -->
+                  <div
+                    *ngIf="countryDropdownOpen"
+                    class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                  >
+                    <!-- Search Input -->
+                    <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                      <input
+                        #countrySearchInput
+                        type="text"
+                        placeholder="Search countries..."
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        (input)="onCountrySearch($event)"
+                        [value]="countrySearchTerm"
+                      />
+                    </div>
+
+                    <!-- Countries List -->
+                    <div class="max-h-48 overflow-y-auto">
+                      <div
+                        *ngFor="let country of filteredCountries"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        (click)="selectCountry(country)"
+                      >
+                        {{ country.name }}
+                      </div>
+
+                      <!-- No results -->
+                      <div
+                        *ngIf="filteredCountries.length === 0"
+                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                      >
+                        No countries found
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Validation Error -->
+                  <p
+                    class="mt-1 text-sm text-red-600 dark:text-red-400"
+                    *ngIf="
+                      editForm.get('country')?.invalid &&
+                      editForm.get('country')?.touched
+                    "
+                  >
+                    <span *ngIf="editForm.get('country')?.errors?.['required']">
+                      Country selection is required
+                    </span>
+                  </p>
+                </div>
+                <span
+                  *ngIf="!isEditing"
+                  class="text-sm text-gray-900 dark:text-white"
+                >
+                  {{ getCountryNameByCode(brand.country) }}
+                </span>
+              </div>
+
               <!-- Status -->
               <div>
                 <label
@@ -118,15 +213,15 @@ import { Brand, BrandUpdateRequest } from '../../models/brand.model';
                 </span>
               </div>
 
-              <!-- Departments Count -->
+              <!-- Desks Count -->
               <div>
                 <label
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Departments
+                  Desks
                 </label>
                 <span class="text-sm text-gray-900 dark:text-white">
-                  {{ brand.departmentsCount || 0 }} departments
+                  {{ brand.desksCount || 0 }} desks
                 </span>
               </div>
 
@@ -250,11 +345,19 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private brandsService = inject(BrandsService);
   private alertService = inject(AlertService);
+  private countryService = inject(CountryService);
   private destroy$ = new Subject<void>();
 
   editForm: FormGroup;
   isEditing = false;
   loading = false;
+
+  // Country dropdown properties
+  countryDropdownOpen = false;
+  countrySearchTerm = '';
+  availableCountries: Country[] = [];
+  filteredCountries: Country[] = [];
+  selectedCountry: Country | null = null;
 
   constructor() {
     this.editForm = this.fb.group({
@@ -266,16 +369,21 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
           Validators.maxLength(100),
         ],
       ],
+      country: ['', [Validators.required]],
       isActive: [true],
     });
   }
 
   ngOnInit(): void {
+    this.loadCountries();
     if (this.brand) {
       this.editForm.patchValue({
         name: this.brand.name,
+        country: this.brand.country,
         isActive: this.brand.isActive,
       });
+      // Set the selected country for display
+      this.setSelectedCountryFromCode(this.brand.country);
     }
   }
 
@@ -293,8 +401,10 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     if (this.brand) {
       this.editForm.patchValue({
         name: this.brand.name,
+        country: this.brand.country,
         isActive: this.brand.isActive,
       });
+      this.setSelectedCountryFromCode(this.brand.country);
     }
   }
 
@@ -304,6 +414,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     const updateRequest: BrandUpdateRequest = {
       id: this.brand.id,
       name: this.editForm.value.name.trim(),
+      country: this.editForm.value.country,
       isActive: this.editForm.value.isActive,
     };
 
@@ -325,6 +436,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         this.brand = {
           ...this.brand,
           name: this.editForm.value.name.trim(),
+          country: this.editForm.value.country,
           isActive: this.editForm.value.isActive,
           lastModifiedAt: new Date(),
         };
@@ -334,6 +446,67 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
           brand: this.brand,
         });
       });
+  }
+
+  // Country dropdown methods
+  loadCountries(): void {
+    this.countryService.getCountries().subscribe({
+      next: (countries) => {
+        this.availableCountries = countries;
+        this.filteredCountries = countries;
+      },
+      error: (error) => {
+        this.alertService.error('Failed to load countries');
+      },
+    });
+  }
+
+  toggleCountryDropdown(): void {
+    this.countryDropdownOpen = !this.countryDropdownOpen;
+  }
+
+  onCountrySearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.countrySearchTerm = target.value.toLowerCase();
+    
+    this.filteredCountries = this.availableCountries.filter(country =>
+      country.name.toLowerCase().includes(this.countrySearchTerm)
+    );
+  }
+
+  selectCountry(country: Country): void {
+    this.selectedCountry = country;
+    this.editForm.patchValue({ country: country.code });
+    this.countryDropdownOpen = false;
+    this.countrySearchTerm = '';
+    this.filteredCountries = this.availableCountries;
+  }
+
+  setSelectedCountryFromCode(countryCode: string): void {
+    this.selectedCountry = this.availableCountries.find(c => c.code === countryCode) || null;
+  }
+
+  getSelectedCountryName(): string {
+    if (this.selectedCountry) {
+      return this.selectedCountry.name;
+    }
+    return 'Select a country...';
+  }
+
+  getCountryNameByCode(countryCode: string): string {
+    const country = this.availableCountries.find(c => c.code === countryCode);
+    return country ? country.name : countryCode;
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    const dropdown = target.closest('.relative');
+    
+    if (!dropdown && this.countryDropdownOpen) {
+      this.countryDropdownOpen = false;
+    }
   }
 
   onClose(): void {

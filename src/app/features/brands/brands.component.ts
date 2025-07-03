@@ -60,6 +60,13 @@ export class BrandsComponent implements OnInit, OnDestroy {
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
+      field: 'country',
+      header: 'Country',
+      sortable: true,
+      filterable: true,
+      selector: (row: Brand) => row.country || 'N/A',
+    },
+    {
       field: 'isActive',
       header: 'Status',
       sortable: true,
@@ -67,8 +74,8 @@ export class BrandsComponent implements OnInit, OnDestroy {
       cellTemplate: null, // Will be set in ngOnInit
     },
     {
-      field: 'departmentsCount',
-      header: 'Departments',
+      field: 'desksCount',
+      header: 'Desks',
       sortable: true,
       filterable: false,
       cellTemplate: null, // Will be set in ngOnInit
@@ -89,13 +96,11 @@ export class BrandsComponent implements OnInit, OnDestroy {
       selector: (row: Brand) => row.createdBy || 'System',
     },
     {
-      field: 'lastModifiedAt',
-      header: 'Last Modified',
+      field: 'officeName',
+      header: 'Office Name',
       sortable: true,
       filterable: true,
-      type: 'date',
-      format: 'short',
-      selector: (row: Brand) => row.lastModifiedAt || null,
+      selector: (row: Brand) => row.officeName || null,
     },
   ];
 
@@ -227,9 +232,9 @@ export class BrandsComponent implements OnInit, OnDestroy {
   }
 
   confirmDelete(brand: Brand): void {
-    if (brand.departmentsCount !== undefined && brand.departmentsCount > 0) {
+    if (brand.desksCount !== undefined && brand.desksCount > 0) {
       this.alertService.error(
-        'Cannot delete brand that has associated departments'
+        'Cannot delete brand that has associated desks'
       );
       return;
     }
@@ -254,7 +259,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
         catchError((error) => {
           if (error.status === 409) {
             this.alertService.error(
-              'Cannot delete brand with associated departments'
+              'Cannot delete brand with associated desks'
             );
           } else {
             this.alertService.error('Failed to delete brand');

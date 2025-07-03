@@ -108,194 +108,6 @@ import { Country } from '../../../../core/models/country.model';
                 </span>
               </div>
 
-              <!-- Country -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Country
-                </label>
-                <div *ngIf="isEditing">
-                  <select
-                    formControlName="country"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    [class.border-red-500]="
-                      editForm.get('country')?.invalid &&
-                      editForm.get('country')?.touched
-                    "
-                  >
-                    <option value="">Select a country</option>
-                    <option
-                      *ngFor="let country of availableCountries"
-                      [value]="country.code"
-                    >
-                      {{ country.name }}
-                    </option>
-                  </select>
-                  <p
-                    class="mt-1 text-sm text-red-600 dark:text-red-400"
-                    *ngIf="
-                      editForm.get('country')?.invalid &&
-                      editForm.get('country')?.touched
-                    "
-                  >
-                    <span *ngIf="editForm.get('country')?.errors?.['required']">
-                      Country is required
-                    </span>
-                  </p>
-                </div>
-                <span
-                  *ngIf="!isEditing"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                >
-                  <svg
-                    class="mr-1 h-3 w-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  {{ getCountryName(office.country) }}
-                </span>
-              </div>
-
-              <!-- Brand -->
-              <div class="relative">
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Brand
-                </label>
-                <div *ngIf="isEditing">
-                  <!-- Custom Dropdown Button -->
-                  <button
-                    type="button"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
-                    [class.border-red-500]="
-                      editForm.get('brandId')?.invalid &&
-                      editForm.get('brandId')?.touched
-                    "
-                    (click)="toggleBrandDropdown()"
-                  >
-                    <span class="truncate">{{ getSelectedBrandName() }}</span>
-                    <svg
-                      class="w-4 h-4 ml-2 transition-transform"
-                      [class.rotate-180]="brandDropdownOpen"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </button>
-
-                  <!-- Dropdown Panel -->
-                  <div
-                    *ngIf="brandDropdownOpen"
-                    class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-                  >
-                    <!-- Search Input -->
-                    <div
-                      class="p-3 border-b border-gray-200 dark:border-gray-700"
-                    >
-                      <input
-                        #brandSearchInput
-                        type="text"
-                        placeholder="Search brands..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        (input)="onBrandSearch($event)"
-                        [value]="brandSearchTerm"
-                      />
-                    </div>
-
-                    <!-- Brands List -->
-                    <div
-                      class="max-h-48 overflow-y-auto"
-                      (scroll)="onBrandDropdownScroll($event)"
-                    >
-                      <div
-                        *ngFor="let brand of availableBrands"
-                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
-                        (click)="selectBrand(brand)"
-                      >
-                        {{ brand.value }}
-                      </div>
-
-                      <!-- Loading indicator -->
-                      <div
-                        *ngIf="brandLoading"
-                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                      >
-                        <svg
-                          class="animate-spin h-4 w-4 mx-auto"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            class="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            stroke-width="4"
-                          ></circle>
-                          <path
-                            class="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                      </div>
-
-                      <!-- No results -->
-                      <div
-                        *ngIf="!brandLoading && availableBrands.length === 0"
-                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                      >
-                        No brands found
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Validation Error -->
-                  <p
-                    class="mt-1 text-sm text-red-600 dark:text-red-400"
-                    *ngIf="
-                      editForm.get('brandId')?.invalid &&
-                      editForm.get('brandId')?.touched
-                    "
-                  >
-                    <span *ngIf="editForm.get('brandId')?.errors?.['required']">
-                      Brand selection is required
-                    </span>
-                  </p>
-                </div>
-                <span
-                  *ngIf="!isEditing"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
-                >
-                  <svg
-                    class="mr-1 h-3 w-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                  {{ office.brandName }}
-                </span>
-              </div>
-
               <!-- Status -->
               <div>
                 <label
@@ -326,18 +138,6 @@ import { Country } from '../../../../core/models/country.model';
                   }"
                 >
                   {{ office.isActive ? 'Active' : 'Inactive' }}
-                </span>
-              </div>
-
-              <!-- Desks Count -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Total Desks
-                </label>
-                <span class="text-sm text-gray-900 dark:text-white">
-                  {{ office.desksCount }}
                 </span>
               </div>
 
@@ -492,9 +292,6 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
           Validators.maxLength(100),
         ],
       ],
-      country: ['', [Validators.required]],
-      brandId: ['', [Validators.required]],
-      brandSearch: [''],
       isActive: [true],
     });
   }
@@ -506,8 +303,6 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
     if (this.office) {
       this.editForm.patchValue({
         name: this.office.name,
-        country: this.office.country,
-        brandId: this.office.brandId,
         isActive: this.office.isActive,
       });
     }
@@ -629,16 +424,6 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
     this.brandDropdownOpen = false;
   }
 
-  getSelectedBrandName(): string {
-    const selectedBrandId = this.editForm.get('brandId')?.value;
-    const selectedBrand = this.availableBrands.find(
-      (brand) => brand.id === selectedBrandId
-    );
-    return selectedBrand
-      ? selectedBrand.value
-      : this.office?.brandName || 'Select a brand';
-  }
-
   getCountryName(countryCode: string): string {
     const country = this.availableCountries.find((c) => c.code === countryCode);
     return country ? country.name : countryCode;
@@ -654,7 +439,6 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
       this.editForm.patchValue({
         name: this.office.name,
         country: this.office.country,
-        brandId: this.office.brandId,
         isActive: this.office.isActive,
       });
     }
@@ -691,7 +475,6 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
           ...this.office,
           name: this.editForm.value.name.trim(),
           country: this.editForm.value.country,
-          brandId: this.editForm.value.brandId,
           isActive: this.editForm.value.isActive,
           lastModifiedAt: new Date(),
         };

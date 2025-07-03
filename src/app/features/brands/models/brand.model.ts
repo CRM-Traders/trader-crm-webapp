@@ -3,8 +3,10 @@
 export interface Brand {
   id: string;
   name: string;
+  country: string;
   isActive: boolean;
-  departmentsCount?: number;
+  desksCount?: number;
+  officeName: string;
   createdAt: Date;
   createdBy: string;
   lastModifiedAt?: Date | null;
@@ -13,12 +15,15 @@ export interface Brand {
 
 export interface BrandCreateRequest {
   name: string;
+  country?: string;
+  officeId?: string;
   isActive?: boolean;
 }
 
 export interface BrandUpdateRequest {
   id: string;
   name: string;
+  country: string;
   isActive: boolean;
 }
 
