@@ -216,7 +216,7 @@
                 </p>
                 <p
                   class="mt-2 text-sm text-yellow-600"
-                  *ngIf="officeToDelete && officeToDelete.desksCount > 0"
+                  *ngIf="officeToDelete && officeToDelete.brandsCount > 0"
                 >
                   <svg
                     class="inline h-4 w-4 mr-1"
@@ -229,8 +229,8 @@
                       clip-rule="evenodd"
                     />
                   </svg>
-                  This office has {{ officeToDelete.desksCount }} desk{{
-                    officeToDelete.desksCount > 1 ? "s" : ""
+                  This office has {{ officeToDelete.brandsCount }} brand{{
+                    officeToDelete.brandsCount > 1 ? "s" : ""
                   }}
                   associated with it.
                 </p>

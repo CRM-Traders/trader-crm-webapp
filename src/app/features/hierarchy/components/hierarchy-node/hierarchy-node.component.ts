@@ -297,8 +297,8 @@ export class HierarchyNodeComponent {
 
   getSecondaryInfo(): string {
     switch (this.node.type) {
-      case 'brand':
       case 'office':
+      case 'brand':
         return this.node.data?.country || '';
       case 'desk':
         return this.node.data?.language
@@ -316,8 +316,8 @@ export class HierarchyNodeComponent {
 
     const count = this.node.children.length;
     const typeMap = {
-      brand: count === 1 ? 'office' : 'offices',
-      office: count === 1 ? 'desk' : 'desks',
+      office: count === 1 ? 'brand' : 'brands',
+      brand: count === 1 ? 'desk' : 'desks',
       desk: count === 1 ? 'team' : 'teams',
       team: count === 1 ? 'member' : 'members',
     };

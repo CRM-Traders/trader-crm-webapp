@@ -48,14 +48,7 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
           *ngIf="hierarchyStats()"
           class="grid grid-cols-1 md:grid-cols-4 gap-4"
         >
-          <div
-            class="text-center p-4 bg-[#10B981]/60 rounded-lg"
-          >
-            <div class="text-2xl font-bold text-white">
-              {{ hierarchyStats()!.brands }}
-            </div>
-            <div class="text-sm text-white/90">Brands</div>
-          </div>
+
           <div
             class="text-center p-4 bg-[#8B5CF6]/60 rounded-lg"
           >
@@ -65,6 +58,14 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
               {{ hierarchyStats()!.offices }}
             </div>
             <div class="text-sm text-white/90">Offices</div>
+          </div>
+                    <div
+            class="text-center p-4 bg-[#10B981]/60 rounded-lg"
+          >
+            <div class="text-2xl font-bold text-white">
+              {{ hierarchyStats()!.brands }}
+            </div>
+            <div class="text-sm text-white/90">Brands</div>
           </div>
           <div
             class="text-center p-4 bg-[#FF6B9D]/60 rounded-lg"

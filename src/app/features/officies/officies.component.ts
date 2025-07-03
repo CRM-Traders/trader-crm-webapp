@@ -65,27 +65,14 @@ export class OfficesComponent implements OnInit, OnDestroy {
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
-      field: 'country',
-      header: 'Country',
-      sortable: true,
-      filterable: true,
-      cellTemplate: null,
-    },
-    {
-      field: 'brandName',
-      header: 'Brand',
-      sortable: true,
-      filterable: true,
-    },
-    {
       field: 'isActive',
       header: 'Status',
       sortable: true,
       filterable: true,
     },
     {
-      field: 'desksCount',
-      header: 'Desks',
+      field: 'brandsCount',
+      header: 'Brands',
       sortable: true,
       filterable: true,
       cellTemplate: null,
@@ -104,15 +91,6 @@ export class OfficesComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       selector: (row: Office) => row.createdBy || 'System',
-    },
-    {
-      field: 'lastModifiedAt',
-      header: 'Last Modified',
-      sortable: true,
-      filterable: true,
-      type: 'date',
-      format: 'short',
-      selector: (row: Office) => row.lastModifiedAt || null,
     },
   ];
 
@@ -158,13 +136,6 @@ export class OfficesComponent implements OnInit, OnDestroy {
     );
     if (statusColumn) {
       statusColumn.cellTemplate = this.statusCellTemplate;
-    }
-
-    const countryColumn = this.gridColumns.find(
-      (col) => col.field === 'country'
-    );
-    if (countryColumn) {
-      countryColumn.cellTemplate = this.countryCellTemplate;
     }
 
     const desksCountColumn = this.gridColumns.find(
@@ -318,6 +289,7 @@ export class OfficesComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.showDeleteModal = false;
           this.officeToDelete = null;
+          this.refreshSpecificGrid();
         })
       )
       .subscribe((result) => {

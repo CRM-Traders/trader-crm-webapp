@@ -15,6 +15,8 @@ import {
   OfficeDropdownRequest,
   OfficeDropdownResponse,
 } from '../models/desk.model';
+import { BrandDropdownRequest } from '../../brands/models/brand.model';
+import { BrandDropdownResponse } from '../../brand-selection/models/brand.model';
 
 @Injectable({
   providedIn: 'root',
@@ -58,6 +60,15 @@ export class DesksService {
   ): Observable<OfficeDropdownResponse> {
     return this.httpService.post<OfficeDropdownResponse>(
       `${this.officesApiPath}/dropdown`,
+      request
+    );
+  }
+
+    getBrandsDropdown(
+    request: BrandDropdownRequest
+  ): Observable<BrandDropdownResponse> {
+    return this.httpService.post<BrandDropdownResponse>(
+      `identity/api/brands/dropdown`,
       request
     );
   }

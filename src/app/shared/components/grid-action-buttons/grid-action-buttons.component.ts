@@ -70,7 +70,7 @@ import { GridAction } from '../../models/grid/grid-column.model';
         <!-- Dropdown menu -->
         <div
           *ngIf="isDropdownOpen"
-          class="fixed right-20 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50"
+          class="absolute right-0 -top-full -translate-y-3/5 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50"
         >
           <ng-container *ngFor="let action of secondaryActions">
             <hr

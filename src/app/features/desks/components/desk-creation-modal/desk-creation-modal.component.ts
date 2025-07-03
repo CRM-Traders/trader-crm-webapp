@@ -32,6 +32,7 @@ import {
   OfficeDropdownItem,
   OfficeDropdownRequest,
 } from '../../models/desk.model';
+import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/brand.model';
 
 @Component({
   selector: 'app-desk-creation-modal',
@@ -88,13 +89,13 @@ import {
             </p>
           </div>
 
-          <!-- Office Selection -->
+          <!-- Brand Selection -->
           <div class="relative">
             <label
-              for="officeId"
+              for="brandId"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Office <span class="text-red-500">*</span>
+              Brand <span class="text-red-500">*</span>
             </label>
 
             <!-- Custom Dropdown Button -->
@@ -102,15 +103,15 @@ import {
               type="button"
               class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
               [class.border-red-500]="
-                deskForm.get('officeId')?.invalid &&
-                deskForm.get('officeId')?.touched
+                deskForm.get('brandId')?.invalid &&
+                deskForm.get('brandId')?.touched
               "
               (click)="toggleOfficeDropdown()"
             >
               <span class="truncate">{{ getSelectedOfficeName() }}</span>
               <svg
                 class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="officeDropdownOpen"
+                [class.rotate-180]="brandDropdownOpen"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -126,42 +127,42 @@ import {
 
             <!-- Dropdown Panel -->
             <div
-              *ngIf="officeDropdownOpen"
+              *ngIf="brandDropdownOpen"
               class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
             >
               <!-- Search Input -->
               <div class="p-3 border-b border-gray-200 dark:border-gray-700">
                 <input
-                  #officeSearchInput
+                  #brandSearchInput
                   type="text"
-                  placeholder="Search offices..."
+                  placeholder="Search brands..."
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   (input)="onOfficeSearch($event)"
-                  [value]="officeSearchTerm"
+                  [value]="brandSearchTerm"
                 />
               </div>
 
-              <!-- Offices List -->
+              <!-- Brands List -->
               <div
                 class="max-h-48 overflow-y-auto"
                 (scroll)="onOfficeDropdownScroll($event)"
               >
                 <div
-                  *ngFor="let office of availableOffices"
+                  *ngFor="let brand of availableOffices"
                   class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
-                  (click)="selectOffice(office)"
+                  (click)="selectOffice(brand)"
                 >
                   <div class="flex justify-between items-center">
-                    <span>{{ office.value }}</span>
+                    <span>{{ brand.value }}</span>
                     <span class="text-xs text-gray-500">{{
-                      office.brandName
+                      brand.value
                     }}</span>
                   </div>
                 </div>
 
                 <!-- Loading indicator -->
                 <div
-                  *ngIf="officeLoading"
+                  *ngIf="brandLoading"
                   class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
                   <svg
@@ -187,10 +188,10 @@ import {
 
                 <!-- No results -->
                 <div
-                  *ngIf="!officeLoading && availableOffices.length === 0"
+                  *ngIf="!brandLoading && availableOffices.length === 0"
                   class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
-                  No offices found
+                  No brands found
                 </div>
               </div>
             </div>
@@ -199,12 +200,12 @@ import {
             <p
               class="mt-1 text-sm text-red-600 dark:text-red-400"
               *ngIf="
-                deskForm.get('officeId')?.invalid &&
-                deskForm.get('officeId')?.touched
+                deskForm.get('brandId')?.invalid &&
+                deskForm.get('brandId')?.touched
               "
             >
-              <span *ngIf="deskForm.get('officeId')?.errors?.['required']">
-                Office selection is required
+              <span *ngIf="deskForm.get('brandId')?.errors?.['required']">
+                Brand selection is required
               </span>
             </p>
           </div>
@@ -330,8 +331,8 @@ import {
 })
 export class DeskCreationModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
-  @ViewChild('officeSearchInput', { static: false })
-  officeSearchInput!: ElementRef;
+  @ViewChild('brandSearchInput', { static: false })
+  brandSearchInput!: ElementRef;
 
   private fb = inject(FormBuilder);
   private desksService = inject(DesksService);
@@ -341,17 +342,17 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
 
   isSubmitting = false;
   deskForm: FormGroup;
-  availableOffices: OfficeDropdownItem[] = [];
+  availableOffices: BrandDropdownItem[] = [];
   availableLanguages: any[] = [];
 
-  // Office dropdown state
-  officeSearchTerm = '';
-  officePageIndex = 0;
-  officePageSize = 20;
-  officeTotalCount = 0;
-  officeLoading = false;
-  officeHasNextPage = false;
-  officeDropdownOpen = false;
+  // Brand dropdown state
+  brandSearchTerm = '';
+  brandPageIndex = 0;
+  brandPageSize = 20;
+  brandTotalCount = 0;
+  brandLoading = false;
+  brandHasNextPage = false;
+  brandDropdownOpen = false;
 
   deskTypes = [
     { value: 0, label: 'Sales' },
@@ -368,8 +369,8 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
           Validators.maxLength(100),
         ],
       ],
-      officeId: ['', [Validators.required]],
-      officeSearch: [''],
+      brandId: ['', [Validators.required]],
+      brandSearch: [''],
       type: [0],
       language: [''],
       isActive: [true],
@@ -389,14 +390,14 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
 
   private initializeSearchObservable(): void {
     this.deskForm
-      .get('officeSearch')
+      .get('brandSearch')
       ?.valueChanges.pipe(
         debounceTime(300),
         distinctUntilChanged(),
         takeUntil(this.destroy$)
       )
       .subscribe((searchTerm: string) => {
-        this.officeSearchTerm = searchTerm || '';
+        this.brandSearchTerm = searchTerm || '';
         this.resetOfficeDropdown();
         this.loadOffices();
       });
@@ -408,30 +409,30 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
   }
 
   private resetOfficeDropdown(): void {
-    this.officePageIndex = 0;
+    this.brandPageIndex = 0;
     this.availableOffices = [];
-    this.officeHasNextPage = false;
+    this.brandHasNextPage = false;
   }
 
   private loadOffices(): void {
-    if (this.officeLoading) return;
+    if (this.brandLoading) return;
 
-    this.officeLoading = true;
-    const request: OfficeDropdownRequest = {
-      pageIndex: this.officePageIndex,
-      pageSize: this.officePageSize,
-      globalFilter: this.officeSearchTerm,
+    this.brandLoading = true;
+    const request: BrandDropdownRequest = {
+      pageIndex: this.brandPageIndex,
+      pageSize: this.brandPageSize,
+      globalFilter: this.brandSearchTerm,
       sortField: 'name',
       sortDirection: 'asc',
     };
 
     this.desksService
-      .getOfficesDropdown(request)
+      .getBrandsDropdown(request)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading offices:', error);
-          this.alertService.error('Failed to load offices');
+          console.error('Error loading brands:', error);
+          this.alertService.error('Failed to load brands');
           return of({
             items: [],
             totalCount: 0,
@@ -444,15 +445,15 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe((response) => {
-        if (this.officePageIndex === 1) {
+        if (this.brandPageIndex === 1) {
           this.availableOffices = response.items;
         } else {
           this.availableOffices = [...this.availableOffices, ...response.items];
         }
 
-        this.officeTotalCount = response.totalCount;
-        this.officeHasNextPage = response.hasNextPage;
-        this.officeLoading = false;
+        this.brandTotalCount = response.totalCount;
+        this.brandHasNextPage = response.hasNextPage;
+        this.brandLoading = false;
       });
   }
 
@@ -473,32 +474,32 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
   }
 
   private loadMoreOffices(): void {
-    if (this.officeHasNextPage && !this.officeLoading) {
-      this.officePageIndex++;
+    if (this.brandHasNextPage && !this.brandLoading) {
+      this.brandPageIndex++;
       this.loadOffices();
     }
   }
 
   onOfficeSearch(event: any): void {
     const searchTerm = event.target.value;
-    this.deskForm.patchValue({ officeSearch: searchTerm });
+    this.deskForm.patchValue({ brandSearch: searchTerm });
   }
 
   toggleOfficeDropdown(): void {
-    this.officeDropdownOpen = !this.officeDropdownOpen;
+    this.brandDropdownOpen = !this.brandDropdownOpen;
   }
 
-  selectOffice(office: OfficeDropdownItem): void {
-    this.deskForm.patchValue({ officeId: office.id });
-    this.officeDropdownOpen = false;
+  selectOffice(brand: BrandDropdownItem): void {
+    this.deskForm.patchValue({ brandId: brand.id });
+    this.brandDropdownOpen = false;
   }
 
   getSelectedOfficeName(): string {
-    const selectedOfficeId = this.deskForm.get('officeId')?.value;
+    const selectedOfficeId = this.deskForm.get('brandId')?.value;
     const selectedOffice = this.availableOffices.find(
-      (office) => office.id === selectedOfficeId
+      (brand) => brand.id === selectedOfficeId
     );
-    return selectedOffice ? selectedOffice.value : 'Select an office';
+    return selectedOffice ? selectedOffice.value : 'Select an brand';
   }
 
   onSubmit(): void {
@@ -514,7 +515,7 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
 
     const deskData: DeskCreateRequest = {
       name: formValue.name.trim(),
-      officeId: formValue.officeId,
+      brandId: formValue.brandId,
       type: Number(formValue.type),
       language: formValue.language || null,
       isActive: formValue.isActive,

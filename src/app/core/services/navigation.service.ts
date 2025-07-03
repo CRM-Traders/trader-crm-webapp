@@ -27,16 +27,16 @@ export class NavigationService {
       route: '/hierarchy',
       requiredRoles: [UserRole.SuperAdmin],
     },
+        {
+      label: 'Offices',
+      icon: 'offices',
+      route: '/offices',
+      requiredRoles: [UserRole.SuperAdmin],
+    },
     {
       label: 'Brands',
       icon: 'brands',
       route: '/brands',
-      requiredRoles: [UserRole.SuperAdmin],
-    },
-    {
-      label: 'offices',
-      icon: 'offices',
-      route: '/offices',
       requiredRoles: [UserRole.SuperAdmin],
     },
     {

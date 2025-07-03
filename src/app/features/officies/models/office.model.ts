@@ -1,11 +1,11 @@
 export interface Office {
   id: string;
   name: string;
-  country: string;
-  brandId: string;
-  brandName: string;
+  country?: string;
+  // brandId: string;
+  // brandName: string;
   isActive: boolean;
-  desksCount: number;
+  brandsCount: number;
   createdAt: Date;
   createdBy: string;
   lastModifiedAt?: Date | null;
@@ -15,7 +15,6 @@ export interface Office {
 export interface OfficeCreateRequest {
   name: string;
   country: string;
-  brandId: string;
   isActive?: boolean;
 }
 
