@@ -526,7 +526,7 @@ export class ClientProfileComponent implements OnInit {
 
       this.addressForm.patchValue({
         country: this.client.country || '',
-        city: 'New York', // Mock data
+        city: 'No data', // Mock data
         poBox: '', // Mock data
         postCode: '10001', // Mock data
         fullAddress: '123 Main Street, New York, NY 10001', // Mock data
@@ -545,10 +545,13 @@ export class ClientProfileComponent implements OnInit {
 
   savePersonalInfo(): void {
     if (this.personalForm.valid) {
+      console.log(this.personalForm)
       // Implement save logic here
       this.alertService.success('Personal information updated successfully');
       this.isEditingPersonal = false;
     } else {
+      console.log(this.personalForm)
+
       this.alertService.error('Please fill in all required fields');
     }
   }

@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GridColumn } from '../../models/grid/grid-column.model';
@@ -17,7 +24,7 @@ interface FilterOption {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './grid-filter-selector.component.html',
-  styleUrls: ['./grid-filter-selector.component.scss']
+  styleUrls: ['./grid-filter-selector.component.scss'],
 })
 export class GridFilterSelectorComponent implements OnInit {
   private gridService = inject(GridService);
@@ -25,6 +32,8 @@ export class GridFilterSelectorComponent implements OnInit {
   @Input() columns: GridColumn[] = [];
   @Input() gridId: string = 'default-grid';
 
+  @Output() filtersSelected = new EventEmitter<string[]>();
+  
   filterSearchTerm = '';
   availableFilterOptions: FilterOption[] = [];
   filteredAvailableOptions: FilterOption[] = [];
@@ -34,12 +43,13 @@ export class GridFilterSelectorComponent implements OnInit {
     this.initializeFilterOptions();
     this.filterAvailableOptions();
   }
-@Output() filtersSelected = new EventEmitter<string[]>();
 
-private notifyFiltersSelected(): void {
-  const selectedFields = this.selectedFilterOptions.map(option => option.id);
-  this.filtersSelected.emit(selectedFields);
-}
+  private notifyFiltersSelected(): void {
+    const selectedFields = this.selectedFilterOptions.map(
+      (option) => option.id
+    );
+    this.filtersSelected.emit(selectedFields);
+  }
   private initializeFilterOptions(): void {
     this.availableFilterOptions = this.columns
       .filter((col) => col.filterable !== false)
@@ -132,5 +142,4 @@ private notifyFiltersSelected(): void {
     this.filterAvailableOptions();
     this.notifyFiltersSelected();
   }
-
 }

@@ -147,9 +147,7 @@
     </div>
 
     <div class="relative">
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
             gridId="clients-grid"
@@ -458,19 +456,7 @@
                       class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
                       [ngClass]="ClientStatusColors[selectedClient.status]"
                     >
-                      <span
-                        class="w-2 h-2 rounded-full mr-2"
-                        [ngClass]="{
-                          'bg-green-600':
-                            selectedClient.status === ClientStatus.Active,
-                          'bg-gray-600':
-                            selectedClient.status === ClientStatus.Inactive,
-                          'bg-yellow-600':
-                            selectedClient.status === ClientStatus.Suspended,
-                          'bg-red-600':
-                            selectedClient.status === ClientStatus.Closed
-                        }"
-                      ></span>
+                      <span class="w-2 h-2 rounded-full mr-2"></span>
                       {{ ClientStatusLabels[selectedClient.status] }}
                     </span>
                   </dd>

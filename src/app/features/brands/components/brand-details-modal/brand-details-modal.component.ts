@@ -15,6 +15,10 @@ import { Country } from '../../../../core/models/country.model';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import { BrandsService } from '../../services/brands.service';
 import { Brand, BrandUpdateRequest } from '../../models/brand.model';
+import { 
+  OfficeDropdownItem, 
+  OfficesListRequest 
+} from '../../../officies/models/office.model';
 
 @Component({
   selector: 'app-brand-details-modal',
@@ -176,7 +180,129 @@ import { Brand, BrandUpdateRequest } from '../../models/brand.model';
                   *ngIf="!isEditing"
                   class="text-sm text-gray-900 dark:text-white"
                 >
-                  {{ getCountryNameByCode(brand.country) }}
+                  {{ brand.country }}
+                </span>
+              </div>
+
+              <!-- Office Selection -->
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Office
+                </label>
+                <div *ngIf="isEditing" class="relative">
+                  <!-- Custom Dropdown Button -->
+                  <button
+                    type="button"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
+                    [class.border-red-500]="
+                      editForm.get('officeId')?.invalid &&
+                      editForm.get('officeId')?.touched
+                    "
+                    (click)="toggleOfficeDropdown()"
+                  >
+                    <span class="truncate">{{ getSelectedOfficeName() }}</span>
+                    <svg
+                      class="w-4 h-4 ml-2 transition-transform"
+                      [class.rotate-180]="officeDropdownOpen"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      ></path>
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Panel -->
+                  <div
+                    *ngIf="officeDropdownOpen"
+                    class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                  >
+                    <!-- Search Input -->
+                    <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                      <input
+                        #officeSearchInput
+                        type="text"
+                        placeholder="Search offices..."
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        (input)="onOfficeSearch($event)"
+                        [value]="officeSearchTerm"
+                      />
+                    </div>
+
+                    <!-- Offices List -->
+                    <div
+                      class="max-h-48 overflow-y-auto"
+                      (scroll)="onOfficeDropdownScroll($event)"
+                    >
+                      <div
+                        *ngFor="let office of availableOffices"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        (click)="selectOffice(office)"
+                      >
+                        <div>{{ office.value }}</div>
+                      </div>
+
+                      <!-- Loading indicator -->
+                      <div
+                        *ngIf="officeLoading"
+                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                      >
+                        <svg
+                          class="animate-spin h-4 w-4 mx-auto"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          ></circle>
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      </div>
+
+                      <!-- No results -->
+                      <div
+                        *ngIf="!officeLoading && availableOffices.length === 0"
+                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                      >
+                        No offices found
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Validation Error -->
+                  <p
+                    class="mt-1 text-sm text-red-600 dark:text-red-400"
+                    *ngIf="
+                      editForm.get('officeId')?.invalid &&
+                      editForm.get('officeId')?.touched
+                    "
+                  >
+                    <span *ngIf="editForm.get('officeId')?.errors?.['required']">
+                      Office selection is required
+                    </span>
+                  </p>
+                </div>
+                <span
+                  *ngIf="!isEditing"
+                  class="text-sm text-gray-900 dark:text-white"
+                >
+                  {{ brand.officeName }}
                 </span>
               </div>
 
@@ -352,6 +478,16 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   isEditing = false;
   loading = false;
 
+  // Office dropdown properties
+  officeDropdownOpen = false;
+  officeLoading = false;
+  officeSearchTerm = '';
+  availableOffices: OfficeDropdownItem[] = [];
+  selectedOffice: OfficeDropdownItem | null = null;
+  currentOfficePage = 0;
+  officePageSize = 20;
+  hasMoreOffices = false;
+
   // Country dropdown properties
   countryDropdownOpen = false;
   countrySearchTerm = '';
@@ -370,20 +506,24 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         ],
       ],
       country: ['', [Validators.required]],
+      officeId: ['', [Validators.required]],
       isActive: [true],
     });
   }
 
   ngOnInit(): void {
     this.loadCountries();
+    this.loadOffices();
     if (this.brand) {
       this.editForm.patchValue({
         name: this.brand.name,
         country: this.brand.country,
+        officeId: this.brand.officeId,
         isActive: this.brand.isActive,
       });
-      // Set the selected country for display
-      this.setSelectedCountryFromCode(this.brand.country);
+      // Set the selected country and office for display
+      this.setSelectedCountryFromName(this.brand.country);
+      this.setSelectedOfficeFromName(this.brand.officeName);
     }
   }
 
@@ -394,6 +534,8 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
 
   startEdit(): void {
     this.isEditing = true;
+    // Load fresh data when starting edit
+    this.loadOffices(true);
   }
 
   cancelEdit(): void {
@@ -402,9 +544,11 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
       this.editForm.patchValue({
         name: this.brand.name,
         country: this.brand.country,
+        officeId: this.brand.officeId,
         isActive: this.brand.isActive,
       });
       this.setSelectedCountryFromCode(this.brand.country);
+      this.setSelectedOfficeFromName(this.brand.officeName);
     }
   }
 
@@ -415,6 +559,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
       id: this.brand.id,
       name: this.editForm.value.name.trim(),
       country: this.editForm.value.country,
+      officeId: this.editForm.value.officeId,
       isActive: this.editForm.value.isActive,
     };
 
@@ -427,25 +572,119 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
           this.alertService.error('Failed to update brand');
           return of(null);
         }),
-        finalize(() => (this.loading = false))
+        finalize(() => {
+          this.loading = false;
+          this.isEditing = false;
+                    this.modalRef.close({
+            updated: true,
+            brand: this.brand,
+          });
+        })
       )
       .subscribe((result) => {
-        this.alertService.success('Brand updated successfully');
-        this.isEditing = false;
+        if (result) {
+          this.alertService.success('Brand updated successfully');
+          this.isEditing = false;
 
-        this.brand = {
-          ...this.brand,
-          name: this.editForm.value.name.trim(),
-          country: this.editForm.value.country,
-          isActive: this.editForm.value.isActive,
-          lastModifiedAt: new Date(),
-        };
+          this.brand = {
+            ...this.brand,
+            name: this.editForm.value.name.trim(),
+            country: this.editForm.value.country,
+            officeId: this.editForm.value.officeId,
+            isActive: this.editForm.value.isActive,
+            lastModifiedAt: new Date(),
+          };
 
-        this.modalRef.close({
-          updated: true,
-          brand: this.brand,
-        });
+          this.modalRef.close({
+            updated: true,
+            brand: this.brand,
+          });
+        }
       });
+  }
+
+  // Office dropdown methods
+  toggleOfficeDropdown(): void {
+    this.officeDropdownOpen = !this.officeDropdownOpen;
+    if (this.officeDropdownOpen && this.availableOffices.length === 0) {
+      this.loadOffices();
+    }
+  }
+
+  loadOffices(reset: boolean = false): void {
+    if (this.officeLoading) return;
+
+    if (reset) {
+      this.currentOfficePage = 0;
+      this.availableOffices = [];
+    }
+
+    this.officeLoading = true;
+
+    const request: OfficesListRequest = {
+      pageIndex: this.currentOfficePage,
+      pageSize: this.officePageSize,
+      globalFilter: this.officeSearchTerm || null,
+    };
+
+    this.brandsService.getOfficeDropdown(request).subscribe({
+      next: (response) => {
+        if (reset) {
+          this.availableOffices = response.items;
+        } else {
+          this.availableOffices = [...this.availableOffices, ...response.items];
+        }
+        this.hasMoreOffices = response.hasNextPage;
+        this.officeLoading = false;
+        
+        // Set selected office from office name if we have the brand's office name
+        if (this.brand?.officeName && !this.selectedOffice) {
+          this.setSelectedOfficeFromName(this.brand.officeName);
+        }
+      },
+      error: (error) => {
+        this.officeLoading = false;
+        this.alertService.error('Failed to load offices');
+      },
+    });
+  }
+
+  onOfficeSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.officeSearchTerm = target.value;
+    this.currentOfficePage = 0;
+    this.loadOffices(true);
+  }
+
+  onOfficeDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 5 &&
+      this.hasMoreOffices &&
+      !this.officeLoading
+    ) {
+      this.currentOfficePage++;
+      this.loadOffices();
+    }
+  }
+
+  selectOffice(office: OfficeDropdownItem): void {
+    this.selectedOffice = office;
+    this.editForm.patchValue({ officeId: office.id });
+    this.officeDropdownOpen = false;
+  }
+
+  setSelectedOfficeFromName(officeName: string): void {
+    this.selectedOffice = this.availableOffices.find(o => o.value === officeName) || null;
+  }
+
+  getSelectedOfficeName(): string {
+    if (this.selectedOffice) {
+      return this.selectedOffice.value;
+    }
+    return 'Select an office...';
   }
 
   // Country dropdown methods
@@ -454,6 +693,12 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
       next: (countries) => {
         this.availableCountries = countries;
         this.filteredCountries = countries;
+        
+        // Set selected country if we have the brand's country code
+        if (this.brand?.country) {
+          this.setSelectedCountryFromCode(this.brand.country);
+          this.setSelectedCountryFromName(this.brand.country);
+        }
       },
       error: (error) => {
         this.alertService.error('Failed to load countries');
@@ -476,7 +721,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
 
   selectCountry(country: Country): void {
     this.selectedCountry = country;
-    this.editForm.patchValue({ country: country.code });
+    this.editForm.patchValue({ country: country.name });
     this.countryDropdownOpen = false;
     this.countrySearchTerm = '';
     this.filteredCountries = this.availableCountries;
@@ -484,6 +729,10 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
 
   setSelectedCountryFromCode(countryCode: string): void {
     this.selectedCountry = this.availableCountries.find(c => c.code === countryCode) || null;
+  }
+
+    setSelectedCountryFromName(countryName: string): void {
+    this.selectedCountry = this.availableCountries.find(c => c.name === countryName) || null;
   }
 
   getSelectedCountryName(): string {
@@ -504,8 +753,13 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLElement;
     const dropdown = target.closest('.relative');
     
-    if (!dropdown && this.countryDropdownOpen) {
-      this.countryDropdownOpen = false;
+    if (!dropdown) {
+      if (this.officeDropdownOpen) {
+        this.officeDropdownOpen = false;
+      }
+      if (this.countryDropdownOpen) {
+        this.countryDropdownOpen = false;
+      }
     }
   }
 
