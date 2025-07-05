@@ -33,6 +33,20 @@ import {
   DeskDropdownResponse,
 } from '../../models/team.model';
 
+interface BrandDropdownItem {
+  id: string;
+  value: string;
+  description?: string;
+}
+
+interface BrandDropdownResponse {
+  items: BrandDropdownItem[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 @Component({
   selector: 'app-team-details-modal',
   standalone: true,
@@ -104,6 +118,149 @@ import {
                 </span>
               </div>
 
+              <!-- Brand Selection -->
+              <div class="relative">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Brand
+                </label>
+                <div *ngIf="isEditing">
+                  <!-- Brand Dropdown Button -->
+                  <button
+                    type="button"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
+                    [class.border-red-500]="
+                      editForm.get('brandId')?.invalid &&
+                      editForm.get('brandId')?.touched
+                    "
+                    (click)="toggleBrandDropdown()"
+                  >
+                    <span class="truncate">{{ getSelectedBrandName() }}</span>
+                    <svg
+                      class="w-4 h-4 ml-2 transition-transform"
+                      [class.rotate-180]="brandDropdownOpen"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      ></path>
+                    </svg>
+                  </button>
+
+                  <!-- Brand Dropdown Panel -->
+                  <div
+                    *ngIf="brandDropdownOpen"
+                    class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                  >
+                    <!-- Search Input -->
+                    <div
+                      class="p-3 border-b border-gray-200 dark:border-gray-700"
+                    >
+                      <input
+                        #brandSearchInput
+                        type="text"
+                        placeholder="Search brands..."
+                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        (input)="onBrandSearch($event)"
+                        [value]="brandSearchTerm"
+                      />
+                    </div>
+
+                    <!-- Brands List -->
+                    <div
+                      class="max-h-48 overflow-y-auto"
+                      (scroll)="onBrandDropdownScroll($event)"
+                    >
+                      <div
+                        *ngFor="let brand of availableBrands"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        (click)="selectBrand(brand)"
+                      >
+                        <div class="flex flex-col">
+                          <span class="font-medium">{{ brand.value }}</span>
+                          <span
+                            class="text-xs text-gray-500 dark:text-gray-400"
+                            *ngIf="brand.description"
+                          >
+                            {{ brand.description }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Loading indicator -->
+                      <div
+                        *ngIf="brandLoading"
+                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                      >
+                        <svg
+                          class="animate-spin h-4 w-4 mx-auto"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                          ></circle>
+                          <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      </div>
+
+                      <!-- No results -->
+                      <div
+                        *ngIf="!brandLoading && availableBrands.length === 0"
+                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                      >
+                        No brands found
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Validation Error -->
+                  <p
+                    class="mt-1 text-sm text-red-600 dark:text-red-400"
+                    *ngIf="
+                      editForm.get('brandId')?.invalid &&
+                      editForm.get('brandId')?.touched
+                    "
+                  >
+                    <span *ngIf="editForm.get('brandId')?.errors?.['required']">
+                      Brand selection is required
+                    </span>
+                  </p>
+                </div>
+                <span
+                  *ngIf="!isEditing"
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                >
+                  <svg
+                    class="mr-1 h-3 w-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  {{ team.brandName }}
+                </span>
+              </div>
+
               <!-- Desk -->
               <div class="relative">
                 <label
@@ -120,6 +277,8 @@ import {
                       editForm.get('deskId')?.invalid &&
                       editForm.get('deskId')?.touched
                     "
+                    [class.opacity-50]="!editForm.get('brandId')?.value"
+                    [disabled]="!editForm.get('brandId')?.value"
                     (click)="toggleDeskDropdown()"
                   >
                     <span class="truncate">{{ getSelectedDeskName() }}</span>
@@ -139,9 +298,17 @@ import {
                     </svg>
                   </button>
 
+                  <!-- Helper text -->
+                  <p
+                    class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                    *ngIf="!editForm.get('brandId')?.value"
+                  >
+                    Please select a brand first to choose a desk
+                  </p>
+
                   <!-- Dropdown Panel -->
                   <div
-                    *ngIf="deskDropdownOpen"
+                    *ngIf="deskDropdownOpen && editForm.get('brandId')?.value"
                     class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                   >
                     <!-- Search Input -->
@@ -270,31 +437,6 @@ import {
                     />
                   </svg>
                   {{ team.officeName }}
-                </span>
-              </div>
-
-              <!-- Brand Information (Read-only) -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Brand
-                </label>
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
-                >
-                  <svg
-                    class="mr-1 h-3 w-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                  {{ team.brandName }}
                 </span>
               </div>
 
@@ -449,6 +591,8 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   @Input() team!: Team;
   @ViewChild('deskSearchInput', { static: false })
   deskSearchInput!: ElementRef;
+  @ViewChild('brandSearchInput', { static: false })
+  brandSearchInput!: ElementRef;
 
   private fb = inject(FormBuilder);
   private teamsService = inject(TeamsService);
@@ -459,6 +603,16 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   isEditing = false;
   loading = false;
   availableDesks: DeskDropdownItem[] = [];
+  availableBrands: BrandDropdownItem[] = [];
+
+  // Brand dropdown state
+  brandSearchTerm = '';
+  brandPageIndex = 0;
+  brandPageSize = 20;
+  brandTotalCount = 0;
+  brandLoading = false;
+  brandHasNextPage = false;
+  brandDropdownOpen = false;
 
   // Desk dropdown state
   deskSearchTerm = '';
@@ -479,18 +633,22 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
           Validators.maxLength(100),
         ],
       ],
+      brandId: ['', [Validators.required]],
       deskId: ['', [Validators.required]],
+      brandSearch: [''],
       deskSearch: [''],
       isActive: [true],
     });
   }
 
   ngOnInit(): void {
-    this.initializeSearchObservable();
-    this.loadInitialDesks();
+    this.initializeSearchObservables();
+    this.loadInitialBrands();
+    this.setupBrandWatcher();
     if (this.team) {
       this.editForm.patchValue({
         name: this.team.name,
+        brandId: this.team.brandId,
         deskId: this.team.deskId,
         isActive: this.team.isActive,
       });
@@ -502,7 +660,22 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private initializeSearchObservable(): void {
+  private initializeSearchObservables(): void {
+    // Brand search
+    this.editForm
+      .get('brandSearch')
+      ?.valueChanges.pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((searchTerm: string) => {
+        this.brandSearchTerm = searchTerm || '';
+        this.resetBrandDropdown();
+        this.loadBrands();
+      });
+
+    // Desk search
     this.editForm
       .get('deskSearch')
       ?.valueChanges.pipe(
@@ -517,9 +690,29 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadInitialDesks(): void {
-    this.resetDeskDropdown();
-    this.loadDesks();
+  private setupBrandWatcher(): void {
+    this.editForm
+      .get('brandId')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((brandId: string) => {
+        // Clear desk selection when brand changes
+        this.editForm.patchValue({ deskId: '' });
+        this.resetDeskDropdown();
+        if (brandId) {
+          this.loadDesks();
+        }
+      });
+  }
+
+  private loadInitialBrands(): void {
+    this.resetBrandDropdown();
+    this.loadBrands();
+  }
+
+  private resetBrandDropdown(): void {
+    this.brandPageIndex = 0;
+    this.availableBrands = [];
+    this.brandHasNextPage = false;
   }
 
   private resetDeskDropdown(): void {
@@ -528,12 +721,58 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     this.deskHasNextPage = false;
   }
 
+  private loadBrands(): void {
+    if (this.brandLoading) return;
+
+    this.brandLoading = true;
+    const request = {
+      pageIndex: this.brandPageIndex,
+      pageSize: this.brandPageSize,
+      sortField: 'name',
+      sortDirection: 'asc',
+      visibleColumns: ['array', 'null'],
+      globalFilter: this.brandSearchTerm,
+      filters: null,
+    };
+
+    this.teamsService
+      .getBrandsDropdown(request)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading brands:', error);
+          this.alertService.error('Failed to load brands');
+          return of({
+            items: [],
+            totalCount: 0,
+            pageIndex: 1,
+            pageSize: 20,
+            totalPages: 0,
+          });
+        })
+      )
+      .subscribe((response: BrandDropdownResponse) => {
+        if (this.brandPageIndex === 0) {
+          this.availableBrands = response.items;
+        } else {
+          this.availableBrands = [...this.availableBrands, ...response.items];
+        }
+
+        this.brandTotalCount = response.totalCount;
+        this.brandHasNextPage = response.pageIndex < response.totalPages;
+        this.brandLoading = false;
+      });
+  }
+
   private loadDesks(): void {
     if (this.deskLoading) return;
 
+    const selectedBrandId = this.editForm.get('brandId')?.value;
+    if (!selectedBrandId) return;
+
     this.deskLoading = true;
     const request = {
-      officeId: null,
+      brandId: selectedBrandId,
       pageIndex: this.deskPageIndex,
       pageSize: this.deskPageSize,
       sortField: 'name',
@@ -572,6 +811,51 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Brand dropdown methods
+  onBrandDropdownScroll(event: any): void {
+    const element = event.target;
+    const threshold = 100;
+
+    if (
+      element.scrollTop + element.clientHeight >=
+      element.scrollHeight - threshold
+    ) {
+      this.loadMoreBrands();
+    }
+  }
+
+  private loadMoreBrands(): void {
+    if (this.brandHasNextPage && !this.brandLoading) {
+      this.brandPageIndex++;
+      this.loadBrands();
+    }
+  }
+
+  onBrandSearch(event: any): void {
+    const searchTerm = event.target.value;
+    this.editForm.patchValue({ brandSearch: searchTerm });
+  }
+
+  toggleBrandDropdown(): void {
+    this.brandDropdownOpen = !this.brandDropdownOpen;
+  }
+
+  selectBrand(brand: BrandDropdownItem): void {
+    this.editForm.patchValue({ brandId: brand.id });
+    this.brandDropdownOpen = false;
+  }
+
+  getSelectedBrandName(): string {
+    const selectedBrandId = this.editForm.get('brandId')?.value;
+    const selectedBrand = this.availableBrands.find(
+      (brand) => brand.id === selectedBrandId
+    );
+    return selectedBrand
+      ? selectedBrand.value
+      : this.team?.brandName || 'Select a brand';
+  }
+
+  // Desk dropdown methods
   onDeskDropdownScroll(event: any): void {
     const element = event.target;
     const threshold = 100;
@@ -597,7 +881,9 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   toggleDeskDropdown(): void {
-    this.deskDropdownOpen = !this.deskDropdownOpen;
+    if (this.editForm.get('brandId')?.value) {
+      this.deskDropdownOpen = !this.deskDropdownOpen;
+    }
   }
 
   selectDesk(desk: DeskDropdownItem): void {
@@ -617,6 +903,10 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
 
   startEdit(): void {
     this.isEditing = true;
+    // Load desks for the current brand when starting edit
+    if (this.editForm.get('brandId')?.value) {
+      this.loadDesks();
+    }
   }
 
   cancelEdit(): void {
@@ -624,6 +914,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     if (this.team) {
       this.editForm.patchValue({
         name: this.team.name,
+        brandId: this.team.brandId,
         deskId: this.team.deskId,
         isActive: this.team.isActive,
       });
@@ -636,6 +927,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     const updateRequest: TeamUpdateRequest = {
       id: this.team.id,
       name: this.editForm.value.name.trim(),
+      brandId: this.editForm.value.brandId,
       deskId: this.editForm.value.deskId,
       isActive: this.editForm.value.isActive,
     };
@@ -659,6 +951,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
         this.team = {
           ...this.team,
           name: this.editForm.value.name.trim(),
+          brandId: this.editForm.value.brandId,
           deskId: this.editForm.value.deskId,
           isActive: this.editForm.value.isActive,
           lastModifiedAt: new Date(),

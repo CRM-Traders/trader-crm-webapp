@@ -16,6 +16,7 @@ import {
   TeamsListRequest,
   DeskDropdownResponse,
 } from '../models/team.model';
+import { BrandDropdownResponse } from '../../brand-selection/models/brand.model';
 
 @Injectable({
   providedIn: 'root',
@@ -49,6 +50,14 @@ export class TeamsService {
   getTeamDropdown(request: TeamsListRequest): Observable<TeamDropdownResponse> {
     return this.httpService.post<TeamDropdownResponse>(
       `${this.apiPath}/dropdown`,
+      request
+    );
+  }
+
+    // Method to get desks dropdown for team creation/editing
+  getBrandsDropdown(request: any): Observable<BrandDropdownResponse> {
+    return this.httpService.post<BrandDropdownResponse>(
+      'identity/api/brands/dropdown',
       request
     );
   }

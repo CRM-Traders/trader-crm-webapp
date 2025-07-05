@@ -235,6 +235,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.showDeleteModal = false;
           this.operatorToDelete = null;
+          this.refreshGrid();
+          this.loadOperatorStatistics(); // Refresh statistics
         })
       )
       .subscribe((result) => {
@@ -287,6 +289,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         closable: true,
       }
     );
+    console.log(modalRef.result)
 
     modalRef.result.then(
       (result) => {
@@ -296,6 +299,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         }
       },
       () => {
+        this.refreshGrid();
+        this.loadOperatorStatistics(); // Refresh statistics
         // Modal dismissed
       }
     );

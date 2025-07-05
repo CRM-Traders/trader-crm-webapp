@@ -23,6 +23,8 @@ import {
   ClientStatus,
   ClientStatusLabels,
   ClientStatusColors,
+  KycStatusLabels,
+  KycStatus,
 } from './models/clients.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
@@ -33,7 +35,7 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { ClientRegistrationModalComponent } from './components/client-registration-modal/client-registration-modal.component';
-import { ClientDetailsModalComponent } from './components/client-details-modal/client-details-modal.component';
+import { ClientCommentsModalComponent } from './components/client-comments-modal/client-comments-modal.component';
 import { Router } from '@angular/router';
 
 @Component({
@@ -54,6 +56,8 @@ export class ClientsComponent implements OnInit {
   statusCellTemplate!: TemplateRef<any>;
   @ViewChild('investmentCell', { static: true })
   investmentCellTemplate!: TemplateRef<any>;
+  @ViewChild('salesStatusCell', { static: true })
+  salesStatusCellTemplate!: TemplateRef<any>;
 
   importLoading = false;
   showDeleteModal = false;
@@ -105,10 +109,29 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       selector: (row: Client) => row.country || '-',
+      hidden: true,
     },
     {
       field: 'status',
       header: 'Status',
+      sortable: true,
+      filterable: true,
+      cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Client) =>
+        ClientStatusLabels[row.status as ClientStatus] || '-',
+    },
+    {
+      field: 'salesStatus',
+      header: 'Sale Status',
+      sortable: true,
+      filterable: true,
+      cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Client) =>
+        KycStatusLabels[row.salesStatus as KycStatus] || '-',
+    },
+    {
+      field: 'balance',
+      header: 'Balance',
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
@@ -122,10 +145,11 @@ export class ClientsComponent implements OnInit {
     },
     {
       field: 'isProblematic',
-      header: 'Flags',
+      header: 'Problematic',
       sortable: false,
       filterable: false,
       cellTemplate: null, // Will be set in ngOnInit
+      hidden: true,
     },
     {
       field: 'registrationDate',
@@ -134,6 +158,7 @@ export class ClientsComponent implements OnInit {
       filterable: true,
       type: 'date',
       format: 'short',
+      hidden: true,
     },
   ];
 
@@ -155,8 +180,8 @@ export class ClientsComponent implements OnInit {
       action: (items: Client[]) => this.bulkAssignAffiliate(items),
       visible: false,
       disabled: false,
-    }
-];
+    },
+  ];
 
   gridActions: GridAction[] = [
     {
@@ -170,6 +195,13 @@ export class ClientsComponent implements OnInit {
       label: 'Edit',
       icon: 'edit',
       action: (item: Client) => this.openClientDetailsModal(item),
+    },
+    {
+      id: 'comments',
+      label: 'Comments',
+      icon: 'documents',
+      type: 'secondary',
+      action: (item: Client) => this.openClientCommentsModal(item),
     },
     {
       id: 'delete',
@@ -211,6 +243,13 @@ export class ClientsComponent implements OnInit {
     if (investmentColumn) {
       investmentColumn.cellTemplate = this.investmentCellTemplate;
     }
+
+    const salesStatusColumn = this.gridColumns.find(
+      (col) => col.field === 'salesStatus'
+    );
+    if (salesStatusColumn) {
+      salesStatusColumn.cellTemplate = this.salesStatusCellTemplate;
+    }
   }
 
   private loadClientStatistics(): void {
@@ -220,21 +259,17 @@ export class ClientsComponent implements OnInit {
     });
   }
 
-   private bulkActivateClients(clients: Client[]): void {
+  private bulkActivateClients(clients: Client[]): void {}
 
-   }
-
-   private bulkAssignAffiliate(clients: Client[]): void {
-
-   }
+  private bulkAssignAffiliate(clients: Client[]): void {}
 
   onBulkActionExecuted(event: { action: GridAction; items: any[] }): void {
-  // Handle bulk action execution
-}
+    // Handle bulk action execution
+  }
 
-onSelectionChange(selectedItems: any[]): void {
-  // Update selection state and action availability
-}
+  onSelectionChange(selectedItems: any[]): void {
+    // Update selection state and action availability
+  }
 
   onRowClick(client: Client): void {
     this.openClientDetailsModal(client);
@@ -245,6 +280,25 @@ onSelectionChange(selectedItems: any[]): void {
       this.router.createUrlTree(['/clients', client.id])
     );
     window.open(url, '_blank');
+  }
+
+  openClientCommentsModal(client: Client): void {
+    const modalRef = this.modalService.open(ClientCommentsModalComponent, {
+      size: 'xl',
+      centered: true,
+      closable: true,
+    }, {
+      client: client,
+    });
+
+    modalRef.result.then(
+      (result) => {
+        // Handle modal result if needed
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
   }
 
   confirmDelete(client: Client): void {
@@ -409,6 +463,12 @@ onSelectionChange(selectedItems: any[]): void {
     if (gridComponent) {
       (gridComponent as any).refresh?.();
     }
+  }
+
+  onSaleStatusChanged(clientId: string, newStatus: KycStatus): void {
+    // Update the client's sales status in the grid data if needed
+    // The grid should automatically refresh or update the display
+    this.loadClientStatistics(); // Refresh statistics if needed
   }
 
   openPermissionDialog(user: any): void {

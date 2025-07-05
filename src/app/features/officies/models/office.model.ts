@@ -68,7 +68,6 @@ export interface OfficeImportResult {
 export interface OfficeDropdownItem {
   id: string;
   value: string;
-  country: string;
   brandName: string;
 }
 
