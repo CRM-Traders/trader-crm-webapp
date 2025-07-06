@@ -91,7 +91,7 @@ export class ClientsComponent implements OnInit {
 
   // Track which client is being updated
   updatingSalesStatus: string | null = null;
-  
+
   // Inline comment functionality
   activeInlineCommentClientId: string | null = null;
   inlineCommentForm: FormGroup;
@@ -358,13 +358,8 @@ export class ClientsComponent implements OnInit {
         value: Number(value),
         label: label
       })),
-      cellTemplate: null, // Will be set in ngOnInit
-      selector: (row: Client) => ({
-        id: row.id,
-        salesStatus: row.saleStatusEnum,
-        label: KycStatusLabels[row.salesStatus as unknown as KycStatus] || 'Unknown',
-        row: row // Pass the entire row for template access
-      })
+      cellTemplate: this.salesStatusCellTemplate, // Will be set in ngOnInit
+      selector: (row: Client) => row // Return the entire row object
     },
     {
       field: 'retentionStatus',
@@ -410,7 +405,7 @@ export class ClientsComponent implements OnInit {
     },
     {
       field: 'hasInvestments',
-      header: 'First Time Deposit',
+      header: 'Investments',
       sortable: true,
       filterable: true,
       filterType: 'select',
@@ -462,7 +457,7 @@ export class ClientsComponent implements OnInit {
       ],
       hidden: true,
     },
-    
+
     // Number Range Filters
     {
       field: 'balance',
@@ -588,17 +583,6 @@ export class ClientsComponent implements OnInit {
       selector: (row: Client) => row.lastCommunication || '-',
       hidden: true,
     },
-
-    // Comments Column - NEW
-    {
-      field: 'comments',
-      header: 'Comments',
-      sortable: false,
-      filterable: false,
-      cellTemplate: null, // Will be set in ngOnInit
-      width: '100px',
-    },
-
     // Problematic field (keeping original)
     {
       field: 'isProblematic',
@@ -699,11 +683,11 @@ export class ClientsComponent implements OnInit {
   private onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     const inlineCommentBox = document.querySelector('.inline-comment-box');
-    
-    if (this.inlineCommentState && 
-        inlineCommentBox && 
-        !inlineCommentBox.contains(target) &&
-        !target.closest('.comment-icon-btn')) {
+
+    if (this.inlineCommentState &&
+      inlineCommentBox &&
+      !inlineCommentBox.contains(target) &&
+      !target.closest('.comment-icon-btn')) {
       this.closeInlineComment();
     }
   }
@@ -716,12 +700,12 @@ export class ClientsComponent implements OnInit {
     if (salesStatus === null || salesStatus === undefined) {
       return 0; // Default to first status
     }
-    
+
     if (typeof salesStatus === 'string') {
       const parsed = parseInt(salesStatus, 10);
       return isNaN(parsed) ? 0 : parsed;
     }
-    
+
     return typeof salesStatus === 'number' ? salesStatus : 0;
   }
 
@@ -743,13 +727,6 @@ export class ClientsComponent implements OnInit {
     );
     if (salesStatusColumn) {
       salesStatusColumn.cellTemplate = this.salesStatusCellTemplate;
-    }
-
-    const commentsColumn = this.gridColumns.find(
-      (col) => col.field === 'comments'
-    );
-    if (commentsColumn) {
-      commentsColumn.cellTemplate = this.commentsCellTemplate;
     }
   }
 
@@ -803,29 +780,29 @@ export class ClientsComponent implements OnInit {
   }
 
   // Inline Comment Methods
-openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent): void {
-  event.stopPropagation();
-  
-  const target = event.target as HTMLElement;
-  const rect = target.getBoundingClientRect();
-  
-  this.inlineCommentState = {
-    clientId,
-    mode,
-    position: {
-      top: rect.top + window.scrollY - 350, // Position above the icon
-      left: rect.left + window.scrollX - 150 // Adjust to center the box
-    },
-    comments: [],
-    isLoading: false
-  };
+  openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent): void {
+    event.stopPropagation();
 
-  if (mode === 'view') {
-    this.loadInlineComments(clientId);
-  } else {
-    this.resetInlineCommentForm();
+    const target = event.target as HTMLElement;
+    const rect = target.getBoundingClientRect();
+
+    this.inlineCommentState = {
+      clientId,
+      mode,
+      position: {
+        top: rect.top + window.scrollY - 350, // Position above the icon
+        left: rect.left + window.scrollX - 150 // Adjust to center the box
+      },
+      comments: [],
+      isLoading: false
+    };
+
+    if (mode === 'view') {
+      this.loadInlineComments(clientId);
+    } else {
+      this.resetInlineCommentForm();
+    }
   }
-}
 
   closeInlineComment(): void {
     this.inlineCommentState = null;
@@ -834,9 +811,9 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
 
   private loadInlineComments(clientId: string): void {
     if (!this.inlineCommentState) return;
-    
+
     this.inlineCommentState.isLoading = true;
-    
+
     this.clientsService.getClientComments(clientId)
       .pipe(
         takeUntil(this.destroy$),
@@ -867,7 +844,7 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
     }
 
     this.isSubmittingInlineComment = true;
-    
+
     const request: ClientCommentCreateRequest = {
       clientId: this.inlineCommentState.clientId,
       subject: this.inlineCommentForm.value.subject,
@@ -1198,27 +1175,27 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
       // Update country filter options
       this.updateColumnFilterOptions('country', countries.map(c => ({ value: c.code, label: c.name })));
       this.updateColumnFilterOptions('passportCountry', countries.map(c => ({ value: c.code, label: c.name })));
-      
+
       // Update language filter options
       this.updateColumnFilterOptions('language', languages.map(l => ({ value: l.key, label: l.value })));
-      
+
       // Update office filter options
       this.updateColumnFilterOptions('officeId', offices);
-      
+
       // Update desk filter options
       this.updateColumnFilterOptions('deskId', desks);
-      
+
       // Update team filter options
       this.updateColumnFilterOptions('teamId', teams);
-      
+
       // Update operator filter options
       this.updateColumnFilterOptions('operatorId', operators);
       this.updateColumnFilterOptions('retentionOperatorId', operators);
       this.updateColumnFilterOptions('salesOperatorId', operators);
-      
+
       // Update timezone filter options
       this.updateColumnFilterOptions('timezone', timezones);
-      
+
       // Load affiliates separately as it might be a different endpoint
       this.loadAffiliatesDropdown();
     });
@@ -1246,7 +1223,7 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
     }).pipe(
       catchError(() => of({ items: [] })),
       takeUntil(this.destroy$)
-    ).toPromise().then((response: any) => 
+    ).toPromise().then((response: any) =>
       response?.items?.map((office: any) => ({ value: office.id, label: office.value })) || []
     );
   }
@@ -1263,7 +1240,7 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
     }).pipe(
       catchError(() => of({ items: [] })),
       takeUntil(this.destroy$)
-    ).toPromise().then((response: any) => 
+    ).toPromise().then((response: any) =>
       response?.items?.map((desk: any) => ({ value: desk.id, label: desk.value })) || []
     );
   }
@@ -1280,7 +1257,7 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
     }).pipe(
       catchError(() => of({ items: [] })),
       takeUntil(this.destroy$)
-    ).toPromise().then((response: any) => 
+    ).toPromise().then((response: any) =>
       response?.items?.map((team: any) => ({ value: team.id, label: team.value })) || []
     );
   }
@@ -1292,7 +1269,7 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
     return this.officeRulesService.getAvailableOperators(0, 1000, '').pipe(
       catchError(() => of([])),
       takeUntil(this.destroy$)
-    ).toPromise().then((response: any) => 
+    ).toPromise().then((response: any) =>
       response?.map((operator: any) => ({ value: operator.id, label: operator.value })) || []
     );
   }
@@ -1308,7 +1285,7 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
       { value: 'affiliate2', label: 'Affiliate 2' },
       // Add more as needed
     ];
-    
+
     this.updateColumnFilterOptions('affiliateName', affiliateOptions);
     this.updateColumnFilterOptions('affiliateReferral', affiliateOptions);
   }
@@ -1330,7 +1307,7 @@ openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent):
       { value: 'MST', label: 'MST' },
       { value: 'AST', label: 'AST' },
     ];
-    
+
     return Promise.resolve(timezones);
   }
 }

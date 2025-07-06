@@ -31,8 +31,7 @@ export class AffiliatesService {
   }
 
   updateAffiliate(request: AffiliateUpdateRequest): Observable<void> {
-    const { id, ...body } = request;
-    return this.httpService.put<void>(`${this.apiPath}/${id}`, body);
+    return this.httpService.put<void>(`${this.apiPath}/${request.id}`, request);
   }
 
   deleteAffiliate(id: string): Observable<void> {

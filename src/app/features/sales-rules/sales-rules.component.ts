@@ -58,8 +58,6 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
   @ViewChild('categoryCell', { static: true })
   categoryCellTemplate!: TemplateRef<any>;
   @ViewChild('typeCell', { static: true }) typeCellTemplate!: TemplateRef<any>;
-  @ViewChild('activeCell', { static: true })
-  activeCellTemplate!: TemplateRef<any>;
   @ViewChild('operatorsCell', { static: true })
   operatorsCellTemplate!: TemplateRef<any>;
 
@@ -93,6 +91,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       filterable: true,
       filterType: 'text',
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
+      selector: (row: SalesRule) => row.name,
     },
     {
       field: 'category',
@@ -142,7 +141,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       filterType: 'text',
-      selector: (row: SalesRule) => row.country || 'All',
+      selector: (row: SalesRule) => (row.country && row.country.trim() !== '') ? row.country : 'All Countries',
     },
     {
       field: 'language',
@@ -150,23 +149,24 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       filterType: 'text',
-      selector: (row: SalesRule) => row.language || 'All',
+      selector: (row: SalesRule) => (row.language && row.language.trim() !== '') ? row.language : 'All Languages',
     },
     {
-      field: 'operatorsCount',
+      field: 'operators',
       header: 'Operators',
       sortable: true,
       filterable: false,
       cellTemplate: null, // Will be set in ngOnInit
       cellClass: 'text-center',
+      selector: (row: SalesRule) => row.operators?.length || 0,
     },
     {
-      field: 'isActive',
-      header: 'Status',
+      field: 'sources',
+      header: 'Sources',
       sortable: true,
       filterable: true,
-      filterType: 'boolean',
-      cellTemplate: null, // Will be set in ngOnInit
+      filterType: 'text',
+      selector: (row: SalesRule) => (row.sources && row.sources.trim() !== '') ? row.sources : 'All Sources',
     },
     {
       field: 'createdAt',
@@ -190,12 +190,6 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       label: 'Edit',
       icon: 'edit',
       action: (item: SalesRule) => this.editRule(item),
-    },
-    {
-      id: 'toggle-status',
-      label: 'Toggle Status',
-      icon: 'toggle',
-      action: (item: SalesRule) => this.toggleRuleStatus(item),
     },
     {
       id: 'delete',
@@ -237,11 +231,6 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
 
     const typeColumn = this.gridColumns.find((col) => col.field === 'type');
     if (typeColumn) typeColumn.cellTemplate = this.typeCellTemplate;
-
-    const activeColumn = this.gridColumns.find(
-      (col) => col.field === 'isActive'
-    );
-    if (activeColumn) activeColumn.cellTemplate = this.activeCellTemplate;
 
     const operatorsColumn = this.gridColumns.find(
       (col) => col.field === 'operatorsCount'
@@ -323,31 +312,6 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
         // Modal dismissed
       }
     );
-  }
-
-  toggleRuleStatus(rule: SalesRule): void {
-    const newStatus = !rule.isActive;
-    this.salesRulesService
-      .toggleRuleStatus(rule.id, newStatus)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          this.alertService.error('Failed to update rule status');
-          console.error('Error toggling status:', error);
-          return of(null);
-        })
-      )
-      .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success(
-            `Rule ${newStatus ? 'activated' : 'deactivated'} successfully`
-          );
-          this.refreshGrid();
-          if (this.selectedRule && this.selectedRule.id === rule.id) {
-            this.selectedRule.isActive = newStatus;
-          }
-        }
-      });
   }
 
   confirmDelete(rule: SalesRule): void {
@@ -502,6 +466,25 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
     }
   }
 
+  loadSalesRules(): void {
+    this.loading = true;
+    this.salesRulesService
+      .getSalesRules()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to load sales rules');
+          console.error('Error loading sales rules:', error);
+          return of([]);
+        }),
+        finalize(() => (this.loading = false))
+      )
+      .subscribe((rules) => {
+        // Handle loaded rules if needed
+        console.log('Loaded sales rules:', rules);
+      });
+  }
+
   closeOperatorModal(): void {
     this.showOperatorModal = false;
     this.selectedOperator = null;
@@ -536,5 +519,28 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
 
   getRuleTypeLabels(value: any) {
     return RuleTypeLabels[value as RuleType];
+  }
+
+  // Helper methods for displaying empty values
+  getCountryDisplay(country: string): string {
+    return country && country.trim() !== '' ? country : 'All Countries';
+  }
+
+  getLanguageDisplay(language: string): string {
+    return language && language.trim() !== '' ? language : 'All Languages';
+  }
+
+  getPartnersDisplay(partners: string): string {
+    return partners && partners.trim() !== '' ? partners : 'All Partners';
+  }
+
+  getAffiliateReferralsDisplay(affiliateReferrals: string | null): string {
+    return affiliateReferrals && affiliateReferrals.trim() !== ''
+      ? affiliateReferrals
+      : 'All Affiliates';
+  }
+
+  getSourcesDisplay(sources: string): string {
+    return sources && sources.trim() !== '' ? sources : 'All Sources';
   }
 }

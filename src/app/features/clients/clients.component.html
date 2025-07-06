@@ -136,12 +136,12 @@
             <!-- Sales Status Cell Template -->
             <ng-template #salesStatusCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">
-                <select name="salesStatus" [value]="value?.saleStatusEnum || row?.saleStatusEnum"
+                <select name="salesStatus" [ngModel]="value.saleStatusEnum"
                   [disabled]="updatingSalesStatus === (value.id || row.id)"
                   (change)="onSalesStatusChange($event, value || row)"
                   class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                   <option *ngFor="let option of salesStatusOptions" [value]="option.value"
-                    [selected]="option.value === row?.saleStatusEnum">
+                    [selected]="option.value === value.saleStatusEnum">
                     {{ option.label }}
                   </option>
                 </select>
@@ -162,27 +162,6 @@
                     </svg>
                   </button>
                 </div>
-              </div>
-            </ng-template>
-
-            <!-- Comments Cell Template -->
-            <ng-template #commentsCell let-value="value" let-row="row">
-              <div class="flex items-center justify-center gap-1">
-                <button class="comment-icon-btn p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                  (click)="openInlineComment(row?.id, 'view', $event)" title="View Comments">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                </button>
-                <button class="comment-icon-btn p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors"
-                  (click)="openInlineComment(row?.id, 'create', $event)" title="Create Comment">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
               </div>
             </ng-template>
           </app-grid>

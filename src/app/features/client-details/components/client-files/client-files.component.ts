@@ -2,36 +2,41 @@
 
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { catchError, finalize, of } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { Client } from '../../../clients/models/clients.model';
+import { FilesService, StoredFileDto, FileType, FileStatus, UploadFileResponse } from './services/files.service';
+import { AddFileModalComponent } from './components/add-file-modal.component';
 
 interface ClientFile {
   id: string;
+  userId: string;
   fileName: string;
-  fileType: string;
-  fileCategory: string;
+  fileExtension: string;
+  contentType: string;
   fileSize: number;
-  uploadedBy: string;
-  uploadDate: Date;
-  description?: string;
+  fileType: FileType;
+  status: FileStatus;
+  bucketName: string;
+  kycProcessId?: string | null;
+  creationTime: string;
+  fileUrl: string;
+  reference?: string | null;
+  description?: string | null;
+  // Additional UI-specific fields
+  uploadedBy?: string;
+  uploadDate?: Date;
   kycNote?: string;
-  isKycDocument: boolean;
-  status: string;
-  downloadUrl?: string;
-  thumbnailUrl?: string;
+  isKycDocument?: boolean;
+  displayStatus?: 'approved' | 'pending' | 'rejected';
+  fileCategory?: string;
 }
 
 @Component({
   selector: 'app-client-files',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, FormsModule, AddFileModalComponent],
   template: `
     <div class="max-w-7xl mx-auto">
       <div class="mb-6">
@@ -190,13 +195,18 @@ interface ClientFile {
       <div
         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8"
       >
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Upload New File
-          </h3>
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              Upload New File
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Add documents, images, or other files for this client
+            </p>
+          </div>
           <button
             type="button"
-            (click)="toggleUploadForm()"
+            (click)="openUploadModal()"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             <svg
@@ -212,219 +222,8 @@ interface ClientFile {
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               ></path>
             </svg>
-            {{ showUploadForm ? 'Cancel' : 'Upload File' }}
+            Upload File
           </button>
-        </div>
-
-        <div
-          *ngIf="showUploadForm"
-          class="border-t border-gray-200 dark:border-gray-700 pt-6"
-        >
-          <form [formGroup]="uploadForm" class="space-y-6">
-            <!-- File Upload Drag & Drop Area -->
-            <div
-              class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
-              (dragover)="onDragOver($event)"
-              (dragleave)="onDragLeave($event)"
-              (drop)="onDrop($event)"
-            >
-              <svg
-                class="mx-auto h-12 w-12 text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-              >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <div class="mt-4">
-                <label for="file-upload" class="cursor-pointer">
-                  <span
-                    class="mt-2 block text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    Drop files here or
-                    <span
-                      class="text-blue-600 dark:text-blue-400 hover:text-blue-500"
-                      >browse</span
-                    >
-                  </span>
-                  <input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    class="sr-only"
-                    multiple
-                    (change)="onFileSelected($event)"
-                  />
-                </label>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  PNG, JPG, PDF up to 10MB each
-                </p>
-              </div>
-            </div>
-
-            <!-- Selected Files Preview -->
-            <div *ngIf="selectedFiles.length > 0" class="space-y-3">
-              <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                Selected Files:
-              </h4>
-              <div class="space-y-2">
-                <div
-                  *ngFor="let file of selectedFiles; let i = index"
-                  class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                >
-                  <div class="flex items-center space-x-3">
-                    <div class="flex-shrink-0">
-                      <svg
-                        class="h-8 w-8 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        ></path>
-                      </svg>
-                    </div>
-                    <div>
-                      <p
-                        class="text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {{ file.name }}
-                      </p>
-                      <p class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ formatFileSize(file.size) }}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    (click)="removeSelectedFile(i)"
-                    class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                  >
-                    <svg
-                      class="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12"
-                      ></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- File Category -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  File Category <span class="text-red-500">*</span>
-                </label>
-                <select
-                  formControlName="fileCategory"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                >
-                  <option value="">Select Category</option>
-                  <option value="kyc-id">KYC - ID Document</option>
-                  <option value="kyc-proof-address">
-                    KYC - Proof of Address
-                  </option>
-                  <option value="kyc-photo">KYC - Photo ID</option>
-                  <option value="financial">Financial Document</option>
-                  <option value="contract">Contract</option>
-                  <option value="communication">Communication</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <!-- Is KYC Document -->
-              <div class="flex items-center">
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Document Type
-                </label>
-                <div class="mt-2">
-                  <label class="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      formControlName="isKycDocument"
-                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                      >KYC Document</span
-                    >
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Description -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Description
-              </label>
-              <textarea
-                formControlName="description"
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
-                placeholder="Enter file description..."
-              ></textarea>
-            </div>
-
-            <!-- KYC Note (shown only if KYC document) -->
-            <div *ngIf="uploadForm.get('isKycDocument')?.value">
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                KYC Review Note
-              </label>
-              <textarea
-                formControlName="kycNote"
-                rows="3"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
-                placeholder="Add KYC review notes..."
-              ></textarea>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="flex justify-end space-x-3">
-              <button
-                type="button"
-                (click)="toggleUploadForm()"
-                class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                (click)="uploadFiles()"
-                [disabled]="uploadForm.invalid || selectedFiles.length === 0"
-                class="px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Upload {{ selectedFiles.length }} File{{
-                  selectedFiles.length !== 1 ? 's' : ''
-                }}
-              </button>
-            </div>
-          </form>
         </div>
       </div>
 
@@ -444,12 +243,16 @@ interface ClientFile {
                 class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
               >
                 <option value="">All Categories</option>
-                <option value="kyc-id">KYC - ID</option>
-                <option value="kyc-proof-address">KYC - Address</option>
-                <option value="kyc-photo">KYC - Photo</option>
-                <option value="financial">Financial</option>
-                <option value="contract">Contract</option>
-                <option value="communication">Communication</option>
+                <option value="kyc">KYC Documents</option>
+                <option value="document">Documents</option>
+                <option value="image">Images</option>
+                <option value="video">Videos</option>
+                <option value="audio">Audio</option>
+                <option value="contract">Contracts</option>
+                <option value="invoice">Invoices</option>
+                <option value="report">Reports</option>
+                <option value="presentation">Presentations</option>
+                <option value="archive">Archives</option>
                 <option value="other">Other</option>
               </select>
               <!-- Search -->
@@ -484,6 +287,69 @@ interface ClientFile {
 
         <!-- Files List -->
         <div class="divide-y divide-gray-200 dark:divide-gray-700/30">
+          <!-- Loading State -->
+          <div
+            *ngIf="isLoading"
+            class="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+          >
+            <svg
+              class="animate-spin mx-auto h-8 w-8 text-gray-400 mb-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <p>Loading files...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div
+            *ngIf="!isLoading && filteredFiles.length === 0"
+            class="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+          >
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400 mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              ></path>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              No files found
+            </h3>
+            <p class="mb-4">
+              {{ searchTerm || categoryFilter ? 'No files match your filters.' : 'This client has no uploaded files yet.' }}
+            </p>
+            <button
+              *ngIf="!searchTerm && !categoryFilter"
+              type="button"
+              (click)="openUploadModal()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              Upload First File
+            </button>
+          </div>
+
+          <!-- Files -->
           <div
             *ngFor="let file of filteredFiles"
             class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
@@ -557,14 +423,14 @@ interface ClientFile {
                       class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                       [ngClass]="{
                         'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                          file.status === 'approved',
+                          getDisplayStatus(file) === 'approved',
                         'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
-                          file.status === 'pending',
+                          getDisplayStatus(file) === 'pending',
                         'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                          file.status === 'rejected'
+                          getDisplayStatus(file) === 'rejected'
                       }"
                     >
-                      {{ file.status | titlecase }}
+                      {{ getDisplayStatus(file) | titlecase }}
                     </span>
                   </div>
                   <div class="flex items-center space-x-4 mt-1">
@@ -575,9 +441,9 @@ interface ClientFile {
                       {{ file.fileCategory | titlecase }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ file.uploadDate | date : 'short' }}
+                      {{ (file.uploadDate || file.creationTime) | date : 'short' }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <p class="text-xs text-gray-500 dark:text-gray-400" *ngIf="file.uploadedBy">
                       by {{ file.uploadedBy }}
                     </p>
                   </div>
@@ -600,72 +466,8 @@ interface ClientFile {
               <div class="flex items-center space-x-2">
                 <button
                   type="button"
-                  class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                  title="Download"
-                >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    ></path>
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                  title="Preview"
-                >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    ></path>
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    ></path>
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  *ngIf="file.isKycDocument && file.status === 'pending'"
-                  (click)="approveKycDocument(file)"
-                  class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                  title="Approve KYC"
-                >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                  (click)="showDeleteConfirmation(file)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
                   title="Delete"
                 >
                   <svg
@@ -688,6 +490,146 @@ interface ClientFile {
         </div>
       </div>
     </div>
+
+    <!-- Add File Modal -->
+    <app-add-file-modal
+      [isOpen]="showUploadModal"
+      [clientId]="client.id"
+      (closeEvent)="closeUploadModal()"
+      (uploadSuccess)="onFilesUploaded($event)"
+    ></app-add-file-modal>
+
+    <!-- Delete Confirmation Modal -->
+    <div
+      *ngIf="showDeleteModal"
+      class="fixed inset-0 z-50 overflow-y-auto"
+      aria-labelledby="modal-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <!-- Background overlay -->
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div
+          class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          aria-hidden="true"
+          (click)="cancelDelete()"
+        ></div>
+
+        <!-- This element is to trick the browser into centering the modal contents. -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <!-- Modal panel -->
+        <div
+          class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+        >
+          <div class="sm:flex sm:items-start">
+            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
+              <svg
+                class="h-6 w-6 text-red-600 dark:text-red-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+              <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                Delete File
+              </h3>
+              <div class="mt-2">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Are you sure you want to delete 
+                  <span class="font-medium text-gray-900 dark:text-white">{{ fileToDelete?.fileName }}</span>?
+                  This action cannot be undone.
+                </p>
+                <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div class="flex items-center space-x-3">
+                    <div
+                      class="w-8 h-8 rounded flex items-center justify-center"
+                      [ngClass]="{
+                        'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400':
+                          getFileIcon(fileToDelete?.fileName || '') === 'pdf',
+                        'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400':
+                          getFileIcon(fileToDelete?.fileName || '') === 'doc',
+                        'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400':
+                          getFileIcon(fileToDelete?.fileName || '') === 'image',
+                        'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400':
+                          getFileIcon(fileToDelete?.fileName || '') === 'other'
+                      }"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {{ fileToDelete?.fileName }}
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ formatFileSize(fileToDelete?.fileSize || 0) }} •
+                        {{ fileToDelete?.fileCategory | titlecase }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              (click)="confirmDelete()"
+              [disabled]="isDeleting"
+              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg
+                *ngIf="isDeleting"
+                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              {{ isDeleting ? 'Deleting...' : 'Delete' }}
+            </button>
+            <button
+              type="button"
+              (click)="cancelDelete()"
+              [disabled]="isDeleting"
+              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   `,
   styles: [
     `
@@ -701,92 +643,147 @@ interface ClientFile {
 export class ClientFilesComponent implements OnInit {
   @Input() client!: Client;
 
-  private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
+  private filesService = inject(FilesService);
 
-  uploadForm: FormGroup;
-  showUploadForm = false;
+  showUploadModal = false;
+  showDeleteModal = false;
+  fileToDelete: ClientFile | null = null;
+  isDeleting = false;
   searchTerm = '';
   categoryFilter = '';
-  selectedFiles: File[] = [];
+  isLoading = false;
 
-  files: ClientFile[] = [
-    {
-      id: '1',
-      fileName: 'passport_front.jpg',
-      fileType: 'image/jpeg',
-      fileCategory: 'kyc-id',
-      fileSize: 2048576, // 2MB
-      uploadedBy: 'John Smith',
-      uploadDate: new Date('2024-01-15T10:30:00'),
-      description: 'Passport front page scan',
-      kycNote: 'Document is clear and valid',
-      isKycDocument: true,
-      status: 'approved',
-    },
-    {
-      id: '2',
-      fileName: 'utility_bill.pdf',
-      fileType: 'application/pdf',
-      fileCategory: 'kyc-proof-address',
-      fileSize: 1536000, // 1.5MB
-      uploadedBy: 'Sarah Johnson',
-      uploadDate: new Date('2024-01-16T14:20:00'),
-      description: 'Electricity bill for address verification',
-      kycNote: 'Address matches client records',
-      isKycDocument: true,
-      status: 'approved',
-    },
-    {
-      id: '3',
-      fileName: 'selfie_with_id.jpg',
-      fileType: 'image/jpeg',
-      fileCategory: 'kyc-photo',
-      fileSize: 3072000, // 3MB
-      uploadedBy: 'Client Upload',
-      uploadDate: new Date('2024-01-17T09:45:00'),
-      description: 'Client selfie holding ID document',
-      kycNote: 'Pending review - face verification needed',
-      isKycDocument: true,
-      status: 'pending',
-    },
-    {
-      id: '4',
-      fileName: 'bank_statement.pdf',
-      fileType: 'application/pdf',
-      fileCategory: 'financial',
-      fileSize: 512000, // 512KB
-      uploadedBy: 'Mike Brown',
-      uploadDate: new Date('2024-01-18T11:15:00'),
-      description: 'Bank statement for income verification',
-      isKycDocument: false,
-      status: 'approved',
-    },
-    {
-      id: '5',
-      fileName: 'trading_agreement.pdf',
-      fileType: 'application/pdf',
-      fileCategory: 'contract',
-      fileSize: 1024000, // 1MB
-      uploadedBy: 'System',
-      uploadDate: new Date('2024-01-15T12:00:00'),
-      description: 'Signed trading agreement and terms',
-      isKycDocument: false,
-      status: 'approved',
-    },
-  ];
-
-  constructor() {
-    this.uploadForm = this.fb.group({
-      fileCategory: ['', Validators.required],
-      isKycDocument: [false],
-      description: [''],
-      kycNote: [''],
-    });
-  }
+  files: ClientFile[] = [];
 
   ngOnInit(): void {
-    // Initialize component
+    if (this.client.id) {
+      this.loadClientFiles();
+    }
+  }
+
+  /**
+   * Load files for the current client
+   */
+  private loadClientFiles(): void {
+    if (!this.client?.id) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.filesService.getFilesByUserId(this.client.id)
+      .pipe(
+        catchError(error => {
+          this.alertService.error('Failed to load files');
+          // Fallback to demo data in case of error
+          return of([]);
+        }),
+        finalize(() => this.isLoading = false)
+      )
+      .subscribe(files => {
+        if (files.length > 0) {
+          this.files = files.map(file => this.mapStoredFileDtoToClientFile(file));
+        }
+      });
+  }
+
+  private mapStoredFileDtoToClientFile(dto: StoredFileDto): ClientFile {
+    const mappedFile: ClientFile = {
+      id: dto.id,
+      userId: dto.userId,
+      fileName: dto.fileName,
+      fileExtension: dto.fileExtension,
+      contentType: dto.contentType,
+      fileSize: dto.fileSize,
+      fileType: dto.fileType,
+      status: dto.status,
+      bucketName: dto.bucketName,
+      kycProcessId: dto.kycProcessId,
+      creationTime: dto.creationTime,
+      fileUrl: dto.fileUrl,
+      reference: dto.reference,
+      description: dto.description,
+      // Map additional UI fields
+      uploadDate: new Date(dto.creationTime),
+      isKycDocument: dto.kycProcessId !== null && dto.kycProcessId !== undefined,
+      displayStatus: this.mapFileStatusToDisplayStatus(dto.status),
+      fileCategory: this.getFileCategoryFromType(dto.fileType),
+      uploadedBy: 'System', // Could be enhanced to include actual user info
+    };
+    
+    return mappedFile;
+  }
+
+  /**
+   * Map FileStatus enum to display status
+   */
+  private mapFileStatusToDisplayStatus(status: FileStatus): 'approved' | 'pending' | 'rejected' {
+    switch (status) {
+      case FileStatus.Permanent: // 1
+        return 'approved';
+      case FileStatus.Temporary: // 0
+        return 'pending';
+      case FileStatus.Deleted: // 2
+        return 'rejected';
+      default:
+        return 'pending';
+    }
+  }
+
+  /**
+   * Get file category from FileType enum
+   */
+  private getFileCategoryFromType(fileType: FileType): string {
+    switch (fileType) {
+      case FileType.IdFront:
+      case FileType.IdBack:
+      case FileType.PassportMain:
+      case FileType.FacePhoto:
+        return 'kyc';
+      case FileType.Document:
+        return 'document';
+      case FileType.Image:
+        return 'image';
+      case FileType.Video:
+        return 'video';
+      case FileType.Audio:
+        return 'audio';
+      case FileType.Contract:
+        return 'contract';
+      case FileType.Invoice:
+        return 'invoice';
+      case FileType.Report:
+        return 'report';
+      case FileType.Presentation:
+        return 'presentation';
+      case FileType.Archive:
+        return 'archive';
+      default:
+        return 'other';
+    }
+  }
+
+  /**
+   * Determine FileType enum from file
+   */
+  private getFileTypeFromFile(file: File): FileType {
+    if (file.type.startsWith('image/')) {
+      return FileType.Image;
+    } else if (file.type.startsWith('video/')) {
+      return FileType.Video;
+    } else if (file.type.startsWith('audio/')) {
+      return FileType.Audio;
+    } else if (file.type === 'application/pdf') {
+      return FileType.Document;
+    } else if (file.type.includes('document') || file.type.includes('word')) {
+      return FileType.Document;
+    } else if (file.type.includes('presentation') || file.type.includes('powerpoint')) {
+      return FileType.Presentation;
+    } else if (file.type.includes('zip') || file.type.includes('archive')) {
+      return FileType.Archive;
+    } else {
+      return FileType.Other;
+    }
   }
 
   get filteredFiles(): ClientFile[] {
@@ -806,13 +803,16 @@ export class ClientFilesComponent implements OnInit {
         (file) =>
           file.fileName.toLowerCase().includes(term) ||
           file.description?.toLowerCase().includes(term) ||
-          file.uploadedBy.toLowerCase().includes(term)
+          file.uploadedBy?.toLowerCase().includes(term)
       );
     }
 
     return filtered.sort(
-      (a, b) =>
-        new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime()
+      (a, b) => {
+        const aDate = a.uploadDate || new Date(a.creationTime);
+        const bDate = b.uploadDate || new Date(b.creationTime);
+        return bDate.getTime() - aDate.getTime();
+      }
     );
   }
 
@@ -826,17 +826,22 @@ export class ClientFilesComponent implements OnInit {
 
   getApprovedKycCount(): number {
     return this.files.filter(
-      (file) => file.isKycDocument && file.status === 'approved'
+      (file) => file.isKycDocument && file.displayStatus === 'approved'
     ).length;
   }
 
   getPendingFilesCount(): number {
-    return this.files.filter((file) => file.status === 'pending').length;
+    return this.files.filter((file) => file.displayStatus === 'pending').length;
   }
 
   getImageFilesCount(): number {
-    return this.files.filter((file) => file.fileType.startsWith('image/'))
-      .length;
+    return this.files.filter((file) => 
+      file.fileType === FileType.Image || 
+      file.fileType === FileType.IdFront || 
+      file.fileType === FileType.IdBack || 
+      file.fileType === FileType.PassportMain || 
+      file.fileType === FileType.FacePhoto
+    ).length;
   }
 
   formatFileSize(bytes: number): string {
@@ -861,98 +866,152 @@ export class ClientFilesComponent implements OnInit {
     }
   }
 
-  toggleUploadForm(): void {
-    this.showUploadForm = !this.showUploadForm;
-    if (!this.showUploadForm) {
-      this.uploadForm.reset();
-      this.selectedFiles = [];
-    }
+  /**
+   * Get display status for template
+   */
+  getDisplayStatus(file: ClientFile): string {
+    return file.displayStatus || 'pending';
   }
 
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
+  /**
+   * Open upload modal
+   */
+  openUploadModal(): void {
+    this.showUploadModal = true;
   }
 
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
+  /**
+   * Close upload modal
+   */
+  closeUploadModal(): void {
+    this.showUploadModal = false;
   }
 
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const files = Array.from(event.dataTransfer?.files || []);
-    this.handleFiles(files);
+  /**
+   * Handle successful file uploads from modal
+   */
+  onFilesUploaded(responses: UploadFileResponse[]): void {
+    this.loadClientFiles(); // Reload files to show new uploads
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files) {
-      const files = Array.from(input.files);
-      this.handleFiles(files);
-    }
+  /**
+   * Show delete confirmation modal
+   */
+  showDeleteConfirmation(file: ClientFile): void {
+    this.fileToDelete = file;
+    this.showDeleteModal = true;
   }
 
-  private handleFiles(files: File[]): void {
-    const validFiles = files.filter((file) => {
-      if (file.size > 10 * 1024 * 1024) {
-        // 10MB limit
-        this.alertService.error(
-          `File ${file.name} is too large. Maximum size is 10MB.`
-        );
-        return false;
-      }
-      return true;
-    });
-
-    this.selectedFiles = [...this.selectedFiles, ...validFiles];
+  /**
+   * Cancel delete operation
+   */
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.fileToDelete = null;
+    this.isDeleting = false;
   }
 
-  removeSelectedFile(index: number): void {
-    this.selectedFiles.splice(index, 1);
-  }
+  /**
+   * Confirm and execute delete operation
+   */
+  confirmDelete(): void {
+    if (!this.fileToDelete) return;
 
-  uploadFiles(): void {
-    if (this.uploadForm.valid && this.selectedFiles.length > 0) {
-      const formData = this.uploadForm.value;
-
-      this.selectedFiles.forEach((file) => {
-        const newFile: ClientFile = {
-          id: String(this.files.length + 1),
-          fileName: file.name,
-          fileType: file.type,
-          fileCategory: formData.fileCategory,
-          fileSize: file.size,
-          uploadedBy: 'Current User', // Replace with actual user
-          uploadDate: new Date(),
-          description: formData.description,
-          kycNote: formData.isKycDocument ? formData.kycNote : undefined,
-          isKycDocument: formData.isKycDocument,
-          status: formData.isKycDocument ? 'pending' : 'approved',
-        };
-
-        this.files.unshift(newFile);
+    this.isDeleting = true;
+    const fileName = this.fileToDelete.fileName;
+    
+    this.filesService.deleteFile(this.fileToDelete.id)
+      .pipe(
+        catchError(error => {
+          this.alertService.error('Failed to delete file');
+          return of(null);
+        }),
+        finalize(() => {
+          this.isDeleting = false;
+          this.showDeleteModal = false;
+          this.fileToDelete = null;
+        })
+      )
+      .subscribe(() => {
+        this.alertService.success(`File "${fileName}" deleted successfully`);
+        this.loadClientFiles(); // Reload files
       });
+  }
 
-      this.uploadForm.reset();
-      this.selectedFiles = [];
-      this.showUploadForm = false;
-
-      this.alertService.success(
-        `${this.selectedFiles.length} file(s) uploaded successfully`
-      );
-    } else {
-      this.alertService.error(
-        'Please fill in all required fields and select files'
-      );
+  /**
+   * Delete a file (deprecated - replaced with modal)
+   */
+  deleteFile(fileId: string): void {
+    const file = this.files.find(f => f.id === fileId);
+    if (file) {
+      this.showDeleteConfirmation(file);
     }
   }
 
-  approveKycDocument(file: ClientFile): void {
-    file.status = 'approved';
-    file.kycNote = 'Document approved after review';
-    this.alertService.success(`KYC document ${file.fileName} approved`);
+  /**
+   * Download a file
+   */
+  downloadFile(file: ClientFile): void {
+    this.filesService.downloadFile(file.id)
+      .pipe(
+        catchError(error => {
+          this.alertService.error('Failed to download file');
+          return of(new Blob());
+        })
+      )
+      .subscribe(blob => {
+        if (blob.size > 0) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = file.fileName;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        }
+      });
   }
+
+  /**
+   * Preview a file (open in new tab)
+   */
+  previewFile(file: ClientFile): void {
+    if (file.fileUrl) {
+      window.open(file.fileUrl, '_blank');
+    } else {
+      this.alertService.info('Preview not available for this file');
+    }
+  }
+
+  /**
+   * Approve KYC document
+   */
+  approveKycDocument(file: ClientFile): void {
+    this.filesService.makeFilePermanent(file.id)
+      .pipe(
+        catchError(error => {
+          this.alertService.error('Failed to approve document');
+          return of(null);
+        })
+      )
+      .subscribe(response => {
+        if (response?.success) {
+          file.displayStatus = 'approved';
+          file.status = FileStatus.Permanent;
+          this.alertService.success(`KYC document ${file.fileName} approved`);
+          this.loadClientFiles(); // Reload to get updated data
+        }
+      });
+  }
+
+  /**
+   * Get full URL for file preview/download
+   */
+  getFullFileUrl(fileUrl: string): string {
+    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+      return fileUrl;
+    }
+    // Handle relative URLs - assuming they're relative to the current domain
+    return `${window.location.origin}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+  }
+
 }
