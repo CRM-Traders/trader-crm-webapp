@@ -98,6 +98,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Operator) => row.branchTypeName || '-',
     },
     {
       field: 'branchName',
@@ -112,6 +113,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Operator) => row.userTypeName || '-',
     },
     {
       field: 'createdAt',

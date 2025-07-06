@@ -99,7 +99,7 @@ export class TeamsComponent implements OnInit, OnDestroy {
       filterable: true,
       type: 'date',
       format: 'short',
-      selector: (row: Team) => row.lastModifiedAt || null,
+      selector: (row: Team) => row.lastModifiedAt || 'No Info',
     },
   ];
 

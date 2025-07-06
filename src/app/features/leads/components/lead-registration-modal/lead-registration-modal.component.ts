@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -8,7 +8,10 @@ import {
 } from '@angular/forms';
 import { Observable, Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
+import { CountryService } from '../../../../core/services/country.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
+import { Country } from '../../../../core/models/country.model';
 import {
   LeadCreateResponse,
   LeadCreateRequest,
@@ -242,8 +245,7 @@ import { LeadsService } from '../../services/leads.service';
               >
                 Country <span class="text-red-500">*</span>
               </label>
-              <input
-                type="text"
+              <select
                 id="country"
                 formControlName="country"
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
@@ -255,8 +257,15 @@ import { LeadsService } from '../../services/leads.service';
                   registrationForm.get('country')?.invalid &&
                   registrationForm.get('country')?.touched
                 "
-                placeholder="Enter country"
-              />
+              >
+                <option value="">Select country</option>
+                <option
+                  *ngFor="let country of countries"
+                  [value]="country.code"
+                >
+                  {{ country.name }}
+                </option>
+              </select>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
@@ -281,8 +290,7 @@ import { LeadsService } from '../../services/leads.service';
               >
                 Language <span class="text-red-500">*</span>
               </label>
-              <input
-                type="text"
+              <select
                 id="language"
                 formControlName="language"
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
@@ -294,8 +302,15 @@ import { LeadsService } from '../../services/leads.service';
                   registrationForm.get('language')?.invalid &&
                   registrationForm.get('language')?.touched
                 "
-                placeholder="Enter language"
-              />
+              >
+                <option value="">Select language</option>
+                <option
+                  *ngFor="let language of languages"
+                  [value]="language.key"
+                >
+                  {{ language.value }}
+                </option>
+              </select>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
@@ -588,12 +603,14 @@ import { LeadsService } from '../../services/leads.service';
   `,
   styles: [],
 })
-export class LeadRegistrationModalComponent implements OnInit {
+export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
 
   private fb = inject(FormBuilder);
   private leadsService = inject(LeadsService);
   private alertService = inject(AlertService);
+  private countryService = inject(CountryService);
+  private languageService = inject(LanguageService);
   private destroy$ = new Subject<void>();
 
   registrationForm!: FormGroup;
@@ -602,8 +619,14 @@ export class LeadRegistrationModalComponent implements OnInit {
   registrationResponse: LeadCreateResponse | null = null;
   passwordCopied = false;
 
+  // Dropdown data
+  countries: Country[] = [];
+  languages: Array<{ key: string; value: string }> = [];
+
   ngOnInit(): void {
     this.initForm();
+    this.loadCountries();
+    this.loadLanguages();
   }
 
   ngOnDestroy(): void {
@@ -628,6 +651,24 @@ export class LeadRegistrationModalComponent implements OnInit {
     });
   }
 
+  private loadCountries(): void {
+    this.countryService
+      .getCountries()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (countries) => {
+          this.countries = countries;
+        },
+        error: (error) => {
+          console.error('Failed to load countries:', error);
+        },
+      });
+  }
+
+  private loadLanguages(): void {
+    this.languages = this.languageService.getAllLanguages();
+  }
+
   onSubmit(): void {
     if (this.registrationForm.invalid) {
       this.markAllFieldsAsTouched();
@@ -648,8 +689,8 @@ export class LeadRegistrationModalComponent implements OnInit {
       email: formValue.email,
       username: formValue.username,
       telephone: formValue.telephone,
-      country: formValue.country,
-      language: formValue.language,
+      country: formValue.country, // This will now be the country code
+      language: formValue.language, // This will now be the language key
       dateOfBirth: dateOfBirth,
       source: formValue.source,
     };
@@ -714,5 +755,15 @@ export class LeadRegistrationModalComponent implements OnInit {
 
   onClose(): void {
     this.modalRef.close(this.registrationResponse);
+  }
+
+  getCountryNameByCode(countryCode: string): string {
+    const country = this.countries.find(c => c.code === countryCode);
+    return country ? country.name : countryCode;
+  }
+
+  getLanguageNameByKey(languageKey: string): string {
+    const language = this.languages.find(l => l.key === languageKey);
+    return language ? language.value : languageKey;
   }
 }

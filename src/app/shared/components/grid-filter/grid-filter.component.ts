@@ -72,7 +72,6 @@ export class GridFilterComponent implements OnInit, OnDestroy {
 
   operatorsByType: Record<string, { value: FilterOperator; label: string }[]> =
     {
-      text: [{ value: FilterOperator.CONTAINS, label: 'Contains' }],
       number: [{ value: FilterOperator.BETWEEN, label: 'Between' }],
       date: [{ value: FilterOperator.BETWEEN, label: 'Between' }],
       boolean: [{ value: FilterOperator.EQUALS, label: 'Equals' }],
@@ -451,6 +450,7 @@ export class GridFilterComponent implements OnInit, OnDestroy {
       filter.multiSelectValues = [];
       filter.operator = this.getDefaultOperator(filter.column);
     });
+    this.appliedFilters = [];
   }
 
   private emitFilterChange(): void {

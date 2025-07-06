@@ -14,7 +14,8 @@ export interface Client {
   dateOfBirth: string | null;
   status: ClientStatus;
   kycStatusId: string | null;
-  salesStatus: KycStatus;
+  salesStatus: string | null;
+  saleStatusEnum: number | null;
   isProblematic: boolean;
   isBonusAbuser: boolean;
   bonusAbuserReason: string | null;
@@ -29,6 +30,7 @@ export interface Client {
   source: string | null;
   lastLogin: string | null;
   lastCommunication: string | null;
+  balance: number;
 }
 
 export interface ClientCreateRequest {

@@ -171,25 +171,6 @@
             (export)="onExport($event)"
             (refresh)="refreshGrid()"
           >
-            <!-- Custom Branch Type Cell Template -->
-            <ng-template #branchTypeCell let-value="value">
-              <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                [ngClass]="returnBranchType(value)"
-              >
-                {{ returnBranchTypeLables(value) }}
-              </span>
-            </ng-template>
-
-            <!-- Custom User Type Cell Template -->
-            <ng-template #userTypeCell let-value="value">
-              <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                [ngClass]="returnUserTypeColors(value)"
-              >
-                {{ returnUserTypeLabels(value) }}
-              </span>
-            </ng-template>
           </app-grid>
         </div>
       </div>

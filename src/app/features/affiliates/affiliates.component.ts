@@ -94,6 +94,7 @@ export class AffiliatesComponent implements OnInit {
       filterable: true,
       type: 'number',
       filterType: 'number',
+      selector: (row: Affiliate) => row.clientsCount || 0,
     },
     {
       field: 'isActive',

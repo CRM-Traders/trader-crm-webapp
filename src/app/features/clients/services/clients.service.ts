@@ -136,9 +136,9 @@ export class ClientsService {
   }
 
   // Client Comments Methods
-  getClientComments(clientId: string): Observable<ClientCommentsResponse> {
-    return this.httpService.get<ClientCommentsResponse>(
-      `api/clientcomments/client?${clientId}`
+  getClientComments(clientId: string): Observable<ClientComment> {
+    return this.httpService.get<ClientComment>(
+      `identity/api/clientcomments/client/${clientId}`
     );
   }
 
@@ -146,14 +146,14 @@ export class ClientsService {
     body: ClientCommentCreateRequest
   ): Observable<ClientComment> {
     return this.httpService.post<ClientComment>(
-      `${this.apiPath}/clientcomments`,
+      `identity/api/clientcomments`,
       body
     );
   }
 
   deleteClientComment(commentId: string): Observable<void> {
     return this.httpService.delete<void>(
-      `${this.apiPath}/clientcomments/${commentId}`
+      `identity/api/clientcomments/${commentId}`
     );
   }
 }

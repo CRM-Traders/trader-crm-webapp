@@ -33,6 +33,7 @@ import {
   Desk,
   DeskUpdateRequest,
 } from '../../models/desk.model';
+import { BrandDropdownItem } from '../../../brands/models/brand.model';
 
 @Component({
   selector: 'app-desk-details-modal',
@@ -172,7 +173,7 @@ import {
                         <div class="flex justify-between items-center">
                           <span>{{ brand.value }}</span>
                           <span class="text-xs text-gray-500">{{
-                            brand.brandName
+                            brand.value
                           }}</span>
                         </div>
                       </div>
@@ -479,7 +480,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   editForm: FormGroup;
   isEditing = false;
   loading = false;
-  availableOffices: OfficeDropdownItem[] = [];
+  availableOffices: BrandDropdownItem[] = [];
   availableLanguages: any[] = [];
 
   // Brand dropdown state
@@ -573,7 +574,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
     };
 
     this.desksService
-      .getOfficesDropdown(request)
+      .getBrandsDropdown(request)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
@@ -631,7 +632,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
     this.officeDropdownOpen = !this.officeDropdownOpen;
   }
 
-  selectOffice(brand: OfficeDropdownItem): void {
+  selectOffice(brand: BrandDropdownItem): void {
     this.editForm.patchValue({ brandId: brand.id });
     this.officeDropdownOpen = false;
   }

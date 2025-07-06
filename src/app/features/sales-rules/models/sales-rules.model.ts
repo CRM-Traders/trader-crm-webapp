@@ -42,6 +42,7 @@ export interface CreateSalesRuleRequest {
   language?: string;
   partners?: string;
   affiliateReferrals?: string;
+  operators?: any[];
   sources?: string;
 }
 
