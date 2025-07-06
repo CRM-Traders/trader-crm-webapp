@@ -4,7 +4,6 @@ import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
 import { Observable } from 'rxjs';
 import {
-  SalesRule,
   SalesRuleDetails,
   CreateSalesRuleRequest,
   CreateSalesRuleResponse,

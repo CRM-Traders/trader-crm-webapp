@@ -2,14 +2,15 @@
 
 export interface ClientComment {
   id: string;
+  commentId: string;
+  note: string;
+  isPinnedComment: boolean;
   clientId: string;
   comment: string;
   createdBy: string;
-  createdByName: string;
+  createdById: string;
   createdAt: Date;
-  updatedAt?: Date;
-  updatedBy?: string;
-  updatedByName?: string;
+  pinnedData: string
 }
 
 export interface ClientCommentCreateRequest {

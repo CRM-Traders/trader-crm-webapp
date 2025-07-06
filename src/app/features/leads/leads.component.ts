@@ -1,4 +1,4 @@
-import { Component, inject, TemplateRef, ViewChild } from '@angular/core';
+import { Component, inject, TemplateRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import {
   FormBuilder,
@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
 import {
   GridColumn,
@@ -15,8 +15,10 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { ModalService } from '../../shared/services/modals/modal.service';
 import { LeadRegistrationModalComponent } from './components/lead-registration-modal/lead-registration-modal.component';
-import { LeadsService } from './services/leads.service';
+import { BulkLeadConversionResponse, LeadConversionResponse, LeadsService } from './services/leads.service';
 import {
+  KycStatus,
+  KycStatusLabels,
   Lead,
   LeadStatus,
   LeadStatusColors,
@@ -25,6 +27,11 @@ import {
 } from './models/leads.model';
 import { CommonModule } from '@angular/common';
 import { GridComponent } from '../../shared/components/grid/grid.component';
+import { Client, ClientStatus, ClientStatusLabels } from '../clients/models/clients.model';
+import { CountryService } from '../../core/services/country.service';
+import { LanguageService } from '../../core/services/language.service';
+import { OperatorsService } from '../operators/services/operators.service';
+import { OfficeRulesService } from '../officies/services/office-rules.service';
 
 @Component({
   selector: 'app-leads',
@@ -32,10 +39,14 @@ import { GridComponent } from '../../shared/components/grid/grid.component';
   templateUrl: './leads.component.html',
   styleUrl: './leads.component.scss',
 })
-export class LeadsComponent {
+export class LeadsComponent implements OnInit, OnDestroy {
   private leadsService = inject(LeadsService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
+  private countryService = inject(CountryService);
+  private languageService = inject(LanguageService);
+  private operatorsService = inject(OperatorsService);
+  private officeRulesService = inject(OfficeRulesService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
@@ -59,6 +70,7 @@ export class LeadsComponent {
   LeadStatusColors = LeadStatusColors;
 
   gridColumns: GridColumn[] = [
+    // Text Input Filters
     {
       field: 'firstName',
       header: 'First Name',
@@ -81,84 +93,204 @@ export class LeadsComponent {
       filterable: true,
       filterType: 'text',
     },
-    // {
-    //   field: 'username',
-    //   header: 'Username',
-    //   sortable: true,
-    //   filterable: true,
-    //   filterType:'text'
-    // },
     {
       field: 'telephone',
       header: 'Phone',
       sortable: true,
       filterable: true,
-      selector: (row: Lead) => row.telephone || '-',
       filterType: 'text',
+      selector: (row: Lead) => row.telephone || '-',
+    },
+    {
+      field: 'id',
+      header: 'ID',
+      sortable: true,
+      filterable: true,
+      filterType: 'text',
+      hidden: true,
+    },
+    {
+      field: 'source',
+      header: 'Source',
+      sortable: true,
+      filterable: true,
+      filterType: 'text',
+      selector: (row: Lead) => row.source || '-',
+      hidden: true,
+    },
+    {
+      field: 'affiliateName',
+      header: 'Affiliate Name',
+      sortable: true,
+      filterable: true,
+      filterType: 'text',
+      selector: (row: Lead) => row.affiliateName || '-',
+      hidden: true,
+    },
+
+    // Dropdown Filters
+    {
+      field: 'language',
+      header: 'Language',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
+      selector: (row: Lead) => row.language || '-',
     },
     {
       field: 'country',
       header: 'Country',
       sortable: true,
       filterable: true,
-      selector: (row: Lead) => row.country || '-',
-      filterType: 'text',
-    },
-    {
-      field: 'language',
-      header: 'Language',
-      sortable: true,
-      filterable: true,
-      selector: (row: Lead) => row.language || '-',
-      filterType: 'text',
-    },
-    {
-      field: 'status',
-      header: 'Status',
-      sortable: true,
-      filterable: true,
-      cellTemplate: null, // Will be set in ngOnInit
       filterType: 'select',
-      filterOptions: [
-        { label: '0', value: 'Active' },
-        { label: '1', value: 'Passive' },
-        { label: '2', value: 'Neutral' },
-        { label: '3', value: 'Inactive' },
-        { label: '4', value: 'Blocked' },
-        { label: '5', value: 'Disabled' },
-      ],
+      filterOptions: [], // Will be populated in ngOnInit
+      selector: (row: Lead) => row.country || '-',
+    },
+    {
+      field: 'deskId',
+      header: 'Desk',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
+      hidden: true,
+    },
+    {
+      field: 'teamId',
+      header: 'Team',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
+      hidden: true,
+    },
+    {
+      field: 'salesAgentId',
+      header: 'Sales Agent',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
+      hidden: true,
     },
     {
       field: 'salesStatus',
       header: 'Sales Status',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: Object.entries(KycStatusLabels).map(([value, label]) => ({
+        value: Number(value),
+        label: label
+      })),
       cellTemplate: null,
-      filterType: 'text',
+      selector: (row: KycStatus) => {
+        switch (row) {
+          case KycStatus.Active:
+            return 'Active';
+          case KycStatus.Appointment24Hr:
+            return 'Appointment 24Hr';
+          case KycStatus.BlackListCountry:
+            return 'Black List Country';
+          case KycStatus.Callback:
+            return 'Callback';
+          case KycStatus.CallbackNA:
+            return 'Callback NA';
+          case KycStatus.CallAgain:
+            return 'Call Again';
+          default:
+            return 'Unknown';
+        }
+      }
     },
     {
+      field: 'status',
+      header: 'Account Status',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: Object.entries(LeadStatusLabels).map(([value, label]) => ({
+        value: Number(value),
+        label: label
+      })),
+      cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Client) =>
+        ClientStatusLabels[row.status as ClientStatus] || 'N/A',
+    },
+    {
+      field: 'neverCalled',
+      header: 'Never Called',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: true, label: 'Yes' },
+        { value: false, label: 'No' }
+      ],
+      hidden: true,
+    },
+    {
+      field: 'timezone',
+      header: 'Time Zone',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
+      hidden: true,
+    },
+
+    // Date Range Filters
+    {
+      field: 'registrationDate',
+      header: 'Registration Date',
+      sortable: true,
+      filterable: true,
+      filterType: 'date',
+      type: 'date',
+      format: 'short',
+    },
+    {
+      field: 'lastNoteDate',
+      header: 'Last Note Date',
+      sortable: true,
+      filterable: true,
+      filterType: 'date',
+      type: 'date',
+      format: 'short',
+      hidden: true,
+    },
+    {
+      field: 'lastCommunication',
+      header: 'Last Call Date',
+      sortable: true,
+      filterable: true,
+      filterType: 'date',
+      type: 'date',
+      format: 'short',
+      selector: (row: Lead) => row.lastCommunication || 'No Info',
+    },
+
+    // Additional existing fields
+    {
       field: 'isProblematic',
-      header: 'Is Problematic',
+      header: 'Problematic',
       sortable: false,
       filterable: false,
       cellTemplate: null,
       filterType: 'boolean',
+      selector: (row: Lead) => (row.isProblematic ? 'Yes' : 'No'),
+      hidden: true,
     },
     {
       field: 'isBonusAbuser',
-      header: 'Is Bonus Abuser',
+      header: 'Bonus Abuser',
       sortable: false,
       filterable: false,
       cellTemplate: null,
       filterType: 'boolean',
-    },
-    {
-      field: 'registrationDate',
-      header: 'Registered At',
-      sortable: true,
-      filterable: true,
-      type: 'date',
-      format: 'short',
+      selector: (row: Lead) => (row.isBonusAbuser ? 'Yes' : 'No'),
+      hidden: true,
     },
     {
       field: 'registrationIP',
@@ -167,14 +299,7 @@ export class LeadsComponent {
       filterable: true,
       type: 'text',
       filterType: 'text',
-    },
-    {
-      field: 'source',
-      header: 'Source',
-      sortable: true,
-      filterable: true,
-      type: 'text',
-      filterType: 'text',
+      hidden: true,
     },
     {
       field: 'lastLogin',
@@ -183,14 +308,20 @@ export class LeadsComponent {
       filterable: true,
       type: 'date',
       format: 'short',
+      selector: (row: Lead) => row.lastLogin || 'No Info',
+      hidden: true,
     },
+  ];
+
+  gridBulkActions: GridAction[] = [
     {
-      field: 'lastCommunication',
-      header: 'Last Communication',
-      sortable: true,
-      filterable: true,
-      type: 'date',
-      format: 'short',
+      id: 'bulk-activate',
+      label: 'Convert to Client(s)',
+      icon: 'fas fa-check-circle',
+      type: 'primary',
+      action: (items: Lead[]) => this.convertLeadsToClients(items),
+      visible: false,
+      disabled: false,
     },
   ];
 
@@ -238,22 +369,9 @@ export class LeadsComponent {
   }
 
   ngOnInit(): void {
-    const statusColumn = this.gridColumns.find((col) => col.field === 'status');
-    if (statusColumn) {
-      statusColumn.cellTemplate = this.statusCellTemplate;
-    }
-
-    const investmentColumn = this.gridColumns.find(
-      (col) => col.field === 'hasInvestments'
-    );
-    if (investmentColumn) {
-      investmentColumn.cellTemplate = this.investmentCellTemplate;
-    }
-
-    this.leadsService.getActiveLeads().subscribe((result: any) => {
-      this.totalCount = result.totalUsers;
-      this.activeCount = result.activeUsersTotalCount;
-    });
+    this.initializeGridTemplates();
+    this.initializeFilterOptions();
+    this.loadStatistics();
   }
 
   ngOnDestroy(): void {
@@ -329,7 +447,11 @@ export class LeadsComponent {
           console.error('Error updating lead:', error);
           return of(null);
         }),
-        finalize(() => (this.loading = false))
+        finalize(() => {
+          this.loading = false;
+                    this.refreshSelectedClient();
+          this.refreshGrid();
+        })
       )
       .subscribe((result) => {
         if (result !== null) {
@@ -338,6 +460,8 @@ export class LeadsComponent {
           this.refreshSelectedClient();
           this.refreshGrid();
         }
+          this.refreshSelectedClient();
+          this.refreshGrid();
       });
   }
 
@@ -553,5 +677,311 @@ export class LeadsComponent {
         userId: user.id,
       }
     );
+  }
+
+  /**
+   * Initialize grid templates
+   */
+  private initializeGridTemplates(): void {
+    const statusColumn = this.gridColumns.find((col) => col.field === 'status');
+    if (statusColumn) {
+      statusColumn.cellTemplate = this.statusCellTemplate;
+    }
+
+    const investmentColumn = this.gridColumns.find(
+      (col) => col.field === 'hasInvestments'
+    );
+    if (investmentColumn) {
+      investmentColumn.cellTemplate = this.investmentCellTemplate;
+    }
+  }
+
+  /**
+   * Initialize filter options for dropdown columns
+   */
+  private initializeFilterOptions(): void {
+    // Load all filter options concurrently
+    forkJoin({
+      countries: this.countryService.getCountries(),
+      languages: of(this.languageService.getAllLanguages()),
+      desks: this.loadDesksDropdown(),
+      teams: this.loadTeamsDropdown(),
+      salesAgents: this.loadSalesAgentsDropdown(),
+      timezones: this.loadTimezones(),
+    }).pipe(
+      takeUntil(this.destroy$),
+      catchError((error) => {
+        console.error('Error loading filter options:', error);
+        return of({
+          countries: [],
+          languages: [],
+          desks: [],
+          teams: [],
+          salesAgents: [],
+          timezones: [],
+        });
+      })
+    ).subscribe(({
+      countries,
+      languages,
+      desks,
+      teams,
+      salesAgents,
+      timezones,
+    }) => {
+      // Update country filter options
+      this.updateColumnFilterOptions('country', countries.map(c => ({ value: c.code, label: c.name })));
+
+      // Update language filter options
+      this.updateColumnFilterOptions('language', languages.map(l => ({ value: l.key, label: l.value })));
+
+      // Update desk filter options
+      this.updateColumnFilterOptions('deskId', desks);
+
+      // Update team filter options
+      this.updateColumnFilterOptions('teamId', teams);
+
+      // Update sales agents filter options
+      this.updateColumnFilterOptions('salesAgentId', salesAgents);
+
+      // Update timezone filter options
+      this.updateColumnFilterOptions('timezone', timezones);
+    });
+  }
+
+  /**
+   * Update filter options for a specific column
+   */
+  private updateColumnFilterOptions(field: string, options: any[]): void {
+    const column = this.gridColumns.find(col => col.field === field);
+    if (column) {
+      column.filterOptions = options;
+    }
+  }
+
+  /**
+   * Load desks dropdown options
+   */
+  private loadDesksDropdown() {
+    return this.operatorsService.getDesksDropdown({
+      pageIndex: 0,
+      pageSize: 1000,
+      sortField: 'name',
+      sortDirection: 'asc'
+    }).pipe(
+      catchError(() => of({ items: [] })),
+      takeUntil(this.destroy$)
+    ).toPromise().then((response: any) =>
+      response?.items?.map((desk: any) => ({ value: desk.id, label: desk.value })) || []
+    );
+  }
+
+  /**
+   * Load teams dropdown options
+   */
+  private loadTeamsDropdown() {
+    return this.operatorsService.getTeamsDropdown({
+      pageIndex: 0,
+      pageSize: 1000,
+      sortField: 'name',
+      sortDirection: 'asc'
+    }).pipe(
+      catchError(() => of({ items: [] })),
+      takeUntil(this.destroy$)
+    ).toPromise().then((response: any) =>
+      response?.items?.map((team: any) => ({ value: team.id, label: team.value })) || []
+    );
+  }
+
+  /**
+   * Load sales agents dropdown options
+   */
+  private loadSalesAgentsDropdown() {
+    return this.officeRulesService.getAvailableOperators(0, 1000, '').pipe(
+      catchError(() => of([])),
+      takeUntil(this.destroy$)
+    ).toPromise().then((response: any) =>
+      response?.map((operator: any) => ({ value: operator.id, label: operator.value })) || []
+    );
+  }
+
+  /**
+   * Load timezone options
+   */
+  private loadTimezones() {
+    // Common timezones - this could be from a service
+    const timezones = [
+      { value: 'UTC', label: 'UTC' },
+      { value: 'GMT', label: 'GMT' },
+      { value: 'EST', label: 'EST' },
+      { value: 'PST', label: 'PST' },
+      { value: 'CET', label: 'CET' },
+      { value: 'JST', label: 'JST' },
+      { value: 'IST', label: 'IST' },
+      { value: 'CST', label: 'CST' },
+      { value: 'MST', label: 'MST' },
+      { value: 'AST', label: 'AST' },
+    ];
+
+    return Promise.resolve(timezones);
+  }
+
+  convertSingleLead(lead: Lead): void {
+    if (!lead || !lead.id) {
+      this.alertService.error('Invalid lead selected');
+      return;
+    }
+
+    this.loading = true;
+    this.leadsService
+      .convertLeadToClient(lead.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          let errorMessage = 'Failed to convert lead to client';
+
+          if (error.status === 400) {
+            errorMessage = 'Lead cannot be converted. Please check the lead details.';
+          } else if (error.status === 409) {
+            errorMessage = 'Lead is already a client or has conflicts.';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+
+          this.alertService.error(errorMessage);
+          console.error('Error converting lead:', error);
+          return of(null);
+        }),
+        finalize(() => {
+          this.loading = false
+          this.refreshGrid();
+          this.loadStatistics();
+
+        })
+      )
+      .subscribe((result: string) => {
+        if (result) {
+          this.alertService.success(
+            `Lead "${lead.firstName} ${lead.lastName}" successfully converted to client`
+          );
+          this.refreshGrid();
+          this.loadStatistics();
+
+          // Clear selected lead if it was the one converted
+          if (this.selectedLead?.id === lead.id) {
+            this.selectedLead = null;
+          }
+        }
+        this.refreshGrid();
+        this.loadStatistics();
+      });
+  }
+
+  /**
+   * Convert multiple leads to clients (bulk operation)
+   */
+  convertLeadsToClients(leads: Lead[]): void {
+    if (!leads || leads.length === 0) {
+      this.alertService.error('No leads selected for conversion');
+      return;
+    }
+
+    const leadIds = leads.map(lead => lead.id).filter(id => id); // Filter out any undefined IDs
+
+    if (leadIds.length === 0) {
+      this.alertService.error('Invalid leads selected');
+      return;
+    }
+
+    // For single selection, use the single conversion endpoint
+    if (leadIds.length === 1) {
+      const lead = leads.find(l => l.id === leadIds[0]);
+      if (lead) {
+        this.convertSingleLead(lead);
+      }
+      return;
+    }
+
+    // Confirm bulk conversion
+    const confirmMessage = `Are you sure you want to convert ${leads.length} leads to clients?`;
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    this.loading = true;
+    this.leadsService
+      .convertLeadsToClients(leadIds)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          let errorMessage = 'Failed to convert leads to clients';
+
+          if (error.status === 400) {
+            errorMessage = 'Some leads cannot be converted. Please check the lead details.';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+
+          this.alertService.error(errorMessage);
+          console.error('Error converting leads:', error);
+          return of(null);
+        }),
+        finalize(() => (this.loading = false))
+      )
+      .subscribe((result: BulkLeadConversionResponse | null) => {
+        if (result) {
+          this.handleBulkConversionResult(result);
+          this.refreshGrid();
+          this.loadStatistics();
+
+          // Clear selected lead if it was one of the converted ones
+          if (this.selectedLead && leadIds.includes(this.selectedLead.id)) {
+            this.selectedLead = null;
+          }
+        }
+      });
+  }
+
+  private handleBulkConversionResult(result: BulkLeadConversionResponse): void {
+    const { successCount, failureCount, errors } = result;
+
+    if (successCount > 0 && failureCount === 0) {
+      // All conversions successful
+      this.alertService.success(
+        `Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to client${successCount > 1 ? 's' : ''}`
+      );
+    } else if (successCount > 0 && failureCount > 0) {
+      // Partial success
+      this.alertService.warning(
+        `Converted ${successCount} lead${successCount > 1 ? 's' : ''} successfully. ${failureCount} failed.`
+      );
+
+      // Log detailed errors for debugging
+      if (errors && errors.length > 0) {
+        console.error('Conversion errors:', errors);
+
+        // Optionally show detailed error information
+        const errorDetails = errors.slice(0, 3).map(err =>
+          `${err.email}: ${err.reason}`
+        ).join('\n');
+
+        if (errors.length <= 3) {
+          this.alertService.error(`Conversion errors:\n${errorDetails}`);
+        } else {
+          this.alertService.error(
+            `Conversion errors:\n${errorDetails}\n... and ${errors.length - 3} more. Check console for details.`
+          );
+        }
+      }
+    } else {
+      // All conversions failed
+      this.alertService.error(
+        `Failed to convert ${failureCount} lead${failureCount > 1 ? 's' : ''}`
+      );
+
+      if (errors && errors.length > 0) {
+        console.error('All conversion errors:', errors);
+      }
+    }
   }
 }
