@@ -34,6 +34,20 @@ import {
 } from '../../models/team.model';
 import { TeamsService } from '../../services/teams.service';
 
+interface BrandDropdownItem {
+  id: string;
+  value: string;
+  description?: string;
+}
+
+interface BrandDropdownResponse {
+  items: BrandDropdownItem[];
+  totalCount: number;
+  pageIndex: number;
+  pageSize: number;
+  totalPages: number;
+}
+
 @Component({
   selector: 'app-team-creation-modal',
   standalone: true,
@@ -89,6 +103,130 @@ import { TeamsService } from '../../services/teams.service';
             </p>
           </div>
 
+          <!-- Brand Selection -->
+          <div class="relative">
+            <label
+              for="brandId"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Brand <span class="text-red-500">*</span>
+            </label>
+
+            <!-- Brand Dropdown Button -->
+            <button
+              type="button"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+              [class.border-red-500]="
+                teamForm.get('brandId')?.invalid &&
+                teamForm.get('brandId')?.touched
+              "
+              (click)="toggleBrandDropdown()"
+            >
+              <span class="truncate">{{ getSelectedBrandName() }}</span>
+              <svg
+                class="w-4 h-4 ml-2 transition-transform"
+                [class.rotate-180]="brandDropdownOpen"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+
+            <!-- Brand Dropdown Panel -->
+            <div
+              *ngIf="brandDropdownOpen"
+              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+            >
+              <!-- Search Input -->
+              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                <input
+                  #brandSearchInput
+                  type="text"
+                  placeholder="Search brands..."
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  (input)="onBrandSearch($event)"
+                  [value]="brandSearchTerm"
+                />
+              </div>
+
+              <!-- Brands List -->
+              <div
+                class="max-h-48 overflow-y-auto"
+                (scroll)="onBrandDropdownScroll($event)"
+              >
+                <div
+                  *ngFor="let brand of availableBrands"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  (click)="selectBrand(brand)"
+                >
+                  <div class="flex flex-col">
+                    <span class="font-medium">{{ brand.value }}</span>
+                    <span
+                      class="text-xs text-gray-500 dark:text-gray-400"
+                      *ngIf="brand.description"
+                    >
+                      {{ brand.description }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Loading indicator -->
+                <div
+                  *ngIf="brandLoading"
+                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  <svg
+                    class="animate-spin h-4 w-4 mx-auto"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </div>
+
+                <!-- No results -->
+                <div
+                  *ngIf="!brandLoading && availableBrands.length === 0"
+                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  No brands found
+                </div>
+              </div>
+            </div>
+
+            <!-- Validation Error -->
+            <p
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+              *ngIf="
+                teamForm.get('brandId')?.invalid &&
+                teamForm.get('brandId')?.touched
+              "
+            >
+              <span *ngIf="teamForm.get('brandId')?.errors?.['required']">
+                Brand selection is required
+              </span>
+            </p>
+          </div>
+
           <!-- Desk Selection -->
           <div class="relative">
             <label
@@ -106,6 +244,8 @@ import { TeamsService } from '../../services/teams.service';
                 teamForm.get('deskId')?.invalid &&
                 teamForm.get('deskId')?.touched
               "
+              [class.opacity-50]="!teamForm.get('brandId')?.value"
+              [disabled]="!teamForm.get('brandId')?.value"
               (click)="toggleDeskDropdown()"
             >
               <span class="truncate">{{ getSelectedDeskName() }}</span>
@@ -125,9 +265,17 @@ import { TeamsService } from '../../services/teams.service';
               </svg>
             </button>
 
+            <!-- Helper text -->
+            <p
+              class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+              *ngIf="!teamForm.get('brandId')?.value"
+            >
+              Please select a brand first to choose a desk
+            </p>
+
             <!-- Dropdown Panel -->
             <div
-              *ngIf="deskDropdownOpen"
+              *ngIf="deskDropdownOpen && teamForm.get('brandId')?.value"
               class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
             >
               <!-- Search Input -->
@@ -289,6 +437,8 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
   @ViewChild('deskSearchInput', { static: false })
   deskSearchInput!: ElementRef;
+  @ViewChild('brandSearchInput', { static: false })
+  brandSearchInput!: ElementRef;
 
   private fb = inject(FormBuilder);
   private teamsService = inject(TeamsService);
@@ -298,6 +448,16 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
   isSubmitting = false;
   teamForm: FormGroup;
   availableDesks: DeskDropdownItem[] = [];
+  availableBrands: BrandDropdownItem[] = [];
+
+  // Brand dropdown state
+  brandSearchTerm = '';
+  brandPageIndex = 0;
+  brandPageSize = 20;
+  brandTotalCount = 0;
+  brandLoading = false;
+  brandHasNextPage = false;
+  brandDropdownOpen = false;
 
   // Desk dropdown state
   deskSearchTerm = '';
@@ -318,15 +478,18 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
           Validators.maxLength(100),
         ],
       ],
+      brandId: ['', [Validators.required]],
       deskId: ['', [Validators.required]],
+      brandSearch: [''],
       deskSearch: [''],
       isActive: [true],
     });
   }
 
   ngOnInit(): void {
-    this.initializeSearchObservable();
-    this.loadInitialDesks();
+    this.initializeSearchObservables();
+    this.loadInitialBrands();
+    this.setupBrandWatcher();
   }
 
   ngOnDestroy(): void {
@@ -334,7 +497,22 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private initializeSearchObservable(): void {
+  private initializeSearchObservables(): void {
+    // Brand search
+    this.teamForm
+      .get('brandSearch')
+      ?.valueChanges.pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((searchTerm: string) => {
+        this.brandSearchTerm = searchTerm || '';
+        this.resetBrandDropdown();
+        this.loadBrands();
+      });
+
+    // Desk search
     this.teamForm
       .get('deskSearch')
       ?.valueChanges.pipe(
@@ -349,9 +527,29 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadInitialDesks(): void {
-    this.resetDeskDropdown();
-    this.loadDesks();
+  private setupBrandWatcher(): void {
+    this.teamForm
+      .get('brandId')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((brandId: string) => {
+        // Clear desk selection when brand changes
+        this.teamForm.patchValue({ deskId: '' });
+        this.resetDeskDropdown();
+        if (brandId) {
+          this.loadDesks();
+        }
+      });
+  }
+
+  private loadInitialBrands(): void {
+    this.resetBrandDropdown();
+    this.loadBrands();
+  }
+
+  private resetBrandDropdown(): void {
+    this.brandPageIndex = 0;
+    this.availableBrands = [];
+    this.brandHasNextPage = false;
   }
 
   private resetDeskDropdown(): void {
@@ -360,12 +558,58 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
     this.deskHasNextPage = false;
   }
 
+  private loadBrands(): void {
+    if (this.brandLoading) return;
+
+    this.brandLoading = true;
+    const request = {
+      pageIndex: this.brandPageIndex,
+      pageSize: this.brandPageSize,
+      sortField: 'name',
+      sortDirection: 'asc',
+      visibleColumns: ['array', 'null'],
+      globalFilter: this.brandSearchTerm,
+      filters: null,
+    };
+
+    this.teamsService
+      .getBrandsDropdown(request)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading brands:', error);
+          this.alertService.error('Failed to load brands');
+          return of({
+            items: [],
+            totalCount: 0,
+            pageIndex: 1,
+            pageSize: 20,
+            totalPages: 0,
+          });
+        })
+      )
+      .subscribe((response: BrandDropdownResponse) => {
+        if (this.brandPageIndex === 0) {
+          this.availableBrands = response.items;
+        } else {
+          this.availableBrands = [...this.availableBrands, ...response.items];
+        }
+
+        this.brandTotalCount = response.totalCount;
+        this.brandHasNextPage = response.pageIndex < response.totalPages;
+        this.brandLoading = false;
+      });
+  }
+
   private loadDesks(): void {
     if (this.deskLoading) return;
 
+    const selectedBrandId = this.teamForm.get('brandId')?.value;
+    if (!selectedBrandId) return;
+
     this.deskLoading = true;
     const request = {
-      officeId: null,
+      brandId: selectedBrandId,
       pageIndex: this.deskPageIndex,
       pageSize: this.deskPageSize,
       sortField: 'name',
@@ -404,6 +648,49 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Brand dropdown methods
+  onBrandDropdownScroll(event: any): void {
+    const element = event.target;
+    const threshold = 100;
+
+    if (
+      element.scrollTop + element.clientHeight >=
+      element.scrollHeight - threshold
+    ) {
+      this.loadMoreBrands();
+    }
+  }
+
+  private loadMoreBrands(): void {
+    if (this.brandHasNextPage && !this.brandLoading) {
+      this.brandPageIndex++;
+      this.loadBrands();
+    }
+  }
+
+  onBrandSearch(event: any): void {
+    const searchTerm = event.target.value;
+    this.teamForm.patchValue({ brandSearch: searchTerm });
+  }
+
+  toggleBrandDropdown(): void {
+    this.brandDropdownOpen = !this.brandDropdownOpen;
+  }
+
+  selectBrand(brand: BrandDropdownItem): void {
+    this.teamForm.patchValue({ brandId: brand.id });
+    this.brandDropdownOpen = false;
+  }
+
+  getSelectedBrandName(): string {
+    const selectedBrandId = this.teamForm.get('brandId')?.value;
+    const selectedBrand = this.availableBrands.find(
+      (brand) => brand.id === selectedBrandId
+    );
+    return selectedBrand ? selectedBrand.value : 'Select a brand';
+  }
+
+  // Desk dropdown methods
   onDeskDropdownScroll(event: any): void {
     const element = event.target;
     const threshold = 100;
@@ -429,7 +716,9 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
   }
 
   toggleDeskDropdown(): void {
-    this.deskDropdownOpen = !this.deskDropdownOpen;
+    if (this.teamForm.get('brandId')?.value) {
+      this.deskDropdownOpen = !this.deskDropdownOpen;
+    }
   }
 
   selectDesk(desk: DeskDropdownItem): void {
@@ -458,6 +747,7 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
 
     const teamData: TeamCreateRequest = {
       name: formValue.name.trim(),
+      brandId: formValue.brandId,
       deskId: formValue.deskId,
       isActive: formValue.isActive,
     };

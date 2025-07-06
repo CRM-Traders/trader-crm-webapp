@@ -10,6 +10,28 @@ import {
   LeadImportResponse,
 } from '../models/leads.model';
 
+// Add these interfaces for the conversion responses
+export interface LeadConversionResponse {
+  success: boolean;
+  clientId?: string;
+  message?: string;
+}
+
+export interface BulkLeadConversionResponse {
+  successCount: number;
+  failureCount: number;
+  convertedClientIds: string[];
+  errors: Array<{
+    leadId: string;
+    email: string;
+    reason: string;
+  }>;
+}
+
+export interface BulkConversionRequest {
+  leadIds: string[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -84,5 +106,27 @@ export class LeadsService {
 
   getActiveLeads(): Observable<any> {
     return this.httpService.get(`identity/api/users/get-active-users?role=7`);
+  }
+
+  /**
+   * Convert a single lead to client
+   */
+  convertLeadToClient(leadId: string): Observable<any> {
+    const request = { leadId };
+    return this.httpService.post<any>(
+      `${this.apiPath}/${leadId}/convert-to-client`,
+      request
+    );
+  }
+
+  /**
+   * Convert multiple leads to clients
+   */
+  convertLeadsToClients(leadIds: string[]): Observable<BulkLeadConversionResponse> {
+    const request: BulkConversionRequest = { leadIds };
+    return this.httpService.post<BulkLeadConversionResponse>(
+      'identity/convert-to-clients',
+      request
+    );
   }
 }

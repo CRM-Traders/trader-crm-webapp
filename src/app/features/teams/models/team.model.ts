@@ -16,6 +16,7 @@ export interface Team {
 
 export interface TeamCreateRequest {
   name: string;
+  brandId: string;
   deskId: string;
   isActive?: boolean;
 }
@@ -23,6 +24,7 @@ export interface TeamCreateRequest {
 export interface TeamUpdateRequest {
   id: string;
   name: string;
+  brandId: string;
   deskId: string;
   isActive: boolean;
 }

@@ -85,32 +85,12 @@
               </span>
             </ng-template>
 
-            <!-- Active Status Cell Template -->
-            <ng-template #activeCell let-value="value">
-              <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                [ngClass]="{
-                  'bg-green-100 text-green-800': value,
-                  'bg-gray-100 text-gray-800': !value
-                }"
-              >
-                <span
-                  class="w-2 h-2 rounded-full mr-1.5"
-                  [ngClass]="{
-                    'bg-green-500': value,
-                    'bg-gray-500': !value
-                  }"
-                ></span>
-                {{ value ? "Active" : "Inactive" }}
-              </span>
-            </ng-template>
-
             <!-- Operators Cell Template -->
-            <ng-template #operatorsCell let-value="value">
+            <ng-template #operatorsCell let-row="row">
               <span
                 class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700 text-sm font-medium"
               >
-                {{ value }}
+                {{ row.operators || 0 }}
               </span>
             </ng-template>
           </app-grid>
@@ -209,28 +189,6 @@
                       </span>
                     </dd>
                   </div>
-
-                  <div>
-                    <dt class="text-sm font-medium text-gray-500">Status</dt>
-                    <dd class="mt-1">
-                      <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                        [ngClass]="{
-                          'bg-green-100 text-green-800': selectedRule.isActive,
-                          'bg-gray-100 text-gray-800': !selectedRule.isActive
-                        }"
-                      >
-                        <span
-                          class="w-2 h-2 rounded-full mr-1.5"
-                          [ngClass]="{
-                            'bg-green-500': selectedRule.isActive,
-                            'bg-gray-500': !selectedRule.isActive
-                          }"
-                        ></span>
-                        {{ selectedRule.isActive ? "Active" : "Inactive" }}
-                      </span>
-                    </dd>
-                  </div>
                 </dl>
               </div>
 
@@ -243,21 +201,21 @@
                   <div>
                     <dt class="text-sm font-medium text-gray-500">Country</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                      {{ selectedRule.country || "All Countries" }}
+                      {{ getCountryDisplay(selectedRule.country) }}
                     </dd>
                   </div>
 
                   <div>
                     <dt class="text-sm font-medium text-gray-500">Language</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                      {{ selectedRule.language || "All Languages" }}
+                      {{ getLanguageDisplay(selectedRule.language) }}
                     </dd>
                   </div>
 
                   <div>
                     <dt class="text-sm font-medium text-gray-500">Partners</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                      {{ selectedRule.partners || "All Partners" }}
+                      {{ getPartnersDisplay(selectedRule.partners) }}
                     </dd>
                   </div>
 
@@ -266,14 +224,14 @@
                       Affiliate Referrals
                     </dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                      {{ selectedRule.affiliateReferrals || "All Affiliates" }}
+                      {{ getAffiliateReferralsDisplay(selectedRule.affiliateReferrals) }}
                     </dd>
                   </div>
 
                   <div>
                     <dt class="text-sm font-medium text-gray-500">Sources</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                      {{ selectedRule.sources || "All Sources" }}
+                      {{ getSourcesDisplay(selectedRule.sources) }}
                     </dd>
                   </div>
                 </dl>
@@ -477,21 +435,11 @@
   <!-- Delete Confirmation Modal -->
   <div
     *ngIf="showDeleteModal"
-    class="fixed bg-black/30 inset-0 overflow-y-auto z-50"
+    class="fixed bg-black/30 inset-0 overflow-y-auto z-60"
   >
     <div
-      class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+      class="flex items-end mt-[30vh] justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
     >
-      <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-        <div class="absolute inset-0 bg-black/30"></div>
-      </div>
-
-      <span
-        class="hidden sm:inline-block sm:align-middle sm:h-screen"
-        aria-hidden="true"
-        >&#8203;</span
-      >
-
       <div
         class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
       >
@@ -523,8 +471,7 @@
                   Are you sure you want to delete the rule "<strong>{{
                     ruleToDelete?.name
                   }}</strong
-                  >"? This action cannot be undone and will affect
-                  {{ ruleToDelete?.operatorsCount || 0 }} operator(s).
+                  >"? This action cannot be undone.
                 </p>
               </div>
             </div>

@@ -230,7 +230,7 @@ export class GridComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          this.data = response.items || [];
+          this.data = response.items || response || [];
 
           const newPagination = {
             pageIndex: response.pageIndex,

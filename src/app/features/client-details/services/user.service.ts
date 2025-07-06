@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
 import { HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Profile, UpdateProfileRequest } from '../models/profile';
 
 
 @Injectable({
@@ -19,4 +20,11 @@ export class UsersService {
     return this.httpService.get<any>(`${this.apiPath}/get-user-phone?userId=${id}`);
   }
 
+  getClient(id: string): Observable<Profile> {
+    return this.httpService.get<Profile>(`identity/api/clients/${id}`);
+  }
+
+  updateClient(id: string, clientData: UpdateProfileRequest): Observable<Profile> {
+    return this.httpService.put<Profile>(`identity/api/clients/${id}`, clientData);
+  }
 }

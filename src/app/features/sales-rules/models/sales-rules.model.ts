@@ -4,25 +4,21 @@ export interface SalesRule {
   id: string;
   name: string;
   category: RuleCategory;
-  categoryName: string;
   priority: RulePriority;
-  priorityName: string;
   type: RuleType;
-  typeName: string;
+  objectId: string;
   country: string;
   language: string;
-  operatorsCount: number;
-  isActive: boolean;
+  partners: string;
+  affiliateReferrals: string | null;
+  sources: string;
+  operators: SalesRuleOperator[];
   createdAt: string;
   updatedAt: string | null;
 }
 
 export interface SalesRuleDetails extends SalesRule {
-  objectId: string;
-  partners: string;
-  affiliateReferrals: string | null;
-  sources: string;
-  operators: SalesRuleOperator[];
+  // SalesRuleDetails now matches SalesRule exactly based on API response
 }
 
 export interface SalesRuleOperator {
@@ -42,6 +38,7 @@ export interface CreateSalesRuleRequest {
   language?: string;
   partners?: string;
   affiliateReferrals?: string;
+  operators?: any[];
   sources?: string;
 }
 

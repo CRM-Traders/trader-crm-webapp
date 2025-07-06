@@ -98,6 +98,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Operator) => row.branchTypeName || '-',
     },
     {
       field: 'branchName',
@@ -112,6 +113,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Operator) => row.userTypeName || '-',
     },
     {
       field: 'createdAt',
@@ -235,6 +237,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.showDeleteModal = false;
           this.operatorToDelete = null;
+          this.refreshGrid();
+          this.loadOperatorStatistics(); // Refresh statistics
         })
       )
       .subscribe((result) => {
@@ -287,6 +291,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         closable: true,
       }
     );
+    console.log(modalRef.result)
 
     modalRef.result.then(
       (result) => {
@@ -296,6 +301,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         }
       },
       () => {
+        this.refreshGrid();
+        this.loadOperatorStatistics(); // Refresh statistics
         // Modal dismissed
       }
     );

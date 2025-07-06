@@ -1,3 +1,5 @@
+// src/app/features/clients/services/clients.service.ts
+
 import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
 import { HttpHeaders } from '@angular/common/http';
@@ -10,6 +12,12 @@ import {
   ClientRegistrationResponse,
   ClientCreateForAffiliateRequest,
 } from '../models/clients.model';
+import {
+  ClientComment,
+  ClientCommentCreateRequest,
+  ClientCommentUpdateRequest,
+  ClientCommentsResponse,
+} from '../models/client-comments.model';
 
 @Injectable({
   providedIn: 'root',
@@ -52,6 +60,13 @@ export class ClientsService {
 
   deleteClient(id: string): Observable<void> {
     return this.httpService.delete<void>(`${this.apiPath}/${id}`);
+  }
+
+  updateClientStatus(clientId: string, saleStatus: number): Observable<void> {
+    return this.httpService.put<void>(`${this.apiPath}/update-client-status`, {
+      clientId,
+      saleStatus,
+    });
   }
 
   importClients(file: File): Observable<ClientImportResponse> {
@@ -118,6 +133,28 @@ export class ClientsService {
       queryParams.toString() ? '?' + queryParams.toString() : ''
     }`;
     return this.httpService.get<AffiliateSearchResponse>(url);
+  }
+
+  // Client Comments Methods
+  getClientComments(clientId: string): Observable<ClientComment> {
+    return this.httpService.get<ClientComment>(
+      `identity/api/clientcomments/client/${clientId}`
+    );
+  }
+
+  createClientComment(
+    body: ClientCommentCreateRequest
+  ): Observable<ClientComment> {
+    return this.httpService.post<ClientComment>(
+      `identity/api/clientcomments`,
+      body
+    );
+  }
+
+  deleteClientComment(commentId: string): Observable<void> {
+    return this.httpService.delete<void>(
+      `identity/api/clientcomments/${commentId}`
+    );
   }
 }
 

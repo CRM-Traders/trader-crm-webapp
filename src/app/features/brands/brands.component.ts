@@ -148,7 +148,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
     }
 
     const departmentsColumn = this.gridColumns.find(
-      (col) => col.field === 'departmentsCount'
+      (col) => col.field === 'desksCount'
     );
     if (departmentsColumn) {
       departmentsColumn.cellTemplate = this.departmentsCellTemplate;

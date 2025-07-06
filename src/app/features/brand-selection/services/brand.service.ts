@@ -38,8 +38,8 @@ export class BrandService {
       );
   }
 
-  setBrandId(selectedBrandId: string): Observable<SetBrandResponse> {
-    const body = { selectedBrandId };
+  setBrandId(selectedOfficeId: string): Observable<SetBrandResponse> {
+    const body = { selectedOfficeId };
 
     return this.http
       .post<SetBrandResponse>('identity/api/offices/set-office-id', body)

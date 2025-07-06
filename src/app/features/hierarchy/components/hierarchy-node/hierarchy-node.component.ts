@@ -103,12 +103,10 @@ import { HierarchyService } from '../../services/hierarchy.service';
                 {{ node.name }}
               </span>
 
-              <!-- Status Badge -->
               <span
-                *ngIf="node.type !== 'member'"
-                [class]="getStatusBadgeClasses()"
+                class="text-xs ms-7 text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/10 px-2 py-1 rounded-full"
               >
-                {{ node.isActive ? 'Active' : 'Inactive' }}
+                {{ getChildrenCount() }}
               </span>
 
               <!-- Role Badge for Members -->
@@ -120,17 +118,13 @@ import { HierarchyService } from '../../services/hierarchy.service';
               </span>
             </div>
 
-            <!-- Node Count Badge -->
-            <div
-              *ngIf="node.hasChildren"
-              class="ml-2 flex items-center space-x-2"
-            >
+                          <!-- Status Badge -->
               <span
-                class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/10 px-2 py-1 rounded-full"
+                *ngIf="node.type !== 'member'"
+                [class]="getStatusBadgeClasses()"
               >
-                {{ getChildrenCount() }}
+                {{ node.isActive ? 'Active' : 'Inactive' }}
               </span>
-            </div>
           </div>
 
           <!-- Secondary Info -->
@@ -298,6 +292,7 @@ export class HierarchyNodeComponent {
   getSecondaryInfo(): string {
     switch (this.node.type) {
       case 'office':
+        return  'Office';
       case 'brand':
         return this.node.data?.country || '';
       case 'desk':

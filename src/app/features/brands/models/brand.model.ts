@@ -6,6 +6,7 @@ export interface Brand {
   country: string;
   isActive: boolean;
   desksCount?: number;
+  officeId: string;
   officeName: string;
   createdAt: Date;
   createdBy: string;
@@ -24,6 +25,7 @@ export interface BrandUpdateRequest {
   id: string;
   name: string;
   country: string;
+  officeId: string;
   isActive: boolean;
 }
 
