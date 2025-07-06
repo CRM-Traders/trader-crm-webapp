@@ -1,6 +1,6 @@
 // src/app/features/clients/components/client-registration-modal/client-registration-modal.component.ts
 
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -9,7 +9,10 @@ import {
   Validators,
 } from '@angular/forms';
 import { AlertService } from '../../../../core/services/alert.service';
+import { CountryService } from '../../../../core/services/country.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
+import { Country } from '../../../../core/models/country.model';
 import {
   ClientCreateRequest,
   ClientRegistrationResponse,
@@ -20,7 +23,7 @@ import {
   AffiliateSearchParams,
   AffiliateSearchResponse,
 } from '../../services/clients.service';
-import { Observable, map } from 'rxjs';
+import { Observable, map, Subject, takeUntil } from 'rxjs';
 import {
   FilterableDropdownComponent,
   DropdownItem,
@@ -317,13 +320,19 @@ import {
               >
                 Country
               </label>
-              <input
-                type="text"
+              <select
                 id="country"
                 formControlName="country"
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="United States"
-              />
+              >
+                <option value="">Select country</option>
+                <option
+                  *ngFor="let country of countries"
+                  [value]="country.code"
+                >
+                  {{ country.name }}
+                </option>
+              </select>
             </div>
 
             <div>
@@ -333,13 +342,19 @@ import {
               >
                 Language
               </label>
-              <input
-                type="text"
+              <select
                 id="language"
                 formControlName="language"
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="English"
-              />
+              >
+                <option value="">Select language</option>
+                <option
+                  *ngFor="let language of languages"
+                  [value]="language.key"
+                >
+                  {{ language.value }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -436,17 +451,24 @@ import {
   `,
   styles: [],
 })
-export class ClientRegistrationModalComponent implements OnInit {
+export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
 
   private fb = inject(FormBuilder);
   private clientsService = inject(ClientsService);
   private alertService = inject(AlertService);
+  private countryService = inject(CountryService);
+  private languageService = inject(LanguageService);
+  private destroy$ = new Subject<void>();
 
   isSubmitting = false;
   registrationForm: FormGroup;
   generatedPassword: string | null = null;
   passwordCopied = false;
+
+  // Dropdown data
+  countries: Country[] = [];
+  languages: Array<{ key: string; value: string }> = [];
 
   // Affiliate search function for the filterable dropdown
   affiliateSearchFunction = (
@@ -487,7 +509,31 @@ export class ClientRegistrationModalComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Initialization is handled by the search function
+    this.loadCountries();
+    this.loadLanguages();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadCountries(): void {
+    this.countryService
+      .getCountries()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (countries) => {
+          this.countries = countries;
+        },
+        error: (error) => {
+          console.error('Failed to load countries:', error);
+        },
+      });
+  }
+
+  private loadLanguages(): void {
+    this.languages = this.languageService.getAllLanguages();
   }
 
   onSubmit() {
@@ -508,9 +554,9 @@ export class ClientRegistrationModalComponent implements OnInit {
       username: formValue.username,
       affiliateId: formValue.affiliateId,
       telephone: formValue.telephone || null,
-      country: formValue.country || null,
-      language: formValue.language || null,
-      dateOfBirth: new Date(formValue.dateOfBirth).toISOString() || null,
+      country: formValue.country || null, // This will now be the country code
+      language: formValue.language || null, // This will now be the language key
+      dateOfBirth: formValue.dateOfBirth ? new Date(formValue.dateOfBirth).toISOString() : null,
       source: formValue.source || null,
     };
 
@@ -584,5 +630,15 @@ export class ClientRegistrationModalComponent implements OnInit {
 
   onClose() {
     this.modalRef.close(true);
+  }
+
+  getCountryNameByCode(countryCode: string): string {
+    const country = this.countries.find(c => c.code === countryCode);
+    return country ? country.name : countryCode;
+  }
+
+  getLanguageNameByKey(languageKey: string): string {
+    const language = this.languages.find(l => l.key === languageKey);
+    return language ? language.value : languageKey;
   }
 }

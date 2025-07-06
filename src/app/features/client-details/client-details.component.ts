@@ -792,8 +792,8 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     { key: ClientDetailSection.Files, label: 'Files' },
     { key: ClientDetailSection.CallHistory, label: 'Call History' },
     { key: ClientDetailSection.Notes, label: 'Notes' },
-    { key: ClientDetailSection.Feed, label: 'Feed' },
-    { key: ClientDetailSection.Referrals, label: 'Referrals' },
+    // { key: ClientDetailSection.Feed, label: 'Feed' },
+    // { key: ClientDetailSection.Referrals, label: 'Referrals' },
   ];
 
   ngOnInit(): void {
@@ -804,7 +804,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this._service.getClientById(clientId!).subscribe((result: Client) => {
+    this._service.getClientById(clientId).subscribe((result: Client) => {
       this.client = result;
       console.log('Client loaded:', this.client, result);
       // Load pinned notes after client is loaded

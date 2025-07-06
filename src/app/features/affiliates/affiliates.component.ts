@@ -192,6 +192,7 @@ export class AffiliatesComponent implements OnInit {
     this.selectedAffiliate = affiliate;
     this.isEditing = false;
     this.editForm.patchValue({
+      id: affiliate.id,
       phone: affiliate.phone || '',
       website: affiliate.website || '',
     });
@@ -208,6 +209,7 @@ export class AffiliatesComponent implements OnInit {
     this.isEditing = false;
     if (this.selectedAffiliate) {
       this.editForm.patchValue({
+        id: this.selectedAffiliate.id,
         phone: this.selectedAffiliate.phone || '',
         website: this.selectedAffiliate.website || '',
       });
