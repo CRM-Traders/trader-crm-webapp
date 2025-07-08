@@ -41,6 +41,7 @@ import {
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { ClientRegistrationModalComponent } from './components/client-registration-modal/client-registration-modal.component';
 import { ClientCommentsModalComponent } from './components/client-comments-modal/client-comments-modal.component';
+import { PasswordChangeComponent, PasswordChangeData } from '../../shared/components/password-change/password-change.component';
 import { Router } from '@angular/router';
 import { CountryService } from '../../core/services/country.service';
 import { LanguageService } from '../../core/services/language.service';
@@ -622,6 +623,12 @@ export class ClientsComponent implements OnInit {
       action: (item: Client) => this.openClientDetailsModal(item),
     },
     {
+      id: 'password',
+      label: 'Change Password',
+      icon: 'password',
+      action: (item: Client) => this.openPasswordChangeModal(item),
+    },
+    {
       id: 'comments',
       label: 'Comments',
       icon: 'documents',
@@ -805,6 +812,32 @@ export class ClientsComponent implements OnInit {
     modalRef.result.then(
       (result) => {
         // Handle modal result if needed
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  openPasswordChangeModal(client: Client): void {
+    const passwordChangeData: PasswordChangeData = {
+      entityId: client.id,
+      entityType: 'client',
+      entityName: `${client.firstName} ${client.lastName}`
+    };
+
+    const modalRef = this.modalService.open(PasswordChangeComponent, {
+      size: 'md',
+      centered: true,
+      closable: true,
+    }, passwordChangeData);
+
+    modalRef.result.then(
+      (result) => {
+        // Handle successful password change
+        if (result) {
+          this.alertService.success('Password changed successfully');
+        }
       },
       () => {
         // Modal dismissed

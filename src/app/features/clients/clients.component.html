@@ -100,7 +100,7 @@
           <app-grid gridId="clients-grid" [endpoint]="'identity/api/clients/grid'" [columns]="gridColumns"
             [actions]="gridActions" [bulkActions]="gridBulkActions" [sortable]="true" [enableContextMenu]="true"
             [exportable]="true" [selectable]="true" [showColumnSelector]="true" [showFilters]="true"
-            emptyMessage="No clients found" (rowClick)="onRowClick($event)"
+            [showPagination]="true" [height]="'auto'" emptyMessage="No clients found" (rowClick)="onRowClick($event)"
             (selectionChange)="onSelectionChange($event)" (bulkActionExecuted)="onBulkActionExecuted($event)"
             (export)="onExport($event)" (refresh)="refreshGrid()">
 

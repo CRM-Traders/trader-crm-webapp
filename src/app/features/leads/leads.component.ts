@@ -14,6 +14,7 @@ import {
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
 import { ModalService } from '../../shared/services/modals/modal.service';
+import { PasswordChangeComponent, PasswordChangeData } from '../../shared/components/password-change/password-change.component';
 import { LeadRegistrationModalComponent } from './components/lead-registration-modal/lead-registration-modal.component';
 import { BulkLeadConversionResponse, LeadConversionResponse, LeadsService } from './services/leads.service';
 import {
@@ -349,6 +350,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
       label: 'Edit',
       icon: 'edit',
       action: (item: Lead) => this.startEdit(item),
+    },
+    {
+      id: 'password',
+      label: 'Change Password',
+      icon: 'password',
+      action: (item: Lead) => this.openPasswordChangeModal(item),
     },
     {
       id: 'delete',
@@ -734,6 +741,32 @@ export class LeadsComponent implements OnInit, OnDestroy {
       },
       {
         userId: user.id,
+      }
+    );
+  }
+
+  openPasswordChangeModal(lead: Lead): void {
+    const passwordChangeData: PasswordChangeData = {
+      entityId: lead.id,
+      entityType: 'lead',
+      entityName: `${lead.firstName} ${lead.lastName}`
+    };
+
+    const modalRef = this.modalService.open(PasswordChangeComponent, {
+      size: 'md',
+      centered: true,
+      closable: true,
+    }, passwordChangeData);
+
+    modalRef.result.then(
+      (result) => {
+        // Handle successful password change
+        if (result) {
+          this.alertService.success('Password changed successfully');
+        }
+      },
+      () => {
+        // Modal dismissed
       }
     );
   }

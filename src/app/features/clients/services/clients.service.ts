@@ -141,6 +141,22 @@ export class ClientsService {
     return this.httpService.get(`identity/api/users/get-active-users?role=6`);
   }
 
+  // TODO: Add password change method when API is ready
+  changePassword(request: { clientId: string; newPassword: string }): Observable<void> {
+    // Placeholder for when the API endpoint is available
+    // return this.httpService.put<void>(`${this.apiPath}/${request.clientId}/change-password`, {
+    //   newPassword: request.newPassword
+    // });
+    
+    // Temporary implementation
+    return new Observable(observer => {
+      setTimeout(() => {
+        observer.next();
+        observer.complete();
+      }, 1000);
+    });
+  }
+
   // Enhanced method to get affiliates with pagination and filtering
   getAffiliatesDropdown(
     params: AffiliateSearchParams = {}

@@ -26,6 +26,7 @@ import {
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
+import { PasswordChangeComponent, PasswordChangeData } from '../../shared/components/password-change/password-change.component';
 import {
   GridColumn,
   GridAction,
@@ -133,31 +134,37 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   ];
 
   gridActions: GridAction[] = [
-    // {
-    //   id: 'view',
-    //   label: 'View Details',
-    //   icon: 'view',
-    //   action: (item: Operator) => this.openOperatorDetailsModal(item),
-    // },
-    // {
-    //   id: 'edit',
-    //   label: 'Edit',
-    //   icon: 'edit',
-    //   action: (item: Operator) => this.openOperatorDetailsModal(item),
-    // },
-    // {
-    //   id: 'delete',
-    //   label: 'Delete',
-    //   icon: 'delete',
-    //   action: (item: Operator) => this.confirmDelete(item),
-    // },
-    // {
-    //   id: 'permissions',
-    //   label: 'Permissions',
-    //   icon: 'permission',
-    //   type: 'primary',
-    //   action: (item) => this.openPermissionDialog(item),
-    // },
+    {
+      id: 'view',
+      label: 'View Details',
+      icon: 'view',
+      action: (item: Operator) => this.openOperatorDetailsModal(item),
+    },
+    {
+      id: 'edit',
+      label: 'Edit',
+      icon: 'edit',
+      action: (item: Operator) => this.openOperatorDetailsModal(item),
+    },
+    {
+      id: 'password',
+      label: 'Change Password',
+      icon: 'password',
+      action: (item: Operator) => this.openPasswordChangeModal(item),
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      action: (item: Operator) => this.confirmDelete(item),
+    },
+    {
+      id: 'permissions',
+      label: 'Permissions',
+      icon: 'permission',
+      type: 'primary',
+      action: (item) => this.openPermissionDialog(item),
+    },
   ];
 
   constructor() {}
@@ -360,6 +367,32 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       },
       {
         userId: user.userId,
+      }
+    );
+  }
+
+  openPasswordChangeModal(operator: Operator): void {
+    const passwordChangeData: PasswordChangeData = {
+      entityId: operator.id,
+      entityType: 'operator',
+      entityName: operator.userFullName
+    };
+
+    const modalRef = this.modalService.open(PasswordChangeComponent, {
+      size: 'md',
+      centered: true,
+      closable: true,
+    }, passwordChangeData);
+
+    modalRef.result.then(
+      (result) => {
+        // Handle successful password change
+        if (result) {
+          this.alertService.success('Password changed successfully');
+        }
+      },
+      () => {
+        // Modal dismissed
       }
     );
   }
