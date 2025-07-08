@@ -477,8 +477,8 @@ interface BranchDropdownItem {
         </form>
 
         <!-- Note -->
-        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p class="text-sm text-blue-800 dark:text-blue-200">
+        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/5 rounded-lg">
+          <p class="text-sm text-blue-800 dark:text-blue-400">
             <strong>Note:</strong> You will be able to set additional
             departments in operator's profile once it's created
           </p>

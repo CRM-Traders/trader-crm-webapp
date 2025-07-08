@@ -49,6 +49,7 @@ import { OfficesService } from '../officies/services/offices.service';
 import { TeamsService } from '../teams/services/teams.service';
 import { DesksService } from '../desks/services/desks.service';
 import { OfficeRulesService } from '../officies/services/office-rules.service';
+import { AssignOperatorModalComponent } from './components/assign-operator-modal/assign-operator-modal.component';
 
 interface InlineCommentState {
   clientId: string;
@@ -597,19 +598,10 @@ export class ClientsComponent implements OnInit {
   gridBulkActions: GridAction[] = [
     {
       id: 'bulk-activate',
-      label: 'Activate Selected',
+      label: 'Assign to operator',
       icon: 'fas fa-check-circle',
       type: 'primary',
-      action: (items: Client[]) => this.bulkActivateClients(items),
-      visible: false,
-      disabled: false,
-    },
-    {
-      id: 'bulk-assign-affiliate',
-      label: 'Assign Affiliate',
-      icon: 'fas fa-user-tie',
-      type: 'primary',
-      action: (items: Client[]) => this.bulkAssignAffiliate(items),
+      action: (clients: Client[]) => this.assignClientsToOperators(clients),
       visible: false,
       disabled: false,
     },
@@ -737,7 +729,47 @@ export class ClientsComponent implements OnInit {
     });
   }
 
-  private bulkActivateClients(clients: Client[]): void { }
+  private assignClientsToOperators(clients: Client[]): void {
+    if (!clients || clients.length === 0) {
+      this.alertService.warning('No clients selected for assignment');
+      return;
+    }
+
+    // Check if any clients have investments (if that should prevent assignment)
+    const clientsWithInvestments = clients.filter(client => client.hasInvestments);
+    if (clientsWithInvestments.length > 0) {
+      // Optional: You can either warn or proceed - adjust based on business rules
+      console.log(`${clientsWithInvestments.length} clients have investments`);
+    }
+
+    // Open the assignment modal
+    const modalRef = this.modalService.open(AssignOperatorModalComponent, {
+      size: 'lg',
+      centered: true,
+      closable: true,
+    }, {
+      selectedClients: clients,
+      userType: 1
+    });
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          // Assignment was successful, refresh the grid and statistics
+          this.refreshGrid();
+          this.loadClientStatistics();
+
+          // Clear the selection after successful assignment
+          this.clearGridSelection();
+        }
+      },
+      () => {
+        // Modal was dismissed/cancelled - no action needed
+        console.log('Assignment modal was cancelled');
+      }
+    );
+  }
+
 
   private bulkAssignAffiliate(clients: Client[]): void { }
 
@@ -884,7 +916,12 @@ export class ClientsComponent implements OnInit {
       minute: '2-digit',
     });
   }
-
+  private clearGridSelection(): void {
+    // Emit event to clear grid selection
+    window.dispatchEvent(new CustomEvent('clearGridSelection', {
+      detail: { gridId: 'clients-grid' }
+    }));
+  }
   getInitials(name: string): string {
     return name
       .split(' ')
