@@ -93,7 +93,7 @@
           *ngIf="!action.separator && isActionVisible(action)"
           [disabled]="isActionDisabled(action)"
           (click)="executeAction(action, $event)"
-          class="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150"
+          class="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-200/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150"
           [ngClass]="{
             'text-gray-700 dark:text-gray-200':
               !isActionDisabled(action) && action.type !== 'danger',
