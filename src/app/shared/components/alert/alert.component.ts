@@ -105,6 +105,6 @@ export class AlertComponent implements OnInit, OnDestroy {
       'bottom-left': 'fixed bottom-4 left-4',
     };
 
-    return `${positions[this.position]} z-50 max-w-md`;
+    return `${positions[this.position]} alert-highest-z max-w-md`;
   }
 }
