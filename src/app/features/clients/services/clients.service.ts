@@ -3,7 +3,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
 import { HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import {
   Client,
   ClientCreateRequest,
@@ -18,6 +18,26 @@ import {
   ClientCommentUpdateRequest,
   ClientCommentsResponse,
 } from '../models/client-comments.model';
+import { OperatorDropdownItem } from '../../officies/models/office-rules.model';
+
+// Add new interfaces for the assignment
+export interface AssignClientsToOperatorRequest {
+  operatorId: string;
+  clientType: number;
+  entityIds: string[];
+  isActive: boolean;
+}
+
+export interface AssignClientsToOperatorResponse {
+  successCount: number;
+  failureCount: number;
+  message: string;
+}
+
+export enum ClientType {
+  Lead = 0,
+  Client = 1
+}
 
 @Injectable({
   providedIn: 'root',
@@ -67,6 +87,14 @@ export class ClientsService {
       clientId,
       saleStatus,
     });
+  }
+
+  // New method to assign clients to operator
+  assignClientsToOperator(request: AssignClientsToOperatorRequest): Observable<AssignClientsToOperatorResponse> {
+    return this.httpService.post<AssignClientsToOperatorResponse>(
+      'identity/api/operatorclient/assign-clients-to-operator',
+      request
+    );
   }
 
   importClients(file: File): Observable<ClientImportResponse> {
@@ -156,6 +184,37 @@ export class ClientsService {
       `identity/api/clientcomments/${commentId}`
     );
   }
+
+   // Get all available operators
+    getAvailableOperators(
+      pageIndex: number = 0,
+      pageSize: number = 100,
+      searchTerm: string = ''
+    ): Observable<OperatorDropdownItem[]> {
+      const request = {
+        pageIndex: pageIndex,
+        pageSize: pageSize,
+        sortField: '',
+        sortDirection: 'asc',
+        globalFilter: searchTerm,
+      };
+  
+      return this.httpService
+        .post<any>('identity/api/operators/dropdown', request)
+        .pipe(
+          map((response) => {
+            return response.items.map((operator: any) => ({
+              id: operator.id,
+              value: operator.value || operator.fullName,
+            }));
+          }),
+          catchError((error) => {
+            console.error('Error fetching operators:', error);
+            return of([]);
+          })
+        );
+    }
+  
 }
 
 // Enhanced interfaces for paginated affiliate search

@@ -1,4 +1,4 @@
-import { Component, inject, TemplateRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, TemplateRef, ViewChild, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import {
   FormBuilder,
@@ -32,6 +32,7 @@ import { CountryService } from '../../core/services/country.service';
 import { LanguageService } from '../../core/services/language.service';
 import { OperatorsService } from '../operators/services/operators.service';
 import { OfficeRulesService } from '../officies/services/office-rules.service';
+import { AssignOperatorModalComponent } from '../clients/components/assign-operator-modal/assign-operator-modal.component';
 
 @Component({
   selector: 'app-leads',
@@ -54,6 +55,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
   statusCellTemplate!: TemplateRef<any>;
   @ViewChild('investmentCell', { static: true })
   investmentCellTemplate!: TemplateRef<any>;
+
+  @Output() selectionChange = new EventEmitter<any[]>();
 
   selectedLead: Lead | null = null;
   editForm: FormGroup;
@@ -316,6 +319,15 @@ export class LeadsComponent implements OnInit, OnDestroy {
   gridBulkActions: GridAction[] = [
     {
       id: 'bulk-activate',
+      label: 'Assign lead(s) to Operator',
+      icon: 'fas fa-check-circle',
+      type: 'primary',
+      action: (leads: Lead[]) => this.assignClientsToOperators(leads),
+      visible: false,
+      disabled: false,
+    },
+    {
+      id: 'bulk-activate',
       label: 'Convert to Client(s)',
       icon: 'fas fa-check-circle',
       type: 'primary',
@@ -449,7 +461,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
         }),
         finalize(() => {
           this.loading = false;
-                    this.refreshSelectedClient();
+          this.refreshSelectedClient();
           this.refreshGrid();
         })
       )
@@ -460,8 +472,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
           this.refreshSelectedClient();
           this.refreshGrid();
         }
-          this.refreshSelectedClient();
-          this.refreshGrid();
+        this.refreshSelectedClient();
+        this.refreshGrid();
       });
   }
 
@@ -518,7 +530,48 @@ export class LeadsComponent implements OnInit, OnDestroy {
       input.value = '';
     }
   }
+  private assignClientsToOperators(leads: Lead[]): void {
+    if (!leads || leads.length === 0) {
+      this.alertService.warning('No leads selected for assignment');
+      return;
+    }
 
+    // Check if any leads have investments (if that should prevent assignment)
+    const clientsWithInvestments = leads.filter(client => client.hasInvestments);
+    if (clientsWithInvestments.length > 0) {
+      // Optional: You can either warn or proceed - adjust based on business rules
+      console.log(`${clientsWithInvestments.length} leads have investments`);
+    }
+
+    // Open the assignment modal
+    const modalRef = this.modalService.open(AssignOperatorModalComponent, {
+      size: 'lg',
+      centered: true,
+      closable: true,
+    }, {
+      selectedClients: leads,
+      userType: 0
+    });
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          // Assignment was successful, refresh the grid and statistics
+          this.refreshGrid();
+          this.refreshSelectedClient();
+          this.loadStatistics();
+          // Clear the selection after successful assignment
+          this.clearGridSelection();
+          this.selectionChange.emit([]);
+        }
+      },
+      () => {
+        // Modal was dismissed/cancelled - no action needed
+        console.log('Assignment modal was cancelled');
+      }
+    );
+   this.refreshGrid();
+  }
   private importFile(file: File): void {
     this.importLoading = true;
 
@@ -540,6 +593,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
           this.refreshGrid();
         }
       });
+  }
+  private clearGridSelection(): void {
+    // Emit event to clear grid selection
+    window.dispatchEvent(new CustomEvent('clearGridSelection', {
+      detail: { gridId: 'leads-grid' }
+    }));
   }
 
   onExport(options: any): void {
