@@ -158,7 +158,7 @@
                 <input
                   type="text"
                   [(ngModel)]="tradingSearchTerm"
-                  class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  class="block w-full !pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="Search orders..."
                 />
               </div>
@@ -187,7 +187,7 @@
 
         <!-- Trading Orders Table -->
         <div *ngIf="!loadingTradingHistory" class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-200/30">
             <thead class="bg-gray-50 dark:bg-gray-900/20">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order ID</th>

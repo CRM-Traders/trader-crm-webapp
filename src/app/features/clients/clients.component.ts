@@ -7,6 +7,7 @@ import {
   TemplateRef,
   inject,
   ElementRef,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -81,6 +82,7 @@ export class ClientsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
@@ -90,6 +92,10 @@ export class ClientsComponent implements OnInit {
   salesStatusCellTemplate!: TemplateRef<any>;
   @ViewChild('commentsCell', { static: true })
   commentsCellTemplate!: TemplateRef<any>;
+  @ViewChild('autoLoginCell', { static: true })
+  autoLoginCellTemplate!: TemplateRef<any>;
+  @ViewChild('latestCommentCell', { static: true })
+  latestCommentCellTemplate!: TemplateRef<any>;
 
   // Track which client is being updated
   updatingSalesStatus: string | null = null;
@@ -99,6 +105,9 @@ export class ClientsComponent implements OnInit {
   inlineCommentForm: FormGroup;
   isSubmittingInlineComment = false;
   inlineCommentState: InlineCommentState | null = null;
+
+  // Client comments cache to store latest comments for each client
+  clientCommentsCache: Map<string, ClientComment[]> = new Map();
 
   // Sales status options for dropdown
   salesStatusOptions: { value: number; label: string }[] = [];
@@ -363,6 +372,15 @@ export class ClientsComponent implements OnInit {
       cellTemplate: this.salesStatusCellTemplate, // Will be set in ngOnInit
       selector: (row: Client) => row // Return the entire row object
     },
+        {
+      field: 'latestComment',
+      header: 'Latest Comment',
+      sortable: false,
+      filterable: false,
+      width: '200px',
+      cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Client) => this.getLatestComment(row.id),
+    },
     {
       field: 'retentionStatus',
       header: 'Retention Status',
@@ -409,6 +427,7 @@ export class ClientsComponent implements OnInit {
       field: 'hasInvestments',
       header: 'Investments',
       sortable: true,
+      hidden: true,
       filterable: true,
       filterType: 'select',
       filterOptions: [
@@ -595,6 +614,15 @@ export class ClientsComponent implements OnInit {
       cellTemplate: null, // Will be set in ngOnInit
       hidden: true,
     },
+        // Auto Login Column (hidden by default, shown on selection)
+        {
+          field: 'autoLogin',
+          header: 'Login',
+          sortable: false,
+          filterable: false,
+          width: '20px',
+          cellTemplate: null, // Will be set in ngOnInit
+        },
   ];
 
   gridBulkActions: GridAction[] = [
@@ -728,6 +756,20 @@ export class ClientsComponent implements OnInit {
     if (salesStatusColumn) {
       salesStatusColumn.cellTemplate = this.salesStatusCellTemplate;
     }
+
+    const autoLoginColumn = this.gridColumns.find(
+      (col) => col.field === 'autoLogin'
+    );
+    if (autoLoginColumn) {
+      autoLoginColumn.cellTemplate = this.autoLoginCellTemplate;
+    }
+
+    const latestCommentColumn = this.gridColumns.find(
+      (col) => col.field === 'latestComment'
+    );
+    if (latestCommentColumn) {
+      latestCommentColumn.cellTemplate = this.latestCommentCellTemplate;
+    }
   }
 
   private loadClientStatistics(): void {
@@ -783,6 +825,11 @@ export class ClientsComponent implements OnInit {
 
   onBulkActionExecuted(event: { action: GridAction; items: any[] }): void {
     // Handle bulk action execution
+  }
+
+  onDataLoaded(clients: Client[]): void {
+    // Load comments for all displayed clients
+    this.loadCommentsForClients(clients);
   }
 
   onSelectionChange(selectedItems: any[]): void {
@@ -928,6 +975,10 @@ export class ClientsComponent implements OnInit {
       .subscribe({
         next: (newComment) => {
           this.alertService.success('Comment added successfully');
+          
+          // Refresh the comments cache for this client
+          this.refreshClientComments(this.inlineCommentState!.clientId);
+          
           this.closeInlineComment();
         },
         error: (error) => {
@@ -1120,6 +1171,9 @@ export class ClientsComponent implements OnInit {
   }
 
   refreshGrid(): void {
+    // Clear comments cache when refreshing grid
+    this.clearCommentsCache();
+    
     const gridComponent = document.querySelector(
       `app-grid[gridId="clients-grid"]`
     );
@@ -1147,6 +1201,12 @@ export class ClientsComponent implements OnInit {
         userId: user.id,
       }
     );
+  }
+
+  onAutoLogin(client: Client): void {
+    // TODO: Implement auto login functionality
+    console.log('Auto login for client:', client);
+    this.alertService.info('Auto login functionality will be implemented');
   }
 
   onSalesStatusChange(event: Event, clientData: Client | any): void {
@@ -1203,6 +1263,7 @@ export class ClientsComponent implements OnInit {
           // Refresh the grid to ensure data consistency
           this.refreshGrid();
           this.loadClientStatistics();
+          this.refreshClientComments(clientId); // Refresh comments after status change
         }
       });
   }
@@ -1380,5 +1441,93 @@ export class ClientsComponent implements OnInit {
     ];
 
     return Promise.resolve(timezones);
+  }
+
+  /**
+   * Get the latest comment for a client
+   */
+  getLatestComment(clientId: string): ClientComment | null {
+    const comments = this.clientCommentsCache.get(clientId);
+    if (!comments || comments.length === 0) {
+      return null;
+    }
+    
+    // Sort by creation date and return the latest
+    return comments.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0];
+  }
+
+  /**
+   * Load comments for a specific client
+   */
+  loadClientComments(clientId: string): void {
+    if (this.clientCommentsCache.has(clientId)) {
+      return; // Already loaded
+    }
+
+    this.clientsService.getClientComments(clientId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading comments for client:', clientId, error);
+          return of([]);
+        })
+      )
+      .subscribe((comments) => {
+        const commentArray = Array.isArray(comments) ? comments : [comments];
+        this.clientCommentsCache.set(clientId, commentArray);
+        
+        // Trigger change detection to update the grid
+        this.cdr.detectChanges();
+      });
+  }
+
+  /**
+   * Load comments for multiple clients
+   */
+  loadCommentsForClients(clients: Client[]): void {
+    const clientsToLoad = clients.filter(client => !this.clientCommentsCache.has(client.id));
+    
+    if (clientsToLoad.length === 0) {
+      return;
+    }
+
+    const commentRequests = clientsToLoad.map(client => 
+      this.clientsService.getClientComments(client.id).pipe(
+        catchError((error) => {
+          console.error('Error loading comments for client:', client.id, error);
+          return of([]);
+        })
+      )
+    );
+
+    forkJoin(commentRequests)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((results) => {
+        results.forEach((comments, index) => {
+          const clientId = clientsToLoad[index].id;
+          const commentArray = Array.isArray(comments) ? comments : [comments];
+          this.clientCommentsCache.set(clientId, commentArray);
+        });
+        
+        // Trigger change detection once after all comments are loaded
+        this.cdr.detectChanges();
+      });
+  }
+
+  /**
+   * Clear comments cache
+   */
+  clearCommentsCache(): void {
+    this.clientCommentsCache.clear();
+  }
+
+  /**
+   * Refresh comments for a specific client
+   */
+  refreshClientComments(clientId: string): void {
+    this.clientCommentsCache.delete(clientId);
+    this.loadClientComments(clientId);
   }
 }

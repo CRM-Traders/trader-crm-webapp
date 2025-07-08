@@ -102,7 +102,7 @@
             [exportable]="true" [selectable]="true" [showColumnSelector]="true" [showFilters]="true"
             [showPagination]="true" [height]="'auto'" emptyMessage="No clients found" (rowClick)="onRowClick($event)"
             (selectionChange)="onSelectionChange($event)" (bulkActionExecuted)="onBulkActionExecuted($event)"
-            (export)="onExport($event)" (refresh)="refreshGrid()">
+            (export)="onExport($event)" (refresh)="refreshGrid()" (dataLoaded)="onDataLoaded($event)">
 
             <!-- Custom Investment Cell Template -->
             <ng-template #investmentCell let-value="value">
@@ -133,6 +133,52 @@
               </span>
             </ng-template>
 
+            <!-- Auto Login Cell Template -->
+            <ng-template #autoLoginCell let-value="value" let-row="row">
+              <button
+                class="p-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                (click)="onAutoLogin(value || row)"
+                title="Auto Login"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </ng-template>
+
+            <!-- Latest Comment Cell Template -->
+            <ng-template #latestCommentCell let-value="value" let-row="row">
+              <div class="max-w-xs">
+                <div *ngIf="value; else noComment" class="text-xs">
+                  <div class="flex items-start justify-between mb-1">
+                    <div class="flex items-center space-x-1">
+                      <div class="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span class="text-[10px] font-medium text-blue-600">
+                          {{ getInitials(value.createdBy) }}
+                        </span>
+                      </div>
+                      <span class="font-medium text-gray-900 text-[10px]">{{ value.createdBy }}</span>
+                      <span *ngIf="value.isPinnedComment"
+                        class="px-1 py-0.5 text-[8px] bg-yellow-100 text-yellow-800 rounded">
+                        Pinned
+                      </span>
+                    </div>
+                    <span class="text-[10px] text-gray-500">{{ formatDate(value.createdAt) }}</span>
+                  </div>
+                  <p class="text-[10px] text-gray-700 font-medium mb-1 truncate" title="{{ value.pinnedData }}">
+                    {{ value.pinnedData }}
+                  </p>
+                  <p class="text-[10px] text-gray-600 line-clamp-2" title="{{ value.note }}">
+                    {{ value.note }}
+                  </p>
+                </div>
+                <ng-template #noComment>
+                  <div class="text-xs text-gray-400 italic">No comments</div>
+                </ng-template>
+              </div>
+            </ng-template>
+
             <!-- Sales Status Cell Template -->
             <ng-template #salesStatusCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">
@@ -159,7 +205,7 @@
                     <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor"
                       viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
+                </svg>
                   </button>
                 </div>
               </div>
@@ -204,7 +250,7 @@
 
         <!-- Comments List -->
         <div *ngIf="!inlineCommentState.isLoading && inlineCommentState.comments.length > 0" class="p-2">
-          <div *ngFor="let comment of inlineCommentState.comments" class="p-3 mb-2 bg-gray-50 rounded border text-sm">
+          <div *ngFor="let comment of inlineCommentState.comments" class="p-3 mb-2 bg-gray-50 rounded text-sm">
             <div class="flex items-start justify-between mb-2">
               <div class="flex items-center space-x-2">
                 <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
