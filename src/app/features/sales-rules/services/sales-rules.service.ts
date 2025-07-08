@@ -23,7 +23,7 @@ export class SalesRulesService {
 
   // Get all sales rules (grid endpoint)
   getSalesRules(): Observable<any> {
-    return this.httpService.get<any>(`${this.apiPath}/grid`);
+    return this.httpService.post<any>(`${this.apiPath}`, {});
   }
 
   // Get single sales rule details
@@ -91,7 +91,18 @@ export class SalesRulesService {
     id: string,
     request: Partial<CreateSalesRuleRequest>
   ): Observable<void> {
-    return this.httpService.put<void>(`${this.apiPath}/${id}`, request);
+    return this.httpService.put<void>(`identity/api/salerules/${id}`, request);
+  }
+
+  // Batch update operators for a rule
+  batchUpdateOperators(
+    ruleId: string,
+    operators: AddOperatorRequest[]
+  ): Observable<void> {
+    return this.httpService.post<void>(
+      `identity/api/salerules/${ruleId}/operators/batch`,
+      operators
+    );
   }
 
   // Toggle rule active status

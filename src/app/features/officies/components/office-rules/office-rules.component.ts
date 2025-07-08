@@ -23,6 +23,7 @@ import {
   OfficeRule,
   OfficeManager,
   RuleCategory,
+  RuleCategoryOption,
   RulePriority,
   RuleType,
   OperatorDropdownItem,
@@ -80,7 +81,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   ruleToDelete: OfficeRule | null = null;
   deletingRule = false;
 
-  categories: RuleCategory[] = [];
+  categories: RuleCategoryOption[] = [];
   priorities: RulePriority[] = [];
   types: RuleType[] = [];
   operators: OperatorDropdownItem[] = [];
@@ -102,15 +103,15 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       filterType: 'text',
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
-    {
-      field: 'category',
-      header: 'Category',
-      sortable: true,
-      filterable: true,
-      filterType: 'select',
-      filterOptions: [],
-      cellTemplate: null,
-    },
+    // {
+    //   field: 'category',
+    //   header: 'Category',
+    //   sortable: true,
+    //   filterable: true,
+    //   filterType: 'select',
+    //   filterOptions: [],
+    //   cellTemplate: null,
+    // },
     {
       field: 'priority',
       header: 'Priority',
@@ -152,6 +153,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       filterable: true,
       filterType: 'select',
       filterOptions: [],
+      hidden: true,
     },
     {
       field: 'operatorsCount',

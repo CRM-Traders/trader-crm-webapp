@@ -181,16 +181,16 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
   gridActions: GridAction[] = [
     {
       id: 'view',
-      label: 'View Details',
+      label: 'View',
       icon: 'view',
       action: (item: SalesRule) => this.viewRule(item),
     },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: SalesRule) => this.editRule(item),
-    },
+    // {
+    //   id: 'edit',
+    //   label: 'Edit',
+    //   icon: 'edit',
+    //   action: (item: SalesRule) => this.editRule(item),
+    // },
     {
       id: 'delete',
       label: 'Delete',
@@ -264,23 +264,25 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       });
   }
 
-  editRule(rule: SalesRule): void {
-    this.salesRulesService
-      .getSalesRuleById(rule.id)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          this.alertService.error('Failed to load rule details');
-          console.error('Error loading rule:', error);
-          return of(null);
-        })
-      )
-      .subscribe((ruleDetails) => {
-        if (ruleDetails) {
-          this.openFormModal(ruleDetails);
-        }
-      });
-  }
+  // editRule(rule: SalesRule): void {
+  //   this.loading = true;
+  //   this.salesRulesService
+  //     .getSalesRuleById(rule.id)
+  //     .pipe(
+  //       takeUntil(this.destroy$),
+  //       catchError((error) => {
+  //         this.alertService.error('Failed to load rule details');
+  //         console.error('Error loading rule:', error);
+  //         return of(null);
+  //       }),
+  //       finalize(() => this.loading = false)
+  //     )
+  //     .subscribe((ruleDetails) => {
+  //       if (ruleDetails) {
+  //         this.openFormModal(ruleDetails);
+  //       }
+  //     });
+  // }
 
   createRule(): void {
     this.openFormModal();
@@ -302,7 +304,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshGrid();
+          this.refreshData();
           if (this.selectedRule && this.selectedRule.id === result.id) {
             this.viewRule(result);
           }
@@ -349,122 +351,150 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
           if (this.selectedRule?.id === this.ruleToDelete?.id) {
             this.selectedRule = null;
           }
-          this.refreshGrid();
+          this.refreshData();
         }
       });
   }
 
   // Operator Management Methods
-  openAddOperatorModal(): void {
-    this.operatorForm.reset({ ratio: 100 });
-    this.showOperatorModal = true;
-    this.loadAvailableOperators();
-  }
+  // openAddOperatorModal(): void {
+  //   this.operatorForm.reset({ ratio: 100 });
+  //   this.showOperatorModal = true;
+  //   this.loadAvailableOperators();
+  // }
 
-  editOperatorRatio(operator: SalesRuleOperator): void {
-    this.selectedOperator = operator;
-    this.operatorForm.patchValue({
-      userId: operator.userId,
-      ratio: operator.ratio,
-    });
-    this.showOperatorModal = true;
-  }
+  // editOperatorRatio(operator: SalesRuleOperator): void {
+  //   this.selectedOperator = operator;
+  //   this.operatorForm.patchValue({
+  //     userId: operator.userId,
+  //     ratio: operator.ratio,
+  //   });
+  //   this.showOperatorModal = true;
+  //   // Don't load available operators when editing ratio
+  // }
 
-  private loadAvailableOperators(): void {
-    this.loadingOperators = true;
-    this.salesRulesService
-      .getOperatorsDropdown({ pageSize: 100 })
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          this.alertService.error('Failed to load operators');
-          console.error('Error loading operators:', error);
-          return of({ items: [] });
-        }),
-        finalize(() => (this.loadingOperators = false))
-      )
-      .subscribe((response) => {
-        this.availableOperators = response.items || [];
-      });
-  }
+  // private loadAvailableOperators(): void {
+  //   this.loadingOperators = true;
+  //   this.salesRulesService
+  //     .getOperatorsDropdown({ pageSize: 100 })
+  //     .pipe(
+  //       takeUntil(this.destroy$),
+  //       catchError((error) => {
+  //         this.alertService.error('Failed to load operators');
+  //         console.error('Error loading operators:', error);
+  //         return of({ items: [] });
+  //       }),
+  //       finalize(() => (this.loadingOperators = false))
+  //     )
+  //     .subscribe((response) => {
+  //       this.availableOperators = response.items || [];
+  //     });
+  // }
 
   saveOperator(): void {
-    if (this.operatorForm.invalid || !this.selectedRule) return;
+  //   if (this.operatorForm.invalid || !this.selectedRule) return;
 
-    const formValue = this.operatorForm.value;
+  //   const formValue = this.operatorForm.value;
 
-    if (this.selectedOperator) {
-      // Update existing operator ratio
-      this.salesRulesService
-        .updateOperatorRatio(
-          this.selectedRule.id,
-          this.selectedOperator.userId,
-          { ratio: formValue.ratio }
-        )
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError((error) => {
-            this.alertService.error('Failed to update operator ratio');
-            console.error('Error updating operator:', error);
-            return of(null);
-          })
-        )
-        .subscribe((result) => {
-          if (result !== null) {
-            this.alertService.success('Operator ratio updated successfully');
-            this.showOperatorModal = false;
-            this.selectedOperator = null;
-            this.viewRule(this.selectedRule!);
-          }
-        });
-    } else {
-      // Add new operator
-      this.salesRulesService
-        .addOperatorToRule(this.selectedRule.id, formValue)
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError((error) => {
-            this.alertService.error('Failed to add operator');
-            console.error('Error adding operator:', error);
-            return of(null);
-          })
-        )
-        .subscribe((result) => {
-          if (result !== null) {
-            this.alertService.success('Operator added successfully');
-            this.showOperatorModal = false;
-            this.viewRule(this.selectedRule!);
-          }
-        });
-    }
+  //   if (this.selectedOperator) {
+  //     // Update existing operator ratio
+  //     this.salesRulesService
+  //       .updateOperatorRatio(
+  //         this.selectedRule.id,
+  //         this.selectedOperator.userId,
+  //         { ratio: formValue.ratio }
+  //       )
+  //       .pipe(
+  //         takeUntil(this.destroy$),
+  //         catchError((error) => {
+  //           this.alertService.error('Failed to update operator ratio');
+  //           console.error('Error updating operator:', error);
+  //           return of(null);
+  //         })
+  //       )
+  //       .subscribe((result) => {
+  //         if (result !== null) {
+  //           this.alertService.success('Operator ratio updated successfully');
+  //           this.showOperatorModal = false;
+  //           this.selectedOperator = null;
+  //           this.viewRule(this.selectedRule!);
+  //         }
+  //       });
+  //   } else {
+  //     // Add new operator
+  //     this.salesRulesService
+  //       .addOperatorToRule(this.selectedRule.id, formValue)
+  //       .pipe(
+  //         takeUntil(this.destroy$),
+  //         catchError((error) => {
+  //           this.alertService.error('Failed to add operator');
+  //           console.error('Error adding operator:', error);
+  //           return of(null);
+  //         })
+  //       )
+  //       .subscribe((result) => {
+  //         if (result !== null) {
+  //           this.alertService.success('Operator added successfully');
+  //           this.showOperatorModal = false;
+  //           this.viewRule(this.selectedRule!);
+  //         }
+  //       });
+  //   }
   }
 
-  removeOperator(operator: SalesRuleOperator): void {
-    if (!this.selectedRule) return;
+  // Enhanced method to update multiple operators at once
+  // updateOperatorsBatch(operators: SalesRuleOperator[]): void {
+  //   if (!this.selectedRule) return;
 
-    if (
-      confirm(
-        `Are you sure you want to remove ${operator.operatorName} from this rule?`
-      )
-    ) {
-      this.salesRulesService
-        .removeOperatorFromRule(this.selectedRule.id, operator.userId)
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError((error) => {
-            this.alertService.error('Failed to remove operator');
-            console.error('Error removing operator:', error);
-            return of(null);
-          })
-        )
-        .subscribe((result) => {
-          if (result !== null) {
-            this.alertService.success('Operator removed successfully');
-            this.viewRule(this.selectedRule!);
-          }
-        });
-    }
-  }
+  //   const operatorRequests = operators.map(op => ({
+  //     userId: op.userId,
+  //     ratio: op.ratio
+  //   }));
+
+  //   this.salesRulesService
+  //     .batchUpdateOperators(this.selectedRule.id, operatorRequests)
+  //     .pipe(
+  //       takeUntil(this.destroy$),
+  //       catchError((error) => {
+  //         this.alertService.error('Failed to update operators');
+  //         console.error('Error updating operators:', error);
+  //         return of(null);
+  //       })
+  //     )
+  //     .subscribe((result) => {
+  //       if (result !== null) {
+  //         this.alertService.success('Operators updated successfully');
+  //         this.viewRule(this.selectedRule!);
+  //       }
+  //     });
+  // }
+
+  // removeOperator(operator: SalesRuleOperator): void {
+  //   if (!this.selectedRule) return;
+
+  //   if (
+  //     confirm(
+  //       `Are you sure you want to remove ${operator.operatorName} from this rule?`
+  //     )
+  //   ) {
+  //     this.salesRulesService
+  //       .removeOperatorFromRule(this.selectedRule.id, operator.userId)
+  //       .pipe(
+  //         takeUntil(this.destroy$),
+  //         catchError((error) => {
+  //           this.alertService.error('Failed to remove operator');
+  //           console.error('Error removing operator:', error);
+  //           return of(null);
+  //         })
+  //       )
+  //       .subscribe((result) => {
+  //         if (result !== null) {
+  //           this.alertService.success('Operator removed successfully');
+  //           this.viewRule(this.selectedRule!);
+  //         }
+  //       });
+  //   }
+  // }
 
   loadSalesRules(): void {
     this.loading = true;
@@ -504,6 +534,63 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       (gridComponent as any).refresh?.();
     }
   }
+
+  // Enhanced refresh method that also refreshes the selected rule details
+  refreshData(): void {
+    this.refreshGrid();
+    if (this.selectedRule) {
+      this.viewRule(this.selectedRule);
+    }
+  }
+
+  // Validate total operator ratio
+  validateOperatorRatios(): boolean {
+    if (!this.selectedRule || !this.selectedRule.operators) {
+      return true;
+    }
+    
+    const totalRatio = this.selectedRule.operators.reduce((sum, op) => sum + op.ratio, 0);
+    return Math.abs(totalRatio - 100) < 0.01; // Allow for small floating point differences
+  }
+
+  // Get total operator ratio for display
+  getTotalOperatorRatio(): number {
+    if (!this.selectedRule || !this.selectedRule.operators) {
+      return 0;
+    }
+    return this.selectedRule.operators.reduce((sum, op) => sum + op.ratio, 0);
+  }
+
+  // Auto-adjust operator ratios to equal 100%
+  // autoAdjustRatios(): void {
+  //   if (!this.selectedRule || !this.selectedRule.operators || this.selectedRule.operators.length === 0) {
+  //     return;
+  //   }
+
+  //   const operators = [...this.selectedRule.operators];
+  //   const count = operators.length;
+  //   const equalRatio = 100 / count;
+
+  //   // Set all but last to floor, last to remainder for exact 100
+  //   let total = 0;
+  //   for (let i = 0; i < count - 1; i++) {
+  //     operators[i].ratio = Math.floor(equalRatio * 1000000) / 1000000;
+  //     total += operators[i].ratio;
+  //   }
+  //   operators[count - 1].ratio = Math.round((100 - total) * 1000000) / 1000000;
+
+  //   // Update the operators using batch operation
+  //   this.updateOperatorsBatch(operators);
+  // }
+
+  // Save current operator ratios as they are
+  // saveCurrentRatios(): void {
+  //   if (!this.selectedRule || !this.selectedRule.operators) {
+  //     return;
+  //   }
+
+  //   this.updateOperatorsBatch(this.selectedRule.operators);
+  // }
 
   getRuleCategory(value: any) {
     return RuleCategoryLabels[value as RuleCategory];

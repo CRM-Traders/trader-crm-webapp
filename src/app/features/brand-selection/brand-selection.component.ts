@@ -27,7 +27,7 @@ import { BrandService } from './services/brand.service';
             Select Your Office
           </h1>
           <p class="text-lg text-gray-600 dark:text-gray-300">
-            Choose the brand you want to work with to continue to your dashboard
+            Choose the office you want to work with to continue to your dashboard
           </p>
         </div>
 
@@ -54,7 +54,7 @@ import { BrandService } from './services/brand.service';
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <p class="text-gray-600 dark:text-gray-300">Loading brands...</p>
+            <p class="text-gray-600 dark:text-gray-300">Loading offices...</p>
           </div>
         </div>
 
@@ -194,10 +194,10 @@ import { BrandService } from './services/brand.service';
             ></path>
           </svg>
           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
-            No brands available
+            No offices available
           </h3>
           <p class="text-gray-600 dark:text-gray-300 mb-4">
-            There are no brands assigned to your account. Please contact your
+            There are no offices assigned to your account. Please contact your
             administrator.
           </p>
           <button

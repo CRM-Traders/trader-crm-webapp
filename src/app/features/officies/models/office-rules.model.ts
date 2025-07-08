@@ -1,10 +1,18 @@
 // src/app/features/officies/models/office-rules.model.ts
 
+export enum RuleCategory {
+  Brand = 0,
+  Desk = 1,
+  Team = 2,
+  Sale = 3,
+  Retention = 4
+}
+
 export interface OfficeRule {
   id: string;
   name: string;
   category: number;
-  categoryName: string;
+  categoryName?: string;
   priority: number;
   priorityName: string;
   type: number;
@@ -49,6 +57,7 @@ export interface OfficeRuleCreateRequest {
   priority: number;
   type: number;
   objectId: string;
+  operators?: OfficeRuleOperator[] | null;
   country?: string;
   language?: string;
   partners?: string;
@@ -98,7 +107,7 @@ export interface OfficeRuleCreateResponse {
   ruleId: string;
 }
 
-export interface RuleCategory {
+export interface RuleCategoryOption {
   value: number;
   name: string;
 }

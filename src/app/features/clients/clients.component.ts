@@ -467,6 +467,7 @@ export class ClientsComponent implements OnInit {
       filterable: true,
       filterType: 'number',
       type: 'currency',
+      selector: (row: Client) => row.balance || '0',
     },
     {
       field: 'depositsCount',

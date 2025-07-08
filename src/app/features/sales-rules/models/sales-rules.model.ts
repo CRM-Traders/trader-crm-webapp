@@ -38,8 +38,12 @@ export interface CreateSalesRuleRequest {
   language?: string;
   partners?: string;
   affiliateReferrals?: string;
-  operators?: any[];
+  operators?: AddOperatorRequest[];
   sources?: string;
+}
+
+export interface UpdateSalesRuleRequest extends CreateSalesRuleRequest {
+  // Same as CreateSalesRuleRequest for now
 }
 
 export interface CreateSalesRuleResponse {

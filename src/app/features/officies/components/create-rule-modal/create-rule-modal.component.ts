@@ -21,6 +21,7 @@ import {
   OfficeRuleCreateRequest,
   OfficeRuleUpdateRequest,
   RuleCategory,
+  RuleCategoryOption,
   RulePriority,
   RuleType,
 } from '../../models/office-rules.model';
@@ -100,6 +101,43 @@ import { Country } from '../../../../core/models/country.model';
               >
                 <span *ngIf="ruleForm.get('ruleName')?.errors?.['required']"
                   >Rule name is required</span
+                >
+              </p>
+            </div>
+
+            <!-- Rule Category -->
+            <div>
+              <label
+                for="category"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Rule category <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="category"
+                formControlName="category"
+                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                [class.border-red-500]="
+                  ruleForm.get('category')?.invalid &&
+                  ruleForm.get('category')?.touched
+                "
+              >
+                <option value="">-- Select --</option>
+                <option [value]="RuleCategory.Brand">Brand</option>
+                <option [value]="RuleCategory.Desk">Desk</option>
+                <option [value]="RuleCategory.Team">Team</option>
+                <option [value]="RuleCategory.Sale">Sale</option>
+                <option [value]="RuleCategory.Retention">Retention</option>
+              </select>
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  ruleForm.get('category')?.invalid &&
+                  ruleForm.get('category')?.touched
+                "
+              >
+                <span *ngIf="ruleForm.get('category')?.errors?.['required']"
+                  >Category is required</span
                 >
               </p>
             </div>
@@ -384,10 +422,13 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
   @Input() officeId!: string;
   @Input() rule?: OfficeRule;
-  @Input() categories: RuleCategory[] = [];
+  @Input() categories: RuleCategoryOption[] = [];
   @Input() priorities: RulePriority[] = [];
   @Input() types: RuleType[] = [];
   @Input() isEditing = false;
+
+  // Make RuleCategory enum available in template
+  RuleCategory = RuleCategory;
 
   private fb = inject(FormBuilder);
   private officeRulesService = inject(OfficeRulesService);
@@ -406,6 +447,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   constructor() {
     this.ruleForm = this.fb.group({
       ruleName: ['', [Validators.required]],
+      category: ['', [Validators.required]],
       priority: ['', [Validators.required]],
       type: ['', [Validators.required]],
       country: [''],
@@ -447,6 +489,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
 
     this.ruleForm.patchValue({
       ruleName: this.rule.name,
+      category: this.rule.category,
       priority: this.rule.priority,
       type: this.rule.type,
       country: this.rule.country,
@@ -478,15 +521,16 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   private createRule(formValue: any): void {
     const request: OfficeRuleCreateRequest = {
       ruleName: formValue.ruleName.trim(),
-      category: 0,
+      category: parseInt(formValue.category),
       priority: parseInt(formValue.priority),
       type: parseInt(formValue.type),
       objectId: this.officeId,
-      country: formValue.country || undefined,
-      language: formValue.language || undefined,
-      partners: formValue.partners || undefined,
-      affiliateReferrals: formValue.affiliateReferrals || undefined,
-      sources: formValue.sources || undefined,
+      operators: null,
+      country: formValue.country || '',
+      language: formValue.language || '',
+      partners: formValue.partners || '',
+      affiliateReferrals: formValue.affiliateReferrals || '',
+      sources: formValue.sources || '',
     };
 
     this.officeRulesService
