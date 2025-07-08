@@ -435,4 +435,8 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   getClientSource(): string {
     return this.client?.source || 'Not specified';
   }
+
+  goBack(): void {
+    this.router.navigate(['/clients']);
+  }
 }

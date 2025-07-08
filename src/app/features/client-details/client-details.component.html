@@ -5,6 +5,15 @@
             <!-- Top Header -->
             <div class="sticky z-50 py-3 bg-white top-0 flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-4">
+                    <!-- Back Button -->
+                    <button type="button" (click)="goBack()"
+                        class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Back to Clients
+                    </button>
                     <div class="flex items-center space-x-2">
                         <div
                             class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
@@ -174,15 +183,15 @@
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-500 dark:text-gray-400">Phone:</span>
                                     <div class="flex items-center">
-                                      
-                                                {{ client.telephone || 'Not provided' }}
+
+                                        {{ client.telephone || 'Not provided' }}
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-gray-500 dark:text-gray-400">Email:</span>
                                     <div class="flex items-center">
-                                   
-                                                {{ client.email || 'Not provided' }}
+
+                                        {{ client.email || 'Not provided' }}
                                     </div>
                                 </div>
                                 <div class="flex justify-between">
