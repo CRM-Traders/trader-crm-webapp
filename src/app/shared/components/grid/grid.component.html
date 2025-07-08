@@ -305,6 +305,7 @@
 
               <ng-template #defaultActions>
                 <app-grid-action-buttons [actions]="actions" [item]="item" [maxPrimaryActions]="maxPrimaryActions"
+                  [isBottomRow]="pagedData.indexOf(item) >= pagedData.length - 2"
                   (actionExecuted)="onActionExecuted($event, item)"></app-grid-action-buttons>
               </ng-template>
             </td>

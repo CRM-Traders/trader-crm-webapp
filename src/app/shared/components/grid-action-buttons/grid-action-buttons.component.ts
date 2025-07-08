@@ -1,129 +1,75 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ElementRef, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { GridAction } from '../../models/grid/grid-column.model';
 
 @Component({
   selector: 'app-grid-action-buttons',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="flex items-center space-x-1">
-      <ng-container *ngFor="let action of primaryActions">
-        <button
-          *ngIf="isActionVisible(action)"
-          [disabled]="isActionDisabled(action)"
-          (click)="executeAction(action, $event)"
-          [title]="action.label"
-          class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-300/30 hover:bg-gray-300 dark:bg-white dark:hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          [ngClass]="{
-            'text-gray-700 dark:text-gray-200':
-              !isActionDisabled(action) && action.type !== 'danger',
-            'text-red-600 dark:text-red-400':
-              !isActionDisabled(action) && action.type === 'danger',
-            'text-green-600 dark:text-green-400':
-              !isActionDisabled(action) && action.type === 'success',
-            'text-blue-600 dark:text-blue-400':
-              !isActionDisabled(action) && action.type === 'primary',
-            'text-yellow-600 dark:text-yellow-400':
-              !isActionDisabled(action) && action.type === 'warning',
-            'border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20':
-              action.type === 'danger' && !isActionDisabled(action),
-            'border-green-300 dark:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20':
-              action.type === 'success' && !isActionDisabled(action),
-            'border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20':
-              action.type === 'primary' && !isActionDisabled(action),
-            'border-yellow-300 dark:border-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20':
-              action.type === 'warning' && !isActionDisabled(action)
-          }"
-        >
-          <img
-            *ngIf="action.icon"
-            [src]="getIconSvg(action.icon)"
-            class="w-4 h-4"
-            [alt]="action.label"
-          />
-        </button>
-      </ng-container>
-
-      <!-- More actions dropdown -->
-      <div *ngIf="secondaryActions.length > 0" class="relative inline-block">
-        <button
-          (click)="toggleDropdown($event)"
-          class="inline-flex items-center relative justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-300/30 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          [ngClass]="{ 'bg-gray-50 dark:bg-gray-600': isDropdownOpen }"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-            />
-          </svg>
-        </button>
-
-        <!-- Dropdown menu -->
-        <div
-          *ngIf="isDropdownOpen"
-          class="absolute right-0 -top-full -translate-y-3/5 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-50"
-        >
-          <ng-container *ngFor="let action of secondaryActions">
-            <hr
-              *ngIf="action.separator"
-              class="border-gray-200 dark:border-gray-600 my-1"
-            />
-            <button
-              *ngIf="!action.separator && isActionVisible(action)"
-              [disabled]="isActionDisabled(action)"
-              (click)="executeAction(action, $event)"
-              class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-300/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              [ngClass]="{
-                'text-gray-700 dark:text-gray-200':
-                  !isActionDisabled(action) && action.type !== 'danger',
-                'text-red-600 dark:text-red-400':
-                  !isActionDisabled(action) && action.type === 'danger',
-                'text-green-600 dark:text-green-400':
-                  !isActionDisabled(action) && action.type === 'success',
-                'text-blue-600 dark:text-blue-400':
-                  !isActionDisabled(action) && action.type === 'primary',
-                'text-yellow-600 dark:text-yellow-400':
-                  !isActionDisabled(action) && action.type === 'warning'
-              }"
-            >
-              <img
-                *ngIf="action.icon"
-                [src]="getIconSvg(action.icon)"
-                class="w-4 h-4 mr-2"
-                [alt]="action.label"
-              />
-              {{ action.label }}
-            </button>
-          </ng-container>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [
-    `
-      :host {
-        display: inline-block;
-      }
-    `,
-  ],
+  templateUrl: './grid-action-buttons.component.html',
+  styleUrls: ['./grid-action-buttons.component.scss'],
+  animations: [
+    trigger('dropdownAnimation', [
+      state('void', style({
+        opacity: 0,
+        transform: 'translateY(-8px) scale(0.95)'
+      })),
+      state('*', style({
+        opacity: 1,
+        transform: 'translateY(0) scale(1)'
+      })),
+      transition('void => *', [
+        animate('200ms ease-out')
+      ]),
+      transition('* => void', [
+        animate('150ms ease-in')
+      ])
+    ])
+  ]
 })
-export class GridActionButtonsComponent {
+export class GridActionButtonsComponent implements OnInit, OnDestroy {
   @Input() actions: GridAction[] = [];
   @Input() item: any = null;
   @Input() maxPrimaryActions = 2;
+  @Input() isBottomRow = false; // New input to detect bottom rows
 
   @Output() actionExecuted = new EventEmitter<GridAction>();
 
   isDropdownOpen = false;
+  dropdownPosition: 'bottom' | 'top' = 'bottom';
+
+  constructor(private elementRef: ElementRef) {}
+
+  ngOnInit(): void {
+    // Add global click listener for closing dropdown
+    document.addEventListener('click', this.handleGlobalClick.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    // Clean up global click listener
+    document.removeEventListener('click', this.handleGlobalClick.bind(this));
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.isDropdownOpen) {
+      this.closeDropdown();
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    if (this.isDropdownOpen) {
+      this.calculateDropdownPosition();
+    }
+  }
+
+  handleGlobalClick(event: Event): void {
+    if (this.isDropdownOpen && !this.elementRef.nativeElement.contains(event.target as Node)) {
+      this.closeDropdown();
+    }
+  }
 
   get primaryActions(): GridAction[] {
     return this.visibleActions.slice(0, this.maxPrimaryActions);
@@ -140,6 +86,14 @@ export class GridActionButtonsComponent {
   toggleDropdown(event: Event): void {
     event.stopPropagation();
     this.isDropdownOpen = !this.isDropdownOpen;
+    
+    if (this.isDropdownOpen) {
+      this.calculateDropdownPosition();
+    }
+  }
+
+  closeDropdown(): void {
+    this.isDropdownOpen = false;
   }
 
   executeAction(action: GridAction, event: Event): void {
@@ -147,7 +101,7 @@ export class GridActionButtonsComponent {
 
     if (!this.isActionDisabled(action)) {
       this.actionExecuted.emit(action);
-      this.isDropdownOpen = false;
+      this.closeDropdown();
     }
   }
 
@@ -178,5 +132,51 @@ export class GridActionButtonsComponent {
 
   getSpritePath(): string {
     return 'icons/sprite.svg';
+  }
+
+  trackByAction(index: number, action: GridAction): string {
+    return action.label || index.toString();
+  }
+
+  private calculateDropdownPosition(): void {
+    // Use setTimeout to ensure DOM is updated
+    setTimeout(() => {
+      const buttonElement = this.elementRef.nativeElement.querySelector('.dropdown-button');
+      const dropdownElement = this.elementRef.nativeElement.querySelector('.dropdown-menu');
+      
+      if (!buttonElement || !dropdownElement) return;
+
+      const buttonRect = buttonElement.getBoundingClientRect();
+      const dropdownHeight = dropdownElement.offsetHeight;
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Check available space
+      const spaceBelow = viewportHeight - buttonRect.bottom;
+      const spaceAbove = buttonRect.top;
+      const spaceRight = viewportWidth - buttonRect.right;
+      const spaceLeft = buttonRect.left;
+      
+      // Minimum space needed for dropdown
+      const minSpace = dropdownHeight + 16; // 16px buffer
+      
+      // For bottom rows, always position above
+      if (this.isBottomRow) {
+        this.dropdownPosition = 'top';
+      } else {
+        // Determine vertical position for other rows
+        if (spaceBelow < minSpace && spaceAbove > minSpace) {
+          this.dropdownPosition = 'top';
+        } else {
+          this.dropdownPosition = 'bottom';
+        }
+      }
+      
+      // Adjust horizontal position if needed (for edge cases)
+      if (spaceRight < 200) { // dropdown width is 192px (w-48)
+        dropdownElement.style.right = '0';
+        dropdownElement.style.left = 'auto';
+      }
+    }, 0);
   }
 }
