@@ -140,10 +140,10 @@ export interface BranchSearchParams {
 }
 
 export enum BranchType {
-  Office = 0,
+  Office = 3,
   Desk = 1,
   Team = 2,
-  Brand = 3,
+  Brand = 0,
 }
 
 export enum UserType {

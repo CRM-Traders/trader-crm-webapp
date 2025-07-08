@@ -14,9 +14,14 @@
   }
 }
 
-/* Increase the z-index to ensure alerts appear above other elements */
+/* Ensure alerts have the highest z-index to appear above all other elements */
+.alert-highest-z {
+  z-index: 2147483647; /* Maximum safe integer value for z-index */
+}
+
+/* Legacy z-index class for backwards compatibility */
 .z-50 {
-  z-index: 50;
+  z-index: 9999999999;
 }
 
 /* Ensure the alerts have proper spacing between them */

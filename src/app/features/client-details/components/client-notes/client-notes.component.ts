@@ -131,9 +131,6 @@ import { NoteCreationModalComponent } from './components/note-creation-modal/not
                   >
                     Created Date
                   </th>
-                  <th scope="col" class="relative px-6 py-3">
-                    <span class="sr-only">Actions</span>
-                  </th>
                 </tr>
               </thead>
               <tbody
