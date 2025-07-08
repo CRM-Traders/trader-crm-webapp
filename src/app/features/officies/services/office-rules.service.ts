@@ -12,6 +12,7 @@ import {
   OfficeRulesListRequest,
   OfficeRulesListResponse,
   RuleCategory,
+  RuleCategoryOption,
   RulePriority,
   RuleType,
   OfficeManager,
@@ -96,15 +97,17 @@ export class OfficeRulesService {
     return this.httpService.delete<void>(`${this.apiPath}/${id}`);
   }
 
-  getRuleCategories(): Observable<RuleCategory[]> {
+  getRuleCategories(): Observable<RuleCategoryOption[]> {
     return this.httpService
-      .get<RuleCategory[]>(`${this.apiPath}/categories`)
+      .get<RuleCategoryOption[]>(`${this.apiPath}/categories`)
       .pipe(
         catchError(() =>
           of([
-            { value: 0, name: 'Office' },
+            { value: 0, name: 'Brand' },
             { value: 1, name: 'Desk' },
             { value: 2, name: 'Team' },
+            { value: 3, name: 'Sale' },
+            { value: 4, name: 'Retention' },
           ])
         )
       );

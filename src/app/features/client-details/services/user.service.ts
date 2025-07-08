@@ -20,8 +20,8 @@ export class UsersService {
     return this.httpService.get<any>(`${this.apiPath}/get-user-phone?userId=${id}`);
   }
 
-  getClient(id: string): Observable<Profile> {
-    return this.httpService.get<Profile>(`identity/api/clients/${id}`);
+  getClient(id: string): Observable<any> {
+    return this.httpService.get<any>(`identity/api/clients/${id}`);
   }
 
   updateClient(id: string, clientData: UpdateProfileRequest): Observable<Profile> {

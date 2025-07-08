@@ -447,6 +447,17 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
       language: this.rule.language || '',
       sources: this.rule.sources || '',
     });
+
+    // Populate existing operators
+    if (this.rule.operators && this.rule.operators.length > 0) {
+      this.selectedOperators = this.rule.operators.map(op => ({
+        id: op.userId,
+        name: op.operatorName,
+        department: '', // Will be populated when loading operators
+        role: '', // Will be populated when loading operators
+        ratio: op.ratio
+      }));
+    }
   }
 
   // Operator dropdown methods
@@ -588,7 +599,7 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
     };
 
     if (this.rule) {
-      // Update existing rule
+      // Update existing rule - use batch operator update for better consistency
       this.salesRulesService.updateSalesRule(this.rule.id, request)
         .pipe(
           takeUntil(this.destroy$),
@@ -601,11 +612,31 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
         )
         .subscribe(result => {
           if (result !== null) {
-            this.alertService.success('Sales rule updated successfully!');
-            this.modalRef.close({
-              id: this.rule!.id,
-              ...request
-            });
+            // Update operators separately using batch operation
+            const operatorRequests = this.selectedOperators.map(op => ({
+              userId: op.id,
+              ratio: op.ratio
+            }));
+            
+            this.salesRulesService.batchUpdateOperators(this.rule!.id, operatorRequests)
+              .pipe(
+                takeUntil(this.destroy$),
+                catchError(error => {
+                  this.alertService.error('Rule updated but failed to update operators');
+                  console.error('Error updating operators:', error);
+                  return of(null);
+                })
+              )
+              .subscribe(operatorResult => {
+                if (operatorResult !== null) {
+                  this.alertService.success('Sales rule and operators updated successfully!');
+                }
+                this.modalRef.close({
+                  id: this.rule!.id,
+                  ...request,
+                  operators: operatorRequests
+                });
+              });
           }
         });
     } else {
