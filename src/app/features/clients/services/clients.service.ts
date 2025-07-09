@@ -36,7 +36,7 @@ export interface AssignClientsToOperatorResponse {
 
 export enum ClientType {
   Lead = 0,
-  Client = 1
+  Client = 1,
 }
 
 @Injectable({
@@ -90,7 +90,9 @@ export class ClientsService {
   }
 
   // New method to assign clients to operator
-  assignClientsToOperator(request: AssignClientsToOperatorRequest): Observable<AssignClientsToOperatorResponse> {
+  assignClientsToOperator(
+    request: AssignClientsToOperatorRequest
+  ): Observable<AssignClientsToOperatorResponse> {
     return this.httpService.post<AssignClientsToOperatorResponse>(
       'identity/api/operatorclient/assign-clients-to-operator',
       request
@@ -122,6 +124,12 @@ export class ClientsService {
     );
   }
 
+  autoLogin(clientId: string) {
+    return this.httpService.post(`identity/api/auth/admin/client/login`, {
+      clientId: clientId,
+    });
+  }
+
   exportClients(request: any): Observable<Blob> {
     const headers = new HttpHeaders({
       Accept: 'text/csv',
@@ -142,14 +150,17 @@ export class ClientsService {
   }
 
   // TODO: Add password change method when API is ready
-  changePassword(request: { clientId: string; newPassword: string }): Observable<void> {
+  changePassword(request: {
+    clientId: string;
+    newPassword: string;
+  }): Observable<void> {
     // Placeholder for when the API endpoint is available
     // return this.httpService.put<void>(`${this.apiPath}/${request.clientId}/change-password`, {
     //   newPassword: request.newPassword
     // });
-    
+
     // Temporary implementation
-    return new Observable(observer => {
+    return new Observable((observer) => {
       setTimeout(() => {
         observer.next();
         observer.complete();
@@ -201,36 +212,35 @@ export class ClientsService {
     );
   }
 
-   // Get all available operators
-    getAvailableOperators(
-      pageIndex: number = 0,
-      pageSize: number = 100,
-      searchTerm: string = ''
-    ): Observable<OperatorDropdownItem[]> {
-      const request = {
-        pageIndex: pageIndex,
-        pageSize: pageSize,
-        sortField: '',
-        sortDirection: 'asc',
-        globalFilter: searchTerm,
-      };
-  
-      return this.httpService
-        .post<any>('identity/api/operators/dropdown', request)
-        .pipe(
-          map((response) => {
-            return response.items.map((operator: any) => ({
-              id: operator.id,
-              value: operator.value || operator.fullName,
-            }));
-          }),
-          catchError((error) => {
-            console.error('Error fetching operators:', error);
-            return of([]);
-          })
-        );
-    }
-  
+  // Get all available operators
+  getAvailableOperators(
+    pageIndex: number = 0,
+    pageSize: number = 100,
+    searchTerm: string = ''
+  ): Observable<OperatorDropdownItem[]> {
+    const request = {
+      pageIndex: pageIndex,
+      pageSize: pageSize,
+      sortField: '',
+      sortDirection: 'asc',
+      globalFilter: searchTerm,
+    };
+
+    return this.httpService
+      .post<any>('identity/api/operators/dropdown', request)
+      .pipe(
+        map((response) => {
+          return response.items.map((operator: any) => ({
+            id: operator.id,
+            value: operator.value || operator.fullName,
+          }));
+        }),
+        catchError((error) => {
+          console.error('Error fetching operators:', error);
+          return of([]);
+        })
+      );
+  }
 }
 
 // Enhanced interfaces for paginated affiliate search

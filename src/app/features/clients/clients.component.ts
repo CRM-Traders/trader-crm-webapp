@@ -620,6 +620,7 @@ export class ClientsComponent implements OnInit {
       filterable: false,
       width: '20px',
       cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Client) => row,
     },
   ];
 
@@ -642,12 +643,12 @@ export class ClientsComponent implements OnInit {
       icon: 'view',
       action: (item: Client) => this.openClientDetailsModal(item),
     },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Client) => this.openClientDetailsModal(item),
-    },
+    // {
+    //   id: 'edit',
+    //   label: 'Edit',
+    //   icon: 'edit',
+    //   action: (item: Client) => this.openClientDetailsModal(item),
+    // },
     {
       id: 'password',
       label: 'Change Password',
@@ -1214,9 +1215,9 @@ export class ClientsComponent implements OnInit {
   }
 
   onAutoLogin(client: Client): void {
-    // TODO: Implement auto login functionality
-    console.log('Auto login for client:', client);
-    this.alertService.info('Auto login functionality will be implemented');
+    this.clientsService.autoLogin(client.id).subscribe((result: any) => {
+      window.location.href = `https://${result}`;
+    });
   }
 
   onSalesStatusChange(event: Event, clientData: Client | any): void {
