@@ -30,6 +30,10 @@ import {
   OperatorDepartment,
 } from '../../models/operators.model';
 import { Country } from '../../../../core/models/country.model';
+import {
+  PasswordChangeComponent,
+  PasswordChangeData,
+} from '../../../../shared/components/password-change/password-change.component';
 
 export enum OperatorDetailSection {
   Profile = 'profile',
@@ -1030,6 +1034,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   private operatorsService = inject(OperatorsService);
   private userService = inject(UsersService);
   private countryService = inject(CountryService);
+  private modalService = inject(ModalService);
 
   private destroy$ = new Subject<void>();
 
@@ -1221,7 +1226,37 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   changePassword(): void {
-    this.alertService.info('Change password functionality coming soon');
+    this.openPasswordChangeModal(this.operator);
+  }
+
+  openPasswordChangeModal(operator: Operator): void {
+    const passwordChangeData: PasswordChangeData = {
+      entityId: operator.id,
+      entityType: 'operator',
+      entityName: operator.userFullName,
+    };
+
+    const modalRef = this.modalService.open(
+      PasswordChangeComponent,
+      {
+        size: 'md',
+        centered: true,
+        closable: true,
+      },
+      passwordChangeData
+    );
+
+    modalRef.result.then(
+      (result) => {
+        // Handle successful password change
+        if (result) {
+          this.alertService.success('Password changed successfully');
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
   }
 
   refreshData(): void {

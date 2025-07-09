@@ -24,7 +24,7 @@ export class GridService {
     sort: undefined,
     pagination: {
       pageIndex: 0,
-      pageSize: 10,
+      pageSize: 50,
       totalItems: 0,
       totalPages: 0,
     },

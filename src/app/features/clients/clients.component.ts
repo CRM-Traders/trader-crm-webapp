@@ -42,7 +42,10 @@ import {
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { ClientRegistrationModalComponent } from './components/client-registration-modal/client-registration-modal.component';
 import { ClientCommentsModalComponent } from './components/client-comments-modal/client-comments-modal.component';
-import { PasswordChangeComponent, PasswordChangeData } from '../../shared/components/password-change/password-change.component';
+import {
+  PasswordChangeComponent,
+  PasswordChangeData,
+} from '../../shared/components/password-change/password-change.component';
 import { Router } from '@angular/router';
 import { CountryService } from '../../core/services/country.service';
 import { LanguageService } from '../../core/services/language.service';
@@ -76,8 +79,6 @@ export class ClientsComponent implements OnInit {
   private languageService = inject(LanguageService);
   private operatorsService = inject(OperatorsService);
   private officesService = inject(OfficesService);
-  private teamsService = inject(TeamsService);
-  private desksService = inject(DesksService);
   private officeRulesService = inject(OfficeRulesService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
@@ -97,19 +98,15 @@ export class ClientsComponent implements OnInit {
   @ViewChild('latestCommentCell', { static: true })
   latestCommentCellTemplate!: TemplateRef<any>;
 
-  // Track which client is being updated
   updatingSalesStatus: string | null = null;
 
-  // Inline comment functionality
   activeInlineCommentClientId: string | null = null;
   inlineCommentForm: FormGroup;
   isSubmittingInlineComment = false;
   inlineCommentState: InlineCommentState | null = null;
 
-  // Client comments cache to store latest comments for each client
   clientCommentsCache: Map<string, ClientComment[]> = new Map();
 
-  // Sales status options for dropdown
   salesStatusOptions: { value: number; label: string }[] = [];
   importLoading = false;
   showDeleteModal = false;
@@ -124,7 +121,6 @@ export class ClientsComponent implements OnInit {
   KycStatusLabels = KycStatusLabels;
 
   gridColumns: GridColumn[] = [
-    // Text Input Filters
     {
       field: 'firstName',
       header: 'First Name',
@@ -163,14 +159,14 @@ export class ClientsComponent implements OnInit {
       filterType: 'text',
       hidden: true,
     },
-    {
-      field: 'mtId',
-      header: 'MT ID',
-      sortable: true,
-      filterable: true,
-      filterType: 'text',
-      hidden: true,
-    },
+    // {
+    //   field: 'mtId',
+    //   header: 'MT ID',
+    //   sortable: true,
+    //   filterable: true,
+    //   filterType: 'text',
+    //   hidden: true,
+    // },
     {
       field: 'affiliateId',
       header: 'Affiliate ID',
@@ -179,14 +175,14 @@ export class ClientsComponent implements OnInit {
       filterType: 'text',
       hidden: true,
     },
-    {
-      field: 'referrerId',
-      header: 'Referrer ID',
-      sortable: true,
-      filterable: true,
-      filterType: 'text',
-      hidden: true,
-    },
+    // {
+    //   field: 'referrerId',
+    //   header: 'Referrer ID',
+    //   sortable: true,
+    //   filterable: true,
+    //   filterType: 'text',
+    //   hidden: true,
+    // },
     {
       field: 'source',
       header: 'Source',
@@ -206,7 +202,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [
         { value: 'online', label: 'Online' },
-        { value: 'offline', label: 'Offline' }
+        { value: 'offline', label: 'Offline' },
       ],
       hidden: true,
     },
@@ -276,49 +272,51 @@ export class ClientsComponent implements OnInit {
       selector: (row: Client) => row.affiliateName || '-',
       hidden: true,
     },
-    {
-      field: 'affiliateReferral',
-      header: 'Affiliate Referral',
-      sortable: true,
-      filterable: true,
-      filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
-      hidden: true,
-    },
-    {
-      field: 'affiliateFtd',
-      header: 'Affiliate FTD',
-      sortable: true,
-      filterable: true,
-      filterType: 'select',
-      filterOptions: [
-        { value: true, label: 'Yes' },
-        { value: false, label: 'No' }
-      ],
-      hidden: true,
-    },
-    {
-      field: 'isReferral',
-      header: 'Referral',
-      sortable: true,
-      filterable: true,
-      filterType: 'select',
-      filterOptions: [
-        { value: true, label: 'Yes' },
-        { value: false, label: 'No' }
-      ],
-      hidden: true,
-    },
+    // {
+    //   field: 'affiliateReferral',
+    //   header: 'Affiliate Referral',
+    //   sortable: true,
+    //   filterable: true,
+    //   filterType: 'select',
+    //   filterOptions: [], // Will be populated in ngOnInit
+    //   hidden: true,
+    // },
+    // {
+    //   field: 'affiliateFtd',
+    //   header: 'Affiliate FTD',
+    //   sortable: true,
+    //   filterable: true,
+    //   filterType: 'select',
+    //   filterOptions: [
+    //     { value: true, label: 'Yes' },
+    //     { value: false, label: 'No' },
+    //   ],
+    //   hidden: true,
+    // },
+    // {
+    //   field: 'isReferral',
+    //   header: 'Referral',
+    //   sortable: true,
+    //   filterable: true,
+    //   filterType: 'select',
+    //   filterOptions: [
+    //     { value: true, label: 'Yes' },
+    //     { value: false, label: 'No' },
+    //   ],
+    //   hidden: true,
+    // },
     {
       field: 'status',
       header: 'Profile Status',
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: Object.entries(ClientStatusLabels).map(([value, label]) => ({
-        value: Number(value),
-        label: label
-      })),
+      filterOptions: Object.entries(ClientStatusLabels).map(
+        ([value, label]) => ({
+          value: Number(value),
+          label: label,
+        })
+      ),
       cellTemplate: null, // Will be set in ngOnInit
       selector: (row: Client) =>
         ClientStatusLabels[row.status as ClientStatus] || '-',
@@ -331,7 +329,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: Object.entries(KycStatusLabels).map(([value, label]) => ({
         value: Number(value),
-        label: label
+        label: label,
       })),
       hidden: true,
     },
@@ -343,7 +341,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [
         { value: 'assigned', label: 'Assigned' },
-        { value: 'unassigned', label: 'Unassigned' }
+        { value: 'unassigned', label: 'Unassigned' },
       ],
       hidden: true,
     },
@@ -355,7 +353,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [
         { value: 'retention', label: 'Retention' },
-        { value: 'sales', label: 'Sales' }
+        { value: 'sales', label: 'Sales' },
       ],
       hidden: true,
     },
@@ -367,19 +365,19 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: Object.entries(KycStatusLabels).map(([value, label]) => ({
         value: Number(value),
-        label: label
+        label: label,
       })),
       cellTemplate: this.salesStatusCellTemplate, // Will be set in ngOnInit
-      selector: (row: Client) => row // Return the entire row object
+      selector: (row: Client) => row, // Return the entire row object
     },
-        {
+    {
       field: 'latestComment',
       header: 'Latest Comment',
       sortable: false,
       filterable: false,
       width: '200px',
       cellTemplate: null, // Will be set in ngOnInit
-      selector: (row: Client) => this.getLatestComment(row.id),
+      selector: (row: Client) => this.getLatestComment(row),
     },
     {
       field: 'retentionStatus',
@@ -389,7 +387,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: Object.entries(KycStatusLabels).map(([value, label]) => ({
         value: Number(value),
-        label: label
+        label: label,
       })),
       hidden: true,
     },
@@ -419,7 +417,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [
         { value: true, label: 'Accepted' },
-        { value: false, label: 'Not Accepted' }
+        { value: false, label: 'Not Accepted' },
       ],
       hidden: true,
     },
@@ -432,7 +430,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [
         { value: true, label: 'Yes' },
-        { value: false, label: 'No' }
+        { value: false, label: 'No' },
       ],
       cellTemplate: null, // Will be set in ngOnInit
     },
@@ -444,7 +442,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [
         { value: true, label: 'Yes' },
-        { value: false, label: 'No' }
+        { value: false, label: 'No' },
       ],
       hidden: true,
     },
@@ -474,7 +472,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [
         { value: true, label: 'Yes' },
-        { value: false, label: 'No' }
+        { value: false, label: 'No' },
       ],
       hidden: true,
     },
@@ -614,15 +612,15 @@ export class ClientsComponent implements OnInit {
       cellTemplate: null, // Will be set in ngOnInit
       hidden: true,
     },
-        // Auto Login Column (hidden by default, shown on selection)
-        {
-          field: 'autoLogin',
-          header: 'Login',
-          sortable: false,
-          filterable: false,
-          width: '20px',
-          cellTemplate: null, // Will be set in ngOnInit
-        },
+    // Auto Login Column (hidden by default, shown on selection)
+    {
+      field: 'autoLogin',
+      header: 'Login',
+      sortable: false,
+      filterable: false,
+      width: '20px',
+      cellTemplate: null, // Will be set in ngOnInit
+    },
   ];
 
   gridBulkActions: GridAction[] = [
@@ -663,20 +661,6 @@ export class ClientsComponent implements OnInit {
       type: 'secondary',
       action: (item: Client) => this.openClientCommentsModal(item),
     },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      disabled: (item: Client) => item.hasInvestments,
-      action: (item: Client) => this.confirmDelete(item),
-    },
-    {
-      id: 'permissions',
-      label: 'Permissions',
-      icon: 'permission',
-      type: 'primary',
-      action: (item) => this.openPermissionDialog(item),
-    },
   ];
 
   constructor() {
@@ -712,10 +696,12 @@ export class ClientsComponent implements OnInit {
     const target = event.target as HTMLElement;
     const inlineCommentBox = document.querySelector('.inline-comment-box');
 
-    if (this.inlineCommentState &&
+    if (
+      this.inlineCommentState &&
       inlineCommentBox &&
       !inlineCommentBox.contains(target) &&
-      !target.closest('.comment-icon-btn')) {
+      !target.closest('.comment-icon-btn')
+    ) {
       this.closeInlineComment();
     }
   }
@@ -786,21 +772,27 @@ export class ClientsComponent implements OnInit {
     }
 
     // Check if any clients have investments (if that should prevent assignment)
-    const clientsWithInvestments = clients.filter(client => client.hasInvestments);
+    const clientsWithInvestments = clients.filter(
+      (client) => client.hasInvestments
+    );
     if (clientsWithInvestments.length > 0) {
       // Optional: You can either warn or proceed - adjust based on business rules
       console.log(`${clientsWithInvestments.length} clients have investments`);
     }
 
     // Open the assignment modal
-    const modalRef = this.modalService.open(AssignOperatorModalComponent, {
-      size: 'lg',
-      centered: true,
-      closable: true,
-    }, {
-      selectedClients: clients,
-      userType: 1
-    });
+    const modalRef = this.modalService.open(
+      AssignOperatorModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        selectedClients: clients,
+        userType: 1,
+      }
+    );
 
     modalRef.result.then(
       (result) => {
@@ -820,8 +812,7 @@ export class ClientsComponent implements OnInit {
     );
   }
 
-
-  private bulkAssignAffiliate(clients: Client[]): void { }
+  private bulkAssignAffiliate(clients: Client[]): void {}
 
   onBulkActionExecuted(event: { action: GridAction; items: any[] }): void {
     // Handle bulk action execution
@@ -829,7 +820,7 @@ export class ClientsComponent implements OnInit {
 
   onDataLoaded(clients: Client[]): void {
     // Load comments for all displayed clients
-    this.loadCommentsForClients(clients);
+    //this.loadCommentsForClients(clients);
   }
 
   onSelectionChange(selectedItems: any[]): void {
@@ -848,13 +839,17 @@ export class ClientsComponent implements OnInit {
   }
 
   openClientCommentsModal(client: Client): void {
-    const modalRef = this.modalService.open(ClientCommentsModalComponent, {
-      size: 'xl',
-      centered: true,
-      closable: true,
-    }, {
-      client: client,
-    });
+    const modalRef = this.modalService.open(
+      ClientCommentsModalComponent,
+      {
+        size: 'xl',
+        centered: true,
+        closable: true,
+      },
+      {
+        client: client,
+      }
+    );
 
     modalRef.result.then(
       (result) => {
@@ -870,14 +865,18 @@ export class ClientsComponent implements OnInit {
     const passwordChangeData: PasswordChangeData = {
       entityId: client.id,
       entityType: 'client',
-      entityName: `${client.firstName} ${client.lastName}`
+      entityName: `${client.firstName} ${client.lastName}`,
     };
 
-    const modalRef = this.modalService.open(PasswordChangeComponent, {
-      size: 'md',
-      centered: true,
-      closable: true,
-    }, passwordChangeData);
+    const modalRef = this.modalService.open(
+      PasswordChangeComponent,
+      {
+        size: 'md',
+        centered: true,
+        closable: true,
+      },
+      passwordChangeData
+    );
 
     modalRef.result.then(
       (result) => {
@@ -893,7 +892,11 @@ export class ClientsComponent implements OnInit {
   }
 
   // Inline Comment Methods
-  openInlineComment(clientId: string, mode: 'view' | 'create', event: MouseEvent): void {
+  openInlineComment(
+    clientId: string,
+    mode: 'view' | 'create',
+    event: MouseEvent
+  ): void {
     event.stopPropagation();
 
     const target = event.target as HTMLElement;
@@ -904,10 +907,10 @@ export class ClientsComponent implements OnInit {
       mode,
       position: {
         top: rect.top + window.scrollY - 350, // Position above the icon
-        left: rect.left + window.scrollX - 150 // Adjust to center the box
+        left: rect.left + window.scrollX - 150, // Adjust to center the box
       },
       comments: [],
-      isLoading: false
+      isLoading: false,
     };
 
     if (mode === 'view') {
@@ -927,7 +930,8 @@ export class ClientsComponent implements OnInit {
 
     this.inlineCommentState.isLoading = true;
 
-    this.clientsService.getClientComments(clientId)
+    this.clientsService
+      .getClientComments(clientId)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -939,14 +943,16 @@ export class ClientsComponent implements OnInit {
       .subscribe({
         next: (response) => {
           if (this.inlineCommentState) {
-            this.inlineCommentState.comments = Array.isArray(response) ? response : [response];
+            this.inlineCommentState.comments = Array.isArray(response)
+              ? response
+              : [response];
           }
         },
         error: (error) => {
           this.alertService.error('Failed to load comments');
           console.error('Error loading comments:', error);
           this.closeInlineComment();
-        }
+        },
       });
   }
 
@@ -965,7 +971,8 @@ export class ClientsComponent implements OnInit {
       isPinnedComment: this.inlineCommentForm.value.isPinnedComment,
     };
 
-    this.clientsService.createClientComment(request)
+    this.clientsService
+      .createClientComment(request)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -975,16 +982,16 @@ export class ClientsComponent implements OnInit {
       .subscribe({
         next: (newComment) => {
           this.alertService.success('Comment added successfully');
-          
+
           // Refresh the comments cache for this client
           this.refreshClientComments(this.inlineCommentState!.clientId);
-          
+
           this.closeInlineComment();
         },
         error: (error) => {
           this.alertService.error('Failed to add comment');
           console.error('Error adding comment:', error);
-        }
+        },
       });
   }
 
@@ -1003,9 +1010,11 @@ export class ClientsComponent implements OnInit {
   }
   private clearGridSelection(): void {
     // Emit event to clear grid selection
-    window.dispatchEvent(new CustomEvent('clearGridSelection', {
-      detail: { gridId: 'clients-grid' }
-    }));
+    window.dispatchEvent(
+      new CustomEvent('clearGridSelection', {
+        detail: { gridId: 'clients-grid' },
+      })
+    );
   }
   getInitials(name: string): string {
     return name
@@ -1110,8 +1119,9 @@ export class ClientsComponent implements OnInit {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `clients_${new Date().toISOString().split('T')[0]
-            }.csv`;
+          link.download = `clients_${
+            new Date().toISOString().split('T')[0]
+          }.csv`;
           link.click();
           window.URL.revokeObjectURL(url);
           this.alertService.success('Export completed successfully');
@@ -1173,7 +1183,7 @@ export class ClientsComponent implements OnInit {
   refreshGrid(): void {
     // Clear comments cache when refreshing grid
     this.clearCommentsCache();
-    
+
     const gridComponent = document.querySelector(
       `app-grid[gridId="clients-grid"]`
     );
@@ -1220,7 +1230,9 @@ export class ClientsComponent implements OnInit {
     );
 
     if (!clientId) {
-      this.alertService.error('Unable to update sales status: Client data not found');
+      this.alertService.error(
+        'Unable to update sales status: Client data not found'
+      );
       return;
     }
 
@@ -1249,15 +1261,26 @@ export class ClientsComponent implements OnInit {
       .subscribe((result) => {
         if (result !== null) {
           // Update the client object with the new status if it's accessible
-          if (clientData?.row && typeof clientData.row === 'object' && 'salesStatus' in clientData.row) {
+          if (
+            clientData?.row &&
+            typeof clientData.row === 'object' &&
+            'salesStatus' in clientData.row
+          ) {
             clientData.row.salesStatus = newSalesStatus;
           }
-          if (clientData && typeof clientData === 'object' && 'salesStatus' in clientData && !clientData.row) {
+          if (
+            clientData &&
+            typeof clientData === 'object' &&
+            'salesStatus' in clientData &&
+            !clientData.row
+          ) {
             clientData.salesStatus = newSalesStatus;
           }
 
           this.alertService.success(
-            `Sales status updated to ${KycStatusLabels[newSalesStatus as KycStatus]}`
+            `Sales status updated to ${
+              KycStatusLabels[newSalesStatus as KycStatus]
+            }`
           );
 
           // Refresh the grid to ensure data consistency
@@ -1281,63 +1304,76 @@ export class ClientsComponent implements OnInit {
       teams: this.loadTeamsDropdown(),
       operators: this.loadOperatorsDropdown(),
       timezones: this.loadTimezones(),
-    }).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => {
-        console.error('Error loading filter options:', error);
-        return of({
-          countries: [],
-          languages: [],
-          offices: [],
-          desks: [],
-          teams: [],
-          operators: [],
-          timezones: [],
-        });
-      })
-    ).subscribe(({
-      countries,
-      languages,
-      offices,
-      desks,
-      teams,
-      operators,
-      timezones,
-    }) => {
-      // Update country filter options
-      this.updateColumnFilterOptions('country', countries.map(c => ({ value: c.code, label: c.name })));
-      this.updateColumnFilterOptions('passportCountry', countries.map(c => ({ value: c.code, label: c.name })));
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading filter options:', error);
+          return of({
+            countries: [],
+            languages: [],
+            offices: [],
+            desks: [],
+            teams: [],
+            operators: [],
+            timezones: [],
+          });
+        })
+      )
+      .subscribe(
+        ({
+          countries,
+          languages,
+          offices,
+          desks,
+          teams,
+          operators,
+          timezones,
+        }) => {
+          // Update country filter options
+          this.updateColumnFilterOptions(
+            'country',
+            countries.map((c) => ({ value: c.code, label: c.name }))
+          );
+          this.updateColumnFilterOptions(
+            'passportCountry',
+            countries.map((c) => ({ value: c.code, label: c.name }))
+          );
 
-      // Update language filter options
-      this.updateColumnFilterOptions('language', languages.map(l => ({ value: l.key, label: l.value })));
+          // Update language filter options
+          this.updateColumnFilterOptions(
+            'language',
+            languages.map((l) => ({ value: l.key, label: l.value }))
+          );
 
-      // Update office filter options
-      this.updateColumnFilterOptions('officeId', offices);
+          // Update office filter options
+          this.updateColumnFilterOptions('officeId', offices);
 
-      // Update desk filter options
-      this.updateColumnFilterOptions('deskId', desks);
+          // Update desk filter options
+          this.updateColumnFilterOptions('deskId', desks);
 
-      // Update team filter options
-      this.updateColumnFilterOptions('teamId', teams);
+          // Update team filter options
+          this.updateColumnFilterOptions('teamId', teams);
 
-      // Update operator filter options
-      this.updateColumnFilterOptions('operatorId', operators);
-      this.updateColumnFilterOptions('retentionOperatorId', operators);
-      this.updateColumnFilterOptions('salesOperatorId', operators);
+          // Update operator filter options
+          this.updateColumnFilterOptions('operatorId', operators);
+          this.updateColumnFilterOptions('retentionOperatorId', operators);
+          this.updateColumnFilterOptions('salesOperatorId', operators);
 
-      // Update timezone filter options
-      this.updateColumnFilterOptions('timezone', timezones);
+          // Update timezone filter options
+          this.updateColumnFilterOptions('timezone', timezones);
 
-      // Load affiliates separately as it might be a different endpoint
-      this.loadAffiliatesDropdown();
-    });
+          // Load affiliates separately as it might be a different endpoint
+          this.loadAffiliatesDropdown();
+        }
+      );
   }
 
   /**
    * Update filter options for a specific column
    */
   private updateColumnFilterOptions(field: string, options: any[]): void {
-    const column = this.gridColumns.find(col => col.field === field);
+    const column = this.gridColumns.find((col) => col.field === field);
     if (column) {
       column.filterOptions = options;
     }
@@ -1347,63 +1383,95 @@ export class ClientsComponent implements OnInit {
    * Load offices dropdown options
    */
   private loadOfficesDropdown() {
-    return this.officesService.getOfficeDropdown({
-      pageIndex: 0,
-      pageSize: 1000,
-      sortField: 'name',
-      sortDirection: 'asc'
-    }).pipe(
-      catchError(() => of({ items: [] })),
-      takeUntil(this.destroy$)
-    ).toPromise().then((response: any) =>
-      response?.items?.map((office: any) => ({ value: office.id, label: office.value })) || []
-    );
+    return this.officesService
+      .getOfficeDropdown({
+        pageIndex: 0,
+        pageSize: 1000,
+        sortField: 'name',
+        sortDirection: 'asc',
+      })
+      .pipe(
+        catchError(() => of({ items: [] })),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.items?.map((office: any) => ({
+            value: office.id,
+            label: office.value,
+          })) || []
+      );
   }
 
   /**
    * Load desks dropdown options
    */
   private loadDesksDropdown() {
-    return this.operatorsService.getDesksDropdown({
-      pageIndex: 0,
-      pageSize: 1000,
-      sortField: 'name',
-      sortDirection: 'asc'
-    }).pipe(
-      catchError(() => of({ items: [] })),
-      takeUntil(this.destroy$)
-    ).toPromise().then((response: any) =>
-      response?.items?.map((desk: any) => ({ value: desk.id, label: desk.value })) || []
-    );
+    return this.operatorsService
+      .getDesksDropdown({
+        pageIndex: 0,
+        pageSize: 1000,
+        sortField: 'name',
+        sortDirection: 'asc',
+      })
+      .pipe(
+        catchError(() => of({ items: [] })),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.items?.map((desk: any) => ({
+            value: desk.id,
+            label: desk.value,
+          })) || []
+      );
   }
 
   /**
    * Load teams dropdown options
    */
   private loadTeamsDropdown() {
-    return this.operatorsService.getTeamsDropdown({
-      pageIndex: 0,
-      pageSize: 1000,
-      sortField: 'name',
-      sortDirection: 'asc'
-    }).pipe(
-      catchError(() => of({ items: [] })),
-      takeUntil(this.destroy$)
-    ).toPromise().then((response: any) =>
-      response?.items?.map((team: any) => ({ value: team.id, label: team.value })) || []
-    );
+    return this.operatorsService
+      .getTeamsDropdown({
+        pageIndex: 0,
+        pageSize: 1000,
+        sortField: 'name',
+        sortDirection: 'asc',
+      })
+      .pipe(
+        catchError(() => of({ items: [] })),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.items?.map((team: any) => ({
+            value: team.id,
+            label: team.value,
+          })) || []
+      );
   }
 
   /**
    * Load operators dropdown options
    */
   private loadOperatorsDropdown() {
-    return this.officeRulesService.getAvailableOperators(0, 1000, '').pipe(
-      catchError(() => of([])),
-      takeUntil(this.destroy$)
-    ).toPromise().then((response: any) =>
-      response?.map((operator: any) => ({ value: operator.id, label: operator.value })) || []
-    );
+    return this.officeRulesService
+      .getAvailableOperators(0, 1000, '')
+      .pipe(
+        catchError(() => of([])),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.map((operator: any) => ({
+            value: operator.id,
+            label: operator.value,
+          })) || []
+      );
   }
 
   /**
@@ -1446,16 +1514,23 @@ export class ClientsComponent implements OnInit {
   /**
    * Get the latest comment for a client
    */
-  getLatestComment(clientId: string): ClientComment | null {
-    const comments = this.clientCommentsCache.get(clientId);
-    if (!comments || comments.length === 0) {
-      return null;
+  getLatestComment(client: Client): ClientComment | null {
+    if (client.lastComment) {
+      return {
+        id: client.lastComment.id,
+        commentId: client.lastComment.commentId,
+        note: client.lastComment.note,
+        isPinnedComment: client.lastComment.isPinnedComment,
+        clientId: client.id,
+        comment: client.lastComment.note,
+        createdBy: client.lastComment.createdBy,
+        createdById: client.lastComment.createdById,
+        createdAt: client.lastComment.createdAt,
+        pinnedData: client.lastComment.pinnedDate,
+      } as ClientComment;
     }
-    
-    // Sort by creation date and return the latest
-    return comments.sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )[0];
+
+    return null;
   }
 
   /**
@@ -1466,7 +1541,8 @@ export class ClientsComponent implements OnInit {
       return; // Already loaded
     }
 
-    this.clientsService.getClientComments(clientId)
+    this.clientsService
+      .getClientComments(clientId)
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
@@ -1477,7 +1553,7 @@ export class ClientsComponent implements OnInit {
       .subscribe((comments) => {
         const commentArray = Array.isArray(comments) ? comments : [comments];
         this.clientCommentsCache.set(clientId, commentArray);
-        
+
         // Trigger change detection to update the grid
         this.cdr.detectChanges();
       });
@@ -1487,13 +1563,15 @@ export class ClientsComponent implements OnInit {
    * Load comments for multiple clients
    */
   loadCommentsForClients(clients: Client[]): void {
-    const clientsToLoad = clients.filter(client => !this.clientCommentsCache.has(client.id));
-    
+    const clientsToLoad = clients.filter(
+      (client) => !this.clientCommentsCache.has(client.id)
+    );
+
     if (clientsToLoad.length === 0) {
       return;
     }
 
-    const commentRequests = clientsToLoad.map(client => 
+    const commentRequests = clientsToLoad.map((client) =>
       this.clientsService.getClientComments(client.id).pipe(
         catchError((error) => {
           console.error('Error loading comments for client:', client.id, error);
@@ -1510,7 +1588,7 @@ export class ClientsComponent implements OnInit {
           const commentArray = Array.isArray(comments) ? comments : [comments];
           this.clientCommentsCache.set(clientId, commentArray);
         });
-        
+
         // Trigger change detection once after all comments are loaded
         this.cdr.detectChanges();
       });

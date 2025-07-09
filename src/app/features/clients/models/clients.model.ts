@@ -31,6 +31,18 @@ export interface Client {
   lastLogin: string | null;
   lastCommunication: string | null;
   balance: number;
+  lastComment?: LastComment | null;
+}
+
+export interface LastComment {
+  id: string;
+  commentId: string;
+  note: string;
+  isPinnedComment: boolean;
+  pinnedDate: string;
+  createdAt: Date;
+  createdBy: string;
+  createdById: string;
 }
 
 export interface ClientCreateRequest {
@@ -129,7 +141,7 @@ export const ClientStatusColors: Record<ClientStatus, string> = {
   [ClientStatus.Disabled]: 'bg-gray-300 text-gray-500',
 };
 
-export enum KycStatus { 
+export enum KycStatus {
   Active = 0,
   Appointment24Hr = 1,
   BlackListCountry = 2,

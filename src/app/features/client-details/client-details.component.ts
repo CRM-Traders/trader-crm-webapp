@@ -80,7 +80,6 @@ export enum ClientDetailSection {
 export class ClientDetailsComponent implements OnInit, OnDestroy {
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
-  private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
   private _userService = inject(UsersService);
@@ -161,7 +160,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
         source: result.source,
         lastLogin: result.lastLogin,
         lastCommunication: result.lastCommunication,
-        balance: 0 // Not provided in API response, defaulting to 0
+        balance: 0, // Not provided in API response, defaulting to 0
       };
 
       console.log('Client loaded:', this.client, result);
@@ -261,15 +260,18 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     const domain = parts[1];
 
     // Mask username (show first 2 chars if longer than 4, otherwise show 1 char)
-    const maskedUsername = username.length > 4
-      ? username.substring(0, 2) + '*'.repeat(username.length - 2)
-      : username.substring(0, 1) + '*'.repeat(username.length - 1);
+    const maskedUsername =
+      username.length > 4
+        ? username.substring(0, 2) + '*'.repeat(username.length - 2)
+        : username.substring(0, 1) + '*'.repeat(username.length - 1);
 
     // Mask domain
     const domainParts = domain.split('.');
-    const maskedDomain = domainParts.map((part, index) =>
-      index === domainParts.length - 1 ? part : '*'.repeat(part.length)
-    ).join('.');
+    const maskedDomain = domainParts
+      .map((part, index) =>
+        index === domainParts.length - 1 ? part : '*'.repeat(part.length)
+      )
+      .join('.');
 
     return `${maskedUsername}@${maskedDomain}`;
   }
@@ -384,8 +386,9 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   }
 
   getInitials(firstName: string, lastName: string): string {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''
-      }`.toUpperCase();
+    return `${firstName?.charAt(0) || ''}${
+      lastName?.charAt(0) || ''
+    }`.toUpperCase();
   }
 
   getStatusLabel(status: number): string {
