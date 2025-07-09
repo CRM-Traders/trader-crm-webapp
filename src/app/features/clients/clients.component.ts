@@ -1216,7 +1216,7 @@ export class ClientsComponent implements OnInit {
 
   onAutoLogin(client: Client): void {
     this.clientsService.autoLogin(client.id).subscribe((result: any) => {
-      window.location.href = `https://${result}`;
+      window.location.href = `http://${result}`;
     });
   }
 
