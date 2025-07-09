@@ -120,7 +120,7 @@ export class GridComponent implements OnInit, OnDestroy {
 
   pagination: GridPagination = {
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 50,
     totalItems: 0,
     totalPages: 0,
   };
@@ -185,7 +185,7 @@ export class GridComponent implements OnInit, OnDestroy {
         }
       });
 
-    this.pagination.pageSize = 10;
+    this.pagination.pageSize = 50;
 
     if (this.endpoint) {
       this.fetchData();
@@ -311,9 +311,9 @@ export class GridComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.bulkActionExecuted.emit({ 
-      action, 
-      items: [...this.selectedItems] 
+    this.bulkActionExecuted.emit({
+      action,
+      items: [...this.selectedItems],
     });
 
     // Execute the action
@@ -364,12 +364,13 @@ export class GridComponent implements OnInit, OnDestroy {
 
   private updateSelectAllState(): void {
     const currentPageItems = this.pagedData;
-    const selectedItemsOnCurrentPage = this.selectedItems.filter(item => 
+    const selectedItemsOnCurrentPage = this.selectedItems.filter((item) =>
       currentPageItems.includes(item)
     );
-    
-    this.selectAll = currentPageItems.length > 0 && 
-                     selectedItemsOnCurrentPage.length === currentPageItems.length;
+
+    this.selectAll =
+      currentPageItems.length > 0 &&
+      selectedItemsOnCurrentPage.length === currentPageItems.length;
   }
 
   onGlobalFilterChange(event: Event): void {
