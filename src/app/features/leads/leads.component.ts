@@ -1,4 +1,13 @@
-import { Component, inject, TemplateRef, ViewChild, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  inject,
+  TemplateRef,
+  ViewChild,
+  OnInit,
+  OnDestroy,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import {
   FormBuilder,
@@ -14,9 +23,16 @@ import {
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
 import { ModalService } from '../../shared/services/modals/modal.service';
-import { PasswordChangeComponent, PasswordChangeData } from '../../shared/components/password-change/password-change.component';
+import {
+  PasswordChangeComponent,
+  PasswordChangeData,
+} from '../../shared/components/password-change/password-change.component';
 import { LeadRegistrationModalComponent } from './components/lead-registration-modal/lead-registration-modal.component';
-import { BulkLeadConversionResponse, LeadConversionResponse, LeadsService } from './services/leads.service';
+import {
+  BulkLeadConversionResponse,
+  LeadConversionResponse,
+  LeadsService,
+} from './services/leads.service';
 import {
   KycStatus,
   KycStatusLabels,
@@ -28,7 +44,11 @@ import {
 } from './models/leads.model';
 import { CommonModule } from '@angular/common';
 import { GridComponent } from '../../shared/components/grid/grid.component';
-import { Client, ClientStatus, ClientStatusLabels } from '../clients/models/clients.model';
+import {
+  Client,
+  ClientStatus,
+  ClientStatusLabels,
+} from '../clients/models/clients.model';
 import { CountryService } from '../../core/services/country.service';
 import { LanguageService } from '../../core/services/language.service';
 import { OperatorsService } from '../operators/services/operators.service';
@@ -186,7 +206,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       filterType: 'select',
       filterOptions: Object.entries(KycStatusLabels).map(([value, label]) => ({
         value: Number(value),
-        label: label
+        label: label,
       })),
       cellTemplate: null,
       selector: (row: KycStatus) => {
@@ -206,7 +226,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
           default:
             return 'Unknown';
         }
-      }
+      },
     },
     {
       field: 'status',
@@ -216,7 +236,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       filterType: 'select',
       filterOptions: Object.entries(LeadStatusLabels).map(([value, label]) => ({
         value: Number(value),
-        label: label
+        label: label,
       })),
       cellTemplate: null, // Will be set in ngOnInit
       selector: (row: Client) =>
@@ -230,7 +250,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       filterType: 'select',
       filterOptions: [
         { value: true, label: 'Yes' },
-        { value: false, label: 'No' }
+        { value: false, label: 'No' },
       ],
       hidden: true,
     },
@@ -351,26 +371,26 @@ export class LeadsComponent implements OnInit, OnDestroy {
       icon: 'edit',
       action: (item: Lead) => this.startEdit(item),
     },
-    {
-      id: 'password',
-      label: 'Change Password',
-      icon: 'password',
-      action: (item: Lead) => this.openPasswordChangeModal(item),
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      disabled: (item: Lead) => item.hasInvestments,
-      action: (item: Lead) => this.confirmDelete(item),
-    },
-    {
-      id: 'permissions',
-      label: 'Permissions',
-      icon: 'permission',
-      type: 'primary',
-      action: (item) => this.openPermissionDialog(item),
-    },
+    // {
+    //   id: 'password',
+    //   label: 'Change Password',
+    //   icon: 'password',
+    //   action: (item: Lead) => this.openPasswordChangeModal(item),
+    // },
+    // {
+    //   id: 'delete',
+    //   label: 'Delete',
+    //   icon: 'delete',
+    //   disabled: (item: Lead) => item.hasInvestments,
+    //   action: (item: Lead) => this.confirmDelete(item),
+    // },
+    // {
+    //   id: 'permissions',
+    //   label: 'Permissions',
+    //   icon: 'permission',
+    //   type: 'primary',
+    //   action: (item) => this.openPermissionDialog(item),
+    // },
   ];
 
   constructor() {
@@ -544,21 +564,27 @@ export class LeadsComponent implements OnInit, OnDestroy {
     }
 
     // Check if any leads have investments (if that should prevent assignment)
-    const clientsWithInvestments = leads.filter(client => client.hasInvestments);
+    const clientsWithInvestments = leads.filter(
+      (client) => client.hasInvestments
+    );
     if (clientsWithInvestments.length > 0) {
       // Optional: You can either warn or proceed - adjust based on business rules
       console.log(`${clientsWithInvestments.length} leads have investments`);
     }
 
     // Open the assignment modal
-    const modalRef = this.modalService.open(AssignOperatorModalComponent, {
-      size: 'lg',
-      centered: true,
-      closable: true,
-    }, {
-      selectedClients: leads,
-      userType: 0
-    });
+    const modalRef = this.modalService.open(
+      AssignOperatorModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        selectedClients: leads,
+        userType: 0,
+      }
+    );
 
     modalRef.result.then(
       (result) => {
@@ -577,7 +603,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
         console.log('Assignment modal was cancelled');
       }
     );
-   this.refreshGrid();
+    this.refreshGrid();
   }
   private importFile(file: File): void {
     this.importLoading = true;
@@ -603,9 +629,11 @@ export class LeadsComponent implements OnInit, OnDestroy {
   }
   private clearGridSelection(): void {
     // Emit event to clear grid selection
-    window.dispatchEvent(new CustomEvent('clearGridSelection', {
-      detail: { gridId: 'leads-grid' }
-    }));
+    window.dispatchEvent(
+      new CustomEvent('clearGridSelection', {
+        detail: { gridId: 'leads-grid' },
+      })
+    );
   }
 
   onExport(options: any): void {
@@ -749,14 +777,18 @@ export class LeadsComponent implements OnInit, OnDestroy {
     const passwordChangeData: PasswordChangeData = {
       entityId: lead.id,
       entityType: 'lead',
-      entityName: `${lead.firstName} ${lead.lastName}`
+      entityName: `${lead.firstName} ${lead.lastName}`,
     };
 
-    const modalRef = this.modalService.open(PasswordChangeComponent, {
-      size: 'md',
-      centered: true,
-      closable: true,
-    }, passwordChangeData);
+    const modalRef = this.modalService.open(
+      PasswordChangeComponent,
+      {
+        size: 'md',
+        centered: true,
+        closable: true,
+      },
+      passwordChangeData
+    );
 
     modalRef.result.then(
       (result) => {
@@ -800,52 +832,55 @@ export class LeadsComponent implements OnInit, OnDestroy {
       teams: this.loadTeamsDropdown(),
       salesAgents: this.loadSalesAgentsDropdown(),
       timezones: this.loadTimezones(),
-    }).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => {
-        console.error('Error loading filter options:', error);
-        return of({
-          countries: [],
-          languages: [],
-          desks: [],
-          teams: [],
-          salesAgents: [],
-          timezones: [],
-        });
-      })
-    ).subscribe(({
-      countries,
-      languages,
-      desks,
-      teams,
-      salesAgents,
-      timezones,
-    }) => {
-      // Update country filter options
-      this.updateColumnFilterOptions('country', countries.map(c => ({ value: c.code, label: c.name })));
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading filter options:', error);
+          return of({
+            countries: [],
+            languages: [],
+            desks: [],
+            teams: [],
+            salesAgents: [],
+            timezones: [],
+          });
+        })
+      )
+      .subscribe(
+        ({ countries, languages, desks, teams, salesAgents, timezones }) => {
+          // Update country filter options
+          this.updateColumnFilterOptions(
+            'country',
+            countries.map((c) => ({ value: c.code, label: c.name }))
+          );
 
-      // Update language filter options
-      this.updateColumnFilterOptions('language', languages.map(l => ({ value: l.key, label: l.value })));
+          // Update language filter options
+          this.updateColumnFilterOptions(
+            'language',
+            languages.map((l) => ({ value: l.key, label: l.value }))
+          );
 
-      // Update desk filter options
-      this.updateColumnFilterOptions('deskId', desks);
+          // Update desk filter options
+          this.updateColumnFilterOptions('deskId', desks);
 
-      // Update team filter options
-      this.updateColumnFilterOptions('teamId', teams);
+          // Update team filter options
+          this.updateColumnFilterOptions('teamId', teams);
 
-      // Update sales agents filter options
-      this.updateColumnFilterOptions('salesAgentId', salesAgents);
+          // Update sales agents filter options
+          this.updateColumnFilterOptions('salesAgentId', salesAgents);
 
-      // Update timezone filter options
-      this.updateColumnFilterOptions('timezone', timezones);
-    });
+          // Update timezone filter options
+          this.updateColumnFilterOptions('timezone', timezones);
+        }
+      );
   }
 
   /**
    * Update filter options for a specific column
    */
   private updateColumnFilterOptions(field: string, options: any[]): void {
-    const column = this.gridColumns.find(col => col.field === field);
+    const column = this.gridColumns.find((col) => col.field === field);
     if (column) {
       column.filterOptions = options;
     }
@@ -855,46 +890,70 @@ export class LeadsComponent implements OnInit, OnDestroy {
    * Load desks dropdown options
    */
   private loadDesksDropdown() {
-    return this.operatorsService.getDesksDropdown({
-      pageIndex: 0,
-      pageSize: 1000,
-      sortField: 'name',
-      sortDirection: 'asc'
-    }).pipe(
-      catchError(() => of({ items: [] })),
-      takeUntil(this.destroy$)
-    ).toPromise().then((response: any) =>
-      response?.items?.map((desk: any) => ({ value: desk.id, label: desk.value })) || []
-    );
+    return this.operatorsService
+      .getDesksDropdown({
+        pageIndex: 0,
+        pageSize: 1000,
+        sortField: 'name',
+        sortDirection: 'asc',
+      })
+      .pipe(
+        catchError(() => of({ items: [] })),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.items?.map((desk: any) => ({
+            value: desk.id,
+            label: desk.value,
+          })) || []
+      );
   }
 
   /**
    * Load teams dropdown options
    */
   private loadTeamsDropdown() {
-    return this.operatorsService.getTeamsDropdown({
-      pageIndex: 0,
-      pageSize: 1000,
-      sortField: 'name',
-      sortDirection: 'asc'
-    }).pipe(
-      catchError(() => of({ items: [] })),
-      takeUntil(this.destroy$)
-    ).toPromise().then((response: any) =>
-      response?.items?.map((team: any) => ({ value: team.id, label: team.value })) || []
-    );
+    return this.operatorsService
+      .getTeamsDropdown({
+        pageIndex: 0,
+        pageSize: 1000,
+        sortField: 'name',
+        sortDirection: 'asc',
+      })
+      .pipe(
+        catchError(() => of({ items: [] })),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.items?.map((team: any) => ({
+            value: team.id,
+            label: team.value,
+          })) || []
+      );
   }
 
   /**
    * Load sales agents dropdown options
    */
   private loadSalesAgentsDropdown() {
-    return this.officeRulesService.getAvailableOperators(0, 1000, '').pipe(
-      catchError(() => of([])),
-      takeUntil(this.destroy$)
-    ).toPromise().then((response: any) =>
-      response?.map((operator: any) => ({ value: operator.id, label: operator.value })) || []
-    );
+    return this.officeRulesService
+      .getAvailableOperators(0, 1000, '')
+      .pipe(
+        catchError(() => of([])),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.map((operator: any) => ({
+            value: operator.id,
+            label: operator.value,
+          })) || []
+      );
   }
 
   /**
@@ -933,7 +992,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
           let errorMessage = 'Failed to convert lead to client';
 
           if (error.status === 400) {
-            errorMessage = 'Lead cannot be converted. Please check the lead details.';
+            errorMessage =
+              'Lead cannot be converted. Please check the lead details.';
           } else if (error.status === 409) {
             errorMessage = 'Lead is already a client or has conflicts.';
           } else if (error.error?.message) {
@@ -945,10 +1005,9 @@ export class LeadsComponent implements OnInit, OnDestroy {
           return of(null);
         }),
         finalize(() => {
-          this.loading = false
+          this.loading = false;
           this.refreshGrid();
           this.loadStatistics();
-
         })
       )
       .subscribe((result: string) => {
@@ -978,7 +1037,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const leadIds = leads.map(lead => lead.id).filter(id => id); // Filter out any undefined IDs
+    const leadIds = leads.map((lead) => lead.id).filter((id) => id); // Filter out any undefined IDs
 
     if (leadIds.length === 0) {
       this.alertService.error('Invalid leads selected');
@@ -987,7 +1046,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
 
     // For single selection, use the single conversion endpoint
     if (leadIds.length === 1) {
-      const lead = leads.find(l => l.id === leadIds[0]);
+      const lead = leads.find((l) => l.id === leadIds[0]);
       if (lead) {
         this.convertSingleLead(lead);
       }
@@ -1009,7 +1068,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
           let errorMessage = 'Failed to convert leads to clients';
 
           if (error.status === 400) {
-            errorMessage = 'Some leads cannot be converted. Please check the lead details.';
+            errorMessage =
+              'Some leads cannot be converted. Please check the lead details.';
           } else if (error.error?.message) {
             errorMessage = error.error.message;
           }
@@ -1040,12 +1100,16 @@ export class LeadsComponent implements OnInit, OnDestroy {
     if (successCount > 0 && failureCount === 0) {
       // All conversions successful
       this.alertService.success(
-        `Successfully converted ${successCount} lead${successCount > 1 ? 's' : ''} to client${successCount > 1 ? 's' : ''}`
+        `Successfully converted ${successCount} lead${
+          successCount > 1 ? 's' : ''
+        } to client${successCount > 1 ? 's' : ''}`
       );
     } else if (successCount > 0 && failureCount > 0) {
       // Partial success
       this.alertService.warning(
-        `Converted ${successCount} lead${successCount > 1 ? 's' : ''} successfully. ${failureCount} failed.`
+        `Converted ${successCount} lead${
+          successCount > 1 ? 's' : ''
+        } successfully. ${failureCount} failed.`
       );
 
       // Log detailed errors for debugging
@@ -1053,15 +1117,18 @@ export class LeadsComponent implements OnInit, OnDestroy {
         console.error('Conversion errors:', errors);
 
         // Optionally show detailed error information
-        const errorDetails = errors.slice(0, 3).map(err =>
-          `${err.email}: ${err.reason}`
-        ).join('\n');
+        const errorDetails = errors
+          .slice(0, 3)
+          .map((err) => `${err.email}: ${err.reason}`)
+          .join('\n');
 
         if (errors.length <= 3) {
           this.alertService.error(`Conversion errors:\n${errorDetails}`);
         } else {
           this.alertService.error(
-            `Conversion errors:\n${errorDetails}\n... and ${errors.length - 3} more. Check console for details.`
+            `Conversion errors:\n${errorDetails}\n... and ${
+              errors.length - 3
+            } more. Check console for details.`
           );
         }
       }

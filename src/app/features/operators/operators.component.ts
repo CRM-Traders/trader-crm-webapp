@@ -26,7 +26,10 @@ import {
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
-import { PasswordChangeComponent, PasswordChangeData } from '../../shared/components/password-change/password-change.component';
+import {
+  PasswordChangeComponent,
+  PasswordChangeData,
+} from '../../shared/components/password-change/password-change.component';
 import {
   GridColumn,
   GridAction,
@@ -151,19 +154,6 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       label: 'Change Password',
       icon: 'password',
       action: (item: Operator) => this.openPasswordChangeModal(item),
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      action: (item: Operator) => this.confirmDelete(item),
-    },
-    {
-      id: 'permissions',
-      label: 'Permissions',
-      icon: 'permission',
-      type: 'primary',
-      action: (item) => this.openPermissionDialog(item),
     },
   ];
 
@@ -298,7 +288,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         closable: true,
       }
     );
-    console.log(modalRef.result)
+    console.log(modalRef.result);
 
     modalRef.result.then(
       (result) => {
@@ -375,14 +365,18 @@ export class OperatorsComponent implements OnInit, OnDestroy {
     const passwordChangeData: PasswordChangeData = {
       entityId: operator.id,
       entityType: 'operator',
-      entityName: operator.userFullName
+      entityName: operator.userFullName,
     };
 
-    const modalRef = this.modalService.open(PasswordChangeComponent, {
-      size: 'md',
-      centered: true,
-      closable: true,
-    }, passwordChangeData);
+    const modalRef = this.modalService.open(
+      PasswordChangeComponent,
+      {
+        size: 'md',
+        centered: true,
+        closable: true,
+      },
+      passwordChangeData
+    );
 
     modalRef.result.then(
       (result) => {
