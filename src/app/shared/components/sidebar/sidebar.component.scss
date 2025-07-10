@@ -36,6 +36,8 @@ aside {
       transition: transform 0.2s ease;
       filter: invert(80%) sepia(29%) saturate(806%) hue-rotate(182deg)
         brightness(103%) contrast(96%);
+      height: 1rem;
+      width: 1rem;
     }
   }
 
