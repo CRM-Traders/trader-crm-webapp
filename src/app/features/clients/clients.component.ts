@@ -759,11 +759,23 @@ export class ClientsComponent implements OnInit {
     }
   }
 
-  private loadClientStatistics(): void {
-    this.clientsService.getActiveClients().subscribe((result: any) => {
-      this.totalCount = result.totalUsers;
-      this.activeCount = result.activeUsersTotalCount;
-    });
+  private loadClientStatistics() {
+    // return this.clientsService.getActiveClients().pipe((result: any) => {
+    //   this.totalCount = result.totalUsers;
+    //   this.activeCount = result.activeUsersTotalCount;
+    // });
+
+    return this.clientsService
+      .getActiveClients()
+      .pipe(
+        catchError(() => of({ items: [] })),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then((response: any) => {
+        this.totalCount = response.totalUsers;
+        this.activeCount = response.activeUsersTotalCount;
+      });
   }
 
   private assignClientsToOperators(clients: Client[]): void {
@@ -991,7 +1003,6 @@ export class ClientsComponent implements OnInit {
         },
         error: (error) => {
           this.alertService.error('Failed to add comment');
-          console.error('Error adding comment:', error);
         },
       });
   }
@@ -1216,7 +1227,7 @@ export class ClientsComponent implements OnInit {
 
   onAutoLogin(client: Client): void {
     this.clientsService.autoLogin(client.id).subscribe((result: any) => {
-      window.location.href = `https://${result}`;
+      window.location.href = `http://${result}`;
     });
   }
 
@@ -1305,6 +1316,7 @@ export class ClientsComponent implements OnInit {
       teams: this.loadTeamsDropdown(),
       operators: this.loadOperatorsDropdown(),
       timezones: this.loadTimezones(),
+      statistics: this.loadClientStatistics(),
     })
       .pipe(
         takeUntil(this.destroy$),
@@ -1318,6 +1330,7 @@ export class ClientsComponent implements OnInit {
             teams: [],
             operators: [],
             timezones: [],
+            statistics: [],
           });
         })
       )
@@ -1330,6 +1343,7 @@ export class ClientsComponent implements OnInit {
           teams,
           operators,
           timezones,
+          statistics,
         }) => {
           // Update country filter options
           this.updateColumnFilterOptions(
@@ -1430,9 +1444,6 @@ export class ClientsComponent implements OnInit {
       );
   }
 
-  /**
-   * Load teams dropdown options
-   */
   private loadTeamsDropdown() {
     return this.operatorsService
       .getTeamsDropdown({
@@ -1534,9 +1545,6 @@ export class ClientsComponent implements OnInit {
     return null;
   }
 
-  /**
-   * Load comments for a specific client
-   */
   loadClientComments(clientId: string): void {
     if (this.clientCommentsCache.has(clientId)) {
       return; // Already loaded
@@ -1590,21 +1598,14 @@ export class ClientsComponent implements OnInit {
           this.clientCommentsCache.set(clientId, commentArray);
         });
 
-        // Trigger change detection once after all comments are loaded
         this.cdr.detectChanges();
       });
   }
 
-  /**
-   * Clear comments cache
-   */
   clearCommentsCache(): void {
     this.clientCommentsCache.clear();
   }
 
-  /**
-   * Refresh comments for a specific client
-   */
   refreshClientComments(clientId: string): void {
     this.clientCommentsCache.delete(clientId);
     this.loadClientComments(clientId);
