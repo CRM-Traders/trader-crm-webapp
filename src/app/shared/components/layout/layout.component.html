@@ -1,4 +1,4 @@
-<div class="flex h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+<div class="dash-main-layout flex h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
   <app-sidebar [expanded]="sidebarExpanded"></app-sidebar>
 
   <div class="flex flex-col flex-1 overflow-hidden">
@@ -7,9 +7,9 @@
     <app-alert position="top-right"></app-alert>
 
     <main
-      class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-100 dark:bg-gray-900"
+      class="flex-1 overflow-y-auto p-3 md:p-4 bg-gray-100 dark:bg-gray-900"
     >
-      <div class="h-full">
+      <div class="h-full zoom-out-layout">
         <router-outlet></router-outlet>
       </div>
     </main>
