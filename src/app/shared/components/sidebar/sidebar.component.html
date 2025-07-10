@@ -3,7 +3,7 @@
   class="bg-navbar shadow-lg transition-all duration-300 ease-in-out h-screen z-20 flex flex-col overflow-hidden"
 >
   <div
-    class="h-16 flex items-center px-4 border-b border-gray-200/20"
+    class="h-12 flex items-center px-3 border-b border-gray-200/20"
   >
     <div
       *ngIf="expanded"
@@ -12,7 +12,7 @@
       <div class="text-white flex-shrink-0">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="h-7 w-7"
+          class="h-5 w-5"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -33,7 +33,7 @@
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        class="h-7 w-7"
+        class="h-5 w-5"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -48,7 +48,7 @@
     </div>
   </div>
 
-  <nav class="flex-1 py-2 overflow-y-auto overflow-x-hidden">
+  <nav class="flex-1 py-1 overflow-y-auto overflow-x-hidden">
     <ul class="space-y-1 px-1">
       <li *ngFor="let item of navItems">
         <ng-container *hasRole="item.requiredRoles || ['Admin']">
@@ -56,7 +56,7 @@
             [routerLink]="item.route"
             routerLinkActive="active-nav-item"
             [routerLinkActiveOptions]="{ exact: false }"
-            class="flex items-center px-3 py-3 rounded-md transition-colors relative nav-item"
+            class="flex items-center px-3 py-2 rounded-md transition-colors relative nav-item"
             [class.collapsed]="!expanded"
           >
             <div
@@ -113,10 +113,10 @@
     </ul>
   </nav>
 
-  <div class="p-4 border-t border-gray-200/20">
+  <div class="p-3 border-t border-gray-200/20">
     <button
       (click)="toggleSidebar()"
-      class="w-full flex items-center justify-center p-2 text-white hover:text-gray-800 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/20 transition-colors"
+      class="w-full flex items-center justify-center p-1.5 text-white hover:text-gray-800 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/20 transition-colors"
       aria-label="Toggle sidebar"
     >
       <svg
