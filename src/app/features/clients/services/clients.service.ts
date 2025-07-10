@@ -146,7 +146,7 @@ export class ClientsService {
   }
 
   getActiveClients() {
-    return this.httpService.get(`identity/api/users/get-active-users?role=6`);
+    return this.httpService.get(`identity/api/users/get-active-users?role=22`);
   }
 
   // TODO: Add password change method when API is ready
