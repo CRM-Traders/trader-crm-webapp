@@ -279,7 +279,7 @@ export class FilterableDropdownComponent
 
   ngOnInit() {
     this.setupSearch();
-    this.setupLoadMore();
+    //this.setupLoadMore();
   }
 
   ngOnDestroy() {
@@ -323,37 +323,37 @@ export class FilterableDropdownComponent
       });
   }
 
-  private setupLoadMore() {
-    this.loadMoreSubject
-      .pipe(
-        takeUntil(this.destroy$),
-        tap(() => {
-          this.loading = true;
-        }),
-        switchMap(() =>
-          this.searchFunction({
-            globalFilter: this.searchTerm || undefined,
-            pageIndex: this.currentPage + 1,
-            pageSize: this.pageSize,
-          }).pipe(
-            catchError((error) => {
-              return of({
-                items: [],
-                totalCount: 0,
-                hasNextPage: false,
-                hasPreviousPage: false,
-              });
-            })
-          )
-        )
-      )
-      .subscribe((response) => {
-        this.items = [...this.items, ...response.items];
-        this.hasMorePages = response.hasNextPage;
-        this.currentPage++;
-        this.loading = false;
-      });
-  }
+  // private setupLoadMore() {
+  //   this.loadMoreSubject
+  //     .pipe(
+  //       takeUntil(this.destroy$),
+  //       tap(() => {
+  //         this.loading = true;
+  //       }),
+  //       switchMap(() =>
+  //         this.searchFunction({
+  //           globalFilter: this.searchTerm || undefined,
+  //           pageIndex: this.currentPage + 1,
+  //           pageSize: this.pageSize,
+  //         }).pipe(
+  //           catchError((error) => {
+  //             return of({
+  //               items: [],
+  //               totalCount: 0,
+  //               hasNextPage: false,
+  //               hasPreviousPage: false,
+  //             });
+  //           })
+  //         )
+  //       )
+  //     )
+  //     .subscribe((response) => {
+  //       this.items = [...this.items, ...response.items];
+  //       this.hasMorePages = response.hasNextPage;
+  //       this.currentPage++;
+  //       this.loading = false;
+  //     });
+  // }
 
   onSearchInput(event: Event) {
     const target = event.target as HTMLInputElement;
