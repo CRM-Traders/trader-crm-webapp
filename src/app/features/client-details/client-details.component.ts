@@ -114,7 +114,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     { key: ClientDetailSection.Accounts, label: 'Accounts' },
     { key: ClientDetailSection.Callbacks, label: 'Callbacks' },
     { key: ClientDetailSection.Files, label: 'Files' },
-    { key: ClientDetailSection.CallHistory, label: 'Call History' },
+    // { key: ClientDetailSection.CallHistory, label: 'Call History' },
     { key: ClientDetailSection.Notes, label: 'Notes' },
     // { key: ClientDetailSection.Feed, label: 'Feed' },
     // { key: ClientDetailSection.Referrals, label: 'Referrals' },
