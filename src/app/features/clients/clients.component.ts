@@ -122,6 +122,14 @@ export class ClientsComponent implements OnInit {
 
   gridColumns: GridColumn[] = [
     {
+      field: 'isOnline',
+      header: '',
+      sortable: true,
+      filterable: true,
+      filterType: 'select',
+      cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
+    },
+    {
       field: 'firstName',
       header: 'First Name',
       sortable: true,
