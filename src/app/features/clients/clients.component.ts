@@ -85,6 +85,8 @@ export class ClientsComponent implements OnInit {
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
+  @ViewChild('onlineStatusCell', { static: true })
+  onlineStatusCellTemplate!: TemplateRef<any>;
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
   @ViewChild('investmentCell', { static: true })
@@ -127,7 +129,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
+      cellTemplate: null, // Will be set in ngOnInit
     },
     {
       field: 'firstName',
@@ -674,7 +676,6 @@ export class ClientsComponent implements OnInit {
 
   constructor() {
     this.inlineCommentForm = this.fb.group({
-      subject: ['', [Validators.required, Validators.minLength(3)]],
       note: ['', [Validators.required, Validators.minLength(5)]],
       isPinnedComment: [false],
     });
@@ -733,6 +734,11 @@ export class ClientsComponent implements OnInit {
   }
 
   private initializeGridTemplates(): void {
+    const onlineStatusColumn = this.gridColumns.find((col) => col.field === 'isOnline');
+    if (onlineStatusColumn) {
+      onlineStatusColumn.cellTemplate = this.onlineStatusCellTemplate;
+    }
+
     const statusColumn = this.gridColumns.find((col) => col.field === 'status');
     if (statusColumn) {
       statusColumn.cellTemplate = this.statusCellTemplate;
@@ -927,8 +933,8 @@ export class ClientsComponent implements OnInit {
       clientId,
       mode,
       position: {
-        top: rect.top + window.scrollY - 350, // Position above the icon
-        left: rect.left + window.scrollX - 150, // Adjust to center the box
+        top: rect.top + window.scrollY - 250, // Position above the icon
+        left: rect.left + window.scrollX - 50, // Adjust to center the box
       },
       comments: [],
       isLoading: false,
@@ -987,7 +993,6 @@ export class ClientsComponent implements OnInit {
 
     const request: ClientCommentCreateRequest = {
       clientId: this.inlineCommentState.clientId,
-      subject: this.inlineCommentForm.value.subject,
       note: this.inlineCommentForm.value.note,
       isPinnedComment: this.inlineCommentForm.value.isPinnedComment,
     };

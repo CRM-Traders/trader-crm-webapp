@@ -2,24 +2,18 @@
 
 export interface TradingOrder {
   id: string;
-  orderId: string;
   tradingAccountId: string;
-  symbol: string;
-  orderType: 'buy' | 'sell' | 'buy_limit' | 'sell_limit' | 'buy_stop' | 'sell_stop';
-  volume: number;
-  openPrice: number;
-  closePrice?: number;
-  currentPrice?: number;
-  profit?: number;
-  commission?: number;
-  swap?: number;
-  status: 'open' | 'closed' | 'pending' | 'cancelled' | 'rejected';
-  openTime: string;
-  closeTime?: string;
-  comment?: string;
-  stopLoss?: number;
-  takeProfit?: number;
-  expiration?: string;
+  accountNumber: string;
+  tradingPairSymbol: string;
+  orderType: string;
+  side: string;
+  price: number;
+  quantity: number;
+  filledQuantity: number;
+  remainingQuantity: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string | null;
 }
 
 export interface TradingActivitySummary {

@@ -15,7 +15,7 @@ export interface ClientComment {
 
 export interface ClientCommentCreateRequest {
   clientId: string;
-  subject: string;
+  subject?: string;
   note: string;
   isPinnedComment: boolean;
 }
@@ -23,7 +23,7 @@ export interface ClientCommentCreateRequest {
 export interface ClientCommentUpdateRequest {
   id: string;
   clientId: string;
-  subject: string;
+  subject?: string;
   note: string;
   isPinnedComment: boolean;
 }

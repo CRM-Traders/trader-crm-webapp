@@ -319,12 +319,12 @@ export class AddFileModalComponent implements OnInit {
       ownerId: [this.clientId || 'demo-client'],
     });
   }
-
   ngOnInit(): void {
     // Update ownerId when clientId is available
     if (this.clientId) {
       this.uploadForm.patchValue({ ownerId: this.clientId });
     }
+    console.log(this.clientId)
   }
 
   /**

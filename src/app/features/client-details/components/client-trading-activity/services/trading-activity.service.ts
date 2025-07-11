@@ -36,6 +36,31 @@ export class TradingActivityService {
   readonly pageSize = this._pageSize.asReadonly();
 
   /**
+   * Get client orders by user ID
+   */
+  getClientOrdersByUserId(userId: string): Observable<TradingOrder[]> {
+    console.log('TradingActivityService: Getting client orders for user:', userId);
+    this._loading.set(true);
+
+    return this.http
+      .get<TradingOrder[]>(`traiding/api/Wallets/client-orders-by-user-id?clientUserId=${userId}`)
+      .pipe(
+        tap((orders) => {
+          this._orders.set(orders);
+          this._loading.set(false);
+        }),
+        catchError((error) => {
+          console.error('TradingActivityService: Error loading client orders:', error);
+          this._loading.set(false);
+          this.alertService.error(
+            'Failed to load client orders. Please try again.'
+          );
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
    * Get trading orders for a specific trading account
    */
   getTradingOrders(
@@ -107,39 +132,31 @@ export class TradingActivityService {
    * Calculate trading activity summary from orders
    */
   private calculateSummary(orders: TradingOrder[]): TradingActivitySummary {
-    const closedOrders = orders.filter(order => order.status === 'closed' && order.profit !== undefined);
-    const openOrders = orders.filter(order => order.status === 'open');
+    const pendingOrders = orders.filter(order => order.status === 'Pending');
+    const filledOrders = orders.filter(order => order.filledQuantity > 0);
+    const cancelledOrders = orders.filter(order => order.status === 'Cancelled');
 
-    const totalVolume = orders.reduce((sum, order) => sum + order.volume, 0);
-    const profits = closedOrders.map(order => order.profit || 0);
-    const winningTrades = profits.filter(profit => profit > 0);
-    const losingTrades = profits.filter(profit => profit < 0);
+    const totalVolume = orders.reduce((sum, order) => sum + order.quantity, 0);
+    const filledVolume = filledOrders.reduce((sum, order) => sum + order.filledQuantity, 0);
+    const pendingVolume = pendingOrders.reduce((sum, order) => sum + order.remainingQuantity, 0);
 
-    const totalProfit = winningTrades.reduce((sum, profit) => sum + profit, 0);
-    const totalLoss = Math.abs(losingTrades.reduce((sum, loss) => sum + loss, 0));
-    const netPnL = totalProfit - totalLoss;
-
-    const winRate = closedOrders.length > 0
-      ? (winningTrades.length / closedOrders.length) * 100
-      : 0;
-
-    const averageWin = winningTrades.length > 0
-      ? totalProfit / winningTrades.length
-      : 0;
-
-    const averageLoss = losingTrades.length > 0
-      ? totalLoss / losingTrades.length
-      : 0;
+    // Since the new API doesn't provide profit/loss data, we'll set these to 0
+    const totalProfit = 0;
+    const totalLoss = 0;
+    const netPnL = 0;
+    const winRate = 0;
+    const averageWin = 0;
+    const averageLoss = 0;
 
     return {
       totalTrades: orders.length,
       totalVolume,
-      winRate: Math.round(winRate * 100) / 100,
+      winRate,
       totalProfit,
       totalLoss,
       netPnL,
-      openTrades: openOrders.length,
-      closedTrades: closedOrders.length,
+      openTrades: pendingOrders.length,
+      closedTrades: filledOrders.length + cancelledOrders.length,
       averageWin,
       averageLoss
     };
