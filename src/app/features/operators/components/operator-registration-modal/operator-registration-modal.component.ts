@@ -668,15 +668,11 @@ export class OperatorRegistrationModalComponent implements OnInit {
   }
 
   onDepartmentChange(departmentId: any): void {
-    // This method is kept for compatibility with the filterable dropdown's valueChange event
-    console.log('Department valueChange event:', departmentId);
     this.handleDepartmentChange(departmentId);
   }
 
   onBranchTypeChange(): void {
-    // This method is kept for compatibility with the select element's change event
     const branchType = this.registrationForm.get('branchType')?.value;
-    console.log('Branch type change event:', branchType);
     this.handleBranchTypeChange(branchType);
   }
 

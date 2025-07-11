@@ -8,7 +8,8 @@ import {
   DepositRequest,
   WithdrawRequest,
   WalletTransaction,
-  TradingAccountSummary
+  TradingAccountSummary,
+  ClientWalletsSummary
 } from '../models/wallet.model';
 import { Wallet } from '../../client-accounts/models/wallet.model';
 
@@ -142,7 +143,55 @@ export class WalletService {
       );
   }
 
-  
+  /**
+   * Get client transactions by user ID
+   */
+  getClientTransactionsByUserId(userId: string): Observable<WalletTransaction[]> {
+    console.log('WalletService: Getting client transactions for user:', userId);
+    this._loading.set(true);
+
+    return this.http
+      .get<WalletTransaction[]>(`traiding/api/Wallets/client-transactions-by-user-id?clientUserId=${userId}`)
+      .pipe(
+        tap((transactions) => {
+          console.log('WalletService: Client transactions loaded:', transactions);
+          this._loading.set(false);
+        }),
+        catchError((error) => {
+          console.error('WalletService: Error loading client transactions:', error);
+          this._loading.set(false);
+          this.alertService.error(
+            'Failed to load client transactions. Please try again.'
+          );
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Get client wallets summary
+   */
+  getClientWalletsSummary(userId: string): Observable<ClientWalletsSummary> {
+    console.log('WalletService: Getting client wallets summary for user:', userId);
+    this._loading.set(true);
+
+    return this.http
+      .get<ClientWalletsSummary>(`traiding/api/Wallets/client-wallets-summary?clientUserId=${userId}`)
+      .pipe(
+        tap((summary) => {
+          console.log('WalletService: Client wallets summary loaded:', summary);
+          this._loading.set(false);
+        }),
+        catchError((error) => {
+          console.error('WalletService: Error loading client wallets summary:', error);
+          this._loading.set(false);
+          this.alertService.error(
+            'Failed to load client wallets summary. Please try again.'
+          );
+          return throwError(() => error);
+        })
+      );
+  }
 
   /**
    * Clear recent transaction

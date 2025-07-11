@@ -6,9 +6,8 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { Client } from '../../../clients/models/clients.model';
-import { AdminTradingAccountService } from '../client-accounts/services/admin-trading-accounts.service';
-import { TradingAccount } from '../client-accounts/models/trading-account.model';
-import { TradingOrder, TradingService } from '../client-payments/services/trading-order.service';
+import { TradingActivityService } from './services/trading-activity.service';
+import { TradingOrder } from './models/trading-activity.model';
 
 @Component({
   selector: 'app-client-trading-activity',
@@ -28,28 +27,22 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
   @Input() client!: Client;
 
   private alertService = inject(AlertService);
-  private tradingService = inject(TradingService);
-  private adminTradingAccountService = inject(AdminTradingAccountService);
+  private tradingActivityService = inject(TradingActivityService);
   private destroy$ = new Subject<void>();
 
   // State
-  selectedTradingAccountId = '';
   tradingSearchTerm = '';
   statusFilter = '';
+  symbolFilter = '';
+  orderTypeFilter = '';
   tradingOrders: TradingOrder[] = [];
-  loadingTradingHistory = false;
+  loadingClientOrders = false;
 
   get clientId(): string {
     return this.client?.userId || '';
   }
 
-  get tradingAccounts(): TradingAccount[] {
-    return this.adminTradingAccountService.accounts();
-  }
 
-  get loadingAccounts(): boolean {
-    return this.adminTradingAccountService.loading();
-  }
 
   get filteredTradingOrders(): TradingOrder[] {
     let filtered = this.tradingOrders;
@@ -59,6 +52,16 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
       filtered = filtered.filter(order => order.status === this.statusFilter);
     }
 
+    // Apply symbol filter
+    if (this.symbolFilter) {
+      filtered = filtered.filter(order => order.tradingPairSymbol.toLowerCase().includes(this.symbolFilter.toLowerCase()));
+    }
+
+    // Apply order type filter
+    if (this.orderTypeFilter) {
+      filtered = filtered.filter(order => order.orderType === this.orderTypeFilter);
+    }
+
     // Apply search filter
     if (this.tradingSearchTerm) {
       const term = this.tradingSearchTerm.toLowerCase();
@@ -66,8 +69,8 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
         order.id.toLowerCase().includes(term) ||
         order.tradingPairSymbol.toLowerCase().includes(term) ||
         order.orderType.toLowerCase().includes(term) ||
-        order.side.toLowerCase().includes(term) ||
-        order.status.toLowerCase().includes(term)
+        order.status.toLowerCase().includes(term) ||
+        order.accountNumber.toLowerCase().includes(term)
       );
     }
 
@@ -80,20 +83,28 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
   }
 
   get filledOrdersCount(): number {
-    return this.tradingOrders.filter(order => order.status === 'filled').length;
+    return this.tradingOrders.filter(order => order.filledQuantity > 0).length;
   }
 
-  get openOrdersCount(): number {
-    return this.tradingOrders.filter(order => order.status === 'open' || order.status === 'partially_filled').length;
+  get pendingOrdersCount(): number {
+    return this.tradingOrders.filter(order => order.status === 'Pending').length;
   }
 
   get cancelledOrdersCount(): number {
-    return this.tradingOrders.filter(order => order.status === 'cancelled' || order.status === 'rejected').length;
+    return this.tradingOrders.filter(order => order.status === 'Cancelled').length;
+  }
+
+  get totalQuantity(): number {
+    return this.tradingOrders.reduce((sum, order) => sum + order.quantity, 0);
+  }
+
+  get filledQuantity(): number {
+    return this.tradingOrders.reduce((sum, order) => sum + order.filledQuantity, 0);
   }
 
   ngOnInit(): void {
     if (this.clientId) {
-      this.loadTradingAccounts();
+      this.loadClientOrders();
     }
   }
 
@@ -104,79 +115,36 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['client'] && this.clientId) {
-      this.loadTradingAccounts();
+      this.loadClientOrders();
     }
   }
 
-  private loadTradingAccounts(): void {
-    this.adminTradingAccountService
-      .getUserAccounts(this.clientId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        error: (error) => {
-          console.error('Error loading trading accounts:', error);
-        },
-      });
-  }
+  private loadClientOrders(): void {
+    if (!this.clientId) return;
 
-  refreshTradingAccounts(): void {
-    if (this.clientId) {
-      this.adminTradingAccountService.refreshAccounts(this.clientId);
-    }
-  }
-
-  selectTradingAccount(account: TradingAccount): void {
-    console.log('Selected trading account:', account);
-    this.selectedTradingAccountId = account.id;
-    this.loadTradingHistory();
-  }
-
-  private loadTradingHistory(): void {
-    if (!this.selectedTradingAccountId) return;
-
-    this.loadingTradingHistory = true;
+    this.loadingClientOrders = true;
     
-    this.tradingService
-      .getTradingOrdersPaginated(this.selectedTradingAccountId, 1, 100) // Get first 100 orders
+    this.tradingActivityService
+      .getClientOrdersByUserId(this.clientId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          this.tradingOrders = response.items;
-          this.loadingTradingHistory = false;
+        next: (orders) => {
+          this.tradingOrders = orders;
+          this.loadingClientOrders = false;
         },
         error: (error) => {
-          console.error('Error loading trading history:', error);
-          this.loadingTradingHistory = false;
+          console.error('Error loading client orders:', error);
+          this.loadingClientOrders = false;
         },
       });
   }
 
   refreshOrders(): void {
-    if (this.selectedTradingAccountId) {
-      this.loadTradingHistory();
-    }
+    this.loadClientOrders();
   }
 
   onFilterChange(): void {
     // Filters are applied through the filteredTradingOrders getter
     // No additional action needed
-  }
-
-  // Utility methods
-  getAccountTypeDisplay(accountType: string): string {
-    return this.adminTradingAccountService.getAccountTypeInfo(accountType as any);
-  }
-
-  getAccountTypeColorClass(accountType: string): string {
-    switch (accountType?.toLowerCase()) {
-      case 'demo':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'real':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'paper':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
-    }
   }
 }

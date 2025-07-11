@@ -32,6 +32,7 @@ export interface Client {
   lastCommunication: string | null;
   balance: number;
   lastComment?: LastComment | null;
+  isOnline?: boolean;
 }
 
 export interface LastComment {

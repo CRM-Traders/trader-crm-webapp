@@ -28,13 +28,20 @@ export interface WithdrawRequest {
 export interface WalletTransaction {
   id: string;
   tradingAccountId: string;
-  transactionType: 'deposit' | 'withdraw';
+  accountNumber: string;
+  transactionType: 'Deposit' | 'Withdrawal';
+  paymentType: string | null;
+  paymentMethod: string | null;
+  paymentStatus: string | null;
   currency: string;
   amount: number;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  balanceBefore: number;
+  balanceAfter: number;
+  referenceId: string | null;
+  referenceType: string | null;
+  description: string;
   createdAt: string;
-  updatedAt: string;
-  note?: string;
+  updatedAt: string | null;
 }
 
 export interface TradingAccountSummary {
@@ -48,3 +55,26 @@ export interface TradingAccountSummary {
 }
 
 export type TransactionType = 'deposit' | 'withdraw';
+
+export interface CurrencyBreakdown {
+  currency: string;
+  availableBalance: number;
+  lockedBalance: number;
+  totalBalance: number;
+  usdEquivalent: number;
+  walletCount: number;
+}
+
+export interface ClientWalletsSummary {
+  userId: string;
+  totalAccounts: number;
+  totalDeposits: number;
+  totalWithdrawals: number;
+  totalTradingOrders: number;
+  totalUsdEquivalent: number;
+  totalAvailableBalance: number;
+  totalLockedBalance: number;
+  totalBalance: number;
+  currencyBreakdown: CurrencyBreakdown[];
+  lastUpdated: string;
+}

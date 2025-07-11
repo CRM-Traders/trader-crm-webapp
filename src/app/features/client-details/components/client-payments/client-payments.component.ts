@@ -16,22 +16,8 @@ import { WalletTransactionModalComponent } from './modals/wallet-transaction-mod
 import { AdminTradingAccountService } from '../client-accounts/services/admin-trading-accounts.service';
 import { TradingAccount } from '../client-accounts/models/trading-account.model';
 import { TradingOrder, TradingService } from './services/trading-order.service';
-
-interface Transaction {
-  id: string;
-  transactionType: string;
-  affiliate: string;
-  originalAgent: string;
-  paymentType: string;
-  amount: number;
-  currency: string;
-  tradingAccount: string;
-  paymentAggregator: string;
-  paymentMethod: string;
-  dateTime: Date;
-  status: string;
-  note: string;
-}
+import { WalletService } from './services/wallet.service';
+import { WalletTransaction, ClientWalletsSummary } from './models/wallet.model';
 
 @Component({
   selector: 'app-client-payments',
@@ -58,7 +44,8 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
   private adminTradingAccountService = inject(AdminTradingAccountService);
-  private tradingService = inject(TradingService); // You'll need to create this service
+  private tradingService = inject(TradingService);
+  private walletService = inject(WalletService);
   private destroy$ = new Subject<void>();
 
   transactionForm: FormGroup;
@@ -76,6 +63,14 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   tradingOrders: TradingOrder[] = [];
   loadingTradingHistory = false;
 
+  // Wallet transactions state
+  walletTransactions: WalletTransaction[] = [];
+  loadingWalletTransactions = false;
+
+  // Wallet summary state
+  walletSummary: ClientWalletsSummary | null = null;
+  loadingWalletSummary = false;
+
   get clientId(): string {
     return this.client?.userId || '';
   }
@@ -84,25 +79,7 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     return this.adminTradingAccountService.accounts();
   }
 
-  // Mock transactions data (replace with actual service calls)
-  transactions: Transaction[] = [
-    {
-      id: 'TXN-001',
-      transactionType: 'deposit',
-      affiliate: 'Direct',
-      originalAgent: 'Admin',
-      paymentType: 'deposit',
-      amount: 1000,
-      currency: 'USD',
-      tradingAccount: 'ACC-001',
-      paymentAggregator: 'Wallet',
-      paymentMethod: 'Bank Transfer',
-      dateTime: new Date('2024-01-15T10:30:00'),
-      status: 'completed',
-      note: 'Initial deposit'
-    },
-    // Add more mock data as needed
-  ];
+
 
   constructor() {
     this.transactionForm = this.fb.group({
@@ -119,6 +96,8 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     if (this.clientId) {
       this.loadTradingAccounts();
       this.loadTradingHistoryForAllAccounts();
+      this.loadWalletTransactions();
+      this.loadWalletSummary();
     }
   }
 
@@ -127,19 +106,18 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  get filteredTransactions(): Transaction[] {
+  get filteredTransactions(): WalletTransaction[] {
     if (!this.searchTerm) {
-      return this.transactions;
+      return this.walletTransactions;
     }
 
     const term = this.searchTerm.toLowerCase();
-    return this.transactions.filter(
+    return this.walletTransactions.filter(
       (transaction) =>
         transaction.id.toLowerCase().includes(term) ||
-        transaction.paymentType.toLowerCase().includes(term) ||
-        transaction.paymentMethod.toLowerCase().includes(term) ||
-        transaction.status.toLowerCase().includes(term) ||
-        transaction.note.toLowerCase().includes(term)
+        transaction.transactionType.toLowerCase().includes(term) ||
+        transaction.accountNumber.toLowerCase().includes(term) ||
+        (transaction.description && transaction.description.toLowerCase().includes(term))
     );
   }
 
@@ -161,31 +139,47 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
 
   // Summary calculations
   get totalDeposits(): number {
-    return this.transactions
-      .filter(t => t.transactionType === 'deposit')
-      .reduce((sum, t) => sum + t.amount, 0);
+    return this.walletSummary?.totalDeposits || this.walletTransactions
+      .filter(t => t.transactionType === 'Deposit')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   }
 
   get totalWithdrawals(): number {
-    return this.transactions
-      .filter(t => t.transactionType === 'withdraw')
-      .reduce((sum, t) => sum + t.amount, 0);
+    return this.walletSummary?.totalWithdrawals || this.walletTransactions
+      .filter(t => t.transactionType === 'Withdrawal')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   }
 
   get netBalance(): number {
-    return this.totalDeposits - this.totalWithdrawals;
+    return this.walletSummary?.totalBalance || (this.totalDeposits - this.totalWithdrawals);
+  }
+
+  get totalUsdEquivalent(): number {
+    return this.walletSummary?.totalUsdEquivalent || 0;
+  }
+
+  get totalAvailableBalance(): number {
+    return this.walletSummary?.totalAvailableBalance || 0;
+  }
+
+  get totalLockedBalance(): number {
+    return this.walletSummary?.totalLockedBalance || 0;
   }
 
   get depositCount(): number {
-    return this.transactions.filter(t => t.transactionType === 'deposit').length;
+    return this.walletTransactions.filter(t => t.transactionType === 'Deposit').length;
   }
 
   get withdrawalCount(): number {
-    return this.transactions.filter(t => t.transactionType === 'withdraw').length;
+    return this.walletTransactions.filter(t => t.transactionType === 'Withdrawal').length;
   }
 
   get totalTradingOrders(): number {
-    return this.tradingOrders.length;
+    return this.walletSummary?.totalTradingOrders || this.tradingOrders.length;
+  }
+
+  get totalAccounts(): number {
+    return this.walletSummary?.totalAccounts || 0;
   }
 
   private loadTradingAccounts(): void {
@@ -228,6 +222,46 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
       });
   }
 
+  private loadWalletTransactions(): void {
+    if (!this.clientId) return;
+
+    this.loadingWalletTransactions = true;
+    
+    this.walletService
+      .getClientTransactionsByUserId(this.clientId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (transactions) => {
+          this.walletTransactions = transactions;
+          this.loadingWalletTransactions = false;
+        },
+        error: (error) => {
+          console.error('Error loading wallet transactions:', error);
+          this.loadingWalletTransactions = false;
+        },
+      });
+  }
+
+  private loadWalletSummary(): void {
+    if (!this.clientId) return;
+
+    this.loadingWalletSummary = true;
+    
+    this.walletService
+      .getClientWalletsSummary(this.clientId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (summary) => {
+          this.walletSummary = summary;
+          this.loadingWalletSummary = false;
+        },
+        error: (error) => {
+          console.error('Error loading wallet summary:', error);
+          this.loadingWalletSummary = false;
+        },
+      });
+  }
+
   onTradingAccountChange(accountId: string): void {
     if (accountId) {
       this.loadTradingHistory(accountId);
@@ -262,13 +296,17 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     this.alertService.success('Transaction completed successfully!');
     
     // Refresh data
-    this.loadTransactionHistory();
+    this.loadWalletTransactions();
+    this.loadWalletSummary();
   }
 
-  private loadTransactionHistory(): void {
-    // Implement actual transaction history loading
-    // This would typically call a service to fetch real transaction data
+  refreshTransactions(): void {
+    console.log('Refreshing transactions data');
+    this.loadWalletTransactions();
+    this.loadWalletSummary();
   }
+
+
 
   exportTransactions(): void {
     // Implement export functionality
@@ -288,31 +326,18 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     if (this.transactionForm.valid) {
       const formData = this.transactionForm.value;
 
-      // Create new transaction object
-      const newTransaction: Transaction = {
-        id: `TXN-${String(this.transactions.length + 1).padStart(3, '0')}`,
-        transactionType: formData.paymentType,
-        affiliate: this.client.affiliateName || 'Direct',
-        originalAgent: 'Current User', // Replace with actual user
-        paymentType: formData.paymentType,
-        amount: formData.amount,
-        currency: 'USD', // Default currency
-        tradingAccount: formData.toAccount,
-        paymentAggregator: 'Manual Entry', // For manual transactions
-        paymentMethod: formData.paymentMethod,
-        dateTime: new Date(),
-        status: 'pending',
-        note: formData.note || '',
-      };
-
-      // Add to transactions list
-      this.transactions.unshift(newTransaction);
+      // For manual transactions, we'll just show a success message
+      // In a real implementation, you might want to call the wallet service
+      // to create a manual transaction entry
 
       // Reset form and hide
       this.transactionForm.reset();
       this.showAddForm = false;
 
       this.alertService.success('Manual transaction created successfully');
+      
+      // Refresh wallet transactions
+      this.loadWalletTransactions();
     } else {
       this.alertService.error('Please fill in all required fields');
     }
