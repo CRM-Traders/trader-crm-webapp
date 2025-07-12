@@ -111,12 +111,6 @@ export class TeamsComponent implements OnInit, OnDestroy {
       action: (item: Team) => this.openDetailsModal(item),
     },
     {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Team) => this.openDetailsModal(item),
-    },
-    {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
