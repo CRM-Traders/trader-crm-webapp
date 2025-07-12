@@ -2,9 +2,9 @@ export interface Settings {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: string;
-  isEmailConfirmed: string;
+  username: string;
+  phoneNumber: string | null;
+  isEmailConfirmed: boolean;
   role: string;
-  isTwoFactorenabled: boolean;
-  isTwoFactorverified: boolean;
+  isTwoFactorEnabled: boolean;
 }

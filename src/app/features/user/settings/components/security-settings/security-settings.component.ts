@@ -55,7 +55,7 @@ export class SecuritySettingsComponent implements OnInit {
   }
 
   check2FAStatus(): void {
-    this.isTwoFactorEnabled = this.settings?.isTwoFactorenabled ?? false;
+    this.isTwoFactorEnabled = this.settings?.isTwoFactorEnabled ?? false;
   }
 
   startSetup(): void {
