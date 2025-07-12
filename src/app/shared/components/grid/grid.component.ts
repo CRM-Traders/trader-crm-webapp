@@ -15,7 +15,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil, finalize } from 'rxjs';
+import { Subject, takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
 import {
   GridAction,
   GridColumn,
@@ -52,6 +52,7 @@ export class GridComponent implements OnInit, OnDestroy {
   private gridService = inject(GridService);
   private themeService = inject(ThemeService);
   private destroy$ = new Subject<void>();
+  private globalFilterSubject = new Subject<string>();
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
 
@@ -74,6 +75,7 @@ export class GridComponent implements OnInit, OnDestroy {
   @Input() responsive: boolean = true;
   @Input() enableContextMenu: boolean = true;
   @Input() maxPrimaryActions: number = 2;
+  @Input() globalFilterDebounceTime: number = 600; // Debounce time in milliseconds
 
   @Output() rowClick = new EventEmitter<any>();
   @Output() actionExecuted = new EventEmitter<{
@@ -111,6 +113,7 @@ export class GridComponent implements OnInit, OnDestroy {
   isExportOpen: boolean = false;
   isDarkMode: boolean = false;
   loading: boolean = false;
+  globalFilterLoading: boolean = false;
 
   // Context menu properties
   contextMenuVisible: boolean = false;
@@ -162,6 +165,17 @@ export class GridComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((isDark) => {
         this.isDarkMode = isDark;
+      });
+
+    // Setup debounced global filter
+    this.globalFilterSubject
+      .pipe(
+        debounceTime(this.globalFilterDebounceTime), // Configurable delay
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((value) => {
+        this.applyGlobalFilter(value);
       });
 
     this.updateVisibleColumns();
@@ -375,7 +389,11 @@ export class GridComponent implements OnInit, OnDestroy {
 
   onGlobalFilterChange(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
+    this.globalFilterLoading = true;
+    this.globalFilterSubject.next(value);
+  }
 
+  private applyGlobalFilter(value: string): void {
     this.gridService.setGlobalFilter(this.gridId, value);
 
     const filterState: GridFilterState = {
@@ -394,6 +412,9 @@ export class GridComponent implements OnInit, OnDestroy {
 
     // Clear selection when filtering
     this.clearSelection();
+    
+    // Reset loading state
+    this.globalFilterLoading = false;
   }
 
   onSortChange(column: GridColumn): void {

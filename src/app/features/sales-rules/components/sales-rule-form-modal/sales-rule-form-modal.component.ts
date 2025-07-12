@@ -49,7 +49,7 @@ interface OperatorSelection {
       </div>
 
       <!-- Form -->
-      <div class="px-6 py-6 max-h-[70vh] overflow-y-auto">
+      <div class="px-6 py-6 max-h-[90vh] overflow-y-auto">
         <form [formGroup]="ruleForm" class="space-y-6">
           
           <!-- Rule Name -->

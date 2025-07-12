@@ -367,34 +367,15 @@ import { LeadsService } from '../../services/leads.service';
               for="source"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              Source <span class="text-red-500">*</span>
+              Source
             </label>
             <input
               type="text"
               id="source"
               formControlName="source"
               class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              [class.border-red-500]="
-                registrationForm.get('source')?.invalid &&
-                registrationForm.get('source')?.touched
-              "
-              [class.focus:ring-red-500]="
-                registrationForm.get('source')?.invalid &&
-                registrationForm.get('source')?.touched
-              "
               placeholder="Enter source (e.g., website, referral, etc.)"
             />
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                registrationForm.get('source')?.invalid &&
-                registrationForm.get('source')?.touched
-              "
-            >
-              <span *ngIf="registrationForm.get('source')?.errors?.['required']"
-                >Source is required</span
-              >
-            </p>
           </div>
         </form>
 
@@ -647,7 +628,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
       country: ['', [Validators.required]],
       language: ['', [Validators.required]],
       dateOfBirth: ['', [Validators.required]],
-      source: ['', [Validators.required]],
+      source: [''], // Optional field - no validators
     });
   }
 

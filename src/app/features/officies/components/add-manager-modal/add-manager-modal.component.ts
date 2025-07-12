@@ -1,6 +1,6 @@
 // src/app/features/officies/components/add-manager-modal/add-manager-modal.component.ts
 
-import { Component, OnInit, OnDestroy, inject, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -35,46 +35,6 @@ import {
 
       <!-- Modal Body -->
       <div class="px-6 py-6">
-        <!-- Information Text -->
-        <div
-          class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/5 rounded-lg border border-blue-200 dark:border-blue-800"
-        >
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg
-                class="h-5 w-5 text-blue-400"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-blue-800 dark:text-blue-500">
-                Manager Assignment
-              </h3>
-              <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                <p>
-                  You are about to
-                  {{
-                    currentManager ? 'change the manager for' : 'add Manager to'
-                  }}
-                  the Office "{{ officeName }}".
-                  {{
-                    currentManager
-                      ? 'The current manager will be replaced.'
-                      : 'He will be able to see and manage all desks, teams and operators inside this office.'
-                  }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Current Manager (if exists) -->
         <div
           *ngIf="currentManager"
@@ -138,27 +98,80 @@ import {
 
         <!-- Operator Selection Form -->
         <form [formGroup]="managerForm" *ngIf="operators.length > 0">
-          <div>
+          <div class="relative">
             <label
               for="operatorId"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Choose an operator <span class="text-red-500">*</span>
             </label>
-            <select
-              id="operatorId"
-              formControlName="operatorId"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+
+            <!-- Custom Dropdown Button -->
+            <button
+              type="button"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
               [class.border-red-500]="
                 managerForm.get('operatorId')?.invalid &&
                 managerForm.get('operatorId')?.touched
               "
+              (click)="toggleOperatorDropdown()"
             >
-              <option value="">-- Select --</option>
-              <option *ngFor="let operator of operators" [value]="operator.id">
-                {{ operator.value }} - {{ operator.email }}
-              </option>
-            </select>
+              <span class="truncate">{{ getSelectedOperatorText() }}</span>
+              <svg
+                class="w-4 h-4 ml-2 transition-transform"
+                [class.rotate-180]="operatorDropdownOpen"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+
+            <!-- Dropdown Panel -->
+            <div
+              *ngIf="operatorDropdownOpen"
+              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+            >
+              <!-- Search Input -->
+              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                <input
+                  #operatorSearchInput
+                  type="text"
+                  placeholder="Search operators..."
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  (input)="onOperatorSearch($event)"
+                  [value]="operatorSearchTerm"
+                />
+              </div>
+
+              <!-- Operators List -->
+              <div class="max-h-48 overflow-y-auto">
+                <div
+                  *ngFor="let operator of filteredOperators"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  (click)="selectOperator(operator)"
+                >
+                  <div class="font-medium">{{ operator.value }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ operator.email }}</div>
+                </div>
+
+                <!-- No results -->
+                <div
+                  *ngIf="filteredOperators.length === 0"
+                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  No operators found
+                </div>
+              </div>
+            </div>
+
+            <!-- Validation Error -->
             <p
               class="mt-1 text-sm text-red-600 dark:text-red-400"
               *ngIf="
@@ -206,6 +219,47 @@ import {
             </div>
           </div>
         </div>
+
+                <!-- Information Text -->
+                <div
+          class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/5 rounded-lg border border-blue-200 dark:border-blue-800"
+        >
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg
+                class="h-5 w-5 text-blue-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-800 dark:text-blue-500">
+                Manager Assignment
+              </h3>
+              <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                <p>
+                  You are about to
+                  {{
+                    currentManager ? 'change the manager for' : 'add Manager to'
+                  }}
+                  the Office "{{ officeName }}".
+                  {{
+                    currentManager
+                      ? 'The current manager will be replaced.'
+                      : 'He will be able to see and manage all desks, teams and operators inside this office.'
+                  }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Modal Footer -->
@@ -287,6 +341,12 @@ export class AddManagerModalComponent implements OnInit, OnDestroy {
   managerForm: FormGroup;
   isSubmitting = false;
 
+  // Operator dropdown
+  operatorDropdownOpen = false;
+  operatorSearchTerm = '';
+  filteredOperators: OperatorDropdownItem[] = [];
+  selectedOperator: OperatorDropdownItem | null = null;
+
   constructor() {
     this.managerForm = this.fb.group({
       operatorId: ['', [Validators.required]],
@@ -294,13 +354,54 @@ export class AddManagerModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Form is already initialized in constructor
-    // No additional initialization needed for this simple modal
+    // Initialize filtered operators
+    this.filteredOperators = this.operators;
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    // Close dropdown when clicking outside
+    if (!(event.target as Element).closest('.relative')) {
+      this.operatorDropdownOpen = false;
+    }
+  }
+
+  // Operator dropdown methods
+  toggleOperatorDropdown(): void {
+    // If this dropdown is already open, just close it
+    if (this.operatorDropdownOpen) {
+      this.operatorDropdownOpen = false;
+      return;
+    }
+    // Open the dropdown
+    this.operatorDropdownOpen = true;
+  }
+
+  onOperatorSearch(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.toLowerCase();
+    this.operatorSearchTerm = value;
+    this.filteredOperators = this.operators.filter(operator =>
+      operator.value.toLowerCase().includes(value) ||
+      operator.email.toLowerCase().includes(value)
+    );
+  }
+
+  selectOperator(operator: OperatorDropdownItem): void {
+    this.selectedOperator = operator;
+    this.managerForm.patchValue({ operatorId: operator.id });
+    this.operatorDropdownOpen = false;
+  }
+
+  getSelectedOperatorText(): string {
+    if (!this.selectedOperator) {
+      return 'Select an operator...';
+    }
+    return `${this.selectedOperator.value} - ${this.selectedOperator.email}`;
   }
 
   onSubmit(): void {

@@ -263,7 +263,7 @@ interface BranchDropdownItem {
                   registrationForm.get('userType')?.touched
                 "
               >
-                <option value="">-- Select --</option>
+                <option value="">Select</option>
                 <optgroup label="Administrators">
                   <option [value]="UserType.CompanyAdmin">Company Admin</option>
                   <option [value]="UserType.BrandAdmin">Brand Admin</option>
@@ -337,7 +337,7 @@ interface BranchDropdownItem {
               </label>
               <app-filterable-dropdown
                 formControlName="departmentId"
-                placeholder="-- Select --"
+                placeholder="Select"
                 [searchFunction]="departmentSearchFunction"
                 [pageSize]="20"
                 containerClass="w-full"
@@ -409,7 +409,7 @@ interface BranchDropdownItem {
                 "
                 (change)="onBranchTypeChange()"
               >
-                <option value="">-- Select --</option>
+                <option value="">Select</option>
                 <option [value]="BranchType.Office">Office</option>
                 <option [value]="BranchType.Desk">Desk</option>
                 <option [value]="BranchType.Team">Team</option>
@@ -451,7 +451,7 @@ interface BranchDropdownItem {
                       ? loadingBranches
                         ? 'Loading...'
                         : availableBranches.length
-                        ? '-- Select --'
+                        ? 'Select'
                         : 'No branches available'
                       : 'Select branch type first'
                   }}

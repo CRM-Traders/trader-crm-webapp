@@ -723,7 +723,7 @@ export enum OperatorDetailSection {
                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       (change)="onDepartmentChange($event.target)"
                     >
-                      <option value="">-- Select --</option>
+                      <option value="">Select</option>
                       <option
                         *ngFor="let dept of availableDepartments"
                         [value]="dept.id"
@@ -747,7 +747,7 @@ export enum OperatorDetailSection {
                       <option value="">
                         {{
                           availableRoles.length
-                            ? '-- Select --'
+                            ? 'Select'
                             : '-- No items --'
                         }}
                       </option>
@@ -879,7 +879,7 @@ export enum OperatorDetailSection {
                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       (change)="onBranchTypeChange()"
                     >
-                      <option value="">-- Select --</option>
+                      <option value="">Select</option>
                       <option [value]="BranchType.Office">Office</option>
                       <option [value]="BranchType.Desk">Desk</option>
                       <option [value]="BranchType.Team">Team</option>
@@ -906,7 +906,7 @@ export enum OperatorDetailSection {
                             ? loadingBranches
                               ? 'Loading...'
                               : availableBranches.length
-                              ? '-- Select --'
+                              ? 'Select'
                               : 'No branches available'
                             : 'Select branch type first'
                         }}
