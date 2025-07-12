@@ -98,7 +98,7 @@ import {
                 >
                   Country
                 </label>
-                <div *ngIf="isEditing" class="relative">
+                <div *ngIf="isEditing" class="relative" data-dropdown="country">
                   <!-- Custom Dropdown Button -->
                   <button
                     type="button"
@@ -191,7 +191,7 @@ import {
                 >
                   Office
                 </label>
-                <div *ngIf="isEditing" class="relative">
+                <div *ngIf="isEditing" class="relative" data-dropdown="office">
                   <!-- Custom Dropdown Button -->
                   <button
                     type="button"
@@ -605,7 +605,14 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
 
   // Office dropdown methods
   toggleOfficeDropdown(): void {
+    // Close country dropdown if open
+    if (this.countryDropdownOpen) {
+      this.countryDropdownOpen = false;
+    }
+    
+    // Toggle office dropdown
     this.officeDropdownOpen = !this.officeDropdownOpen;
+    
     if (this.officeDropdownOpen && this.availableOffices.length === 0) {
       this.loadOffices();
     }
@@ -707,6 +714,12 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   toggleCountryDropdown(): void {
+    // Close office dropdown if open
+    if (this.officeDropdownOpen) {
+      this.officeDropdownOpen = false;
+    }
+    
+    // Toggle country dropdown
     this.countryDropdownOpen = !this.countryDropdownOpen;
   }
 
@@ -751,15 +764,15 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    const dropdown = target.closest('.relative');
     
-    if (!dropdown) {
-      if (this.officeDropdownOpen) {
-        this.officeDropdownOpen = false;
-      }
-      if (this.countryDropdownOpen) {
-        this.countryDropdownOpen = false;
-      }
+    // Check if click is inside any dropdown container
+    const officeDropdown = target.closest('[data-dropdown="office"]');
+    const countryDropdown = target.closest('[data-dropdown="country"]');
+    
+    // Close dropdowns if click is outside both dropdowns
+    if (!officeDropdown && !countryDropdown) {
+      this.officeDropdownOpen = false;
+      this.countryDropdownOpen = false;
     }
   }
 

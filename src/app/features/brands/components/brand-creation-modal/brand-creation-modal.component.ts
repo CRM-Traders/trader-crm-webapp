@@ -218,7 +218,7 @@ import {
 
               <!-- Offices List -->
               <div
-                class="max-h-48 overflow-y-auto"
+                class="max-h-28 overflow-y-auto"
                 (scroll)="onOfficeDropdownScroll($event)"
               >
                 <div
