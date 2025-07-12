@@ -98,7 +98,7 @@ export class AffiliatesService {
     });
 
     return this.httpService['_http'].post<Blob>(
-      `${this.httpService['_apiUrl']}/identity/api/affiliate/clients/generate-documentation`,
+      `${this.httpService['_apiUrl']}/identity/api/affiliate/generate-documentation`,
       body,
       {
         responseType: 'blob' as 'json',

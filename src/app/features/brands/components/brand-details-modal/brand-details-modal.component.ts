@@ -32,7 +32,7 @@ import {
       >
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Brand Details - {{ brand?.name || 'Loading...' }}
+            Brand Details - {{ brand.name || 'Loading...' }}
           </h2>
         </div>
       </div>
@@ -108,7 +108,7 @@ import {
                   *ngIf="!isEditing"
                   class="text-sm text-gray-900 dark:text-white font-medium"
                 >
-                  {{ brand?.name }}
+                  {{ brand.name }}
                 </span>
               </div>
 
@@ -201,7 +201,7 @@ import {
                   *ngIf="!isEditing"
                   class="text-sm text-gray-900 dark:text-white"
                 >
-                  {{ brand?.country }}
+                  {{ brand.country }}
                 </span>
               </div>
 
@@ -323,7 +323,7 @@ import {
                   *ngIf="!isEditing"
                   class="text-sm text-gray-900 dark:text-white"
                 >
-                  {{ brand?.officeName }}
+                  {{ brand.officeName }}
                 </span>
               </div>
 
@@ -351,12 +351,12 @@ import {
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                   [ngClass]="{
                     'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                      brand?.isActive,
+                      brand.isActive,
                     'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200':
-                      !brand?.isActive
+                      !brand.isActive
                   }"
                 >
-                  {{ brand?.isActive ? 'Active' : 'Inactive' }}
+                  {{ brand.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </div>
 
@@ -368,7 +368,7 @@ import {
                   Desks
                 </label>
                 <span class="text-sm text-gray-900 dark:text-white">
-                  {{ brand?.desksCount || 0 }} desks
+                  {{ brand.desksCount || 0 }} desks
                 </span>
               </div>
 
@@ -381,7 +381,7 @@ import {
                     Created Date
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ brand?.createdAt | date : 'medium' }}
+                    {{ brand.createdAt | date : 'medium' }}
                   </span>
                 </div>
                 <div>
@@ -391,7 +391,7 @@ import {
                     Created By
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ brand?.createdBy || 'System' }}
+                    {{ brand.createdBy || 'System' }}
                   </span>
                 </div>
               </div>
@@ -399,7 +399,7 @@ import {
               <!-- Last Modified Information -->
               <div
                 class="grid grid-cols-1 md:grid-cols-2 gap-4"
-                *ngIf="brand?.lastModifiedAt"
+                *ngIf="brand.lastModifiedAt"
               >
                 <div>
                   <label
@@ -408,7 +408,7 @@ import {
                     Last Modified
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ brand?.lastModifiedAt | date : 'medium' }}
+                    {{ brand.lastModifiedAt | date : 'medium' }}
                   </span>
                 </div>
                 <div>
@@ -418,7 +418,7 @@ import {
                     Modified By
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ brand?.lastModifiedBy || 'System' }}
+                    {{ brand.lastModifiedBy || 'System' }}
                   </span>
                 </div>
               </div>
@@ -545,7 +545,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   private loadBrandData(): void {
-    if (!this.brand?.id) return;
+    if (!this.brand.id) return;
 
     this.brandLoading = true;
     this.brandsService
@@ -668,7 +668,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         this.officeLoading = false;
         
         // Set selected office from office name if we have the brand's office name
-        if (this.brand?.officeName && !this.selectedOffice) {
+        if (this.brand.officeName && !this.selectedOffice) {
           this.setSelectedOfficeFromName(this.brand.officeName);
         }
       },
@@ -725,7 +725,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         this.filteredCountries = countries;
         
         // Set selected country if we have the brand's country code
-        if (this.brand?.country) {
+        if (this.brand.country) {
           this.setSelectedCountryFromCode(this.brand.country);
           this.setSelectedCountryFromName(this.brand.country);
         }

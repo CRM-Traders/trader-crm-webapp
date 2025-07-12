@@ -9,17 +9,15 @@ import { CommonModule } from '@angular/common';
 import {
   FormsModule,
   ReactiveFormsModule,
-  FormBuilder,
-  FormGroup,
-  Validators,
 } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { AffiliatesService } from './services/affiliates.service';
-import { Affiliate, AffiliateUpdateRequest } from './models/affiliates.model';
+import { Affiliate } from './models/affiliates.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
 import { AffiliateRegistrationModalComponent } from './components/affiliate-registration-modal/affiliate-registration-modal.component';
+import { AffiliateDetailsModalComponent } from './components/affiliate-details-modal/affiliate-details-modal.component';
 import {
   GridColumn,
   GridAction,
@@ -37,7 +35,6 @@ export class AffiliatesComponent implements OnInit {
   private affiliatesService = inject(AffiliatesService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
-  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
   @ViewChild('statusCell', { static: true })
@@ -45,10 +42,6 @@ export class AffiliatesComponent implements OnInit {
   @ViewChild('websiteCell', { static: true })
   websiteCellTemplate!: TemplateRef<any>;
 
-  selectedAffiliate: Affiliate | null = null;
-  editForm: FormGroup;
-  isEditing = false;
-  loading = false;
   importLoading = false;
   showDeleteModal = false;
   affiliateToDelete: Affiliate | null = null;
@@ -120,13 +113,7 @@ export class AffiliatesComponent implements OnInit {
       id: 'view',
       label: 'View Details',
       icon: 'view',
-      action: (item: Affiliate) => this.viewAffiliate(item),
-    },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Affiliate) => this.startEdit(item),
+      action: (item: Affiliate) => this.openDetailsModal(item),
     },
     {
       id: 'delete',
@@ -134,13 +121,6 @@ export class AffiliatesComponent implements OnInit {
       icon: 'delete',
       disabled: (item: Affiliate) => item.clientsCount > 0,
       action: (item: Affiliate) => this.confirmDelete(item),
-    },
-    {
-      id: 'permissions',
-      label: 'Permissions',
-      icon: 'permission',
-      type: 'primary',
-      action: (item) => this.openPermissionDialog(item),
     },
     {
       id: 'integration',
@@ -151,12 +131,7 @@ export class AffiliatesComponent implements OnInit {
     },
   ];
 
-  constructor() {
-    this.editForm = this.fb.group({
-      phone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
-      website: ['', [Validators.pattern(/^https?:\/\/.+/)]],
-    });
-  }
+
 
   ngOnInit(): void {
     const websiteColumn = this.gridColumns.find(
@@ -173,10 +148,7 @@ export class AffiliatesComponent implements OnInit {
       statusColumn.cellTemplate = this.statusCellTemplate;
     }
 
-    this.affiliatesService.getActiveAffiliates().subscribe((result: any) => {
-      this.totalCount = result.totalUsers;
-      this.activeCount = result.activeUsersTotalCount;
-    });
+    this.loadAffiliates();
   }
 
   ngOnDestroy(): void {
@@ -185,66 +157,42 @@ export class AffiliatesComponent implements OnInit {
   }
 
   onRowClick(affiliate: Affiliate): void {
-    this.viewAffiliate(affiliate);
+    this.openDetailsModal(affiliate);
   }
 
-  viewAffiliate(affiliate: Affiliate): void {
-    this.selectedAffiliate = affiliate;
-    this.isEditing = false;
-    this.editForm.patchValue({
-      id: affiliate.id,
-      phone: affiliate.phone || '',
-      website: affiliate.website || '',
-    });
-  }
+  openDetailsModal(affiliate: Affiliate): void {
+    const modalRef = this.modalService.open(
+      AffiliateDetailsModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        affiliate: affiliate,
+      }
+    );
 
-  startEdit(affiliate?: Affiliate): void {
-    if (affiliate) {
-      this.viewAffiliate(affiliate);
-    }
-    this.isEditing = true;
-  }
-
-  cancelEdit(): void {
-    this.isEditing = false;
-    if (this.selectedAffiliate) {
-      this.editForm.patchValue({
-        id: this.selectedAffiliate.id,
-        phone: this.selectedAffiliate.phone || '',
-        website: this.selectedAffiliate.website || '',
-      });
-    }
-  }
-
-  saveAffiliate(): void {
-    if (this.editForm.invalid || !this.selectedAffiliate) return;
-
-    const updateRequest: AffiliateUpdateRequest = {
-      id: this.selectedAffiliate.id,
-      phone: this.editForm.value.phone || null,
-      website: this.editForm.value.website || null,
-    };
-
-    this.loading = true;
-    this.affiliatesService
-      .updateAffiliate(updateRequest)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          this.alertService.error('Failed to update affiliate');
-          console.error('Error updating affiliate:', error);
-          return of(null);
-        }),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success('Affiliate updated successfully');
-          this.isEditing = false;
-          this.refreshSelectedAffiliate();
+    modalRef.result.then(
+      (result) => {
+        if (result) {
           this.refreshGrid();
+          this.loadAffiliates();
         }
-      });
+      },
+      () => {
+        // Modal dismissed
+        this.refreshGrid();
+        this.loadAffiliates();
+      }
+    );
+  }
+
+  loadAffiliates(): void {
+    this.affiliatesService.getActiveAffiliates().subscribe((result: any) => {
+      this.totalCount = result.totalUsers;
+      this.activeCount = result.activeUsersTotalCount;
+    });
   }
 
   confirmDelete(affiliate: Affiliate): void {
@@ -260,7 +208,6 @@ export class AffiliatesComponent implements OnInit {
   deleteAffiliate(): void {
     if (!this.affiliateToDelete) return;
 
-    this.loading = true;
     this.affiliatesService
       .deleteAffiliate(this.affiliateToDelete.id)
       .pipe(
@@ -277,7 +224,6 @@ export class AffiliatesComponent implements OnInit {
           return of(null);
         }),
         finalize(() => {
-          this.loading = false;
           this.showDeleteModal = false;
           this.affiliateToDelete = null;
         })
@@ -285,9 +231,6 @@ export class AffiliatesComponent implements OnInit {
       .subscribe((result) => {
         if (result !== null) {
           this.alertService.success('Affiliate deleted successfully');
-          if (this.selectedAffiliate?.id === this.affiliateToDelete?.id) {
-            this.selectedAffiliate = null;
-          }
           this.refreshGrid();
         }
       });
@@ -356,30 +299,6 @@ export class AffiliatesComponent implements OnInit {
     //   });
   }
 
-  public refreshSelectedAffiliate(): void {
-    if (this.selectedAffiliate) {
-      this.affiliatesService
-        .getAffiliateById(this.selectedAffiliate.id)
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError((error) => {
-            console.error('Error refreshing affiliate:', error);
-            return of(null);
-          })
-        )
-        .subscribe((affiliate) => {
-          if (affiliate) {
-            this.selectedAffiliate = affiliate;
-          }
-        });
-    }
-  }
-
-  closeDetails(): void {
-    this.selectedAffiliate = null;
-    this.isEditing = false;
-  }
-
   openRegistrationModal(): void {
     const modalRef = this.modalService.open(
       AffiliateRegistrationModalComponent,
@@ -392,12 +311,14 @@ export class AffiliatesComponent implements OnInit {
 
     modalRef.result.then(
       (result) => {
-        if (result) {
+        if (result && result.success) {
           this.refreshGrid();
+          this.loadAffiliates();
         }
       },
       () => {
         // Modal dismissed
+        this.loadAffiliates();
       }
     );
   }

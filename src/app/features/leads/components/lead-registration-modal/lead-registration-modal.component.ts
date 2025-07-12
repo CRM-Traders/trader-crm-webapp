@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -33,9 +33,8 @@ import { LeadsService } from '../../services/leads.service';
 
       <!-- Modal Body -->
       <div class="px-6 py-6">
-        <!-- Registration Form (shown before success) -->
+        <!-- Registration Form -->
         <form
-          *ngIf="!registrationSuccess"
           [formGroup]="registrationForm"
           class="space-y-4"
         >
@@ -198,7 +197,184 @@ import { LeadsService } from '../../services/leads.service';
 
           <!-- Phone and Country Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+             <!-- Language Selection -->
+            <div class="relative">
+              <label
+                for="language"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Language <span class="text-red-500">*</span>
+              </label>
+
+              <!-- Custom Dropdown Button -->
+              <button
+                type="button"
+                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                [class.border-red-500]="
+                  registrationForm.get('language')?.invalid &&
+                  registrationForm.get('language')?.touched
+                "
+                (click)="toggleLanguageDropdown()"
+              >
+                <span class="truncate">{{ getSelectedLanguageName() }}</span>
+                <svg
+                  class="w-4 h-4 ml-2 transition-transform"
+                  [class.rotate-180]="languageDropdownOpen"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+
+              <!-- Dropdown Panel -->
+              <div
+                *ngIf="languageDropdownOpen"
+                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+              >
+                <!-- Search Input -->
+                <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <input
+                    #languageSearchInput
+                    type="text"
+                    placeholder="Search languages..."
+                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    (input)="onLanguageSearch($event)"
+                    [value]="languageSearchTerm"
+                  />
+                </div>
+
+                <!-- Languages List -->
+                <div class="max-h-48 overflow-y-auto">
+                  <div
+                    *ngFor="let language of filteredLanguages"
+                    class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                    (click)="selectLanguage(language)"
+                  >
+                    {{ language.value }}
+                  </div>
+
+                  <!-- No results -->
+                  <div
+                    *ngIf="filteredLanguages.length === 0"
+                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    No languages found
+                  </div>
+                </div>
+              </div>
+
+              <!-- Validation Error -->
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  registrationForm.get('language')?.invalid &&
+                  registrationForm.get('language')?.touched
+                "
+              >
+                <span *ngIf="registrationForm.get('language')?.errors?.['required']">
+                  Language is required
+                </span>
+              </p>
+            </div>
+            <!-- Country Selection -->
+            <div class="relative">
+              <label
+                for="country"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Country <span class="text-red-500">*</span>
+              </label>
+
+              <!-- Custom Dropdown Button -->
+              <button
+                type="button"
+                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                [class.border-red-500]="
+                  registrationForm.get('country')?.invalid &&
+                  registrationForm.get('country')?.touched
+                "
+                (click)="toggleCountryDropdown()"
+              >
+                <span class="truncate">{{ getSelectedCountryName() }}</span>
+                <svg
+                  class="w-4 h-4 ml-2 transition-transform"
+                  [class.rotate-180]="countryDropdownOpen"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  ></path>
+                </svg>
+              </button>
+
+              <!-- Dropdown Panel -->
+              <div
+                *ngIf="countryDropdownOpen"
+                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+              >
+                <!-- Search Input -->
+                <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <input
+                    #countrySearchInput
+                    type="text"
+                    placeholder="Search countries..."
+                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    (input)="onCountrySearch($event)"
+                    [value]="countrySearchTerm"
+                  />
+                </div>
+
+                <!-- Countries List -->
+                <div class="max-h-48 overflow-y-auto">
+                  <div
+                    *ngFor="let country of filteredCountries"
+                    class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                    (click)="selectCountry(country)"
+                  >
+                    {{ country.name }}
+                  </div>
+
+                  <!-- No results -->
+                  <div
+                    *ngIf="filteredCountries.length === 0"
+                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    No countries found
+                  </div>
+                </div>
+              </div>
+
+              <!-- Validation Error -->
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  registrationForm.get('country')?.invalid &&
+                  registrationForm.get('country')?.touched
+                "
+              >
+                <span *ngIf="registrationForm.get('country')?.errors?.['required']">
+                  Country is required
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Language and Date of Birth Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+           <div>
               <label
                 for="telephone"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -234,93 +410,6 @@ import { LeadsService } from '../../services/leads.service';
                 <span
                   *ngIf="registrationForm.get('telephone')?.errors?.['pattern']"
                   >Please enter a valid phone number</span
-                >
-              </p>
-            </div>
-
-            <div>
-              <label
-                for="country"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Country <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="country"
-                formControlName="country"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  registrationForm.get('country')?.invalid &&
-                  registrationForm.get('country')?.touched
-                "
-                [class.focus:ring-red-500]="
-                  registrationForm.get('country')?.invalid &&
-                  registrationForm.get('country')?.touched
-                "
-              >
-                <option value="">Select country</option>
-                <option
-                  *ngFor="let country of countries"
-                  [value]="country.code"
-                >
-                  {{ country.name }}
-                </option>
-              </select>
-              <p
-                class="mt-1 text-sm text-red-600 dark:text-red-400"
-                *ngIf="
-                  registrationForm.get('country')?.invalid &&
-                  registrationForm.get('country')?.touched
-                "
-              >
-                <span
-                  *ngIf="registrationForm.get('country')?.errors?.['required']"
-                  >Country is required</span
-                >
-              </p>
-            </div>
-          </div>
-
-          <!-- Language and Date of Birth Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                for="language"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Language <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="language"
-                formControlName="language"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  registrationForm.get('language')?.invalid &&
-                  registrationForm.get('language')?.touched
-                "
-                [class.focus:ring-red-500]="
-                  registrationForm.get('language')?.invalid &&
-                  registrationForm.get('language')?.touched
-                "
-              >
-                <option value="">Select language</option>
-                <option
-                  *ngFor="let language of languages"
-                  [value]="language.key"
-                >
-                  {{ language.value }}
-                </option>
-              </select>
-              <p
-                class="mt-1 text-sm text-red-600 dark:text-red-400"
-                *ngIf="
-                  registrationForm.get('language')?.invalid &&
-                  registrationForm.get('language')?.touched
-                "
-              >
-                <span
-                  *ngIf="registrationForm.get('language')?.errors?.['required']"
-                  >Language is required</span
                 >
               </p>
             </div>
@@ -378,211 +467,51 @@ import { LeadsService } from '../../services/leads.service';
             />
           </div>
         </form>
-
-        <!-- Success Message with Generated Password -->
-        <div *ngIf="registrationSuccess" class="text-center space-y-6">
-          <!-- Success Icon -->
-          <div
-            class="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center"
-          >
-            <svg
-              class="w-8 h-8 text-green-600 dark:text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              ></path>
-            </svg>
-          </div>
-
-          <!-- Success Message -->
-          <div>
-            <h3
-              class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
-            >
-              Lead Registered Successfully!
-            </h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              The lead has been created and a password has been generated.
-            </p>
-          </div>
-
-          <!-- Generated Password Section -->
-          <div class="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 space-y-3">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Generated Password
-            </h4>
-
-            <!-- Password Display with Copy Button -->
-            <div class="flex items-center gap-3">
-              <div class="flex-1 relative">
-                <input
-                  type="text"
-                  readonly
-                  [value]="registrationResponse?.generatedPassword"
-                  id="generatedPassword"
-                  class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <button
-                type="button"
-                class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
-                (click)="copyPassword()"
-                [class.bg-green-600]="passwordCopied"
-                [class.hover:bg-green-700]="passwordCopied"
-              >
-                <span class="flex items-center">
-                  <svg
-                    *ngIf="!passwordCopied"
-                    class="w-4 h-4 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    ></path>
-                  </svg>
-                  <svg
-                    *ngIf="passwordCopied"
-                    class="w-4 h-4 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                  {{ passwordCopied ? 'Copied!' : 'Copy' }}
-                </span>
-              </button>
-            </div>
-
-            <!-- Additional Info -->
-            <div class="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-              <p>Lead ID: {{ registrationResponse?.leadId }}</p>
-              <p>User ID: {{ registrationResponse?.userId }}</p>
-            </div>
-          </div>
-
-          <!-- Warning Message -->
-          <div
-            class="bg-yellow-50 dark:bg-yellow-900/5 border border-yellow-200 dark:border-yellow-800/5 rounded-lg p-3"
-          >
-            <div class="flex items-start">
-              <svg
-                class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-2 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                ></path>
-              </svg>
-              <div>
-                <h4
-                  class="text-sm font-medium text-yellow-800 dark:text-yellow-300"
-                >
-                  Important
-                </h4>
-                <p class="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-                  Please copy and securely share this password with the lead. It
-                  will not be displayed again.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Modal Footer -->
-      <div
-        class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3"
-      >
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
         <button
-          *ngIf="!registrationSuccess"
           type="button"
-          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           (click)="onCancel()"
+          [disabled]="isSubmitting"
         >
           Cancel
         </button>
-
         <button
-          *ngIf="!registrationSuccess"
           type="button"
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           (click)="onSubmit()"
-          [disabled]="registrationForm.invalid || isSubmitting"
+          [disabled]="isSubmitting || registrationForm.invalid"
         >
-          <span class="flex items-center">
-            <svg
-              *ngIf="isSubmitting"
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <svg
-              *ngIf="!isSubmitting"
-              class="w-4 h-4 mr-2"
-              fill="none"
+          <svg
+            *ngIf="isSubmitting"
+            class="animate-spin -ml-1 mr-2 h-4 w-4 inline"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
               stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-              ></path>
-            </svg>
-            {{ isSubmitting ? 'Registering...' : 'Register Lead' }}
-          </span>
-        </button>
-
-        <button
-          *ngIf="registrationSuccess"
-          type="button"
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          (click)="onClose()"
-        >
-          Close
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          {{ isSubmitting ? 'Registering...' : 'Register Lead' }}
         </button>
       </div>
     </div>
   `,
-  styles: [],
+  styleUrls: ['./lead-registration-modal.component.scss'],
 })
 export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
@@ -596,13 +525,20 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
 
   registrationForm!: FormGroup;
   isSubmitting = false;
-  registrationSuccess = false;
-  registrationResponse: LeadCreateResponse | null = null;
-  passwordCopied = false;
 
-  // Dropdown data
-  countries: Country[] = [];
-  languages: Array<{ key: string; value: string }> = [];
+  // Country dropdown properties
+  countryDropdownOpen = false;
+  countrySearchTerm = '';
+  availableCountries: Country[] = [];
+  filteredCountries: Country[] = [];
+  selectedCountry: Country | null = null;
+
+  // Language dropdown properties
+  languageDropdownOpen = false;
+  languageSearchTerm = '';
+  availableLanguages: Array<{ key: string; value: string }> = [];
+  filteredLanguages: Array<{ key: string; value: string }> = [];
+  selectedLanguage: { key: string; value: string } | null = null;
 
   ngOnInit(): void {
     this.initForm();
@@ -623,12 +559,17 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
       username: ['', [Validators.required, Validators.minLength(3)]],
       telephone: [
         '',
-        [Validators.required, Validators.pattern(/^\+?[\d\s\-\(\)]+$/)],
+        [
+          Validators.required,
+          Validators.pattern(
+            /^\+?[1-9]\d{1,14}$/
+          ),
+        ],
       ],
       country: ['', [Validators.required]],
       language: ['', [Validators.required]],
       dateOfBirth: ['', [Validators.required]],
-      source: [''], // Optional field - no validators
+      source: [''],
     });
   }
 
@@ -638,16 +579,89 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (countries) => {
-          this.countries = countries;
+          this.availableCountries = countries;
+          this.filteredCountries = countries;
         },
         error: (error) => {
-          console.error('Failed to load countries:', error);
+          console.error('Error loading countries:', error);
+          this.alertService.error('Failed to load countries');
         },
       });
   }
 
   private loadLanguages(): void {
-    this.languages = this.languageService.getAllLanguages();
+    this.availableLanguages = this.languageService.getAllLanguages();
+    this.filteredLanguages = this.availableLanguages;
+  }
+
+  // Country dropdown methods
+  toggleCountryDropdown(): void {
+    if (this.countryDropdownOpen) {
+      this.countryDropdownOpen = false;
+      return;
+    }
+    this.languageDropdownOpen = false;
+    this.countryDropdownOpen = true;
+  }
+
+  onCountrySearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.countrySearchTerm = target.value.toLowerCase();
+
+    this.filteredCountries = this.availableCountries.filter(country =>
+      country.name.toLowerCase().includes(this.countrySearchTerm) ||
+      country.code.toLowerCase().includes(this.countrySearchTerm)
+    );
+  }
+
+  selectCountry(country: Country): void {
+    this.selectedCountry = country;
+    this.registrationForm.patchValue({ country: country.name });
+    this.countryDropdownOpen = false;
+    this.countrySearchTerm = '';
+    this.filteredCountries = this.availableCountries;
+  }
+
+  getSelectedCountryName(): string {
+    if (this.selectedCountry) {
+      return this.selectedCountry.name;
+    }
+    return 'Select a country...';
+  }
+
+  // Language dropdown methods
+  toggleLanguageDropdown(): void {
+    if (this.languageDropdownOpen) {
+      this.languageDropdownOpen = false;
+      return;
+    }
+    this.countryDropdownOpen = false;
+    this.languageDropdownOpen = true;
+  }
+
+  onLanguageSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.languageSearchTerm = target.value.toLowerCase();
+
+    this.filteredLanguages = this.availableLanguages.filter(language =>
+      language.value.toLowerCase().includes(this.languageSearchTerm) ||
+      language.key.toLowerCase().includes(this.languageSearchTerm)
+    );
+  }
+
+  selectLanguage(language: { key: string; value: string }): void {
+    this.selectedLanguage = language;
+    this.registrationForm.patchValue({ language: language.value });
+    this.languageDropdownOpen = false;
+    this.languageSearchTerm = '';
+    this.filteredLanguages = this.availableLanguages;
+  }
+
+  getSelectedLanguageName(): string {
+    if (this.selectedLanguage) {
+      return this.selectedLanguage.value;
+    }
+    return 'Select a language...';
   }
 
   onSubmit(): void {
@@ -670,8 +684,8 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
       email: formValue.email,
       username: formValue.username,
       telephone: formValue.telephone,
-      country: formValue.country, // This will now be the country code
-      language: formValue.language, // This will now be the language key
+      country: formValue.country, // This will now be the country name
+      language: formValue.language, // This will now be the language name
       dateOfBirth: dateOfBirth,
       source: formValue.source,
     };
@@ -698,30 +712,10 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
       )
       .subscribe((result) => {
         if (result) {
-          this.registrationResponse = result;
-          this.registrationSuccess = true;
           this.alertService.success('Lead registered successfully!');
+          this.modalRef.close({ success: true, data: result });
         }
       });
-  }
-
-  copyPassword(): void {
-    if (this.registrationResponse?.generatedPassword) {
-      navigator.clipboard
-        .writeText(this.registrationResponse.generatedPassword)
-        .then(() => {
-          this.passwordCopied = true;
-          this.alertService.success('Password copied to clipboard!');
-
-          // Reset the copied state after 3 seconds
-          setTimeout(() => {
-            this.passwordCopied = false;
-          }, 3000);
-        })
-        .catch(() => {
-          this.alertService.error('Failed to copy password to clipboard');
-        });
-    }
   }
 
   private markAllFieldsAsTouched(): void {
@@ -734,17 +728,26 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
     this.modalRef.dismiss();
   }
 
-  onClose(): void {
-    this.modalRef.close(this.registrationResponse);
+  getCountryNameByCode(countryName: string): string {
+    return countryName;
   }
 
-  getCountryNameByCode(countryCode: string): string {
-    const country = this.countries.find(c => c.code === countryCode);
-    return country ? country.name : countryCode;
+  getLanguageNameByKey(languageName: string): string {
+    return languageName;
   }
 
-  getLanguageNameByKey(languageKey: string): string {
-    const language = this.languages.find(l => l.key === languageKey);
-    return language ? language.value : languageKey;
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    // Close dropdowns if clicking outside
+    if (!target.closest('.relative')) {
+      this.closeAllDropdowns();
+    }
+  }
+
+  private closeAllDropdowns(): void {
+    this.countryDropdownOpen = false;
+    this.languageDropdownOpen = false;
   }
 }

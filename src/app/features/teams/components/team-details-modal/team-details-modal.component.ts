@@ -59,7 +59,7 @@ interface BrandDropdownResponse {
       >
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Team Details - {{ team?.name || 'Loading...' }}
+            Team Details - {{ team.name || 'Loading...' }}
           </h2>
         </div>
       </div>
@@ -278,7 +278,7 @@ interface BrandDropdownResponse {
                       clip-rule="evenodd"
                     />
                   </svg>
-                  {{ team?.brandName }}
+                  {{ team.brandName }}
                 </span>
               </div>
 
@@ -423,7 +423,7 @@ interface BrandDropdownResponse {
                       d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
                     />
                   </svg>
-                  {{ team?.deskName }}
+                  {{ team.deskName }}
                 </span>
               </div>
 
@@ -448,7 +448,7 @@ interface BrandDropdownResponse {
                       clip-rule="evenodd"
                     />
                   </svg>
-                  {{ team?.officeName }}
+                  {{ team.officeName }}
                 </span>
               </div>
 
@@ -476,12 +476,12 @@ interface BrandDropdownResponse {
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                   [ngClass]="{
                     'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                      team?.isActive,
+                      team.isActive,
                     'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200':
-                      !team?.isActive
+                      !team.isActive
                   }"
                 >
-                  {{ team?.isActive ? 'Active' : 'Inactive' }}
+                  {{ team.isActive ? 'Active' : 'Inactive' }}
                 </span>
               </div>
 
@@ -494,7 +494,7 @@ interface BrandDropdownResponse {
                     Created Date
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ team?.createdAt | date : 'medium' }}
+                    {{ team.createdAt | date : 'medium' }}
                   </span>
                 </div>
                 <div>
@@ -504,7 +504,7 @@ interface BrandDropdownResponse {
                     Created By
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ team?.createdBy || 'System' }}
+                    {{ team.createdBy || 'System' }}
                   </span>
                 </div>
               </div>
@@ -512,7 +512,7 @@ interface BrandDropdownResponse {
               <!-- Last Modified Information -->
               <div
                 class="grid grid-cols-1 md:grid-cols-2 gap-4"
-                *ngIf="team?.lastModifiedAt"
+                *ngIf="team.lastModifiedAt"
               >
                 <div>
                   <label
@@ -521,7 +521,7 @@ interface BrandDropdownResponse {
                     Last Modified
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ team?.lastModifiedAt | date : 'medium' }}
+                    {{ team.lastModifiedAt | date : 'medium' }}
                   </span>
                 </div>
                 <div>
@@ -531,7 +531,7 @@ interface BrandDropdownResponse {
                     Modified By
                   </label>
                   <span class="text-sm text-gray-900 dark:text-white">
-                    {{ team?.lastModifiedBy || 'System' }}
+                    {{ team.lastModifiedBy || 'System' }}
                   </span>
                 </div>
               </div>
@@ -667,7 +667,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   private loadTeamData(): void {
-    if (!this.team?.id) return;
+    if (!this.team.id) return;
 
     this.teamLoading = true;
     this.teamsService
@@ -842,7 +842,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
           
           // Ensure the current desk is always available in the list
           const selectedDeskId = this.editForm.get('deskId')?.value;
-          if (selectedDeskId && this.team?.deskName) {
+          if (selectedDeskId && this.team.deskName) {
             const currentDeskExists = this.availableDesks.find(desk => desk.id === selectedDeskId);
             if (!currentDeskExists) {
               // Add the current desk to the list if it's not already there
@@ -910,7 +910,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     );
     return selectedBrand
       ? selectedBrand.value
-      : this.team?.brandName || 'Select a brand';
+      : this.team.brandName || 'Select a brand';
   }
 
   // Desk dropdown methods
