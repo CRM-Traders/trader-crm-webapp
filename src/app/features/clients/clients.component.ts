@@ -107,6 +107,13 @@ export class ClientsComponent implements OnInit {
   isSubmittingInlineComment = false;
   inlineCommentState: InlineCommentState | null = null;
 
+  // Tooltip state
+  tooltipState: {
+    visible: boolean;
+    text: string;
+    position: { x: number; y: number };
+  } | null = null;
+
   clientCommentsCache: Map<string, ClientComment[]> = new Map();
 
   salesStatusOptions: { value: number; label: string }[] = [];
@@ -676,7 +683,8 @@ export class ClientsComponent implements OnInit {
 
   constructor() {
     this.inlineCommentForm = this.fb.group({
-      note: ['', [Validators.required, Validators.minLength(5)]],
+      subject: [''],
+      note: ['', [Validators.required]],
       isPinnedComment: [false],
     });
   }
@@ -933,7 +941,7 @@ export class ClientsComponent implements OnInit {
       clientId,
       mode,
       position: {
-        top: rect.top + window.scrollY - 250, // Position above the icon
+        top: rect.top + window.scrollY - 240, // Position above the icon
         left: rect.left + window.scrollX - 50, // Adjust to center the box
       },
       comments: [],
@@ -993,6 +1001,7 @@ export class ClientsComponent implements OnInit {
 
     const request: ClientCommentCreateRequest = {
       clientId: this.inlineCommentState.clientId,
+      subject: this.inlineCommentForm.value.subject,
       note: this.inlineCommentForm.value.note,
       isPinnedComment: this.inlineCommentForm.value.isPinnedComment,
     };
@@ -1012,6 +1021,9 @@ export class ClientsComponent implements OnInit {
           // Refresh the comments cache for this client
           this.refreshClientComments(this.inlineCommentState!.clientId);
 
+          // Refresh the grid to show the latest comment
+          this.refreshGrid();
+
           this.closeInlineComment();
         },
         error: (error) => {
@@ -1022,7 +1034,10 @@ export class ClientsComponent implements OnInit {
 
   private resetInlineCommentForm(): void {
     this.inlineCommentForm.reset();
-    this.inlineCommentForm.patchValue({ isPinnedComment: false });
+    this.inlineCommentForm.patchValue({ 
+      subject: '',
+      isPinnedComment: false 
+    });
   }
 
   formatDate(date: Date): string {
@@ -1164,11 +1179,12 @@ export class ClientsComponent implements OnInit {
     modalRef.result.then(
       (result) => {
         if (result) {
+          // Refresh grid and statistics when modal closes with success
           this.refreshGrid();
+          this.alertService.success('Client registration completed successfully');
         }
       },
       () => {
-        // Modal dismissed
       }
     );
   }
@@ -1209,12 +1225,23 @@ export class ClientsComponent implements OnInit {
     // Clear comments cache when refreshing grid
     this.clearCommentsCache();
 
+    // Refresh client statistics
+    this.loadClientStatistics();
+
+    // Trigger grid refresh
     const gridComponent = document.querySelector(
       `app-grid[gridId="clients-grid"]`
     );
     if (gridComponent) {
       (gridComponent as any).refresh?.();
     }
+
+    // Alternative: Dispatch custom event to refresh grid
+    window.dispatchEvent(
+      new CustomEvent('refreshGrid', {
+        detail: { gridId: 'clients-grid' },
+      })
+    );
   }
 
   onSaleStatusChanged(clientId: string, newStatus: KycStatus): void {
@@ -1622,5 +1649,23 @@ export class ClientsComponent implements OnInit {
   refreshClientComments(clientId: string): void {
     this.clientCommentsCache.delete(clientId);
     this.loadClientComments(clientId);
+  }
+
+  showTooltip(event: MouseEvent, text: string): void {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    
+    this.tooltipState = {
+      visible: true,
+      text: text,
+      position: {
+        x: rect.left + window.scrollX + 300, // Center on the text
+        y: rect.top + window.scrollY + 90  // Just above the text
+      }
+    };
+  }
+
+  hideTooltip(): void {
+    this.tooltipState = null;
   }
 }

@@ -54,8 +54,8 @@ export class ClientCommentsModalComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.commentForm = this.fb.group({
-      subject: ['', [Validators.required, Validators.minLength(3)]],
-      note: ['', [Validators.required, Validators.minLength(5)]],
+      subject: [''],
+      note: ['', [Validators.required]],
       isPinnedComment: [false],
     });
   }

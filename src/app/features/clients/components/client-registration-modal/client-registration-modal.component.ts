@@ -1,6 +1,6 @@
 // src/app/features/clients/components/client-registration-modal/client-registration-modal.component.ts
 
-import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -24,17 +24,11 @@ import {
   AffiliateSearchResponse,
 } from '../../services/clients.service';
 import { Observable, map, Subject, takeUntil } from 'rxjs';
-import {
-  FilterableDropdownComponent,
-  DropdownItem,
-  DropdownSearchParams,
-  DropdownSearchResponse,
-} from '../../../../shared/components/filterable-dropdown/filterable-dropdown.component';
 
 @Component({
   selector: 'app-client-registration-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FilterableDropdownComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="w-full">
       <!-- Modal Header -->
@@ -244,6 +238,149 @@ import {
             </div>
           </div>
 
+          <!-- Country and Language Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="country"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Country
+              </label>
+              <div class="relative" data-dropdown="country">
+                <!-- Custom Dropdown Button -->
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  (click)="toggleCountryDropdown()"
+                >
+                  <span class="truncate">{{ getSelectedCountryName() }}</span>
+                  <svg
+                    class="w-4 h-4 ml-2 transition-transform"
+                    [class.rotate-180]="countryDropdownOpen"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div
+                  *ngIf="countryDropdownOpen"
+                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                >
+                  <!-- Search Input -->
+                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                      #countrySearchInput
+                      type="text"
+                      placeholder="Search countries..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      (input)="onCountrySearch($event)"
+                      [value]="countrySearchTerm"
+                    />
+                  </div>
+
+                  <!-- Countries List -->
+                  <div class="max-h-48 overflow-y-auto">
+                    <div
+                      *ngFor="let country of filteredCountries"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      (click)="selectCountry(country)"
+                    >
+                      {{ country.name }}
+                    </div>
+
+                    <!-- No results -->
+                    <div
+                      *ngIf="filteredCountries.length === 0"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      No countries found
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label
+                for="language"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Language
+              </label>
+              <div class="relative" data-dropdown="language">
+                <!-- Custom Dropdown Button -->
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  (click)="toggleLanguageDropdown()"
+                >
+                  <span class="truncate">{{ getSelectedLanguageName() }}</span>
+                  <svg
+                    class="w-4 h-4 ml-2 transition-transform"
+                    [class.rotate-180]="languageDropdownOpen"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div
+                  *ngIf="languageDropdownOpen"
+                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                >
+                  <!-- Search Input -->
+                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                      #languageSearchInput
+                      type="text"
+                      placeholder="Search languages..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      (input)="onLanguageSearch($event)"
+                      [value]="languageSearchTerm"
+                    />
+                  </div>
+
+                  <!-- Languages List -->
+                  <div class="max-h-48 overflow-y-auto">
+                    <div
+                      *ngFor="let language of filteredLanguages"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      (click)="selectLanguage(language)"
+                    >
+                      {{ language.value }}
+                    </div>
+
+                    <!-- No results -->
+                    <div
+                      *ngIf="filteredLanguages.length === 0"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      No languages found
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Affiliate and Phone Number Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -251,27 +388,98 @@ import {
                 for="affiliateId"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Affiliate <span class="text-red-500">*</span>
+                Affiliate
               </label>
-              <app-filterable-dropdown
-                formControlName="affiliateId"
-                placeholder="Search and select an affiliate..."
-                [searchFunction]="affiliateSearchFunction"
-                [pageSize]="20"
-                containerClass="w-full"
-              ></app-filterable-dropdown>
-              <p
-                class="mt-1 text-sm text-red-600 dark:text-red-400"
-                *ngIf="
-                  registrationForm.get('affiliateId')?.invalid &&
-                  registrationForm.get('affiliateId')?.touched
-                "
-              >
-                <span
-                  *ngIf="registrationForm.get('affiliateId')?.errors?.['required']"
-                  >Affiliate is required</span
+              <div class="relative" data-dropdown="affiliate">
+                <!-- Custom Dropdown Button -->
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  (click)="toggleAffiliateDropdown()"
                 >
-              </p>
+                  <span class="truncate">{{ getSelectedAffiliateName() }}</span>
+                  <svg
+                    class="w-4 h-4 ml-2 transition-transform"
+                    [class.rotate-180]="affiliateDropdownOpen"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div
+                  *ngIf="affiliateDropdownOpen"
+                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                >
+                  <!-- Search Input -->
+                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                      #affiliateSearchInput
+                      type="text"
+                      placeholder="Search affiliates..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      (input)="onAffiliateSearch($event)"
+                      [value]="affiliateSearchTerm"
+                    />
+                  </div>
+
+                  <!-- Affiliates List -->
+                  <div
+                    class="max-h-48 overflow-y-auto"
+                    (scroll)="onAffiliateDropdownScroll($event)"
+                  >
+                    <div
+                      *ngFor="let affiliate of availableAffiliates"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      (click)="selectAffiliate(affiliate)"
+                    >
+                      <div>{{ affiliate.userFullName }}</div>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div
+                      *ngIf="affiliateLoading"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      <svg
+                        class="animate-spin h-4 w-4 mx-auto"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+
+                    <!-- No results -->
+                    <div
+                      *ngIf="!affiliateLoading && availableAffiliates.length === 0"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      No affiliates found
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -308,53 +516,6 @@ import {
                   >Invalid phone number format</span
                 >
               </p>
-            </div>
-          </div>
-
-          <!-- Country and Language Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label
-                for="country"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Country
-              </label>
-              <select
-                id="country"
-                formControlName="country"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              >
-                <option value="">Select country</option>
-                <option
-                  *ngFor="let country of countries"
-                  [value]="country.code"
-                >
-                  {{ country.name }}
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                for="language"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Language
-              </label>
-              <select
-                id="language"
-                formControlName="language"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              >
-                <option value="">Select language</option>
-                <option
-                  *ngFor="let language of languages"
-                  [value]="language.key"
-                >
-                  {{ language.value }}
-                </option>
-              </select>
             </div>
           </div>
 
@@ -470,28 +631,27 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   countries: Country[] = [];
   languages: Array<{ key: string; value: string }> = [];
 
-  // Affiliate search function for the filterable dropdown
-  affiliateSearchFunction = (
-    params: DropdownSearchParams
-  ): Observable<DropdownSearchResponse> => {
-    const searchParams: AffiliateSearchParams = {
-      globalFilter: params.globalFilter,
-      pageIndex: params.pageIndex,
-      pageSize: params.pageSize,
-    };
+  // Country dropdown properties
+  countryDropdownOpen = false;
+  countrySearchTerm = '';
+  filteredCountries: Country[] = [];
+  selectedCountry: Country | null = null;
 
-    return this.clientsService.getAffiliatesDropdown(searchParams).pipe(
-      map((response: AffiliateSearchResponse) => ({
-        items: response.items.map((affiliate: AffiliateDropdownItem) => ({
-          value: affiliate.affiliateId,
-          label: affiliate.userFullName,
-        })),
-        totalCount: response.totalCount,
-        hasNextPage: response.hasNextPage,
-        hasPreviousPage: response.hasPreviousPage,
-      }))
-    );
-  };
+  // Language dropdown properties
+  languageDropdownOpen = false;
+  languageSearchTerm = '';
+  filteredLanguages: Array<{ key: string; value: string }> = [];
+  selectedLanguage: { key: string; value: string } | null = null;
+
+  // Affiliate dropdown properties
+  affiliateDropdownOpen = false;
+  affiliateLoading = false;
+  affiliateSearchTerm = '';
+  availableAffiliates: AffiliateDropdownItem[] = [];
+  selectedAffiliate: AffiliateDropdownItem | null = null;
+  currentAffiliatePage = 0;
+  affiliatePageSize = 20;
+  hasMoreAffiliates = false;
 
   constructor() {
     this.registrationForm = this.fb.group({
@@ -499,7 +659,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       username: ['', Validators.required],
-      affiliateId: ['', Validators.required],
+      affiliateId: [null], // Changed from required to optional, default to null
       telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       country: [''],
       language: [''],
@@ -511,6 +671,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadCountries();
     this.loadLanguages();
+    this.loadAffiliates();
   }
 
   ngOnDestroy(): void {
@@ -525,6 +686,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (countries) => {
           this.countries = countries;
+          this.filteredCountries = countries;
         },
         error: (error) => {
           console.error('Failed to load countries:', error);
@@ -534,6 +696,166 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
   private loadLanguages(): void {
     this.languages = this.languageService.getAllLanguages();
+    this.filteredLanguages = this.languages;
+  }
+
+  private loadAffiliates(reset: boolean = false): void {
+    if (this.affiliateLoading) return;
+
+    if (reset) {
+      this.currentAffiliatePage = 0;
+      this.availableAffiliates = [];
+    }
+
+    this.affiliateLoading = true;
+
+    const searchParams: AffiliateSearchParams = {
+      globalFilter: this.affiliateSearchTerm || undefined,
+      pageIndex: this.currentAffiliatePage,
+      pageSize: this.affiliatePageSize,
+    };
+
+    this.clientsService.getAffiliatesDropdown(searchParams).subscribe({
+      next: (response: AffiliateSearchResponse) => {
+        if (reset) {
+          this.availableAffiliates = response.items;
+        } else {
+          this.availableAffiliates = [...this.availableAffiliates, ...response.items];
+        }
+        this.hasMoreAffiliates = response.hasNextPage;
+        this.affiliateLoading = false;
+      },
+      error: (error) => {
+        this.affiliateLoading = false;
+        this.alertService.error('Failed to load affiliates');
+      },
+    });
+  }
+
+  // Country dropdown methods
+  toggleCountryDropdown(): void {
+    // Close other dropdowns
+    if (this.languageDropdownOpen) {
+      this.languageDropdownOpen = false;
+    }
+    if (this.affiliateDropdownOpen) {
+      this.affiliateDropdownOpen = false;
+    }
+    
+    this.countryDropdownOpen = !this.countryDropdownOpen;
+  }
+
+  onCountrySearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.countrySearchTerm = target.value.toLowerCase();
+    
+    this.filteredCountries = this.countries.filter(country =>
+      country.name.toLowerCase().includes(this.countrySearchTerm)
+    );
+  }
+
+  selectCountry(country: Country): void {
+    this.selectedCountry = country;
+    this.registrationForm.patchValue({ country: country.code });
+    this.countryDropdownOpen = false;
+    this.countrySearchTerm = '';
+    this.filteredCountries = this.countries;
+  }
+
+  getSelectedCountryName(): string {
+    if (this.selectedCountry) {
+      return this.selectedCountry.name;
+    }
+    return 'Select a country...';
+  }
+
+  // Language dropdown methods
+  toggleLanguageDropdown(): void {
+    // Close other dropdowns
+    if (this.countryDropdownOpen) {
+      this.countryDropdownOpen = false;
+    }
+    if (this.affiliateDropdownOpen) {
+      this.affiliateDropdownOpen = false;
+    }
+    
+    this.languageDropdownOpen = !this.languageDropdownOpen;
+  }
+
+  onLanguageSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.languageSearchTerm = target.value.toLowerCase();
+    
+    this.filteredLanguages = this.languages.filter(language =>
+      language.value.toLowerCase().includes(this.languageSearchTerm) ||
+      language.key.toLowerCase().includes(this.languageSearchTerm)
+    );
+  }
+
+  selectLanguage(language: { key: string; value: string }): void {
+    this.selectedLanguage = language;
+    this.registrationForm.patchValue({ language: language.key });
+    this.languageDropdownOpen = false;
+    this.languageSearchTerm = '';
+    this.filteredLanguages = this.languages;
+  }
+
+  getSelectedLanguageName(): string {
+    if (this.selectedLanguage) {
+      return this.selectedLanguage.value;
+    }
+    return 'Select a language...';
+  }
+
+  // Affiliate dropdown methods
+  toggleAffiliateDropdown(): void {
+    // Close other dropdowns
+    if (this.countryDropdownOpen) {
+      this.countryDropdownOpen = false;
+    }
+    if (this.languageDropdownOpen) {
+      this.languageDropdownOpen = false;
+    }
+    
+    this.affiliateDropdownOpen = !this.affiliateDropdownOpen;
+    
+    if (this.affiliateDropdownOpen && this.availableAffiliates.length === 0) {
+      this.loadAffiliates();
+    }
+  }
+
+  onAffiliateSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.affiliateSearchTerm = target.value;
+    this.currentAffiliatePage = 0;
+    this.loadAffiliates(true);
+  }
+
+  onAffiliateDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 5 &&
+      this.hasMoreAffiliates &&
+      !this.affiliateLoading
+    ) {
+      this.currentAffiliatePage++;
+      this.loadAffiliates();
+    }
+  }
+
+  selectAffiliate(affiliate: AffiliateDropdownItem): void {
+    this.selectedAffiliate = affiliate;
+    this.registrationForm.patchValue({ affiliateId: affiliate.affiliateId });
+    this.affiliateDropdownOpen = false;
+  }
+
+  getSelectedAffiliateName(): string {
+    if (this.selectedAffiliate) {
+      return this.selectedAffiliate.userFullName;
+    }
+    return 'None';
   }
 
   onSubmit() {
@@ -552,10 +874,10 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       lastName: formValue.lastName,
       email: formValue.email,
       username: formValue.username,
-      affiliateId: formValue.affiliateId,
+      affiliateId: formValue.affiliateId === null ? undefined : formValue.affiliateId,
       telephone: formValue.telephone || null,
-      country: formValue.country || null, // This will now be the country code
-      language: formValue.language || null, // This will now be the language key
+      country: formValue.country || null,
+      language: formValue.language || null,
       dateOfBirth: formValue.dateOfBirth ? new Date(formValue.dateOfBirth).toISOString() : null,
       source: formValue.source || null,
     };
@@ -630,6 +952,24 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
   onClose() {
     this.modalRef.close(true);
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    // Check if click is inside any dropdown container
+    const countryDropdown = target.closest('[data-dropdown="country"]');
+    const languageDropdown = target.closest('[data-dropdown="language"]');
+    const affiliateDropdown = target.closest('[data-dropdown="affiliate"]');
+    
+    // Close dropdowns if click is outside all dropdowns
+    if (!countryDropdown && !languageDropdown && !affiliateDropdown) {
+      this.countryDropdownOpen = false;
+      this.languageDropdownOpen = false;
+      this.affiliateDropdownOpen = false;
+    }
   }
 
   getCountryNameByCode(countryCode: string): string {
