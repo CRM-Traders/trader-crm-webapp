@@ -78,3 +78,20 @@ export interface ClientWalletsSummary {
   currencyBreakdown: CurrencyBreakdown[];
   lastUpdated: string;
 }
+
+export interface WalletTransactionFilters {
+  transactionType?: string;
+  currency?: string;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface WalletTransactionResponse {
+  items: WalletTransaction[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}

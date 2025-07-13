@@ -1,7 +1,7 @@
 // services/trading-activity.service.ts
 
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, map } from 'rxjs';
 import { HttpService } from '../../../../../core/services/http.service';
 import { AlertService } from '../../../../../core/services/alert.service';
 import {
@@ -36,17 +36,59 @@ export class TradingActivityService {
   readonly pageSize = this._pageSize.asReadonly();
 
   /**
-   * Get client orders by user ID
+   * Get client orders by user ID with pagination and filtering
    */
-  getClientOrdersByUserId(userId: string): Observable<TradingOrder[]> {
-    console.log('TradingActivityService: Getting client orders for user:', userId);
+  getClientOrdersByUserId(
+    userId: string, 
+    filters?: {
+      pageNumber?: number;
+      pageSize?: number;
+      status?: string;
+      symbol?: string;
+    }
+  ): Observable<TradingActivityResponse> {
+    console.log('TradingActivityService: Getting client orders for user:', userId, 'with filters:', filters);
     this._loading.set(true);
 
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('clientUserId', userId);
+    
+    if (filters?.pageNumber) params.append('pageNumber', (filters.pageNumber - 1).toString()); // Adjust for 0-based pageNumber
+    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString()); // pageSize is the actual count, not 0-based
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.symbol) params.append('symbol', filters.symbol);
+
+    const queryString = params.toString();
+    const url = `traiding/api/Wallets/client-orders-by-user-id?${queryString}`;
+
     return this.http
-      .get<TradingOrder[]>(`traiding/api/Wallets/client-orders-by-user-id?clientUserId=${userId}`)
+      .get<{
+        items: TradingOrder[];
+        totalCount: number;
+        pageNumber: number;
+        pageSize: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      }>(url)
       .pipe(
-        tap((orders) => {
-          this._orders.set(orders);
+        map((response) => {
+          // Convert the response to match our TradingActivityResponse interface
+          const tradingResponse: TradingActivityResponse = {
+            orders: response.items,
+            totalCount: response.totalCount,
+            pageIndex: response.pageNumber + 1, // Convert from 0-based to 1-based
+            pageSize: response.pageSize, // pageSize is already the correct count
+            summary: this.calculateSummary(response.items)
+          };
+          return tradingResponse;
+        }),
+        tap((tradingResponse) => {
+          this._orders.set(tradingResponse.orders);
+          this._totalCount.set(tradingResponse.totalCount);
+          this._pageIndex.set(tradingResponse.pageIndex);
+          this._pageSize.set(tradingResponse.pageSize);
           this._loading.set(false);
         }),
         catchError((error) => {

@@ -125,7 +125,6 @@ export class WalletService {
       })
       .pipe(
         catchError((error) => {
-          this.alertService.error('Failed to create wallet. Please try again.');
           return throwError(() => error);
         })
       );
