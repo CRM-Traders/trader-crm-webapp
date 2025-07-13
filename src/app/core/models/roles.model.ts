@@ -28,3 +28,18 @@ export enum UserRole {
   SuperAdmin = 'SuperAdmin',
   MrRobot = 'MrRobot',
 }
+
+export enum UserPermission {
+  AffiliateManager_Executive = 'Affiliate manager.Executive',
+  AffiliateManager_TeamLead = 'Affiliate manager.Team leader',
+  AffiliateManager_HOD = 'Affiliate manager.Head of department',
+  AffiliateManager_Manager = 'Affiliate manager.Manager',
+  Compliance = 'Compliance.Compliance',
+  Compliance_Manager = 'Compliance.Compliance manager',
+  Finance_Executive = 'Finance.Executive',
+  Finance_TeamLead = 'Finance.Team leader',
+  Finance_HOD = 'Finance.Head of department',
+  Finance_Manager = 'Finance.Manager',
+
+  MrRobot = 'MrRobot',
+}

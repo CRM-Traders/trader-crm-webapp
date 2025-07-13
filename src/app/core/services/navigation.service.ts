@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { BehaviorSubject, Observable, filter } from 'rxjs';
-import { UserRole } from '../models/roles.model';
+import { BehaviorSubject, filter } from 'rxjs';
+import { UserPermission } from '../models/roles.model';
 import { NavItem } from '../models/nav-item.model';
 
 @Injectable({
@@ -19,85 +19,139 @@ export class NavigationService {
       label: 'Dashboard',
       icon: 'dashboard',
       route: '/dashboard',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
     {
       label: 'Hierarchy',
       icon: 'hierarchy',
       route: '/hierarchy',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
-        {
+    {
       label: 'Offices',
       icon: 'offices',
       route: '/offices',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
     {
       label: 'Brands',
       icon: 'brands',
       route: '/brands',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
     {
       label: 'Desks',
       icon: 'desks',
       route: '/desks',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
     {
       label: 'Teams',
       icon: 'teams',
       route: '/teams',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
     {
       label: 'Sales Rules',
       icon: 'salerule',
       route: '/salerules',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
     {
       label: 'Clients',
       icon: 'traders',
       route: '/clients',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+        UserPermission.Finance_Executive,
+      ],
     },
     {
       label: 'Affiliates',
       icon: 'affiliates',
       route: '/affiliates',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.AffiliateManager_Executive,
+        UserPermission.AffiliateManager_HOD,
+        UserPermission.AffiliateManager_Manager,
+        UserPermission.AffiliateManager_TeamLead,
+      ],
     },
     {
       label: 'Leads',
       icon: 'leads',
       route: '/leads',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+      ],
     },
     {
       label: 'Operators',
       icon: 'operator',
       route: '/operators',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_HOD,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_Manager,
+      ],
     },
     {
       label: 'Calendar',
       icon: 'calendar',
       route: '/calendar',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Finance_Manager,
+        UserPermission.Finance_TeamLead,
+        UserPermission.Finance_HOD,
+        UserPermission.Finance_Executive,
+      ],
     },
     {
       label: 'Documents',
       icon: 'documents',
       route: '/documents',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [
+        UserPermission.Compliance,
+        UserPermission.Compliance_Manager,
+      ],
     },
     {
       label: 'Sources',
       icon: 'sources',
       route: '/sources',
-      requiredRoles: [UserRole.SuperAdmin],
+      requiredRoles: [UserPermission.MrRobot],
     },
   ];
 

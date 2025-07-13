@@ -26,6 +26,7 @@ export class AuthService implements OnDestroy {
   private readonly ACCESS_TOKEN_KEY = 'iFC03fkUWhcdYGciaclPyeqySdQE6qCd';
   private readonly REFRESH_TOKEN_KEY = 'LXP6usaZ340gDciGr69MQpPwpEdvPj9M';
   private readonly ROLE_KEY = '9JeQyQTsI03hbuMtl9tR1TjbOFGWf54p';
+  private readonly PERMISSION_KEY = 'PerseQyQTsI03hbuMtl9tR1TjbOFGWf54p';
   private readonly EXPIRATION_KEY = 'z6ipay7ciaSpZQbb6cDLueVAAs0WtRjs';
   private readonly NAME_KEY = 'amskskwmwi7ciaSpZQbb6cDLueVAAs0WtRjs';
 
@@ -35,9 +36,13 @@ export class AuthService implements OnDestroy {
 
   private readonly _isAuthenticated = signal<boolean>(this.hasValidToken());
   private readonly _userRole = signal<string>(this.getRole());
+  private readonly _userPermissions = signal<string[]>(
+    this.getUserPermissions()
+  );
 
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly userRole = this._userRole.asReadonly();
+  readonly userPermissions = this._userPermissions.asReadonly();
 
   constructor() {
     this.initTokenRefresh();
@@ -97,9 +102,7 @@ export class AuthService implements OnDestroy {
 
     if (this.getRefreshToken()) {
       this._http.post<void>('identity/api/auth/logout', {}).subscribe({
-        error: () => {
-          /* Ignore logout errors */
-        },
+        error: () => {},
         complete: () => this.clearAuthState(),
       });
     } else {
@@ -178,6 +181,11 @@ export class AuthService implements OnDestroy {
     return localStorage.getItem(this.ROLE_KEY) || '';
   }
 
+  getUserPermissions(): string[] {
+    const stored = localStorage.getItem(this.PERMISSION_KEY);
+    return stored ? JSON.parse(stored) : [];
+  }
+
   getName(): string {
     return localStorage.getItem(this.NAME_KEY) || '';
   }
@@ -214,6 +222,10 @@ export class AuthService implements OnDestroy {
     localStorage.setItem(this.ROLE_KEY, authData.role);
     localStorage.setItem(this.EXPIRATION_KEY, `${authData.exp}`);
     localStorage.setItem(this.NAME_KEY, authData.name);
+    localStorage.setItem(
+      this.PERMISSION_KEY,
+      JSON.stringify(authData.permissions)
+    );
   }
 
   private clearAuthData(): void {
@@ -222,6 +234,7 @@ export class AuthService implements OnDestroy {
     localStorage.removeItem(this.ROLE_KEY);
     localStorage.removeItem(this.EXPIRATION_KEY);
     localStorage.removeItem(this.NAME_KEY);
+    localStorage.removeItem(this.PERMISSION_KEY);
     this.clearBrandSelection();
   }
 
