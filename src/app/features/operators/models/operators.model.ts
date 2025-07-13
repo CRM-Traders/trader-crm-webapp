@@ -176,7 +176,15 @@ export interface UserProfileUpdateRequest {
   lastName: string;
   email: string;
   phoneNumber: string;
-  countryCode: string;
+}
+
+export interface OperatorPersonalInfoUpdateRequest {
+  id: string;
+  firstname: string | null;
+  lastname: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  userType: UserType | null;
 }
 
 export interface UserOrganizationAssignRequest {

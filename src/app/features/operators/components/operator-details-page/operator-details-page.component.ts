@@ -12,7 +12,6 @@ import { ModalService } from '../../../../shared/services/modals/modal.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { OperatorsService } from '../../services/operators.service';
 import { UsersService } from '../../../client-details/services/user.service';
-import { CountryService } from '../../../../core/services/country.service';
 import {
   Operator,
   OperatorUpdateRequest,
@@ -28,8 +27,8 @@ import {
   OperatorDepartmentRoleAssignRequest,
   OperatorBranch,
   OperatorDepartment,
+  OperatorPersonalInfoUpdateRequest,
 } from '../../models/operators.model';
-import { Country } from '../../../../core/models/country.model';
 import {
   PasswordChangeComponent,
   PasswordChangeData,
@@ -433,30 +432,6 @@ export enum OperatorDetailSection {
                       [class.bg-gray-50]="!isEditingProfile"
                       [class.dark:bg-gray-800]="!isEditingProfile"
                     />
-                  </div>
-
-                  <!-- Country -->
-                  <div>
-                    <label
-                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Country <span class="text-red-500">*</span>
-                    </label>
-                    <select
-                      formControlName="countryCode"
-                      [disabled]="!isEditingProfile"
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                      [class.bg-gray-50]="!isEditingProfile"
-                      [class.dark:bg-gray-800]="!isEditingProfile"
-                    >
-                      <option value="">-- Select Country --</option>
-                      <option
-                        *ngFor="let country of countries$ | async"
-                        [value]="country.code"
-                      >
-                        {{ country.name }}
-                      </option>
-                    </select>
                   </div>
 
                   <!-- User Type -->
@@ -1033,7 +1008,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private operatorsService = inject(OperatorsService);
   private userService = inject(UsersService);
-  private countryService = inject(CountryService);
   private modalService = inject(ModalService);
 
   private destroy$ = new Subject<void>();
@@ -1053,7 +1027,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   loadingBranches = false;
 
   // Data properties
-  countries$ = this.countryService.getCountries();
   availableDepartments: any[] = [];
   availableRoles: OperatorRole[] = [];
   availableBranches: any[] = [];
@@ -1078,7 +1051,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phoneNumber: [''],
-      countryCode: ['', Validators.required],
       userType: ['', Validators.required],
     });
 
@@ -1144,11 +1116,9 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         lastName: lastName,
         email: this.operator.userEmail,
         phoneNumber: '', // Will be loaded separately if needed
-        countryCode: '', // Will be loaded separately if needed
         userType: this.operator.userType,
       });
 
-      // Load user details for phone and country
       this.loadUserDetails();
     }
   }
@@ -1174,7 +1144,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       }
     );
 
-    // TODO: Load country when endpoint is available
     // For now, defaulting to empty
   }
 
@@ -1284,29 +1253,19 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
     if (this.profileForm.valid) {
       this.isSavingProfile = true;
 
-      // Update user profile
-      const profileRequest: UserProfileUpdateRequest = {
-        firstName: this.profileForm.value.firstName,
-        lastName: this.profileForm.value.lastName,
+      // Use the new endpoint for updating personal information
+      const personalInfoRequest: OperatorPersonalInfoUpdateRequest = {
+        id: this.operator.id,
+        firstname: this.profileForm.value.firstName,
+        lastname: this.profileForm.value.lastName,
         email: this.profileForm.value.email,
-        phoneNumber: this.profileForm.value.phoneNumber || '',
-        countryCode: this.profileForm.value.countryCode,
+        phoneNumber: this.profileForm.value.phoneNumber || null,
+        userType: this.profileForm.value.userType,
       };
 
       this.operatorsService
-        .updateUserProfile(this.operator.userId, profileRequest)
+        .updateOperatorPersonalInfo(personalInfoRequest)
         .pipe(
-          switchMap(() => {
-            // Update operator user type if changed
-            if (this.profileForm.value.userType !== this.operator.userType) {
-              const updateRequest: OperatorUpdateRequest = {
-                id: this.operator.id,
-                userType: this.profileForm.value.userType,
-              };
-              return this.operatorsService.updateOperator(updateRequest);
-            }
-            return of(null);
-          }),
           takeUntil(this.destroy$),
           catchError((error) => {
             this.alertService.error('Failed to update profile');
@@ -1316,12 +1275,10 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
           })
         )
         .subscribe((result) => {
-          if (result) {
-            this.alertService.success('Profile updated successfully');
-            this.isEditingProfile = false;
-            this.isSavingProfile = false;
-            this.loadOperatorDetails(); // Refresh data
-          }
+          this.alertService.success('Profile updated successfully');
+          this.isEditingProfile = false;
+          this.isSavingProfile = false;
+          this.loadOperatorDetails(); // Refresh data
         });
     } else {
       this.alertService.error('Please fill in all required fields');
