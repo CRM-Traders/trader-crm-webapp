@@ -27,7 +27,8 @@ import { BrandService } from './services/brand.service';
             Select Your Office
           </h1>
           <p class="text-lg text-gray-600 dark:text-gray-300">
-            Choose the office you want to work with to continue to your dashboard
+            Choose the office you want to work with to continue to your
+            dashboard
           </p>
         </div>
 
@@ -288,7 +289,7 @@ export class BrandSelectionComponent implements OnInit {
           }
 
           // Navigate to dashboard
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['']);
         }
       });
   }
