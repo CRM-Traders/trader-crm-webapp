@@ -150,7 +150,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
-            gridId="leads-grid"
+            [gridId]="gridId"
             [endpoint]="'identity/api/leads/grid'"
             [columns]="gridColumns"
             [actions]="gridActions"
@@ -165,7 +165,7 @@
             emptyMessage="No Leads found"
             (rowClick)="onRowClick($event)"
             (export)="onExport($event)"
-            (refresh)="refreshGrid()"
+            (refresh)="refreshSpecificGrid()"
           >
             <!-- Custom Status Cell Template -->
 

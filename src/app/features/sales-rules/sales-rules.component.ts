@@ -44,6 +44,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
   private destroy$ = new Subject<void>();
+  gridId = 'sales-rules-grid';
 
   @ViewChild('priorityCell', { static: true })
   priorityCellTemplate!: TemplateRef<any>;
@@ -224,7 +225,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshData();
+          this.refreshSpecificGrid();
         }
       },
       () => {
@@ -253,7 +254,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshData();
+          this.refreshSpecificGrid();
         }
       },
       () => {
@@ -281,6 +282,13 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       });
   }
 
+  refreshSpecificGrid(): void {
+    const event = new CustomEvent('refreshGrid', {
+      detail: { gridId: this.gridId },
+    });
+    window.dispatchEvent(event);
+  }
+
   refreshGrid(): void {
     const gridComponent = document.querySelector(
       `app-grid[gridId="sales-rules-grid"]`
@@ -291,7 +299,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
   }
 
   refreshData(): void {
-    this.refreshGrid();
+    this.refreshSpecificGrid();
   }
 
   getRuleCategory(value: any) {

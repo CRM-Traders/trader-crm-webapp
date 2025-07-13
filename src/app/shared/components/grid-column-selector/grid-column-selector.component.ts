@@ -6,6 +6,8 @@ import {
   OnInit,
   Output,
   inject,
+  OnChanges,
+  SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +21,7 @@ import { GridColumn } from '../../models/grid/grid-column.model';
   templateUrl: './grid-column-selector.component.html',
   styleUrls: ['./grid-column-selector.component.scss'],
 })
-export class GridColumnSelectorComponent implements OnInit {
+export class GridColumnSelectorComponent implements OnInit, OnChanges {
   private gridService = inject(GridService);
 
   @Input() columns: GridColumn[] = [];
@@ -31,13 +33,34 @@ export class GridColumnSelectorComponent implements OnInit {
   selectAll: boolean = true;
 
   ngOnInit(): void {
-    this.selectedColumns = this.columns
-      .filter((col) => !col.hidden)
-      .map((col) => col.field);
+    this.initializeColumnSelection();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // If columns or gridId changes, reinitialize the selection
+    if ((changes['columns'] || changes['gridId']) && this.columns.length > 0) {
+      this.initializeColumnSelection();
+    }
+  }
+
+  private initializeColumnSelection(): void {
+    // Get the current state from the grid service
+    const currentState = this.gridService.getCurrentState(this.gridId);
+    
+    if (currentState.visibleColumns.length > 0) {
+      // Use the saved state if it exists
+      this.selectedColumns = currentState.visibleColumns;
+    } else {
+      // Fall back to default values (non-hidden columns)
+      this.selectedColumns = this.columns
+        .filter((col) => !col.hidden)
+        .map((col) => col.field);
+      
+      // Save the default state
+      this.gridService.setVisibleColumns(this.gridId, this.selectedColumns);
+    }
 
     this.selectAll = this.selectedColumns.length === this.columns.length;
-
-    this.gridService.setVisibleColumns(this.gridId, this.selectedColumns);
   }
 
   toggleColumn(column: GridColumn, event: Event): void {

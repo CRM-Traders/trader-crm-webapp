@@ -185,11 +185,31 @@ export class GridComponent implements OnInit, OnDestroy {
       this.visibleColumns.map((col) => col.field)
     );
 
+    // Reset pagination to initial state when component initializes
+    this.pagination.pageIndex = 0;
+    this.gridService.setPagination(this.gridId, { pageIndex: 0 });
+
+    // Get the current state for other properties (sort, visible columns, etc.)
+    const currentState = this.gridService.getCurrentState(this.gridId);
+    
+    // Restore other state properties (but keep pageIndex at 0)
+    this.currentSort = currentState.sort;
+
+    if (currentState.visibleColumns.length > 0) {
+      this.visibleColumns = this.columns.filter((col) =>
+        currentState.visibleColumns.includes(col.field)
+      );
+    }
+
+    // Subscribe to state changes for future updates
     this.gridService
       .getState(this.gridId)
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
-        this.pagination = state.pagination;
+        // Only update pagination if it's not the initial load
+        if (this.pagination.totalItems > 0) {
+          this.pagination = state.pagination;
+        }
         this.currentSort = state.sort;
 
         if (state.visibleColumns.length > 0) {
@@ -199,8 +219,7 @@ export class GridComponent implements OnInit, OnDestroy {
         }
       });
 
-    this.pagination.pageSize = 50;
-
+    // Fetch data with reset pagination
     if (this.endpoint) {
       this.fetchData();
     } else {
@@ -246,11 +265,14 @@ export class GridComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.data = response.items || response || [];
 
+          // Preserve the current pageIndex and pageSize if the response doesn't provide them
+          // or if they don't match what was requested
+          const currentState = this.gridService.getCurrentState(this.gridId);
           const newPagination = {
-            pageIndex: response.pageIndex,
-            pageSize: response.pageSize,
-            totalItems: response.totalCount,
-            totalPages: response.totalPages,
+            pageIndex: response.pageIndex !== undefined ? response.pageIndex : currentState.pagination.pageIndex,
+            pageSize: response.pageSize !== undefined ? response.pageSize : currentState.pagination.pageSize,
+            totalItems: response.totalCount || 0,
+            totalPages: response.totalPages || 0,
           };
 
           this.pagination = newPagination;
@@ -556,14 +578,18 @@ export class GridComponent implements OnInit, OnDestroy {
 
   refreshGrid(): void {
     const currentPageSize = this.pagination.pageSize;
+    const currentPageIndex = this.pagination.pageIndex;
 
     this.fetchData();
     this.refresh.emit();
 
-    if (this.pagination.pageSize !== currentPageSize) {
+    // Preserve the current pagination state after refresh
+    if (this.pagination.pageSize !== currentPageSize || this.pagination.pageIndex !== currentPageIndex) {
       this.pagination.pageSize = currentPageSize;
+      this.pagination.pageIndex = currentPageIndex;
       this.gridService.setPagination(this.gridId, {
         pageSize: currentPageSize,
+        pageIndex: currentPageIndex,
       });
     }
 

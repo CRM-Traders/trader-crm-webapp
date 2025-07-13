@@ -154,7 +154,7 @@
       >
         <div class="overflow-x-auto">
           <app-grid
-            gridId="affiliates-grid"
+            [gridId]="gridId"
             [endpoint]="'identity/api/affiliates/grid'"
             [columns]="gridColumns"
             [actions]="gridActions"
@@ -167,7 +167,7 @@
             emptyMessage="No affiliates found"
             (rowClick)="onRowClick($event)"
             (export)="onExport($event)"
-            (refresh)="refreshGrid()"
+            (refresh)="refreshSpecificGrid()"
           >
             <!-- Custom Status Cell Template -->
             <ng-template #statusCell let-value="value">
