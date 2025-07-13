@@ -52,26 +52,6 @@ interface OperatorSelection {
               {{ rule?.name }}
             </p>
           </div>
-          <button
-            type="button"
-            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            (click)="onCancel()"
-          >
-            <svg
-              class="h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -131,32 +111,36 @@ interface OperatorSelection {
                 Targeting
               </h4>
               <dl class="space-y-4">
-                <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Country</dt>
-                  <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                    {{ getCountryDisplay(rule?.country) }}
-                  </dd>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Country</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                      {{ getCountryDisplay(rule?.country) }}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Language</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                      {{ getLanguageDisplay(rule?.language) }}
+                    </dd>
+                  </div>
                 </div>
 
-                <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Language</dt>
-                  <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                    {{ getLanguageDisplay(rule?.language) }}
-                  </dd>
-                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Partners</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                      {{ getPartnersDisplay(rule?.partners) }}
+                    </dd>
+                  </div>
 
-                <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Partners</dt>
-                  <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                    {{ getPartnersDisplay(rule?.partners) }}
-                  </dd>
-                </div>
-
-                <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Affiliate Referrals</dt>
-                  <dd class="mt-1 text-sm text-gray-900 dark:text-white">
-                    {{ getAffiliateReferralsDisplay(rule?.affiliateReferrals) }}
-                  </dd>
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Affiliate Referrals</dt>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-white">
+                      {{ getAffiliateReferralsDisplay(rule?.affiliateReferrals) }}
+                    </dd>
+                  </div>
                 </div>
 
                 <div>
@@ -169,18 +153,20 @@ interface OperatorSelection {
             </div>
 
             <!-- Timestamps -->
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6 space-y-3">
-              <div>
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created At</dt>
-                <dd class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  {{ rule?.createdAt | date : "MMMM d, y 'at' h:mm a" }}
-                </dd>
-              </div>
-              <div *ngIf="rule?.updatedAt">
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
-                <dd class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                  {{ rule?.updatedAt | date : "MMMM d, y 'at' h:mm a" }}
-                </dd>
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created At</dt>
+                  <dd class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {{ rule?.createdAt | date : "MMMM d, y 'at' h:mm a" }}
+                  </dd>
+                </div>
+                <div *ngIf="rule?.updatedAt">
+                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Last Updated</dt>
+                  <dd class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    {{ rule?.updatedAt | date : "MMMM d, y 'at' h:mm a" }}
+                  </dd>
+                </div>
               </div>
             </div>
           </div>
@@ -538,9 +524,18 @@ export class SalesRuleDetailsModalComponent implements OnInit, OnDestroy {
         finalize(() => this.isLoadingOperators = false)
       )
       .subscribe(response => {
-        // Filter out already selected operators
-        const selectedIds = this.currentOperators.map(op => op.userId);
-        this.availableOperators = response.items.filter(op => !selectedIds.includes(op.id));
+        // Filter out operators that are already assigned to this sales rule
+        const assignedOperatorIds = this.currentOperators.map(op => op.userId);
+        console.log('Assigned operator IDs:', assignedOperatorIds);
+        console.log('Available operators before filtering:', response.items);
+        
+        this.availableOperators = response.items.filter(op => {
+          const isAssigned = assignedOperatorIds.includes(op.id);
+          console.log(`Operator ${op.value} (ID: ${op.id}) - Assigned: ${isAssigned}`);
+          return !isAssigned;
+        });
+        
+        console.log('Available operators after filtering:', this.availableOperators);
       });
   }
 

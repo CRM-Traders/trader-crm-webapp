@@ -1055,6 +1055,14 @@ export class ClientsComponent implements OnInit {
         detail: { gridId: 'clients-grid' },
       })
     );
+    
+    // Also try to clear selection directly on the grid component
+    const gridComponent = document.querySelector(
+      `app-grid[gridId="clients-grid"]`
+    ) as any;
+    if (gridComponent && gridComponent.clearSelection) {
+      gridComponent.clearSelection();
+    }
   }
   getInitials(name: string): string {
     return name

@@ -230,7 +230,21 @@ export class AssignOperatorModalComponent implements OnInit {
           }
 
           if (response.failureCount > 0) {
-            this.alertService.warning("Some users have already been assigned to operator.");
+            // Display specific error messages if available
+            if (response.errors && response.errors.length > 0) {
+              if (response.failureCount === 1) {
+                // Single failure - show the specific error with name
+                const errorWithName = this.replaceEntityIdWithName(response.errors[0]);
+                this.alertService.warning(errorWithName);
+              } else {
+                // Multiple failures - show all failed names
+                const failedNames = this.getFailedEntityNames(response.errors);
+                const summaryMessage = `${response.failureCount} leads could not be assigned: ${failedNames.join(', ')}`;
+                this.alertService.warning(summaryMessage);
+              }
+            } else {
+              this.alertService.warning("Some users have already been assigned to operator.");
+            }
           }
 
           this.modalService.closeAll(); // Close with success result
@@ -244,5 +258,44 @@ export class AssignOperatorModalComponent implements OnInit {
 
   closeModal(): void {
     this.modalService.closeAll();
+  }
+
+  /**
+   * Replace entity ID in error message with the actual name
+   */
+  private replaceEntityIdWithName(errorMessage: string): string {
+    // Extract entity ID from error message
+    const entityIdMatch = errorMessage.match(/Entity ([a-f0-9-]+)/);
+    if (entityIdMatch) {
+      const entityId = entityIdMatch[1];
+      // Find the corresponding client/lead by ID
+      const entity = this.selectedClients.find(client => client.id === entityId);
+      if (entity) {
+        const entityName = `${entity.firstName} ${entity.lastName}`;
+        // Replace the ID with the name
+        return errorMessage.replace(`Entity ${entityId}`, `Lead "${entityName}"`);
+      }
+    }
+    return errorMessage;
+  }
+
+  /**
+   * Get all failed entity names from error messages
+   */
+  private getFailedEntityNames(errors: string[]): string[] {
+    const failedNames: string[] = [];
+    
+    for (const error of errors) {
+      const entityIdMatch = error.match(/Entity ([a-f0-9-]+)/);
+      if (entityIdMatch) {
+        const entityId = entityIdMatch[1];
+        const entity = this.selectedClients.find(client => client.id === entityId);
+        if (entity) {
+          failedNames.push(`${entity.firstName} ${entity.lastName}`);
+        }
+      }
+    }
+    
+    return failedNames;
   }
 }
