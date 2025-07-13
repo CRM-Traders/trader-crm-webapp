@@ -371,18 +371,20 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.alertService.success('Note added successfully!');
-          // Refresh pinned notes and comments to show the new note if it's pinned
           this.loadPinnedNotes();
           this.loadClientComments();
-          // Optionally navigate to notes section
-          // this.setActiveSection(ClientDetailSection.Notes);
         }
       },
       () => {
         // User dismissed the modal
       }
     );
+  }
+
+  onNotesUpdated(): void {
+    // Refresh pinned notes when notes are updated from the client-notes component
+    this.loadPinnedNotes();
+    this.loadClientComments();
   }
 
   setActiveSection(section: ClientDetailSection): void {

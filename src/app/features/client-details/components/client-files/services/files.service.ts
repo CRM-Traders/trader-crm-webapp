@@ -80,15 +80,20 @@ export class FilesService {
    * Upload a file
    */
   uploadFile(file: File, metadata?: { description?: string; reference?: string; fileType?: FileType; ownerId?: string; makePermanent?: boolean }): Observable<UploadFileResponse> {
+    // Validate file is not empty
+    if (!file || file.size === 0) {
+      throw new Error('File is empty or invalid');
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     
-    if (metadata?.description) {
-      formData.append('description', metadata.description);
-    }
-    if (metadata?.reference) {
-      formData.append('reference', metadata.reference);
-    }
+    // Always include description, even if empty
+    formData.append('description', metadata?.description || '');
+    
+    // Always include reference, even if empty
+    formData.append('reference', metadata?.reference || '');
+    
     if (metadata?.fileType !== undefined && metadata?.fileType !== null) {
       formData.append('fileType', metadata.fileType.toString());
     }
@@ -106,6 +111,16 @@ export class FilesService {
       metadata,
       formDataEntries: Array.from(formData.entries())
     });
+
+    // Log the actual FormData entries for debugging
+    console.log('FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`${key}: ${value}`);
+      }
+    }
 
     return this.httpService.postForm<UploadFileResponse>(this.apiPath, formData);
   }

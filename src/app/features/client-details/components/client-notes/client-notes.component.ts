@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
@@ -335,6 +335,7 @@ import { NoteCreationModalComponent } from './components/note-creation-modal/not
 })
 export class ClientNotesComponent implements OnInit, OnDestroy {
   @Input() client!: Client;
+  @Output() notesUpdated = new EventEmitter<void>();
 
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
@@ -489,6 +490,8 @@ export class ClientNotesComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           this.loadNotes();
+          // Emit event to notify parent component that notes have been updated
+          this.notesUpdated.emit();
         }
       },
       () => {}

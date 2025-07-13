@@ -51,6 +51,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   private modalService = inject(ModalService);
   private destroy$ = new Subject<void>();
   private router = inject(Router);
+  gridId = 'operators-grid';
 
   @ViewChild('branchTypeCell', { static: true })
   branchTypeCellTemplate!: TemplateRef<any>;
@@ -252,15 +253,15 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.showDeleteModal = false;
           this.operatorToDelete = null;
-          this.refreshGrid();
-          this.loadOperatorStatistics(); // Refresh statistics
+          this.refreshSpecificGrid();
+          this.loadOperatorStatistics();
         })
       )
       .subscribe((result) => {
         if (result !== null) {
           this.alertService.success('Operator deleted successfully');
-          this.refreshGrid();
-          this.loadOperatorStatistics(); // Refresh statistics
+          this.refreshSpecificGrid();
+          this.loadOperatorStatistics();
         }
       });
   }
@@ -306,20 +307,15 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         closable: true,
       }
     );
-    console.log(modalRef.result);
 
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshGrid();
-          this.loadOperatorStatistics(); // Refresh statistics
+          this.refreshSpecificGrid();
+          this.loadOperatorStatistics();
         }
       },
-      () => {
-        this.refreshGrid();
-        this.loadOperatorStatistics(); // Refresh statistics
-        // Modal dismissed
-      }
+      () => {}
     );
   }
 
@@ -353,6 +349,13 @@ export class OperatorsComponent implements OnInit, OnDestroy {
           this.alertService.success('Template downloaded successfully!');
         }
       });
+  }
+
+  refreshSpecificGrid(): void {
+    const event = new CustomEvent('refreshGrid', {
+      detail: { gridId: this.gridId },
+    });
+    window.dispatchEvent(event);
   }
 
   refreshGrid(): void {

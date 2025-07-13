@@ -109,21 +109,22 @@ export class OperatorsService {
 
   // Departments dropdown
   getDepartmentsDropdown(
-    params: DepartmentSearchParams = {}
+    params: any = {}
   ): Observable<DepartmentSearchResponse> {
-    const queryParams = new URLSearchParams();
+    const requestBody = {
+      pageIndex: params.pageIndex || 0,
+      pageSize: params.pageSize || 50,
+      sortField: params.sortField || null,
+      sortDirection: params.sortDirection || null,
+      visibleColumns: params.visibleColumns || null,
+      globalFilter: params.globalFilter || null,
+      filters: params.filters || null,
+    };
 
-    if (params.pageIndex !== undefined) {
-      queryParams.append('pageIndex', params.pageIndex.toString());
-    }
-    if (params.pageSize !== undefined) {
-      queryParams.append('pageSize', params.pageSize.toString());
-    }
-
-    const url = `${this.departmentsApiPath}/dropdown${
-      queryParams.toString() ? '?' + queryParams.toString() : ''
-    }`;
-    return this.httpService.post<DepartmentSearchResponse>(url, {});
+    return this.httpService.post<DepartmentSearchResponse>(
+      `${this.departmentsApiPath}/dropdown`,
+      requestBody
+    );
   }
 
   // Branch dropdown methods based on branch type

@@ -25,6 +25,7 @@ import {
   RuleCategoryOption,
   RulePriority,
   RuleType,
+  OperatorDropdownItem,
 } from '../../models/office-rules.model';
 import { Country } from '../../../../core/models/country.model';
 import { Affiliate } from '../../../affiliates/models/affiliates.model';
@@ -33,560 +34,8 @@ import { Affiliate } from '../../../affiliates/models/affiliates.model';
   selector: 'app-create-rule-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  template: `
-    <div class="w-full">
-      <!-- Modal Header -->
-      <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-        <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
-          {{ isEditing ? 'Edit Rule' : 'Create New Rule' }}
-        </h4>
-      </div>
-
-      <!-- Modal Body -->
-      <div class="px-6 py-6 max-h-[100vh] overflow-y-auto">
-        <form [formGroup]="ruleForm" class="space-y-6">
-          <!-- Rule Name -->
-          <div>
-            <label
-              for="ruleName"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Rule name <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="ruleName"
-              formControlName="ruleName"
-              placeholder="Rule name"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              [class.border-red-500]="
-                ruleForm.get('ruleName')?.invalid &&
-                ruleForm.get('ruleName')?.touched
-              "
-            />
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                ruleForm.get('ruleName')?.invalid &&
-                ruleForm.get('ruleName')?.touched
-              "
-            >
-              <span *ngIf="ruleForm.get('ruleName')?.errors?.['required']"
-                >Rule name is required</span
-              >
-            </p>
-          </div>
-
-          <!-- Rule Category -->
-          <div>
-            <label
-              for="category"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Rule category <span class="text-red-500">*</span>
-            </label>
-            <select
-              id="category"
-              formControlName="category"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              [class.border-red-500]="
-                ruleForm.get('category')?.invalid &&
-                ruleForm.get('category')?.touched
-              "
-            >
-              <option value="">Select</option>
-              <option [value]="RuleCategory.Brand">Brand</option>
-              <option [value]="RuleCategory.Desk">Desk</option>
-              <option [value]="RuleCategory.Team">Team</option>
-              <option [value]="RuleCategory.Sale">Sale</option>
-              <option [value]="RuleCategory.Retention">Retention</option>
-            </select>
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                ruleForm.get('category')?.invalid &&
-                ruleForm.get('category')?.touched
-              "
-            >
-              <span *ngIf="ruleForm.get('category')?.errors?.['required']"
-                >Category is required</span
-              >
-            </p>
-          </div>
-
-          <!-- Rule Priority and Type Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Rule Priority -->
-            <div>
-              <label
-                for="priority"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Rule priority <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="priority"
-                formControlName="priority"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  ruleForm.get('priority')?.invalid &&
-                  ruleForm.get('priority')?.touched
-                "
-              >
-                <option value="">Select</option>
-                <option
-                  *ngFor="let priority of priorities"
-                  [value]="priority.value"
-                >
-                  {{ priority.name }}
-                </option>
-              </select>
-              <p
-                class="mt-1 text-sm text-red-600 dark:text-red-400"
-                *ngIf="
-                  ruleForm.get('priority')?.invalid &&
-                  ruleForm.get('priority')?.touched
-                "
-              >
-                <span *ngIf="ruleForm.get('priority')?.errors?.['required']"
-                  >Priority is required</span
-                >
-              </p>
-            </div>
-
-            <!-- Rule Type -->
-            <div>
-              <label
-                for="type"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Rule type <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="type"
-                formControlName="type"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  ruleForm.get('type')?.invalid &&
-                  ruleForm.get('type')?.touched
-                "
-              >
-                <option value="">Select</option>
-                <option *ngFor="let type of types" [value]="type.value">
-                  {{ type.name }}
-                </option>
-              </select>
-              <p
-                class="mt-1 text-sm text-red-600 dark:text-red-400"
-                *ngIf="
-                  ruleForm.get('type')?.invalid &&
-                  ruleForm.get('type')?.touched
-                "
-              >
-                <span *ngIf="ruleForm.get('type')?.errors?.['required']"
-                  >Type is required</span
-                >
-              </p>
-            </div>
-          </div>
-
-          <!-- Countries Selection -->
-          <div class="relative">
-            <label
-              for="countries"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Countries
-            </label>
-
-            <!-- Custom Dropdown Button -->
-            <button
-              type="button"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              (click)="toggleCountryDropdown()"
-            >
-              <span class="truncate">{{ getSelectedCountriesText() }}</span>
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="countryDropdownOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Dropdown Panel -->
-            <div
-              *ngIf="countryDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-            >
-              <!-- Search Input -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  #countrySearchInput
-                  type="text"
-                  placeholder="Search countries..."
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onCountrySearch($event)"
-                  [value]="countrySearchTerm"
-                />
-              </div>
-
-              <!-- Countries List -->
-              <div class="max-h-48 overflow-y-auto">
-                <div
-                  *ngFor="let country of filteredCountries"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
-                  (click)="toggleCountrySelection(country)"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isCountrySelected(country)"
-                    class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    (click)="$event.stopPropagation()"
-                    (change)="toggleCountrySelection(country)"
-                  />
-                  {{ country.name }}
-                </div>
-
-                <!-- No results -->
-                <div
-                  *ngIf="filteredCountries.length === 0"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No countries found
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Languages Selection -->
-          <div class="relative">
-            <label
-              for="languages"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Languages
-            </label>
-
-            <!-- Custom Dropdown Button -->
-            <button
-              type="button"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              (click)="toggleLanguageDropdown()"
-            >
-              <span class="truncate">{{ getSelectedLanguagesText() }}</span>
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="languageDropdownOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Dropdown Panel -->
-            <div
-              *ngIf="languageDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-            >
-              <!-- Search Input -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  #languageSearchInput
-                  type="text"
-                  placeholder="Search languages..."
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onLanguageSearch($event)"
-                  [value]="languageSearchTerm"
-                />
-              </div>
-
-              <!-- Languages List -->
-              <div class="max-h-48 overflow-y-auto">
-                <div
-                  *ngFor="let language of filteredLanguages"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
-                  (click)="toggleLanguageSelection(language)"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isLanguageSelected(language)"
-                    class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    (click)="$event.stopPropagation()"
-                    (change)="toggleLanguageSelection(language)"
-                  />
-                  {{ language.value }}
-                </div>
-
-                <!-- No results -->
-                <div
-                  *ngIf="filteredLanguages.length === 0"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No languages found
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Partners (Affiliates) Selection -->
-          <div class="relative">
-            <label
-              for="partners"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Partners (Affiliates)
-            </label>
-
-            <!-- Custom Dropdown Button -->
-            <button
-              type="button"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              (click)="togglePartnerDropdown()"
-            >
-              <span class="truncate">{{ getSelectedPartnersText() }}</span>
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="partnerDropdownOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Dropdown Panel -->
-            <div
-              *ngIf="partnerDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-            >
-              <!-- Search Input -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  #partnerSearchInput
-                  type="text"
-                  placeholder="Search partners..."
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onPartnerSearch($event)"
-                  [value]="partnerSearchTerm"
-                />
-              </div>
-
-              <!-- Partners List -->
-              <div class="max-h-48 overflow-y-auto">
-                <div
-                  *ngFor="let partner of filteredPartners"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
-                  (click)="togglePartnerSelection(partner)"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isPartnerSelected(partner)"
-                    class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    (click)="$event.stopPropagation()"
-                    (change)="togglePartnerSelection(partner)"
-                  />
-                  {{ partner.name }}
-                </div>
-
-                <!-- No results -->
-                <div
-                  *ngIf="filteredPartners.length === 0"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No partners found
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Affiliate Referrals Selection -->
-          <div class="relative">
-            <label
-              for="affiliateReferrals"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Affiliate Referrals
-            </label>
-
-            <!-- Custom Dropdown Button -->
-            <button
-              type="button"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              (click)="toggleAffiliateReferralDropdown()"
-            >
-              <span class="truncate">{{ getSelectedAffiliateReferralsText() }}</span>
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="affiliateReferralDropdownOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Dropdown Panel -->
-            <div
-              *ngIf="affiliateReferralDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-            >
-              <!-- Search Input -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  #affiliateReferralSearchInput
-                  type="text"
-                  placeholder="Search affiliate referrals..."
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onAffiliateReferralSearch($event)"
-                  [value]="affiliateReferralSearchTerm"
-                />
-              </div>
-
-              <!-- Affiliate Referrals List -->
-              <div class="max-h-48 overflow-y-auto">
-                <div
-                  *ngFor="let referral of filteredAffiliateReferrals"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
-                  (click)="toggleAffiliateReferralSelection(referral)"
-                >
-                  <input
-                    type="checkbox"
-                    [checked]="isAffiliateReferralSelected(referral)"
-                    class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    (click)="$event.stopPropagation()"
-                    (change)="toggleAffiliateReferralSelection(referral)"
-                  />
-                  {{ referral.name }}
-                </div>
-
-                <!-- No results -->
-                <div
-                  *ngIf="filteredAffiliateReferrals.length === 0"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No affiliate referrals found
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Source -->
-          <div>
-            <label
-              for="sources"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Source
-            </label>
-            <input
-              type="text"
-              id="sources"
-              formControlName="sources"
-              placeholder="Source"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-            />
-          </div>
-        </form>
-      </div>
-
-      <!-- Modal Footer -->
-      <div
-        class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3"
-      >
-        <button
-          type="button"
-          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          (click)="onCancel()"
-          [disabled]="isSubmitting"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          (click)="onSubmit()"
-          [disabled]="ruleForm.invalid || isSubmitting"
-        >
-          <span class="flex items-center">
-            <svg
-              *ngIf="isSubmitting"
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            {{
-              isSubmitting
-                ? isEditing
-                  ? 'Updating...'
-                  : 'Creating...'
-                : isEditing
-                ? 'Update Rule'
-                : 'Create rule'
-            }}
-          </span>
-        </button>
-      </div>
-    </div>
-  `,
-  styles: [
-    `
-      .animate-spin {
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
-      }
-    `,
-  ],
+  templateUrl: './create-rule-modal.component.html',
+  styleUrls: ['./create-rule-modal.component.scss'],
 })
 export class CreateRuleModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
@@ -639,6 +88,13 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   affiliateReferralDropdownOpen = false;
   affiliateReferralSearchTerm = '';
 
+  // Operators
+  availableOperators: OperatorDropdownItem[] = [];
+  filteredOperators: OperatorDropdownItem[] = [];
+  selectedOperators: OperatorDropdownItem[] = [];
+  operatorDropdownOpen = false;
+  operatorSearchTerm = '';
+
   constructor() {
     this.ruleForm = this.fb.group({
       ruleName: ['', [Validators.required]],
@@ -649,6 +105,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
       languages: [''],
       partners: [''],
       affiliateReferrals: [''],
+      operators: [''],
       sources: [''],
     });
   }
@@ -679,6 +136,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     this.languageDropdownOpen = false;
     this.partnerDropdownOpen = false;
     this.affiliateReferralDropdownOpen = false;
+    this.operatorDropdownOpen = false;
   }
 
   private loadLookupData(): void {
@@ -712,6 +170,15 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
         this.availableAffiliateReferrals = response.items || [];
         this.filteredAffiliateReferrals = this.availableAffiliateReferrals;
       });
+
+    // Load operators
+    this.officeRulesService
+      .getAvailableOperators(0, 100)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((operators) => {
+        this.availableOperators = operators;
+        this.filteredOperators = operators;
+      });
   }
 
   private populateFormForEdit(): void {
@@ -728,6 +195,15 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     this.selectedLanguages = this.availableLanguages.filter(l => languages.includes(l.key));
     this.selectedPartners = this.availablePartners.filter(p => partners.includes(p.id));
     this.selectedAffiliateReferrals = this.availableAffiliateReferrals.filter(a => affiliateReferrals.includes(a.id));
+
+    // Set selected operators from existing rule
+    if (this.rule.operators && this.rule.operators.length > 0) {
+      this.selectedOperators = this.rule.operators.map(op => ({
+        id: op.userId,
+        value: op.operatorName,
+        email: op.operatorEmail
+      }));
+    }
 
     this.ruleForm.patchValue({
       ruleName: this.rule.name,
@@ -938,6 +414,59 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     this.ruleForm.patchValue({ affiliateReferrals: value });
   }
 
+  // Operators methods
+  toggleOperatorDropdown(): void {
+    // If this dropdown is already open, just close it
+    if (this.operatorDropdownOpen) {
+      this.operatorDropdownOpen = false;
+      return;
+    }
+    // Close all other dropdowns first, then open this one
+    this.closeAllDropdowns();
+    this.operatorDropdownOpen = true;
+  }
+
+  onOperatorSearch(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.toLowerCase();
+    this.operatorSearchTerm = value;
+    this.filteredOperators = this.availableOperators.filter(operator =>
+      operator.value.toLowerCase().includes(value) || 
+      operator.email.toLowerCase().includes(value)
+    );
+  }
+
+  toggleOperatorSelection(operator: OperatorDropdownItem): void {
+    const index = this.selectedOperators.findIndex(o => o.id === operator.id);
+    if (index > -1) {
+      this.selectedOperators.splice(index, 1);
+    } else {
+      this.selectedOperators.push(operator);
+    }
+    this.updateOperatorsFormValue();
+    // Don't close dropdown for multiple selection - let user select multiple items
+  }
+
+  isOperatorSelected(operator: OperatorDropdownItem): boolean {
+    return this.selectedOperators.some(o => o.id === operator.id);
+  }
+
+  getSelectedOperatorsText(): string {
+    if (this.selectedOperators.length === 0) {
+      return 'Select operators...';
+    }
+    if (this.selectedOperators.length === 1) {
+      return this.selectedOperators[0].value;
+    }
+    return `${this.selectedOperators.length} operators selected`;
+  }
+
+  private updateOperatorsFormValue(): void {
+    const value = this.selectedOperators.map(o => o.id).join(';');
+    this.ruleForm.patchValue({ operators: value });
+  }
+
+
+
   onSubmit(): void {
     if (this.ruleForm.invalid) {
       Object.keys(this.ruleForm.controls).forEach((key) => {
@@ -963,7 +492,14 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
       priority: parseInt(formValue.priority),
       type: parseInt(formValue.type),
       objectId: this.officeId,
-      operators: null,
+      operators: this.selectedOperators.length > 0 ? this.selectedOperators.map(op => ({
+        id: op.id,
+        userId: op.id,
+        operatorName: op.value,
+        operatorEmail: op.email,
+        ratio: 100 / this.selectedOperators.length, // Equal distribution
+        isValidOperator: true
+      })) : null,
       country: formValue.countries || '',
       language: formValue.languages || '',
       partners: formValue.partners || '',

@@ -244,66 +244,83 @@ interface RoleDropdownItem {
               >
                 User Type <span class="text-red-500">*</span>
               </label>
-              <select
-                id="userType"
-                formControlName="userType"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  registrationForm.get('userType')?.invalid &&
-                  registrationForm.get('userType')?.touched
-                "
-              >
-                <option value="">Select</option>
-                <optgroup label="Administrators">
-                  <option [value]="UserType.CompanyAdmin">Company Admin</option>
-                  <option [value]="UserType.BrandAdmin">Brand Admin</option>
-                </optgroup>
-                <optgroup label="Heads of Department">
-                  <option [value]="UserType.SalesHOD">Sales HOD</option>
-                  <option [value]="UserType.RetentionHOD">Retention HOD</option>
-                  <option [value]="UserType.SupportHOD">Support HOD</option>
-                  <option [value]="UserType.PspHOD">PSP HOD</option>
-                </optgroup>
-                <optgroup label="Managers">
-                  <option [value]="UserType.SalesManager">Sales Manager</option>
-                  <option [value]="UserType.RetentionManager">
-                    Retention Manager
-                  </option>
-                  <option [value]="UserType.SupportManager">
-                    Support Manager
-                  </option>
-                  <option [value]="UserType.PSPManager">PSP Manager</option>
-                  <option [value]="UserType.BOManager">BO Manager</option>
-                  <option [value]="UserType.ComplianceManager">
-                    Compliance Manager
-                  </option>
-                  <option [value]="UserType.OperationsManager">
-                    Operations Manager
-                  </option>
-                  <option [value]="UserType.DealingManager">
-                    Dealing Manager
-                  </option>
-                </optgroup>
-                <optgroup label="Team Leads">
-                  <option [value]="UserType.SalesLead">Sales Lead</option>
-                  <option [value]="UserType.RetentionLead">
-                    Retention Lead
-                  </option>
-                  <option [value]="UserType.SupportLead">Support Lead</option>
-                </optgroup>
-                <optgroup label="Agents">
-                  <option [value]="UserType.SalesAgent">Sales Agent</option>
-                  <option [value]="UserType.RetentionAgent">
-                    Retention Agent
-                  </option>
-                  <option [value]="UserType.SupportAgent">Support Agent</option>
-                </optgroup>
-                <optgroup label="Other">
-                  <option [value]="UserType.AffiliateManager">
-                    Affiliate Manager
-                  </option>
-                </optgroup>
-              </select>
+              <div class="relative">
+                <!-- Custom Dropdown Button -->
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                  [class.border-red-500]="
+                    registrationForm.get('userType')?.invalid &&
+                    registrationForm.get('userType')?.touched
+                  "
+                  (click)="toggleUserTypeDropdown()"
+                >
+                  <span class="truncate">{{ getSelectedUserTypeName() }}</span>
+                  <svg
+                    class="w-4 h-4 ml-2 transition-transform"
+                    [class.rotate-180]="userTypeDropdownOpen"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div
+                  *ngIf="userTypeDropdownOpen"
+                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                >
+                  <!-- Search Input -->
+                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                      #userTypeSearchInput
+                      type="text"
+                      placeholder="Search user types..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      (input)="onUserTypeSearch($event)"
+                      [value]="userTypeSearchTerm"
+                    />
+                  </div>
+
+                  <!-- User Types List -->
+                  <div class="max-h-48 overflow-y-auto">
+                    <div
+                      *ngFor="let group of getFilteredUserTypeGroups()"
+                      class="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                    >
+                      <!-- Group Header -->
+                      <div class="px-3 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        {{ group.group }}
+                      </div>
+                      
+                      <!-- Group Options -->
+                      <div
+                        *ngFor="let option of group.options"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        (click)="selectUserType(option)"
+                      >
+                        <div>{{ option.value }}</div>
+                      </div>
+                    </div>
+
+                    <!-- No results -->
+                    <div
+                      *ngIf="getFilteredUserTypeGroups().length === 0"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      <span *ngIf="userTypeSearchTerm">No user types match your search</span>
+                      <span *ngIf="!userTypeSearchTerm">No user types found</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
@@ -376,7 +393,7 @@ interface RoleDropdownItem {
                     (scroll)="onDepartmentDropdownScroll($event)"
                   >
                     <div
-                      *ngFor="let department of availableDepartments"
+                      *ngFor="let department of getFilteredDepartments()"
                       class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
                       (click)="selectDepartment(department)"
                     >
@@ -411,10 +428,11 @@ interface RoleDropdownItem {
 
                     <!-- No results -->
                     <div
-                      *ngIf="!departmentLoading && availableDepartments.length === 0"
+                      *ngIf="!departmentLoading && getFilteredDepartments().length === 0"
                       class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
-                      No departments found
+                      <span *ngIf="departmentSearchTerm">No departments match your search</span>
+                      <span *ngIf="!departmentSearchTerm">No departments found</span>
                     </div>
                   </div>
                 </div>
@@ -789,8 +807,68 @@ export class OperatorRegistrationModalComponent implements OnInit {
   branchPageSize = 20;
   hasMoreBranches = false;
 
+  // User Type dropdown properties
+  userTypeDropdownOpen = false;
+  userTypeSearchTerm = '';
+  selectedUserType: { id: number; value: string; group: string } | null = null;
+
   BranchType = BranchType;
   UserType = UserType;
+
+  // User Type options organized by groups
+  userTypeOptions = [
+    {
+      group: 'Administrators',
+      options: [
+        { id: UserType.CompanyAdmin, value: 'Company Admin', group: 'Administrators' },
+        { id: UserType.BrandAdmin, value: 'Brand Admin', group: 'Administrators' }
+      ]
+    },
+    {
+      group: 'Heads of Department',
+      options: [
+        { id: UserType.SalesHOD, value: 'Sales HOD', group: 'Heads of Department' },
+        { id: UserType.RetentionHOD, value: 'Retention HOD', group: 'Heads of Department' },
+        { id: UserType.SupportHOD, value: 'Support HOD', group: 'Heads of Department' },
+        { id: UserType.PspHOD, value: 'PSP HOD', group: 'Heads of Department' }
+      ]
+    },
+    {
+      group: 'Managers',
+      options: [
+        { id: UserType.SalesManager, value: 'Sales Manager', group: 'Managers' },
+        { id: UserType.RetentionManager, value: 'Retention Manager', group: 'Managers' },
+        { id: UserType.SupportManager, value: 'Support Manager', group: 'Managers' },
+        { id: UserType.PSPManager, value: 'PSP Manager', group: 'Managers' },
+        { id: UserType.BOManager, value: 'BO Manager', group: 'Managers' },
+        { id: UserType.ComplianceManager, value: 'Compliance Manager', group: 'Managers' },
+        { id: UserType.OperationsManager, value: 'Operations Manager', group: 'Managers' },
+        { id: UserType.DealingManager, value: 'Dealing Manager', group: 'Managers' }
+      ]
+    },
+    {
+      group: 'Team Leads',
+      options: [
+        { id: UserType.SalesLead, value: 'Sales Lead', group: 'Team Leads' },
+        { id: UserType.RetentionLead, value: 'Retention Lead', group: 'Team Leads' },
+        { id: UserType.SupportLead, value: 'Support Lead', group: 'Team Leads' }
+      ]
+    },
+    {
+      group: 'Agents',
+      options: [
+        { id: UserType.SalesAgent, value: 'Sales Agent', group: 'Agents' },
+        { id: UserType.RetentionAgent, value: 'Retention Agent', group: 'Agents' },
+        { id: UserType.SupportAgent, value: 'Support Agent', group: 'Agents' }
+      ]
+    },
+    {
+      group: 'Other',
+      options: [
+        { id: UserType.AffiliateManager, value: 'Affiliate Manager', group: 'Other' }
+      ]
+    }
+  ];
 
 
 
@@ -1055,8 +1133,13 @@ export class OperatorRegistrationModalComponent implements OnInit {
     // Toggle department dropdown
     this.departmentDropdownOpen = !this.departmentDropdownOpen;
     
-    if (this.departmentDropdownOpen && this.availableDepartments.length === 0) {
-      this.loadDepartments();
+    if (this.departmentDropdownOpen) {
+      if (this.availableDepartments.length === 0) {
+        this.loadDepartments();
+      } else {
+        // Reset search when opening dropdown
+        this.departmentSearchTerm = '';
+      }
     }
   }
 
@@ -1070,12 +1153,14 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
     this.departmentLoading = true;
 
-    const searchParams: DepartmentSearchParams = {
+    // Create request body with search parameters
+    const requestBody = {
       pageIndex: this.currentDepartmentPage,
       pageSize: this.departmentPageSize,
+      globalFilter: this.departmentSearchTerm || null,
     };
 
-    this.operatorsService.getDepartmentsDropdown(searchParams).subscribe({
+    this.operatorsService.getDepartmentsDropdown(requestBody).subscribe({
       next: (response) => {
         if (reset) {
           this.availableDepartments = response.items;
@@ -1117,6 +1202,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.selectedDepartment = department;
     this.registrationForm.patchValue({ departmentId: department.id });
     this.departmentDropdownOpen = false;
+    this.departmentSearchTerm = '';
     this.handleDepartmentChange(department.id);
   }
 
@@ -1127,6 +1213,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
     return 'Select a department...';
   }
 
+  getFilteredDepartments(): any[] {
+    return this.availableDepartments;
+  }
+
   // Role dropdown methods
   toggleRoleDropdown(): void {
     // Close other dropdowns
@@ -1135,6 +1225,11 @@ export class OperatorRegistrationModalComponent implements OnInit {
     
     // Toggle role dropdown
     this.roleDropdownOpen = !this.roleDropdownOpen;
+    
+    if (this.roleDropdownOpen) {
+      // Reset search when opening dropdown
+      this.roleSearchTerm = '';
+    }
   }
 
   onRoleSearch(event: Event): void {
@@ -1162,8 +1257,11 @@ export class OperatorRegistrationModalComponent implements OnInit {
     if (this.selectedRole) {
       return this.selectedRole.value;
     }
+    if (!this.selectedDepartment) {
+      return 'Select a department first';
+    }
     if (this.availableRoles.length === 0) {
-      return 'No roles available';
+      return 'No roles available for this department';
     }
     return 'Select a role...';
   }
@@ -1177,10 +1275,15 @@ export class OperatorRegistrationModalComponent implements OnInit {
     // Toggle branch dropdown
     this.branchDropdownOpen = !this.branchDropdownOpen;
     
-    if (this.branchDropdownOpen && this.availableBranches.length === 0) {
+    if (this.branchDropdownOpen) {
       const branchType = this.registrationForm.get('branchType')?.value;
       if (branchType) {
-        this.loadBranchesForType(parseInt(branchType), true);
+        if (this.availableBranches.length === 0) {
+          this.loadBranchesForType(parseInt(branchType), true);
+        } else {
+          // Reset search when opening dropdown
+          this.branchSearchTerm = '';
+        }
       }
     }
   }
@@ -1189,6 +1292,9 @@ export class OperatorRegistrationModalComponent implements OnInit {
     const target = event.target as HTMLInputElement;
     this.branchSearchTerm = target.value;
     this.currentBranchPage = 0;
+    
+    // Reload branches with search term
+    this.availableBranches = [];
     this.loadBranchesForType(parseInt(this.registrationForm.get('branchType')?.value), true);
   }
 
@@ -1210,6 +1316,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.selectedBranch = branch;
     this.registrationForm.patchValue({ branchId: branch.id });
     this.branchDropdownOpen = false;
+    this.branchSearchTerm = '';
   }
 
   getSelectedBranchName(): string {
@@ -1221,10 +1328,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
       return 'Select branch type first';
     }
     if (this.branchLoading) {
-      return 'Loading...';
+      return 'Loading branches...';
     }
     if (this.availableBranches.length === 0) {
-      return 'No branches available';
+      return 'No branches available for this type';
     }
     return 'Select a branch...';
   }
@@ -1242,5 +1349,55 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.departmentDropdownOpen = false;
     this.roleDropdownOpen = false;
     this.branchDropdownOpen = false;
+    this.userTypeDropdownOpen = false;
+  }
+
+  // User Type dropdown methods
+  toggleUserTypeDropdown(): void {
+    // Close other dropdowns
+    this.departmentDropdownOpen = false;
+    this.roleDropdownOpen = false;
+    this.branchDropdownOpen = false;
+    
+    // Toggle user type dropdown
+    this.userTypeDropdownOpen = !this.userTypeDropdownOpen;
+    
+    if (this.userTypeDropdownOpen) {
+      // Reset search when opening dropdown
+      this.userTypeSearchTerm = '';
+    }
+  }
+
+  selectUserType(userType: { id: number; value: string; group: string }): void {
+    this.selectedUserType = userType;
+    this.registrationForm.patchValue({ userType: userType.id });
+    this.userTypeDropdownOpen = false;
+    this.userTypeSearchTerm = '';
+  }
+
+  getSelectedUserTypeName(): string {
+    if (this.selectedUserType) {
+      return this.selectedUserType.value;
+    }
+    return 'Select a user type...';
+  }
+
+  onUserTypeSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.userTypeSearchTerm = target.value.toLowerCase();
+  }
+
+  getFilteredUserTypeGroups(): any[] {
+    if (!this.userTypeSearchTerm) {
+      return this.userTypeOptions;
+    }
+    
+    return this.userTypeOptions.map(group => ({
+      ...group,
+      options: group.options.filter(option =>
+        option.value.toLowerCase().includes(this.userTypeSearchTerm) ||
+        option.group.toLowerCase().includes(this.userTypeSearchTerm)
+      )
+    })).filter(group => group.options.length > 0);
   }
 }
