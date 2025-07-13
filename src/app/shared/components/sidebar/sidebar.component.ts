@@ -12,11 +12,12 @@ import { Router, RouterModule } from '@angular/router';
 import { HasRoleDirective } from '../../../core/directives/has-role.directive';
 import { NavItem } from '../../../core/models/nav-item.model';
 import { NavigationService } from '../../../core/services/navigation.service';
+import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, HasRoleDirective],
+  imports: [CommonModule, RouterModule, HasPermissionDirective],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
   encapsulation: ViewEncapsulation.None,
