@@ -145,7 +145,7 @@ export class OfficeRulesService {
     // First try to get managers by branch ID
     return this.httpService
       .get<OfficeManager[]>(
-        `${this.operatorManagerPath}/get-manager-by-branch-id?BranchId=${officeId}`
+        `${this.operatorManagerPath}/get-managers-by-branch-id?BranchId=${officeId}`
       )
       .pipe(
         map((managers) => {

@@ -67,6 +67,21 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   walletTransactions: WalletTransaction[] = [];
   loadingWalletTransactions = false;
 
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 50;
+  totalItems = 0;
+  totalPages = 0;
+  hasNextPage = false;
+  hasPreviousPage = false;
+
+  // Filter properties
+  transactionTypeFilter = '';
+  currencyFilter = '';
+
+  // Math property for template access
+  Math = Math;
+
   // Wallet summary state
   walletSummary: ClientWalletsSummary | null = null;
   loadingWalletSummary = false;
@@ -227,12 +242,26 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
 
     this.loadingWalletTransactions = true;
     
+    // Prepare filters for the API call
+    const filters = {
+      pageNumber: this.currentPage,
+      pageSize: this.pageSize,
+      transactionType: this.transactionTypeFilter || undefined,
+      currency: this.currencyFilter || undefined
+    };
+    
     this.walletService
-      .getClientTransactionsByUserId(this.clientId)
+      .getClientTransactionsByUserId(this.clientId, filters)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (transactions) => {
-          this.walletTransactions = transactions;
+        next: (response) => {
+          this.walletTransactions = response.items;
+          this.totalItems = response.totalCount;
+          this.currentPage = response.pageNumber + 1; // Convert from 0-based to 1-based
+          this.pageSize = response.pageSize;
+          this.totalPages = response.totalPages;
+          this.hasNextPage = response.hasNextPage;
+          this.hasPreviousPage = response.hasPreviousPage;
           this.loadingWalletTransactions = false;
         },
         error: (error) => {
@@ -306,6 +335,42 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     this.loadWalletSummary();
   }
 
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadWalletTransactions();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1; // Reset to first page when page size changes
+    this.loadWalletTransactions();
+  }
+
+  onFilterChange(): void {
+    // Reset to first page when filters change
+    this.currentPage = 1;
+    this.loadWalletTransactions();
+  }
+
+  getTotalPages(): number {
+    return this.totalPages;
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const currentPage = this.currentPage;
+    const pages: number[] = [];
+    
+    // Show up to 5 page numbers around the current page
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
 
 
   exportTransactions(): void {

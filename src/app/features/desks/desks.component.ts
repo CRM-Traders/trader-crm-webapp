@@ -122,12 +122,6 @@ export class DesksComponent implements OnInit, OnDestroy {
       action: (item: Desk) => this.openDetailsModal(item),
     },
     {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Desk) => this.openDetailsModal(item),
-    },
-    {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',

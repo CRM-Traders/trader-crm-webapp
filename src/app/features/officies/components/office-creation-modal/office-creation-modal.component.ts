@@ -42,7 +42,7 @@ import { Country } from '../../../../core/models/country.model';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <div class="w-full">
+    <div class="w-full modal-content">
       <!-- Modal Header -->
       <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
         <h4 class="text-xl font-semibold text-gray-900 dark:text-white">

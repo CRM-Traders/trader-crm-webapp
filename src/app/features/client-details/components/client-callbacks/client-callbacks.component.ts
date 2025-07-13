@@ -48,38 +48,7 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
         </div>
       </div>
       <!-- Callback Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div
-          class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-6"
-        >
-          <div class="flex items-center">
-            <div class="p-3 rounded-full bg-blue-200 dark:bg-blue-700">
-              <svg
-                class="w-6 h-6 text-blue-600 dark:text-blue-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
-                Pending Callbacks
-              </p>
-              <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                {{ getPendingCallbacksCount() }}
-              </p>
-              <p class="text-xs text-blue-700 dark:text-blue-300">Due</p>
-            </div>
-          </div>
-        </div>
-
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div
           class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-6"
         >

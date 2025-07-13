@@ -32,24 +32,45 @@ import {
       >
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Brand Details - {{ brand.name }}
+            Brand Details - {{ brand.name || 'Loading...' }}
           </h2>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="brandLoading" class="px-6 py-8 flex items-center justify-center">
+        <div class="text-center">
+          <svg
+            class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p class="text-gray-600 dark:text-gray-400">Loading brand data...</p>
         </div>
       </div>
 
       <!-- Modal Body -->
       <div
-        class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[70vh] overflow-y-auto"
+        *ngIf="!brandLoading"
+        class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[100vh] overflow-y-auto"
       >
         <div class="space-y-6">
           <!-- Brand Information Section -->
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-            <h3
-              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-            >
-              Brand Information
-            </h3>
-
             <form [formGroup]="editForm" class="space-y-4">
               <!-- Brand Name -->
               <div>
@@ -98,7 +119,7 @@ import {
                 >
                   Country
                 </label>
-                <div *ngIf="isEditing" class="relative">
+                <div *ngIf="isEditing" class="relative" data-dropdown="country">
                   <!-- Custom Dropdown Button -->
                   <button
                     type="button"
@@ -191,7 +212,7 @@ import {
                 >
                   Office
                 </label>
-                <div *ngIf="isEditing" class="relative">
+                <div *ngIf="isEditing" class="relative" data-dropdown="office">
                   <!-- Custom Dropdown Button -->
                   <button
                     type="button"
@@ -477,6 +498,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   editForm: FormGroup;
   isEditing = false;
   loading = false;
+  brandLoading = false;
 
   // Office dropdown properties
   officeDropdownOpen = false;
@@ -512,8 +534,38 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadBrandData();
     this.loadCountries();
     this.loadOffices();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadBrandData(): void {
+    if (!this.brand.id) return;
+
+    this.brandLoading = true;
+    this.brandsService
+      .getBrandById(this.brand.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading brand data:', error);
+          this.alertService.error('Failed to load brand data');
+          return of(this.brand); // Fallback to input brand data
+        }),
+        finalize(() => (this.brandLoading = false))
+      )
+      .subscribe((brandData) => {
+        this.brand = brandData;
+        this.updateFormWithBrandData();
+      });
+  }
+
+  private updateFormWithBrandData(): void {
     if (this.brand) {
       this.editForm.patchValue({
         name: this.brand.name,
@@ -527,11 +579,6 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   startEdit(): void {
     this.isEditing = true;
     // Load fresh data when starting edit
@@ -540,16 +587,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
 
   cancelEdit(): void {
     this.isEditing = false;
-    if (this.brand) {
-      this.editForm.patchValue({
-        name: this.brand.name,
-        country: this.brand.country,
-        officeId: this.brand.officeId,
-        isActive: this.brand.isActive,
-      });
-      this.setSelectedCountryFromCode(this.brand.country);
-      this.setSelectedOfficeFromName(this.brand.officeName);
-    }
+    this.updateFormWithBrandData(); // Reset form to current brand data
   }
 
   saveBrand(): void {
@@ -572,40 +610,32 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
           this.alertService.error('Failed to update brand');
           return of(null);
         }),
-        finalize(() => {
-          this.loading = false;
-          this.isEditing = false;
-                    this.modalRef.close({
-            updated: true,
-            brand: this.brand,
-          });
-        })
+        finalize(() => (this.loading = false))
       )
       .subscribe((result) => {
-        if (result) {
-          this.alertService.success('Brand updated successfully');
-          this.isEditing = false;
+        this.alertService.success('Brand updated successfully');
+        this.isEditing = false;
 
-          this.brand = {
-            ...this.brand,
-            name: this.editForm.value.name.trim(),
-            country: this.editForm.value.country,
-            officeId: this.editForm.value.officeId,
-            isActive: this.editForm.value.isActive,
-            lastModifiedAt: new Date(),
-          };
+        // Reload brand data to get the updated information
+        this.loadBrandData();
 
-          this.modalRef.close({
-            updated: true,
-            brand: this.brand,
-          });
-        }
+        this.modalRef.close({
+          updated: true,
+          brand: this.brand,
+        });
       });
   }
 
   // Office dropdown methods
   toggleOfficeDropdown(): void {
+    // Close country dropdown if open
+    if (this.countryDropdownOpen) {
+      this.countryDropdownOpen = false;
+    }
+    
+    // Toggle office dropdown
     this.officeDropdownOpen = !this.officeDropdownOpen;
+    
     if (this.officeDropdownOpen && this.availableOffices.length === 0) {
       this.loadOffices();
     }
@@ -638,7 +668,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         this.officeLoading = false;
         
         // Set selected office from office name if we have the brand's office name
-        if (this.brand?.officeName && !this.selectedOffice) {
+        if (this.brand.officeName && !this.selectedOffice) {
           this.setSelectedOfficeFromName(this.brand.officeName);
         }
       },
@@ -695,7 +725,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         this.filteredCountries = countries;
         
         // Set selected country if we have the brand's country code
-        if (this.brand?.country) {
+        if (this.brand.country) {
           this.setSelectedCountryFromCode(this.brand.country);
           this.setSelectedCountryFromName(this.brand.country);
         }
@@ -707,6 +737,12 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   toggleCountryDropdown(): void {
+    // Close office dropdown if open
+    if (this.officeDropdownOpen) {
+      this.officeDropdownOpen = false;
+    }
+    
+    // Toggle country dropdown
     this.countryDropdownOpen = !this.countryDropdownOpen;
   }
 
@@ -751,15 +787,15 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    const dropdown = target.closest('.relative');
     
-    if (!dropdown) {
-      if (this.officeDropdownOpen) {
-        this.officeDropdownOpen = false;
-      }
-      if (this.countryDropdownOpen) {
-        this.countryDropdownOpen = false;
-      }
+    // Check if click is inside any dropdown container
+    const officeDropdown = target.closest('[data-dropdown="office"]');
+    const countryDropdown = target.closest('[data-dropdown="country"]');
+    
+    // Close dropdowns if click is outside both dropdowns
+    if (!officeDropdown && !countryDropdown) {
+      this.officeDropdownOpen = false;
+      this.countryDropdownOpen = false;
     }
   }
 

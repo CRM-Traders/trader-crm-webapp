@@ -227,6 +227,74 @@ export class HierarchyService {
     return results;
   }
 
+  /**
+   * Search hierarchy and automatically expand nodes that match the search query
+   * @param query Search query string
+   * @returns Object containing search results and expanded node IDs
+   */
+  searchAndExpandHierarchy(query: string): {
+    results: HierarchySearchResult[];
+    expandedNodeIds: string[];
+  } {
+    if (!query.trim()) {
+      return { results: [], expandedNodeIds: [] };
+    }
+
+    const results = this.searchHierarchy(query);
+    const expandedNodeIds: string[] = [];
+
+    // Get all parent node IDs that need to be expanded to show search results
+    const nodesToExpand = new Set<string>();
+
+    results.forEach((result) => {
+      // Get the path to this node and expand all parent nodes
+      const pathIds = this.getNodePathIds(result.node);
+      pathIds.forEach((id) => nodesToExpand.add(id));
+    });
+
+    // Expand all the nodes that need to be expanded
+    const currentExpandedNodes = new Set(this.expandedNodesSubject.value);
+    nodesToExpand.forEach((nodeId) => {
+      currentExpandedNodes.add(nodeId);
+    });
+
+    this.expandedNodesSubject.next(currentExpandedNodes);
+
+    return {
+      results,
+      expandedNodeIds: Array.from(nodesToExpand),
+    };
+  }
+
+  /**
+   * Get the path of node IDs from root to the target node
+   * @param targetNode The node to find the path for
+   * @returns Array of node IDs representing the path from root to target
+   */
+  getNodePathIds(targetNode: HierarchyNode): string[] {
+    const pathIds: string[] = [];
+    const nodes = this.hierarchySubject.value;
+
+    function findPath(nodeList: HierarchyNode[], path: string[] = []): boolean {
+      for (const node of nodeList) {
+        const currentPath = [...path, node.id];
+
+        if (node.id === targetNode.id) {
+          pathIds.push(...path); // Don't include the target node itself
+          return true;
+        }
+
+        if (node.children && findPath(node.children, currentPath)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    findPath(nodes);
+    return pathIds;
+  }
+
   getRoleDisplayName(role: number): string {
     const roleNames: Record<number, string> = {
       [UserRole.SuperAdmin]: 'Super Admin',

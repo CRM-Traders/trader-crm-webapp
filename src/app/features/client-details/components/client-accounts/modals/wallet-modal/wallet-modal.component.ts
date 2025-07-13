@@ -93,6 +93,21 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
   get filteredWallets(): Wallet[] {
     let filtered = this.wallets;
 
+    // Apply search filter
+    if (this.searchTerm.trim()) {
+      const searchLower = this.searchTerm.toLowerCase().trim();
+      filtered = filtered.filter((wallet) => {
+        return (
+          wallet.currency.toLowerCase().includes(searchLower) ||
+          this.walletServicePublic.getCurrencyDisplayName(wallet.currency).toLowerCase().includes(searchLower) ||
+          wallet.totalBalance.toString().includes(searchLower) ||
+          wallet.availableBalance.toString().includes(searchLower) ||
+          wallet.lockedBalance.toString().includes(searchLower) ||
+          wallet.usdEquivalent.toString().includes(searchLower)
+        );
+      });
+    }
+
     // Apply currency filter
     if (this.selectedCurrencyFilter) {
       filtered = filtered.filter(
@@ -129,6 +144,15 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
     if (this.tradingAccountId) {
       this.walletService.refreshWallets(this.tradingAccountId);
     }
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.selectedCurrencyFilter = '';
   }
 
   closeModal(): void {

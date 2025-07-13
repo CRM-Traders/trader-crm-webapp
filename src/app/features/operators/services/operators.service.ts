@@ -18,6 +18,7 @@ import {
   UserOrganizationAssignRequest,
   UserOrganizationReassignRequest,
   UserProfileUpdateRequest,
+  OperatorPersonalInfoUpdateRequest,
 } from '../models/operators.model';
 
 interface BranchDropdownResponse {
@@ -234,6 +235,15 @@ export class OperatorsService {
     request: UserProfileUpdateRequest
   ): Observable<void> {
     return this.httpService.put<void>(`identity/api/users/${userId}`, request);
+  }
+
+  updateOperatorPersonalInfo(
+    request: OperatorPersonalInfoUpdateRequest
+  ): Observable<void> {
+    return this.httpService.put<void>(
+      `${this.apiPath}/update-personal-information`,
+      request
+    );
   }
 
   // User organization management

@@ -89,7 +89,7 @@ export class FilesService {
     if (metadata?.reference) {
       formData.append('reference', metadata.reference);
     }
-    if (metadata?.fileType !== undefined) {
+    if (metadata?.fileType !== undefined && metadata?.fileType !== null) {
       formData.append('fileType', metadata.fileType.toString());
     }
     if (metadata?.ownerId) {
@@ -99,7 +99,15 @@ export class FilesService {
       formData.append('makePermanent', metadata.makePermanent.toString());
     }
 
-    return this.httpService.post<UploadFileResponse>(this.apiPath, formData);
+    console.log('FilesService: Uploading file with FormData:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      metadata,
+      formDataEntries: Array.from(formData.entries())
+    });
+
+    return this.httpService.postForm<UploadFileResponse>(this.apiPath, formData);
   }
 
   /**

@@ -517,11 +517,11 @@
 <!-- Event Creation/Edit Modal -->
 <div
   *ngIf="showEventModal"
-  class="fixed inset-0 bg-black/50 h-screen w-full z-50"
+  class="fixed inset-0 bg-black/50 h-full w-full z-50"
   (click)="closeEventModal()"
 >
   <div
-    class="relative mx-auto p-5 mt-[5vh] max-h-[90vh] overflow-y-auto border border-gray-300/30 w-11/12 md:w-3/4 lg:w-1/2 xl:w-2/5 shadow-lg rounded-md bg-white dark:bg-gray-800"
+    class="relative mx-auto p-5 mt-[10vh] h-[91vh] overflow-y-auto border border-gray-300/30 w-11/12 md:w-3/4 lg:w-1/2 xl:w-2/5 shadow-lg rounded-md bg-white dark:bg-gray-800"
     (click)="$event.stopPropagation()"
   >
     <div class="mt-3">

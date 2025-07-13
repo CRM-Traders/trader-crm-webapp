@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, input } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -16,7 +16,7 @@ import { Settings } from '../../models/settings.model';
   templateUrl: './profile-settings.component.html',
   styleUrls: ['./profile-settings.component.scss'],
 })
-export class ProfileSettingsComponent implements OnInit {
+export class ProfileSettingsComponent implements OnInit, OnChanges {
   @Input() settings: Settings | null = null;
 
   private fb = inject(FormBuilder);
@@ -27,7 +27,12 @@ export class ProfileSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.populateFormWithSettings();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['settings'] && this.settings && this.profileForm) {
+      this.populateFormWithSettings();
+    }
   }
 
   initForm(): void {
@@ -37,16 +42,23 @@ export class ProfileSettingsComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern(/^\+?[0-9\s\-\(\)]+$/)]],
     });
+
+    // If settings are already available, populate the form
+    if (this.settings) {
+      this.populateFormWithSettings();
+    }
   }
 
   populateFormWithSettings(): void {
-    if (!this.settings) return;
+    if (!this.settings || !this.profileForm) return;
+
+    console.log('Populating form with settings:', this.settings);
 
     this.profileForm.patchValue({
-      firstName: this.settings.firstName,
-      lastName: this.settings.lastName,
-      email: this.settings.email,
-      phone: this.settings.phoneNumber,
+      firstName: this.settings.firstName || '',
+      lastName: this.settings.lastName || '',
+      email: this.settings.email || '',
+      phone: this.settings.phoneNumber || '',
     });
   }
 

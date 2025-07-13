@@ -56,7 +56,7 @@ import { Country } from '../../../../core/models/country.model';
 
       <!-- Modal Body -->
       <div
-        class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[70vh] overflow-y-auto"
+        class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[100vh] overflow-y-auto"
       >
         <div class="space-y-6">
           <!-- Office Information Section -->

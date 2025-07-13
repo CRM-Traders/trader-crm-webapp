@@ -292,7 +292,7 @@ interface BrandDropdownResponse {
 
               <!-- Desks List -->
               <div
-                class="max-h-48 overflow-y-auto"
+                class="max-h-28 overflow-y-auto"
                 (scroll)="onDeskDropdownScroll($event)"
               >
                 <div
@@ -302,13 +302,6 @@ interface BrandDropdownResponse {
                 >
                   <div class="flex flex-col">
                     <span class="font-medium">{{ desk.value }}</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">
-                      Office: {{ desk.officeName }}
-                      <span *ngIf="desk.language">
-                        | Language: {{ desk.language }}</span
-                      >
-                      | Type: {{ desk.type }}
-                    </span>
                   </div>
                 </div>
 
@@ -674,6 +667,10 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
   }
 
   toggleBrandDropdown(): void {
+    // Close desk dropdown if open
+    if (this.deskDropdownOpen) {
+      this.deskDropdownOpen = false;
+    }
     this.brandDropdownOpen = !this.brandDropdownOpen;
   }
 
@@ -717,6 +714,10 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
 
   toggleDeskDropdown(): void {
     if (this.teamForm.get('brandId')?.value) {
+      // Close brand dropdown if open
+      if (this.brandDropdownOpen) {
+        this.brandDropdownOpen = false;
+      }
       this.deskDropdownOpen = !this.deskDropdownOpen;
     }
   }

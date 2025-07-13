@@ -56,6 +56,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   branchTypeCellTemplate!: TemplateRef<any>;
   @ViewChild('userTypeCell', { static: true })
   userTypeCellTemplate!: TemplateRef<any>;
+  @ViewChild('onlineStatusCell', { static: true })
+  onlineStatusCellTemplate!: TemplateRef<any>;
 
   showDeleteModal = false;
   operatorToDelete: Operator | null = null;
@@ -69,6 +71,14 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   UserTypeColors = UserTypeColors;
 
   gridColumns: GridColumn[] = [
+    {
+      field: 'isOnline',
+      header: 'Status',
+      sortable: true,
+      filterable: true,
+      cellTemplate: null, // Will be set in ngOnInit
+      width: '20px',
+    },
     {
       field: 'userFullName',
       header: 'Full Name',
@@ -126,6 +136,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       filterable: true,
       type: 'date',
       format: 'short',
+      hidden: true,
     },
     {
       field: 'createdBy',
@@ -143,12 +154,12 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       icon: 'view',
       action: (item: Operator) => this.openOperatorDetailsModal(item),
     },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Operator) => this.openOperatorDetailsModal(item),
-    },
+    // {
+    //   id: 'edit',
+    //   label: 'Edit',
+    //   icon: 'edit',
+    //   action: (item: Operator) => this.openOperatorDetailsModal(item),
+    // },
     {
       id: 'password',
       label: 'Change Password',
@@ -170,6 +181,13 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   }
 
   private initializeGridTemplates(): void {
+    const onlineStatusColumn = this.gridColumns.find(
+      (col) => col.field === 'isOnline'
+    );
+    if (onlineStatusColumn) {
+      onlineStatusColumn.cellTemplate = this.onlineStatusCellTemplate;
+    }
+
     const branchTypeColumn = this.gridColumns.find(
       (col) => col.field === 'branchType'
     );

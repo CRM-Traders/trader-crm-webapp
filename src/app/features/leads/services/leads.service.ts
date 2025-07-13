@@ -56,8 +56,7 @@ export class LeadsService {
   }
 
   updateClient(request: LeadUpdateRequest): Observable<void> {
-    const { id, ...body } = request;
-    return this.httpService.put<void>(`${this.apiPath}/${id}`, body);
+    return this.httpService.put<void>(`${this.apiPath}/${request.id}`, request);
   }
 
   deleteClient(id: string): Observable<void> {

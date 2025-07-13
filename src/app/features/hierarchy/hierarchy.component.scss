@@ -48,6 +48,14 @@
   @apply p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors;
 }
 
+.search-result-item:hover {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-600;
+}
+
+.search-result-item .search-highlight {
+  @apply bg-yellow-200 dark:bg-yellow-800 px-1 rounded;
+}
+
 .stats-grid {
   @apply grid grid-cols-1 md:grid-cols-4 gap-4;
 }
@@ -135,6 +143,19 @@
 .node-container.highlight {
   @apply bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-400;
   animation: highlight-pulse 2s ease-in-out;
+}
+
+/* Search highlighting styles */
+.node-container.search-match {
+  @apply bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400;
+}
+
+.node-container.search-match .node-header {
+  @apply bg-blue-50 dark:bg-blue-900/20;
+}
+
+.node-container.search-match .node-name {
+  @apply font-semibold text-blue-900 dark:text-blue-100;
 }
 
 @keyframes highlight-pulse {
