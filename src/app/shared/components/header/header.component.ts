@@ -16,7 +16,6 @@ import { LocalizationService } from '../../../core/services/localization.service
     CommonModule,
     ThemeToggleComponent,
     UserMenuComponent,
-    NotificationsComponent,
     MiniCalendarComponent,
   ],
   templateUrl: './header.component.html',
