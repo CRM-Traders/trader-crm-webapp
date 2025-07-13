@@ -119,7 +119,7 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
               [(ngModel)]="searchQuery"
               (input)="onSearchInput($event)"
               placeholder="Search by name, email, or country..."
-              class="block w-80 !pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              [class]="'block w-80 !pl-10 pr-3 py-3 border rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ' + (searchResults().length > 0 ? 'border-green-500 focus:border-green-500' : 'border-gray-300 dark:border-gray-600')"
             />
             <div
               *ngIf="searchQuery"
@@ -212,21 +212,22 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
         </div>
 
         <!-- Search Results -->
-        <div *ngIf="searchResults().length > 0" class="mb-4">
+        <div *ngIf="searchResults().length > 0" class="mb-4 border-b border-gray-200 dark:border-gray-600 pb-4">
           <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
             Found {{ searchResults().length }} result(s)
+            <span *ngIf="searchQueryTrimmed()" class="text-green-600 dark:text-green-400">
+              • Auto-expanded matching nodes
+            </span>
           </div>
           <div class="space-y-2 max-h-40 overflow-y-auto">
             <div
               *ngFor="let result of searchResults()"
               (click)="navigateToNode(result)"
-              class="p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              class="p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/10 transition-colors"
             >
-              <div class="font-medium text-gray-900 dark:text-gray-100">
-                {{ result.node.name }}
+              <div class="font-medium text-gray-900 dark:text-gray-100" [innerHTML]="getHighlightedText(result.node.name, searchQuery)">
               </div>
-              <div class="text-sm text-gray-500 dark:text-gray-400">
-                {{ result.path.join(' > ') }}
+              <div class="text-sm text-gray-500 dark:text-gray-400" [innerHTML]="getHighlightedText(result.path.join(' > '), searchQuery)">
               </div>
               <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">
                 Matches: {{ result.matches.join(', ') }}
@@ -234,7 +235,7 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
             </div>
           </div>
         </div>
-        <div class="">
+        <div>
           <div
             *ngIf="loading() && !hierarchyNodes().length"
             class="text-center py-12"
@@ -328,6 +329,8 @@ export class HierarchyComponent implements OnInit, OnDestroy {
   searchQuery = '';
 
   // Computed values
+  searchQueryTrimmed = computed(() => this.searchQuery.trim());
+  
   hierarchyStats = computed(() => {
     const nodes = this.hierarchyNodes();
     if (!nodes.length) return null;
@@ -426,19 +429,29 @@ export class HierarchyComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const results = this.hierarchyService.searchHierarchy(query);
+    const { results, expandedNodeIds } = this.hierarchyService.searchAndExpandHierarchy(query);
     this.searchResults.set(results);
+    
+    // Log expanded nodes for debugging
+    if (expandedNodeIds.length > 0) {
+      console.log('Auto-expanded nodes:', expandedNodeIds);
+    }
   }
 
   clearSearch() {
     this.searchQuery = '';
     this.searchResults.set([]);
+    
+    // Clear any search highlighting by triggering a re-render
+    // This will cause the hierarchy nodes to re-evaluate their search match status
+    const currentNodes = this.hierarchyNodes();
+    this.hierarchyNodes.set([...currentNodes]);
   }
 
   navigateToNode(result: HierarchySearchResult) {
     // Expand all parent nodes to make the target visible
-    const pathIds = this.getNodePathIds(result.node);
-    pathIds.forEach((id) => this.hierarchyService.expandNode(id));
+    const pathIds = this.hierarchyService.getNodePathIds(result.node);
+    pathIds.forEach((id: string) => this.hierarchyService.expandNode(id));
 
     // Scroll to the node
     setTimeout(() => {
@@ -455,28 +468,15 @@ export class HierarchyComponent implements OnInit, OnDestroy {
     this.clearSearch();
   }
 
-  private getNodePathIds(targetNode: HierarchyNode): string[] {
-    const pathIds: string[] = [];
-
-    function findPath(nodes: HierarchyNode[], path: string[] = []): boolean {
-      for (const node of nodes) {
-        const currentPath = [...path, node.id];
-
-        if (node.id === targetNode.id) {
-          pathIds.push(...path); // Don't include the target node itself
-          return true;
-        }
-
-        if (node.children && findPath(node.children, currentPath)) {
-          return true;
-        }
-      }
-      return false;
+  getHighlightedText(text: string, query: string): string {
+    if (!query.trim()) {
+      return text;
     }
-
-    findPath(this.hierarchyNodes());
-    return pathIds;
+    
+    const regex = new RegExp(`(${query})`, 'gi');
+    return text.replace(regex, '<span class="search-highlight">$1</span>');
   }
+
 
   expandAll() {
     this.hierarchyService.expandAll();
