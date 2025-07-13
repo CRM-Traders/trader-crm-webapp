@@ -10,7 +10,7 @@ import { OperatorDropdownItem } from '../../../officies/models/office-rules.mode
 import { Client } from '../../models/clients.model';
 import { AssignClientsToOperatorRequest, ClientsService, ClientType } from '../../services/clients.service';
 
-export type UserType = 'client' | 'lead';
+export type UserType = 0 | 1; // 0 = lead, 1 = client
 
 
 @Component({
@@ -22,7 +22,7 @@ export type UserType = 'client' | 'lead';
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          Assign Clients to Operator
+          Assign {{ userType === 0 ? 'Leads' : 'Clients' }} to Operator
         </h2>
       </div>
 
@@ -35,7 +35,7 @@ export type UserType = 'client' | 'lead';
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             <span class="text-blue-800 dark:text-blue-400 font-medium">
-              {{ selectedClients.length }} client{{ selectedClients.length === 1 ? '' : 's' }} selected for assignment
+              {{ selectedClients.length }} {{ userType === 0 ? 'lead' : 'client' }}{{ selectedClients.length === 1 ? '' : 's' }} selected for assignment
             </span>
           </div>
           
@@ -135,7 +135,7 @@ export type UserType = 'client' | 'lead';
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          {{ isSubmitting ? 'Assigning...' : 'Assign Clients' }}
+          {{ isSubmitting ? 'Assigning...' : 'Assign ' + (userType === 0 ? 'Leads' : 'Clients') }}
         </button>
       </div>
     </div>
@@ -192,7 +192,6 @@ export class AssignOperatorModalComponent implements OnInit {
         this.operators = operators;
       });
   }
-
   onSubmit(): void {
     if (this.assignmentForm.invalid) {
       this.assignmentForm.markAllAsTouched();
@@ -224,8 +223,10 @@ export class AssignOperatorModalComponent implements OnInit {
           const operatorName = selectedOperator?.value || 'Selected operator';
 
           if (response.successCount > 0) {
+            // Check if this is for leads or clients based on userType
+            const entityType = this.userType === 0 ? 'lead' : 'client';
             this.alertService.success(
-              `Successfully assigned ${response.successCount} client${response.successCount === 1 ? '' : 's'} to ${operatorName}`
+              `Successfully assigned ${response.successCount} ${entityType}${response.successCount === 1 ? '' : 's'} to ${operatorName}`
             );
           }
 
@@ -239,11 +240,14 @@ export class AssignOperatorModalComponent implements OnInit {
               } else {
                 // Multiple failures - show all failed names
                 const failedNames = this.getFailedEntityNames(response.errors);
-                const summaryMessage = `${response.failureCount} leads could not be assigned: ${failedNames.join(', ')}`;
-                this.alertService.warning(summaryMessage);
+                const entityType = this.userType === 0 ? 'leads' : 'clients';
+              this.alertService.warning(`${entityType} already assigned to an active operator`);
+                
               }
             } else {
-              this.alertService.warning("Some users have already been assigned to operator.");
+              // Check if this is for leads or clients based on userType
+              const entityType = this.userType === 0 ? 'lead' : 'client';
+              this.alertService.warning(`${entityType} already assigned to an active operator`);
             }
           }
 
@@ -251,7 +255,9 @@ export class AssignOperatorModalComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error assigning clients:', error);
-          this.alertService.error('Failed to assign clients to operator');
+          // Check if this is for leads or clients based on userType
+          const entityType = this.userType === 0 ? 'leads' : 'clients';
+          this.alertService.error(`Failed to assign ${entityType} to operator`);
         }
       });
   }
@@ -273,7 +279,8 @@ export class AssignOperatorModalComponent implements OnInit {
       if (entity) {
         const entityName = `${entity.firstName} ${entity.lastName}`;
         // Replace the ID with the name
-        return errorMessage.replace(`Entity ${entityId}`, `Lead "${entityName}"`);
+        const entityType = this.userType === 0 ? 'Lead' : 'Client';
+        return errorMessage.replace(`Entity ${entityId}`, `${entityType} "${entityName}"`);
       }
     }
     return errorMessage;
