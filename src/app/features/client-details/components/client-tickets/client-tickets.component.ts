@@ -13,7 +13,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { Client } from '../../../clients/models/clients.model';
 import { AlertService } from '../../../../core/services/alert.service';
 import { TicketService } from './services/ticket.service';
-import { FinancialTicket, FinancialTicketSummary } from './models/ticket.model';
+import { FinancialTicket, FinancialTicketSummary, TicketStatus } from './models/ticket.model';
 
 @Component({
   selector: 'app-client-tickets',
@@ -68,6 +68,12 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
 
   // Math property for template access
   Math = Math;
+
+  // Ticket status enum for template access
+  TicketStatus = TicketStatus;
+
+  // Status update loading state
+  updatingStatus: { [key: string]: boolean } = {};
 
   get clientId(): string {
     return this.client?.userId || '';
@@ -288,6 +294,84 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
   refreshTickets(): void {
     this.loadFinancialTickets();
   }
+
+  /**
+   * Update ticket status
+   */
+  updateTicketStatus(ticketId: string, newStatus: string | TicketStatus): void {
+    if (this.updatingStatus[ticketId]) return;
+
+    // Convert string to TicketStatus enum if needed
+    const status = typeof newStatus === 'string' ? parseInt(newStatus) as TicketStatus : newStatus;
+    
+    this.updatingStatus[ticketId] = true;
+    
+    this.ticketService
+      .updateTicketStatus(ticketId, status)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Reset loading state
+          this.updatingStatus[ticketId] = false;
+          // Refresh the tickets to get updated data
+          this.loadFinancialTickets();
+        },
+        error: () => {
+          this.updatingStatus[ticketId] = false;
+        }
+      });
+  }
+
+  /**
+   * Handle select change event for status update
+   */
+  onStatusChange(ticketId: string, event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    if (target && target.value) {
+      this.updateTicketStatus(ticketId, target.value);
+    }
+  }
+
+  /**
+   * Check if status update is in progress for a ticket
+   */
+  isUpdatingStatus(ticketId: string): boolean {
+    return this.updatingStatus[ticketId] || false;
+  }
+
+  /**
+   * Get available status options for a ticket
+   */
+  getAvailableStatuses(currentStatus: number): TicketStatus[] {
+    const allStatuses = Object.values(TicketStatus).filter(value => typeof value === 'number') as TicketStatus[];
+    
+    // Filter out the current status and return available options
+    return allStatuses.filter(status => status !== currentStatus);
+  }
+
+  /**
+   * Get status display name
+   */
+  getStatusDisplayName(status: TicketStatus): string {
+    switch (status) {
+      case TicketStatus.Pending:
+        return 'Pending';
+      case TicketStatus.Processing:
+        return 'Processing';
+      case TicketStatus.Completed:
+        return 'Completed';
+      case TicketStatus.Cancelled:
+        return 'Cancelled';
+      case TicketStatus.Failed:
+        return 'Failed';
+      case TicketStatus.Rejected:
+        return 'Rejected';
+      default:
+        return 'Unknown';
+    }
+  }
+
+
 
   getStatusColorClass(status: string): string {
     return this.ticketService.getFinancialTicketStatusColorClass(status);

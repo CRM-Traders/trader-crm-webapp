@@ -267,6 +267,9 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
               ID
             </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -304,6 +307,22 @@
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="text-sm text-gray-500 dark:text-gray-400 font-mono">
                 {{ ticket.id.substring(0, 8) }}...
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center space-x-2">
+                <!-- Simple Status Update Dropdown -->
+                <select
+                  [disabled]="isUpdatingStatus(ticket.id)"
+                  class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  (change)="onStatusChange(ticket.id, $event)"
+                >
+                  <option value="" disabled selected>Update Status</option>
+                  <option *ngFor="let status of getAvailableStatuses(ticket.ticketStatus)" [value]="status">
+                    {{ getStatusDisplayName(status) }}
+                  </option>
+                </select>
+                <div *ngIf="isUpdatingStatus(ticket.id)" class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
               </div>
             </td>
           </tr>

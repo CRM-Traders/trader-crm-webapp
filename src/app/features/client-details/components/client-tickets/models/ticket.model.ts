@@ -1,5 +1,19 @@
 // models/ticket.model.ts
 
+export enum TicketStatus {
+  Pending = 0,
+  Processing = 1,
+  Completed = 2,
+  Cancelled = 3,
+  Failed = 4,
+  Rejected = 5
+}
+
+export interface UpdateTicketStatusRequest {
+  id: string;
+  status: TicketStatus;
+}
+
 export interface FinancialTicket {
   id: string;
   ticketType: number; // 0 = Deposit, 1 = Withdraw

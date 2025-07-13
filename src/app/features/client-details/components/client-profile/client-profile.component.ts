@@ -138,6 +138,8 @@ import { Country } from '../../../../core/models/country.model';
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   [class.bg-gray-50]="!isEditingPersonal"
                   [class.dark:bg-gray-800]="!isEditingPersonal"
+                  [class.cursor-not-allowed]="!isEditingPersonal"
+                  [class.opacity-50]="!isEditingPersonal"
                 >
                   <option value="">Select Language</option>
                   <option *ngFor="let language of languages" [value]="language.key">
@@ -160,6 +162,8 @@ import { Country } from '../../../../core/models/country.model';
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 [class.bg-gray-50]="!isEditingPersonal"
                 [class.dark:bg-gray-800]="!isEditingPersonal"
+                [class.cursor-not-allowed]="!isEditingPersonal"
+                [class.opacity-50]="!isEditingPersonal"
               >
                 <option value="">Select Country</option>
                 <option *ngFor="let country of countries$ | async" [value]="country.code">
@@ -342,14 +346,27 @@ export class ClientProfileComponent implements OnInit {
       secondTelephone: client.secondTelephone || '',
       email: client.email || '',
     });
+    
+    // Disable form controls after initialization
+    this.disableFormControls();
+  }
+
+  private enableFormControls(): void {
+    this.personalForm.enable();
+  }
+
+  private disableFormControls(): void {
+    this.personalForm.disable();
   }
 
   startEditPersonal(): void {
     this.isEditingPersonal = true;
+    this.enableFormControls();
   }
 
   cancelEditPersonal(): void {
     this.isEditingPersonal = false;
+    this.disableFormControls();
     if (this.clientProfile) {
       this.initializeForm(this.clientProfile);
     }
@@ -392,6 +409,7 @@ export class ClientProfileComponent implements OnInit {
           this.clientProfile = updatedClient;
           this.initializeForm(updatedClient);
           this.isEditingPersonal = false;
+          this.disableFormControls();
           this.alertService.success('Personal information updated successfully');
         },
         error: (error) => {
