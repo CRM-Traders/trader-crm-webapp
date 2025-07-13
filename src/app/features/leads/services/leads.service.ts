@@ -104,7 +104,7 @@ export class LeadsService {
   }
 
   getActiveLeads(): Observable<any> {
-    return this.httpService.get(`identity/api/users/get-active-users?role=7`);
+    return this.httpService.get(`identity/api/leads/get-active-leads`);
   }
 
   /**
@@ -121,7 +121,9 @@ export class LeadsService {
   /**
    * Convert multiple leads to clients
    */
-  convertLeadsToClients(leadIds: string[]): Observable<BulkLeadConversionResponse> {
+  convertLeadsToClients(
+    leadIds: string[]
+  ): Observable<BulkLeadConversionResponse> {
     const request: BulkConversionRequest = { leadIds };
     return this.httpService.post<BulkLeadConversionResponse>(
       'identity/convert-to-clients',
