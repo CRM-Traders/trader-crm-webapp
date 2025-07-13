@@ -5,4 +5,5 @@ export interface AuthResponse {
   name: string;
   exp: number;
   requiresTwoFactor?: boolean;
+  permissions: string[];
 }
