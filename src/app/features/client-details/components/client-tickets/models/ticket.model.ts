@@ -1,5 +1,47 @@
 // models/ticket.model.ts
 
+export interface FinancialTicket {
+  id: string;
+  ticketType: number; // 0 = Deposit, 1 = Withdraw
+  ticketTypeName: string;
+  amount: number;
+  walletId: string;
+  ticketStatus: number;
+  ticketStatusName: string;
+  createdAt: string;
+  walletCurrency: string;
+  tradingAccountId: string;
+}
+
+export interface FinancialTicketResponse {
+  data: {
+    tickets: FinancialTicket[];
+    totalCount: number;
+    activeTickets: number;
+    totalWithdrawals: number;
+    totalDeposits: number;
+  }[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    hasPrevious: boolean;
+    hasNext: boolean;
+  };
+}
+
+export interface FinancialTicketSummary {
+  totalTickets: number;
+  activeTickets: number;
+  totalWithdrawals: number;
+  totalDeposits: number;
+  totalAmount: number;
+  totalWithdrawalAmount: number;
+  totalDepositAmount: number;
+}
+
+// Legacy interfaces for backward compatibility
 export interface Ticket {
   id: string;
   title: string;

@@ -13,7 +13,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { Client } from '../../../clients/models/clients.model';
 import { AlertService } from '../../../../core/services/alert.service';
 import { TicketService } from './services/ticket.service';
-import { Ticket, TicketFilters, TicketSummary } from './models/ticket.model';
+import { FinancialTicket, FinancialTicketSummary } from './models/ticket.model';
 
 @Component({
   selector: 'app-client-tickets',
@@ -41,17 +41,12 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
   private ticketService = inject(TicketService);
   private destroy$ = new Subject<void>();
 
-  ticketForm: FormGroup;
-  showAddForm = false;
-  searchTerm = '';
-  activeTab: 'tickets' | 'summary' = 'tickets';
-
-  // Tickets state
-  tickets: Ticket[] = [];
+  // Financial tickets state
+  financialTickets: FinancialTicket[] = [];
   loadingTickets = false;
 
   // Pagination properties
-  currentPage = 1;
+  currentPage = 0; // 0-based for API
   pageSize = 50;
   totalItems = 0;
   totalPages = 0;
@@ -59,13 +54,17 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
   hasPreviousPage = false;
 
   // Filter properties
+  tradingAccountIdFilter = '';
   statusFilter = '';
-  priorityFilter = '';
-  categoryFilter = '';
+  currencyFilter = '';
 
-  // Summary state
-  ticketSummary: TicketSummary | null = null;
-  loadingSummary = false;
+  // Available filter options
+  availableTradingAccounts: string[] = [];
+  availableStatuses: string[] = [];
+  availableCurrencies: string[] = [];
+
+  // Summary state - calculated from response data
+  financialSummary: FinancialTicketSummary | null = null;
 
   // Math property for template access
   Math = Math;
@@ -74,31 +73,13 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
     return this.client?.userId || '';
   }
 
-  get supportedStatuses(): string[] {
-    return this.ticketService.getSupportedStatuses();
-  }
-
-  get supportedPriorities(): string[] {
-    return this.ticketService.getSupportedPriorities();
-  }
-
-  get supportedCategories(): string[] {
-    return this.ticketService.getSupportedCategories();
-  }
-
   constructor() {
-    this.ticketForm = this.fb.group({
-      title: ['', Validators.required],
-      description: ['', Validators.required],
-      priority: ['Medium', Validators.required],
-      category: ['General', Validators.required],
-    });
+    // Remove form initialization since we're not creating tickets
   }
 
   ngOnInit(): void {
     if (this.clientId) {
-      this.loadTickets();
-      this.loadTicketSummary();
+      this.loadFinancialTickets();
     }
   }
 
@@ -107,125 +88,170 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  get filteredTickets(): Ticket[] {
-    if (!this.searchTerm) {
-      return this.tickets;
+  // Summary calculations from response data
+  get totalTickets(): number {
+    return this.financialSummary?.totalTickets || 0;
+  }
+
+  get activeTickets(): number {
+    return this.financialSummary?.activeTickets || 0;
+  }
+
+  get totalWithdrawals(): number {
+    return this.financialSummary?.totalWithdrawals || 0;
+  }
+
+  get totalDeposits(): number {
+    return this.financialSummary?.totalDeposits || 0;
+  }
+
+  get totalAmount(): number {
+    return this.financialSummary?.totalAmount || 0;
+  }
+
+  get totalWithdrawalAmount(): number {
+    return this.financialSummary?.totalWithdrawalAmount || 0;
+  }
+
+  get totalDepositAmount(): number {
+    return this.financialSummary?.totalDepositAmount || 0;
+  }
+
+  // Get filtered tickets
+  get filteredTickets(): FinancialTicket[] {
+    let filtered = this.financialTickets;
+
+    if (this.tradingAccountIdFilter) {
+      filtered = filtered.filter(ticket => 
+        ticket.tradingAccountId === this.tradingAccountIdFilter
+      );
     }
 
-    const term = this.searchTerm.toLowerCase();
-    return this.tickets.filter(
-      (ticket) =>
-        ticket.title.toLowerCase().includes(term) ||
-        ticket.description.toLowerCase().includes(term) ||
-        ticket.ticketNumber.toLowerCase().includes(term) ||
-        ticket.status.toLowerCase().includes(term) ||
-        ticket.priority.toLowerCase().includes(term) ||
-        ticket.category.toLowerCase().includes(term)
-    );
+    if (this.statusFilter) {
+      filtered = filtered.filter(ticket => 
+        ticket.ticketStatusName.toLowerCase() === this.statusFilter.toLowerCase()
+      );
+    }
+
+    if (this.currencyFilter) {
+      filtered = filtered.filter(ticket => 
+        ticket.walletCurrency === this.currencyFilter
+      );
+    }
+
+    return filtered;
   }
 
-  // Summary calculations
-  get totalTickets(): number {
-    return this.ticketSummary?.totalTickets || this.tickets.length;
-  }
-
-  get openTickets(): number {
-    return this.ticketSummary?.openTickets || this.tickets.filter(t => t.status === 'Open').length;
-  }
-
-  get inProgressTickets(): number {
-    return this.ticketSummary?.inProgressTickets || this.tickets.filter(t => t.status === 'InProgress').length;
-  }
-
-  get resolvedTickets(): number {
-    return this.ticketSummary?.resolvedTickets || this.tickets.filter(t => t.status === 'Resolved').length;
-  }
-
-  get closedTickets(): number {
-    return this.ticketSummary?.closedTickets || this.tickets.filter(t => t.status === 'Closed').length;
-  }
-
-  get criticalTickets(): number {
-    return this.ticketSummary?.criticalTickets || this.tickets.filter(t => t.priority === 'Critical').length;
-  }
-
-  get highPriorityTickets(): number {
-    return this.ticketSummary?.highPriorityTickets || this.tickets.filter(t => t.priority === 'High').length;
-  }
-
-  private loadTickets(): void {
+  private loadFinancialTickets(): void {
     if (!this.clientId) return;
-
-    const filters: TicketFilters = {
-      pageIndex: this.currentPage - 1, // Convert to 0-based
-      pageSize: this.pageSize,
-      status: this.statusFilter || undefined,
-      priority: this.priorityFilter || undefined,
-      category: this.categoryFilter || undefined,
-    };
 
     this.loadingTickets = true;
     this.ticketService
-      .getTickets(this.clientId, filters)
+      .getFinancialTickets(this.clientId, this.currentPage, this.pageSize)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.tickets = response.items;
-          this.totalItems = response.totalCount;
-          this.totalPages = response.totalPages;
-          this.hasNextPage = response.hasNextPage;
-          this.hasPreviousPage = response.hasPreviousPage;
+          if (response.data && response.data.length > 0) {
+            const data = response.data[0];
+            this.financialTickets = data.tickets;
+            this.totalItems = response.pagination.totalCount;
+            this.totalPages = response.pagination.totalPages;
+            this.hasNextPage = response.pagination.hasNext;
+            this.hasPreviousPage = response.pagination.hasPrevious;
+            
+            // Calculate summary from response data
+            this.calculateSummaryFromResponse(data);
+            
+            // Extract filter options from tickets
+            this.extractFilterOptions();
+          } else {
+            this.financialTickets = [];
+            this.totalItems = 0;
+            this.totalPages = 0;
+            this.hasNextPage = false;
+            this.hasPreviousPage = false;
+            this.financialSummary = null;
+            this.clearFilterOptions();
+          }
           this.loadingTickets = false;
         },
         error: (error) => {
-          console.error('Error loading tickets:', error);
+          console.error('Error loading financial tickets:', error);
           this.loadingTickets = false;
         },
       });
   }
 
-  private loadTicketSummary(): void {
-    if (!this.clientId) return;
+  private calculateSummaryFromResponse(data: any): void {
+    // Calculate amounts from the tickets array
+    const totalAmount = data.tickets.reduce((sum: number, ticket: FinancialTicket) => sum + ticket.amount, 0);
+    const totalWithdrawalAmount = data.tickets
+      .filter((ticket: FinancialTicket) => ticket.ticketType === 1)
+      .reduce((sum: number, ticket: FinancialTicket) => sum + ticket.amount, 0);
+    const totalDepositAmount = data.tickets
+      .filter((ticket: FinancialTicket) => ticket.ticketType === 0)
+      .reduce((sum: number, ticket: FinancialTicket) => sum + ticket.amount, 0);
 
-    this.loadingSummary = true;
-    this.ticketService
-      .getTicketSummary(this.clientId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (summary) => {
-          this.ticketSummary = summary;
-          this.loadingSummary = false;
-        },
-        error: (error) => {
-          console.error('Error loading ticket summary:', error);
-          this.loadingSummary = false;
-        },
-      });
+    this.financialSummary = {
+      totalTickets: data.totalCount,
+      activeTickets: data.activeTickets,
+      totalWithdrawals: data.totalWithdrawals,
+      totalDeposits: data.totalDeposits,
+      totalAmount: totalAmount,
+      totalWithdrawalAmount: totalWithdrawalAmount,
+      totalDepositAmount: totalDepositAmount
+    };
+  }
+
+  private extractFilterOptions(): void {
+    // Extract unique trading account IDs
+    this.availableTradingAccounts = [...new Set(this.financialTickets.map(ticket => ticket.tradingAccountId))];
+    
+    // Extract unique statuses
+    this.availableStatuses = [...new Set(this.financialTickets.map(ticket => ticket.ticketStatusName))];
+    
+    // Extract unique currencies
+    this.availableCurrencies = [...new Set(this.financialTickets.map(ticket => ticket.walletCurrency))];
+  }
+
+  private clearFilterOptions(): void {
+    this.availableTradingAccounts = [];
+    this.availableStatuses = [];
+    this.availableCurrencies = [];
+  }
+
+  onFilterChange(): void {
+    // Reset to first page when filters change
+    this.currentPage = 0;
+    // Note: Since we're filtering client-side, we don't need to reload from API
+    // The filteredTickets getter will handle the filtering
+  }
+
+  clearFilters(): void {
+    this.tradingAccountIdFilter = '';
+    this.statusFilter = '';
+    this.currencyFilter = '';
+    this.onFilterChange();
   }
 
   onPageChange(page: number): void {
-    this.currentPage = page;
-    this.loadTickets();
+    this.currentPage = page - 1; // Convert to 0-based
+    this.loadFinancialTickets();
   }
 
   onPageSizeChange(size: number): void {
     this.pageSize = size;
-    this.currentPage = 1;
-    this.loadTickets();
-  }
-
-  onFilterChange(): void {
-    this.currentPage = 1;
-    this.loadTickets();
+    this.currentPage = 0;
+    this.loadFinancialTickets();
   }
 
   getTotalPages(): number {
-    return Math.ceil(this.totalItems / this.pageSize);
+    return this.totalPages;
   }
 
   getPageNumbers(): number[] {
     const totalPages = this.getTotalPages();
-    const currentPage = this.currentPage;
+    const currentPage = this.currentPage + 1; // Convert to 1-based for display
     const pages: number[] = [];
 
     if (totalPages <= 7) {
@@ -260,80 +286,23 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
   }
 
   refreshTickets(): void {
-    this.loadTickets();
-    this.loadTicketSummary();
-  }
-
-  toggleAddTicket(): void {
-    this.showAddForm = !this.showAddForm;
-    if (!this.showAddForm) {
-      this.ticketForm.reset({
-        priority: 'Medium',
-        category: 'General',
-      });
-    }
-  }
-
-  submitTicket(): void {
-    if (this.ticketForm.valid) {
-      const ticketData = {
-        ...this.ticketForm.value,
-        clientUserId: this.clientId,
-      };
-
-      this.ticketService
-        .createTicket(ticketData)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: () => {
-            this.ticketForm.reset({
-              priority: 'Medium',
-              category: 'General',
-            });
-            this.showAddForm = false;
-            this.refreshTickets();
-          },
-          error: (error) => {
-            console.error('Error creating ticket:', error);
-          },
-        });
-    }
-  }
-
-  updateTicketStatus(ticketId: string, newStatus: string): void {
-    this.ticketService
-      .updateTicket(ticketId, { status: newStatus as 'Open' | 'InProgress' | 'Resolved' | 'Closed' })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.refreshTickets();
-        },
-        error: (error) => {
-          console.error('Error updating ticket status:', error);
-        },
-      });
-  }
-
-  updateTicketPriority(ticketId: string, newPriority: string): void {
-    this.ticketService
-      .updateTicket(ticketId, { priority: newPriority as 'Low' | 'Medium' | 'High' | 'Critical' })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.refreshTickets();
-        },
-        error: (error) => {
-          console.error('Error updating ticket priority:', error);
-        },
-      });
+    this.loadFinancialTickets();
   }
 
   getStatusColorClass(status: string): string {
-    return this.ticketService.getStatusColorClass(status);
+    return this.ticketService.getFinancialTicketStatusColorClass(status);
   }
 
-  getPriorityColorClass(priority: string): string {
-    return this.ticketService.getPriorityColorClass(priority);
+  getTicketTypeColorClass(ticketType: number): string {
+    return this.ticketService.getTicketTypeColorClass(ticketType);
+  }
+
+  getTicketTypeIcon(ticketType: number): string {
+    return this.ticketService.getTicketTypeIcon(ticketType);
+  }
+
+  formatCurrency(amount: number, currency: string): string {
+    return this.ticketService.formatCurrency(amount, currency);
   }
 
   formatDate(dateString: string): string {
@@ -342,7 +311,7 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
+      minute: '2-digit'
     });
   }
 } 
