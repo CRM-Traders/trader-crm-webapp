@@ -50,8 +50,8 @@ export class AffiliatesComponent implements OnInit {
 
   gridColumns: GridColumn[] = [
     {
-      field: 'name',
-      header: 'Name',
+      field: 'userFullName',
+      header: 'Full Name',
       sortable: true,
       filterable: true,
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',

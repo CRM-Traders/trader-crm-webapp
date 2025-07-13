@@ -15,6 +15,7 @@ export interface Operator {
   branchName: string;
   userType: UserType;
   userTypeName: string;
+  isOnline: boolean;
   createdAt: string;
   createdBy: string;
   lastModifiedAt: string | null;
