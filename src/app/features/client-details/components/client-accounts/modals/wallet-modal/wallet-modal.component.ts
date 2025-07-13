@@ -1,16 +1,31 @@
 // wallet-modal.component.ts
 
-import { Component, inject, Input, OnDestroy, OnInit, OnChanges, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  OnChanges,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { WalletService } from '../../services/wallet.service';
-import { 
-  WalletSummary, 
-  Wallet, 
-  CreateWalletRequest, 
-  WalletType, 
-  WalletStatus 
+import {
+  WalletSummary,
+  Wallet,
+  CreateWalletRequest,
+  WalletType,
+  WalletStatus,
 } from '../../models/wallet.model';
 import { AlertService } from '../../../../../../core/services/alert.service';
 
@@ -38,11 +53,11 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
 
   // Form controls
   walletForm: FormGroup;
-  
+
   // Modal states
   showAddWalletModal = false;
   addingWallet = false;
-  
+
   // Search and filter
   searchTerm = '';
   selectedCurrencyFilter = '';
@@ -99,7 +114,10 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
       filtered = filtered.filter((wallet) => {
         return (
           wallet.currency.toLowerCase().includes(searchLower) ||
-          this.walletServicePublic.getCurrencyDisplayName(wallet.currency).toLowerCase().includes(searchLower) ||
+          this.walletServicePublic
+            .getCurrencyDisplayName(wallet.currency)
+            .toLowerCase()
+            .includes(searchLower) ||
           wallet.totalBalance.toString().includes(searchLower) ||
           wallet.availableBalance.toString().includes(searchLower) ||
           wallet.lockedBalance.toString().includes(searchLower) ||
@@ -120,7 +138,7 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
 
   // Get unique currencies for filter dropdown
   get availableCurrencies(): string[] {
-    return [...new Set(this.wallets.map(w => w.currency))].sort();
+    return [...new Set(this.wallets.map((w) => w.currency))].sort();
   }
 
   private loadWallets(): void {
@@ -184,7 +202,9 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (newWallet) => {
-            this.alertService.success(`${newWallet.currency} wallet created successfully`);
+            this.alertService.success(
+              `${formData.currency} wallet created successfully`
+            );
             this.toggleAddWalletModal();
             this.loadWallets(); // Refresh wallets after creation
             this.addingWallet = false;
@@ -212,22 +232,29 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
 
   getWalletTypeColorClass(walletType: string): string {
     const colorMap: Record<string, string> = {
-      'SPOT': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      'FUTURES': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      'MARGIN': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      SPOT: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      FUTURES: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      MARGIN:
+        'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
     };
-    return colorMap[walletType] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    return (
+      colorMap[walletType] ||
+      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    );
   }
 
   getWalletStatusColorClass(status: string): string {
     const colorMap: Record<string, string> = {
-      'ACTIVE': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      'SUSPENDED': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-      'MAINTENANCE': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      'INACTIVE': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+      ACTIVE:
+        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      SUSPENDED: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+      MAINTENANCE:
+        'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      INACTIVE: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
     };
-    return colorMap[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    return (
+      colorMap[status] ||
+      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+    );
   }
-
-
 }
