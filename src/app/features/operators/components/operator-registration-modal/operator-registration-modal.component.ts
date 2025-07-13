@@ -1,6 +1,6 @@
 // src/app/features/operators/components/operator-registration-modal/operator-registration-modal.component.ts
 
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -17,31 +17,21 @@ import {
   OperatorRole,
   DepartmentSearchParams,
   DepartmentSearchResponse,
+  BranchDropdownItem,
+  BranchDropdownResponse,
 } from '../../models/operators.model';
 import { OperatorsService } from '../../services/operators.service';
 import { Observable, map, switchMap, of } from 'rxjs';
-import {
-  FilterableDropdownComponent,
-  DropdownItem,
-  DropdownSearchParams,
-  DropdownSearchResponse,
-} from '../../../../shared/components/filterable-dropdown/filterable-dropdown.component';
 
-interface BranchDropdownItem {
+interface RoleDropdownItem {
   id: string;
   value: string;
-  brandName?: string;
-  country?: string;
-  officeName?: string;
-  language?: string;
-  type?: number;
-  deskName?: string;
 }
 
 @Component({
   selector: 'app-operator-registration-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FilterableDropdownComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="w-full">
       <!-- Modal Header -->
@@ -335,14 +325,100 @@ interface BranchDropdownItem {
               >
                 Department <span class="text-red-500">*</span>
               </label>
-              <app-filterable-dropdown
-                formControlName="departmentId"
-                placeholder="Select"
-                [searchFunction]="departmentSearchFunction"
-                [pageSize]="20"
-                containerClass="w-full"
-                (valueChange)="onDepartmentChange($event)"
-              ></app-filterable-dropdown>
+              <div class="relative">
+                <!-- Custom Dropdown Button -->
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                  [class.border-red-500]="
+                    registrationForm.get('departmentId')?.invalid &&
+                    registrationForm.get('departmentId')?.touched
+                  "
+                  (click)="toggleDepartmentDropdown()"
+                >
+                  <span class="truncate">{{ getSelectedDepartmentName() }}</span>
+                  <svg
+                    class="w-4 h-4 ml-2 transition-transform"
+                    [class.rotate-180]="departmentDropdownOpen"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div
+                  *ngIf="departmentDropdownOpen"
+                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                >
+                  <!-- Search Input -->
+                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                      #departmentSearchInput
+                      type="text"
+                      placeholder="Search departments..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      (input)="onDepartmentSearch($event)"
+                      [value]="departmentSearchTerm"
+                    />
+                  </div>
+
+                  <!-- Departments List -->
+                  <div
+                    class="max-h-48 overflow-y-auto"
+                    (scroll)="onDepartmentDropdownScroll($event)"
+                  >
+                    <div
+                      *ngFor="let department of availableDepartments"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      (click)="selectDepartment(department)"
+                    >
+                      <div>{{ department.value }}</div>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div
+                      *ngIf="departmentLoading"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      <svg
+                        class="animate-spin h-4 w-4 mx-auto"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+
+                    <!-- No results -->
+                    <div
+                      *ngIf="!departmentLoading && availableDepartments.length === 0"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      No departments found
+                    </div>
+                  </div>
+                </div>
+              </div>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
@@ -361,23 +437,98 @@ interface BranchDropdownItem {
               >
                 Role <span class="text-red-500">*</span>
               </label>
-              <select
-                id="roleId"
-                formControlName="roleId"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  registrationForm.get('roleId')?.invalid &&
-                  registrationForm.get('roleId')?.touched
-                "
-                [disabled]="!availableRoles.length"
-              >
-                <option value="">
-                  -- {{ availableRoles.length ? 'Select' : 'No items' }} --
-                </option>
-                <option *ngFor="let role of availableRoles" [value]="role.id">
-                  {{ role.value }}
-                </option>
-              </select>
+              <div class="relative">
+                <!-- Custom Dropdown Button -->
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                  [class.border-red-500]="
+                    registrationForm.get('roleId')?.invalid &&
+                    registrationForm.get('roleId')?.touched
+                  "
+                  [disabled]="!availableRoles.length"
+                  (click)="toggleRoleDropdown()"
+                >
+                  <span class="truncate">{{ getSelectedRoleName() }}</span>
+                  <svg
+                    class="w-4 h-4 ml-2 transition-transform"
+                    [class.rotate-180]="roleDropdownOpen"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div
+                  *ngIf="roleDropdownOpen"
+                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                >
+                  <!-- Search Input -->
+                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                      #roleSearchInput
+                      type="text"
+                      placeholder="Search roles..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      (input)="onRoleSearch($event)"
+                      [value]="roleSearchTerm"
+                    />
+                  </div>
+
+                  <!-- Roles List -->
+                  <div class="max-h-48 overflow-y-auto">
+                    <div
+                      *ngFor="let role of getFilteredRoles()"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      (click)="selectRole(role)"
+                    >
+                      <div>{{ role.value }}</div>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div
+                      *ngIf="roleLoading"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      <svg
+                        class="animate-spin h-4 w-4 mx-auto"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+
+                    <!-- No results -->
+                    <div
+                      *ngIf="!roleLoading && getFilteredRoles().length === 0"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      No roles found
+                    </div>
+                  </div>
+                </div>
+              </div>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
@@ -407,7 +558,7 @@ interface BranchDropdownItem {
                   registrationForm.get('branchType')?.invalid &&
                   registrationForm.get('branchType')?.touched
                 "
-                (change)="onBranchTypeChange()"
+                (change)="onBranchTypeChange($event)"
               >
                 <option value="">Select</option>
                 <option [value]="BranchType.Office">Office</option>
@@ -433,36 +584,103 @@ interface BranchDropdownItem {
               >
                 Branch <span class="text-red-500">*</span>
               </label>
-              <select
-                id="branchId"
-                formControlName="branchId"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  registrationForm.get('branchId')?.invalid &&
-                  registrationForm.get('branchId')?.touched
-                "
-                [disabled]="
-                  !registrationForm.get('branchType')?.value || loadingBranches
-                "
-              >
-                <option value="">
-                  {{
-                    registrationForm.get('branchType')?.value
-                      ? loadingBranches
-                        ? 'Loading...'
-                        : availableBranches.length
-                        ? 'Select'
-                        : 'No branches available'
-                      : 'Select branch type first'
-                  }}
-                </option>
-                <option
-                  *ngFor="let branch of availableBranches"
-                  [value]="branch.id"
+              <div class="relative">
+                <!-- Custom Dropdown Button -->
+                <button
+                  type="button"
+                  class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                  [class.border-red-500]="
+                    registrationForm.get('branchId')?.invalid &&
+                    registrationForm.get('branchId')?.touched
+                  "
+                  [disabled]="
+                    !registrationForm.get('branchType')?.value || branchLoading
+                  "
+                  (click)="toggleBranchDropdown()"
                 >
-                  {{ getBranchDisplayText(branch) }}
-                </option>
-              </select>
+                  <span class="truncate">{{ getSelectedBranchName() }}</span>
+                  <svg
+                    class="w-4 h-4 ml-2 transition-transform"
+                    [class.rotate-180]="branchDropdownOpen"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 9l-7 7-7-7"
+                    ></path>
+                  </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div
+                  *ngIf="branchDropdownOpen"
+                  class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+                >
+                  <!-- Search Input -->
+                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <input
+                      #branchSearchInput
+                      type="text"
+                      placeholder="Search branches..."
+                      class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      (input)="onBranchSearch($event)"
+                      [value]="branchSearchTerm"
+                    />
+                  </div>
+
+                  <!-- Branches List -->
+                  <div
+                    class="max-h-28 overflow-y-auto"
+                    (scroll)="onBranchDropdownScroll($event)"
+                  >
+                    <div
+                      *ngFor="let branch of availableBranches"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      (click)="selectBranch(branch)"
+                    >
+                      <div>{{ getBranchDisplayText(branch) }}</div>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div
+                      *ngIf="branchLoading"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      <svg
+                        class="animate-spin h-4 w-4 mx-auto"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+
+                    <!-- No results -->
+                    <div
+                      *ngIf="!branchLoading && availableBranches.length === 0"
+                      class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                    >
+                      No branches found
+                    </div>
+                  </div>
+                </div>
+              </div>
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
@@ -543,33 +761,38 @@ export class OperatorRegistrationModalComponent implements OnInit {
   showPassword = false;
   loadingBranches = false;
   registrationForm: FormGroup;
-  availableRoles: OperatorRole[] = [];
+  availableRoles: RoleDropdownItem[] = [];
   availableBranches: BranchDropdownItem[] = [];
+
+  // Department dropdown properties
+  departmentDropdownOpen = false;
+  departmentLoading = false;
+  departmentSearchTerm = '';
+  availableDepartments: any[] = [];
+  selectedDepartment: any = null;
+  currentDepartmentPage = 0;
+  departmentPageSize = 20;
+  hasMoreDepartments = false;
+
+  // Role dropdown properties
+  roleDropdownOpen = false;
+  roleLoading = false;
+  roleSearchTerm = '';
+  selectedRole: RoleDropdownItem | null = null;
+
+  // Branch dropdown properties
+  branchDropdownOpen = false;
+  branchLoading = false;
+  branchSearchTerm = '';
+  selectedBranch: BranchDropdownItem | null = null;
+  currentBranchPage = 0;
+  branchPageSize = 20;
+  hasMoreBranches = false;
 
   BranchType = BranchType;
   UserType = UserType;
 
-  // Department search function for the filterable dropdown
-  departmentSearchFunction = (
-    params: DropdownSearchParams
-  ): Observable<DropdownSearchResponse> => {
-    const searchParams: DepartmentSearchParams = {
-      pageIndex: params.pageIndex,
-      pageSize: params.pageSize,
-    };
 
-    return this.operatorsService.getDepartmentsDropdown(searchParams).pipe(
-      map((response: DepartmentSearchResponse) => ({
-        items: response.items.map((department: any) => ({
-          value: department.id,
-          label: department.value,
-        })),
-        totalCount: response.totalCount,
-        hasNextPage: response.hasNextPage,
-        hasPreviousPage: response.hasPreviousPage,
-      }))
-    );
-  };
 
   constructor() {
     this.registrationForm = this.fb.group({
@@ -589,6 +812,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
   ngOnInit() {
     // Initialize component and set up form change listeners
     this.setupFormChangeListeners();
+    this.loadDepartments();
   }
 
   private setupFormChangeListeners(): void {
@@ -603,7 +827,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     // Listen to branch type changes via form control value changes
     this.registrationForm.get('branchType')?.valueChanges.subscribe((value) => {
       console.log('Branch type form control changed:', value);
-      this.handleBranchTypeChange(value);
+      this.onBranchTypeChange({ target: { value } } as any);
     });
   }
 
@@ -612,6 +836,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
     // Clear existing roles first
     this.availableRoles = [];
+    this.selectedRole = null;
     this.registrationForm.patchValue({ roleId: '' }, { emitEvent: false });
 
     if (departmentId) {
@@ -619,15 +844,20 @@ export class OperatorRegistrationModalComponent implements OnInit {
     }
   }
 
-  private handleBranchTypeChange(branchType: any): void {
+  onBranchTypeChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const branchType = target.value;
     console.log('Handling branch type change:', branchType);
 
     // Reset branch selection when branch type changes
     this.registrationForm.patchValue({ branchId: '' }, { emitEvent: false });
+    this.selectedBranch = null;
     this.availableBranches = [];
+    this.currentBranchPage = 0;
+    this.branchSearchTerm = '';
 
     if (branchType !== '' && branchType !== null && branchType !== undefined) {
-      this.loadBranchesForType(parseInt(branchType));
+      this.loadBranchesForType(parseInt(branchType), true);
     }
   }
 
@@ -667,61 +897,72 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.showPassword = true; // Show the generated password
   }
 
-  onDepartmentChange(departmentId: any): void {
-    this.handleDepartmentChange(departmentId);
-  }
 
-  onBranchTypeChange(): void {
-    const branchType = this.registrationForm.get('branchType')?.value;
-    this.handleBranchTypeChange(branchType);
-  }
 
   private loadRolesForDepartment(departmentId: string): void {
+    this.roleLoading = true;
     this.operatorsService.getOperatorRolesByDepartment(departmentId).subscribe({
       next: (roles: any) => {
-        this.availableRoles = roles.items;
-        // Reset role selection when department changes
-        this.registrationForm.patchValue({ roleId: '' });
+        this.availableRoles = roles.items || [];
+        this.roleLoading = false;
       },
       error: (error) => {
         console.error('Error loading roles:', error);
         this.availableRoles = [];
-        this.registrationForm.patchValue({ roleId: '' });
+        this.roleLoading = false;
       },
     });
   }
 
-  private loadBranchesForType(branchType: BranchType): void {
-    this.loadingBranches = true;
-    let observable: Observable<any>;
+  private loadBranchesForType(branchType: BranchType, reset: boolean = false): void {
+    if (this.branchLoading) return;
+
+    if (reset) {
+      this.currentBranchPage = 0;
+      this.availableBranches = [];
+    }
+
+    this.branchLoading = true;
+    let observable: Observable<BranchDropdownResponse>;
+
+    const params = {
+      pageIndex: this.currentBranchPage,
+      pageSize: this.branchPageSize,
+      globalFilter: this.branchSearchTerm || null,
+    };
 
     switch (branchType) {
       case BranchType.Office:
-        observable = this.operatorsService.getOfficesDropdown();
+        observable = this.operatorsService.getOfficesDropdown(params);
         break;
       case BranchType.Desk:
-        observable = this.operatorsService.getDesksDropdown();
+        observable = this.operatorsService.getDesksDropdown(params);
         break;
       case BranchType.Team:
-        observable = this.operatorsService.getTeamsDropdown();
+        observable = this.operatorsService.getTeamsDropdown(params);
         break;
       case BranchType.Brand:
-        observable = this.operatorsService.getBrandsDropdown();
+        observable = this.operatorsService.getBrandsDropdown(params);
         break;
       default:
-        this.loadingBranches = false;
+        this.branchLoading = false;
         return;
     }
 
     observable.subscribe({
       next: (response) => {
-        this.availableBranches = response.items || [];
-        this.loadingBranches = false;
+        if (reset) {
+          this.availableBranches = response.items || [];
+        } else {
+          this.availableBranches = [...this.availableBranches, ...(response.items || [])];
+        }
+        this.hasMoreBranches = response.hasNextPage;
+        this.branchLoading = false;
       },
       error: (error) => {
         console.error('Error loading branches:', error);
         this.availableBranches = [];
-        this.loadingBranches = false;
+        this.branchLoading = false;
         this.alertService.error('Failed to load branches');
       },
     });
@@ -803,5 +1044,203 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
   onCancel() {
     this.modalRef.dismiss();
+  }
+
+  // Department dropdown methods
+  toggleDepartmentDropdown(): void {
+    // Close other dropdowns
+    this.roleDropdownOpen = false;
+    this.branchDropdownOpen = false;
+    
+    // Toggle department dropdown
+    this.departmentDropdownOpen = !this.departmentDropdownOpen;
+    
+    if (this.departmentDropdownOpen && this.availableDepartments.length === 0) {
+      this.loadDepartments();
+    }
+  }
+
+  loadDepartments(reset: boolean = false): void {
+    if (this.departmentLoading) return;
+
+    if (reset) {
+      this.currentDepartmentPage = 0;
+      this.availableDepartments = [];
+    }
+
+    this.departmentLoading = true;
+
+    const searchParams: DepartmentSearchParams = {
+      pageIndex: this.currentDepartmentPage,
+      pageSize: this.departmentPageSize,
+    };
+
+    this.operatorsService.getDepartmentsDropdown(searchParams).subscribe({
+      next: (response) => {
+        if (reset) {
+          this.availableDepartments = response.items;
+        } else {
+          this.availableDepartments = [...this.availableDepartments, ...response.items];
+        }
+        this.hasMoreDepartments = response.hasNextPage;
+        this.departmentLoading = false;
+      },
+      error: (error) => {
+        this.departmentLoading = false;
+        this.alertService.error('Failed to load departments');
+      },
+    });
+  }
+
+  onDepartmentSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.departmentSearchTerm = target.value;
+    this.currentDepartmentPage = 0;
+    this.loadDepartments(true);
+  }
+
+  onDepartmentDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 5 &&
+      this.hasMoreDepartments &&
+      !this.departmentLoading
+    ) {
+      this.currentDepartmentPage++;
+      this.loadDepartments();
+    }
+  }
+
+  selectDepartment(department: any): void {
+    this.selectedDepartment = department;
+    this.registrationForm.patchValue({ departmentId: department.id });
+    this.departmentDropdownOpen = false;
+    this.handleDepartmentChange(department.id);
+  }
+
+  getSelectedDepartmentName(): string {
+    if (this.selectedDepartment) {
+      return this.selectedDepartment.value;
+    }
+    return 'Select a department...';
+  }
+
+  // Role dropdown methods
+  toggleRoleDropdown(): void {
+    // Close other dropdowns
+    this.departmentDropdownOpen = false;
+    this.branchDropdownOpen = false;
+    
+    // Toggle role dropdown
+    this.roleDropdownOpen = !this.roleDropdownOpen;
+  }
+
+  onRoleSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.roleSearchTerm = target.value.toLowerCase();
+  }
+
+  getFilteredRoles(): RoleDropdownItem[] {
+    if (!this.roleSearchTerm) {
+      return this.availableRoles;
+    }
+    return this.availableRoles.filter(role =>
+      role.value.toLowerCase().includes(this.roleSearchTerm)
+    );
+  }
+
+  selectRole(role: RoleDropdownItem): void {
+    this.selectedRole = role;
+    this.registrationForm.patchValue({ roleId: role.id });
+    this.roleDropdownOpen = false;
+    this.roleSearchTerm = '';
+  }
+
+  getSelectedRoleName(): string {
+    if (this.selectedRole) {
+      return this.selectedRole.value;
+    }
+    if (this.availableRoles.length === 0) {
+      return 'No roles available';
+    }
+    return 'Select a role...';
+  }
+
+  // Branch dropdown methods
+  toggleBranchDropdown(): void {
+    // Close other dropdowns
+    this.departmentDropdownOpen = false;
+    this.roleDropdownOpen = false;
+    
+    // Toggle branch dropdown
+    this.branchDropdownOpen = !this.branchDropdownOpen;
+    
+    if (this.branchDropdownOpen && this.availableBranches.length === 0) {
+      const branchType = this.registrationForm.get('branchType')?.value;
+      if (branchType) {
+        this.loadBranchesForType(parseInt(branchType), true);
+      }
+    }
+  }
+
+  onBranchSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.branchSearchTerm = target.value;
+    this.currentBranchPage = 0;
+    this.loadBranchesForType(parseInt(this.registrationForm.get('branchType')?.value), true);
+  }
+
+  onBranchDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 5 &&
+      this.hasMoreBranches &&
+      !this.branchLoading
+    ) {
+      this.currentBranchPage++;
+      this.loadBranchesForType(parseInt(this.registrationForm.get('branchType')?.value));
+    }
+  }
+
+  selectBranch(branch: BranchDropdownItem): void {
+    this.selectedBranch = branch;
+    this.registrationForm.patchValue({ branchId: branch.id });
+    this.branchDropdownOpen = false;
+  }
+
+  getSelectedBranchName(): string {
+    if (this.selectedBranch) {
+      return this.getBranchDisplayText(this.selectedBranch);
+    }
+    const branchType = this.registrationForm.get('branchType')?.value;
+    if (!branchType) {
+      return 'Select branch type first';
+    }
+    if (this.branchLoading) {
+      return 'Loading...';
+    }
+    if (this.availableBranches.length === 0) {
+      return 'No branches available';
+    }
+    return 'Select a branch...';
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    // Close dropdowns when clicking outside
+    if (!(event.target as Element).closest('.relative')) {
+      this.closeAllDropdowns();
+    }
+  }
+
+  private closeAllDropdowns(): void {
+    this.departmentDropdownOpen = false;
+    this.roleDropdownOpen = false;
+    this.branchDropdownOpen = false;
   }
 }

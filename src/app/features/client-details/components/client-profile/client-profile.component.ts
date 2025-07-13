@@ -383,7 +383,7 @@ export class ClientProfileComponent implements OnInit {
       dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
     };
 
-    this.userService.updateClient(this.client.id, updateData)
+    this.userService.updateClient(updateData)
       .pipe(finalize(() => {
         this.savingPersonal = false;
       }))

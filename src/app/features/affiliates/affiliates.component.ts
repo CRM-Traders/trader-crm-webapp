@@ -115,13 +115,13 @@ export class AffiliatesComponent implements OnInit {
       icon: 'view',
       action: (item: Affiliate) => this.openDetailsModal(item),
     },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: 'delete',
-      disabled: (item: Affiliate) => item.clientsCount > 0,
-      action: (item: Affiliate) => this.confirmDelete(item),
-    },
+    // {
+    //   id: 'delete',
+    //   label: 'Delete',
+    //   icon: 'delete',
+    //   disabled: (item: Affiliate) => item.clientsCount > 0,
+    //   action: (item: Affiliate) => this.confirmDelete(item),
+    // },
     {
       id: 'integration',
       label: 'Integration Document',

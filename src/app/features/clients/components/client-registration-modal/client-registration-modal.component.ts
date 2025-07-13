@@ -433,7 +433,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
 
                   <!-- Affiliates List -->
                   <div
-                    class="max-h-48 overflow-y-auto"
+                    class="max-h-30 overflow-y-auto"
                     (scroll)="onAffiliateDropdownScroll($event)"
                   >
                     <div

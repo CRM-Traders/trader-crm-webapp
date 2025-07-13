@@ -50,10 +50,10 @@ export interface LeadUpdateRequest {
   id: string;
   firstName?: string;
   lastName?: string;
+  email?: string;
   username?: string;
   telephone?: string | null;
   secondTelephone?: string | null;
-  skype?: string | null;
   country?: string | null;
   language?: string | null;
   dateOfBirth?: string | null;

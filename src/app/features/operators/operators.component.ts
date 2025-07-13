@@ -126,6 +126,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       filterable: true,
       type: 'date',
       format: 'short',
+      hidden: true,
     },
     {
       field: 'createdBy',
@@ -143,12 +144,12 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       icon: 'view',
       action: (item: Operator) => this.openOperatorDetailsModal(item),
     },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Operator) => this.openOperatorDetailsModal(item),
-    },
+    // {
+    //   id: 'edit',
+    //   label: 'Edit',
+    //   icon: 'edit',
+    //   action: (item: Operator) => this.openOperatorDetailsModal(item),
+    // },
     {
       id: 'password',
       label: 'Change Password',

@@ -10,11 +10,8 @@ import {
 } from '@angular/core';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import {
-  FormBuilder,
-  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  Validators,
 } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
@@ -28,6 +25,7 @@ import {
   PasswordChangeData,
 } from '../../shared/components/password-change/password-change.component';
 import { LeadRegistrationModalComponent } from './components/lead-registration-modal/lead-registration-modal.component';
+import { LeadDetailsModalComponent } from './components/lead-details-modal/lead-details-modal.component';
 import {
   BulkLeadConversionResponse,
   LeadConversionResponse,
@@ -40,7 +38,6 @@ import {
   LeadStatus,
   LeadStatusColors,
   LeadStatusLabels,
-  LeadUpdateRequest,
 } from './models/leads.model';
 import { CommonModule } from '@angular/common';
 import { GridComponent } from '../../shared/components/grid/grid.component';
@@ -69,7 +66,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
   private languageService = inject(LanguageService);
   private operatorsService = inject(OperatorsService);
   private officeRulesService = inject(OfficeRulesService);
-  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
   @ViewChild('statusCell', { static: true })
@@ -79,9 +75,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
 
   @Output() selectionChange = new EventEmitter<any[]>();
 
-  selectedLead: Lead | null = null;
-  editForm: FormGroup;
-  isEditing = false;
   loading = false;
   importLoading = false;
   showDeleteModal = false;
@@ -363,13 +356,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       id: 'view',
       label: 'View Details',
       icon: 'view',
-      action: (item: Lead) => this.viewLead(item),
-    },
-    {
-      id: 'edit',
-      label: 'Edit',
-      icon: 'edit',
-      action: (item: Lead) => this.startEdit(item),
+      action: (item: Lead) => this.openDetailsModal(item),
     },
     // {
     //   id: 'password',
@@ -393,19 +380,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
     // },
   ];
 
-  constructor() {
-    this.editForm = this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      username: ['', [Validators.required, Validators.minLength(3)]],
-      telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
-      secondTelephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
-      skype: [''],
-      country: [''],
-      language: [''],
-      dateOfBirth: [''],
-    });
-  }
+  constructor() {}
 
   ngOnInit(): void {
     this.initializeGridTemplates();
@@ -419,89 +394,33 @@ export class LeadsComponent implements OnInit, OnDestroy {
   }
 
   onRowClick(lead: Lead): void {
-    this.viewLead(lead);
+    this.openDetailsModal(lead);
   }
 
-  viewLead(lead: Lead): void {
-    this.selectedLead = lead;
-    this.isEditing = false;
-    this.editForm.patchValue({
-      firstName: lead.firstName,
-      lastName: lead.lastName,
-      username: lead.username,
-      telephone: lead.telephone || '',
-      skype: lead.skype || '',
-      country: lead.country || '',
-      language: lead.language || '',
-      dateOfBirth: lead.dateOfBirth || '',
-    });
-  }
+  openDetailsModal(lead: Lead): void {
+    const modalRef = this.modalService.open(
+      LeadDetailsModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        leadId: lead.id,
+      }
+    );
 
-  startEdit(lead?: Lead): void {
-    if (lead) {
-      this.viewLead(lead);
-    }
-    this.isEditing = true;
-  }
-
-  cancelEdit(): void {
-    this.isEditing = false;
-    if (this.selectedLead) {
-      this.editForm.patchValue({
-        firstName: this.selectedLead.firstName,
-        lastName: this.selectedLead.lastName,
-        username: this.selectedLead.username,
-        telephone: this.selectedLead.telephone || '',
-        skype: this.selectedLead.skype || '',
-        country: this.selectedLead.country || '',
-        language: this.selectedLead.language || '',
-        dateOfBirth: this.selectedLead.dateOfBirth || '',
-      });
-    }
-  }
-
-  saveClient(): void {
-    if (this.editForm.invalid || !this.selectedLead) return;
-
-    const updateRequest: LeadUpdateRequest = {
-      id: this.selectedLead.id,
-      firstName: this.editForm.value.firstName,
-      lastName: this.editForm.value.lastName,
-      username: this.editForm.value.username,
-      telephone: this.editForm.value.telephone || null,
-      secondTelephone: this.editForm.value.secondTelephone || null,
-      skype: this.editForm.value.skype || null,
-      country: this.editForm.value.country || null,
-      language: this.editForm.value.language || null,
-      dateOfBirth: this.editForm.value.dateOfBirth || null,
-    };
-
-    this.loading = true;
-    this.leadsService
-      .updateClient(updateRequest)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          this.alertService.error('Failed to update lead');
-          console.error('Error updating lead:', error);
-          return of(null);
-        }),
-        finalize(() => {
-          this.loading = false;
-          this.refreshSelectedClient();
+    modalRef.result.then(
+      (result) => {
+        if (result) {
           this.refreshGrid();
-        })
-      )
-      .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success('Lead updated successfully');
-          this.isEditing = false;
-          this.refreshSelectedClient();
-          this.refreshGrid();
+          this.loadStatistics();
         }
-        this.refreshSelectedClient();
-        this.refreshGrid();
-      });
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
   }
 
   confirmDelete(client: Lead): void {
@@ -542,9 +461,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       .subscribe((result) => {
         if (result !== null) {
           this.alertService.success('Lead deleted successfully');
-          if (this.selectedLead?.id === this.clientToDelete?.id) {
-            this.selectedLead = null;
-          }
           this.refreshGrid();
         }
       });
@@ -591,7 +507,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
         if (result) {
           // Assignment was successful, refresh the grid and statistics
           this.refreshGrid();
-          this.refreshSelectedClient();
           this.loadStatistics();
           // Clear the selection after successful assignment
           this.clearGridSelection();
@@ -666,29 +581,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       });
   }
 
-  private refreshSelectedClient(): void {
-    if (this.selectedLead) {
-      this.leadsService
-        .getClientById(this.selectedLead.id)
-        .pipe(
-          takeUntil(this.destroy$),
-          catchError((error) => {
-            console.error('Error refreshing lead:', error);
-            return of(null);
-          })
-        )
-        .subscribe((client) => {
-          if (client) {
-            this.selectedLead = client;
-          }
-        });
-    }
-  }
 
-  closeDetails(): void {
-    this.selectedLead = null;
-    this.isEditing = false;
-  }
 
   openRegistrationModal(): void {
     const modalRef = this.modalService.open(LeadRegistrationModalComponent, {
@@ -1018,10 +911,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
           this.refreshGrid();
           this.loadStatistics();
 
-          // Clear selected lead if it was the one converted
-          if (this.selectedLead?.id === lead.id) {
-            this.selectedLead = null;
-          }
+
         }
         this.refreshGrid();
         this.loadStatistics();
@@ -1086,10 +976,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
           this.refreshGrid();
           this.loadStatistics();
 
-          // Clear selected lead if it was one of the converted ones
-          if (this.selectedLead && leadIds.includes(this.selectedLead.id)) {
-            this.selectedLead = null;
-          }
+
         }
       });
   }
