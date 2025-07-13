@@ -165,6 +165,19 @@ export interface FileUploadData {
                 ></textarea>
               </div>
 
+              <!-- Reference -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Reference (Optional)
+                </label>
+                <input
+                  type="text"
+                  formControlName="reference"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="Enter reference number or identifier..."
+                />
+              </div>
+
               <!-- Make Permanent -->
               <div>
                 <label class="inline-flex items-center">
@@ -389,6 +402,14 @@ export class AddFileModalComponent implements OnInit, OnChanges {
     const file = files[0];
     
     if (!file) {
+      console.log('No file provided');
+      return;
+    }
+
+    // Check if file is empty
+    if (file.size === 0) {
+      console.log('File is empty:', file.name);
+      this.alertService.error('Selected file is empty. Please select a valid file.');
       return;
     }
 
@@ -474,6 +495,14 @@ export class AddFileModalComponent implements OnInit, OnChanges {
       return;
     }
 
+    // Validate file is not empty
+    const selectedFile = this.selectedFiles[0];
+    if (!selectedFile || selectedFile.size === 0) {
+      console.log('File is empty or invalid');
+      this.alertService.error('Selected file is empty or invalid. Please select a valid file.');
+      return;
+    }
+
     // Force refresh client ID before upload
     this.refreshClientId();
 
@@ -537,6 +566,23 @@ export class AddFileModalComponent implements OnInit, OnChanges {
    * Upload a single file
    */
   private async uploadSingleFile(file: File, formData: FileUploadData): Promise<UploadFileResponse> {
+    // Validate file before upload
+    if (!file || file.size === 0) {
+      throw new Error('File is empty or invalid');
+    }
+
+    // Additional validation to ensure file can be read
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      if (arrayBuffer.byteLength === 0) {
+        throw new Error('File content is empty');
+      }
+      console.log(`File ${file.name} can be read successfully, size: ${arrayBuffer.byteLength} bytes`);
+    } catch (error) {
+      console.error(`Error reading file ${file.name}:`, error);
+      throw new Error(`File cannot be read: ${error}`);
+    }
+
     console.log(`Uploading file: ${file.name}`, {
       fileSize: file.size,
       fileType: file.type,
@@ -564,8 +610,8 @@ export class AddFileModalComponent implements OnInit, OnChanges {
     }
     
     const metadata = {
-      description: formData.description,
-      reference: formData.reference,
+      description: formData.description || '',
+      reference: formData.reference || '',
       fileType: fileType,
       ownerId: formData.ownerId || this.clientId,
       makePermanent: formData.makePermanent

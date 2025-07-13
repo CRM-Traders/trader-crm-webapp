@@ -37,6 +37,8 @@ export class AffiliatesComponent implements OnInit {
   private modalService = inject(ModalService);
   private destroy$ = new Subject<void>();
 
+  gridId = 'affiliates-grid';
+
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
   @ViewChild('websiteCell', { static: true })
@@ -176,13 +178,13 @@ export class AffiliatesComponent implements OnInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadAffiliates();
         }
       },
       () => {
         // Modal dismissed
-        this.refreshGrid();
+        this.refreshSpecificGrid();
         this.loadAffiliates();
       }
     );
@@ -231,7 +233,7 @@ export class AffiliatesComponent implements OnInit {
       .subscribe((result) => {
         if (result !== null) {
           this.alertService.success('Affiliate deleted successfully');
-          this.refreshGrid();
+          this.refreshSpecificGrid();
         }
       });
   }
@@ -262,7 +264,7 @@ export class AffiliatesComponent implements OnInit {
         if (response) {
           const message = `Import completed: ${response.successCount} successful, ${response.failureCount} failed`;
           this.alertService.success(message);
-          this.refreshGrid();
+          this.refreshSpecificGrid();
         }
       });
   }
@@ -312,7 +314,7 @@ export class AffiliatesComponent implements OnInit {
     modalRef.result.then(
       (result) => {
         if (result && result.success) {
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadAffiliates();
         }
       },
@@ -379,13 +381,11 @@ export class AffiliatesComponent implements OnInit {
       });
   }
 
-  refreshGrid(): void {
-    const gridComponent = document.querySelector(
-      `app-grid[gridId="affiliates-grid"]`
-    );
-    if (gridComponent) {
-      (gridComponent as any).refresh?.();
-    }
+  refreshSpecificGrid(): void {
+    const event = new CustomEvent('refreshGrid', {
+      detail: { gridId: this.gridId },
+    });
+    window.dispatchEvent(event);
   }
 
   openPermissionDialog(user: any) {

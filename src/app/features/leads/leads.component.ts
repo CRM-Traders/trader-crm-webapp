@@ -68,6 +68,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
   private officeRulesService = inject(OfficeRulesService);
   private destroy$ = new Subject<void>();
 
+  gridId = 'leads-grid';
+
   @ViewChild('statusCell', { static: true })
   statusCellTemplate!: TemplateRef<any>;
   @ViewChild('investmentCell', { static: true })
@@ -413,12 +415,14 @@ export class LeadsComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadStatistics();
         }
       },
       () => {
-        // Modal dismissed
+        // Modal dismissed - still refresh to ensure data is up to date
+        this.refreshSpecificGrid();
+        this.loadStatistics();
       }
     );
   }
@@ -461,7 +465,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       .subscribe((result) => {
         if (result !== null) {
           this.alertService.success('Lead deleted successfully');
-          this.refreshGrid();
+          this.refreshSpecificGrid();
         }
       });
   }
@@ -506,7 +510,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       (result) => {
         if (result) {
           // Assignment was successful, refresh the grid and statistics
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadStatistics();
           // Clear the selection after successful assignment
           this.clearGridSelection();
@@ -518,7 +522,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
         console.log('Assignment modal was cancelled');
       }
     );
-    this.refreshGrid();
+    this.refreshSpecificGrid();
   }
   private importFile(file: File): void {
     this.importLoading = true;
@@ -538,7 +542,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
         if (response) {
           const message = `Import completed: ${response.successCount} successful, ${response.failureCount} failed`;
           this.alertService.success(message);
-          this.refreshGrid();
+          this.refreshSpecificGrid();
         }
       });
   }
@@ -546,7 +550,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
     // Emit event to clear grid selection
     window.dispatchEvent(
       new CustomEvent('clearGridSelection', {
-        detail: { gridId: 'leads-grid' },
+        detail: { gridId: this.gridId },
       })
     );
   }
@@ -593,12 +597,14 @@ export class LeadsComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadStatistics();
         }
       },
       () => {
-        // Modal dismissed
+        // Modal dismissed - still refresh to ensure data is up to date
+        this.refreshSpecificGrid();
+        this.loadStatistics();
       }
     );
   }
@@ -635,13 +641,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
       });
   }
 
-  refreshGrid(): void {
-    const gridComponent = document.querySelector(
-      `app-grid[gridId="leads-grid"]`
-    );
-    if (gridComponent) {
-      (gridComponent as any).refresh?.();
-    }
+  refreshSpecificGrid(): void {
+    console.log('Refreshing grid with ID:', this.gridId);
+    const event = new CustomEvent('refreshGrid', {
+      detail: { gridId: this.gridId },
+    });
+    window.dispatchEvent(event);
   }
 
   private loadStatistics(): void {
@@ -899,7 +904,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
         }),
         finalize(() => {
           this.loading = false;
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadStatistics();
         })
       )
@@ -908,12 +913,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
           this.alertService.success(
             `Lead "${lead.firstName} ${lead.lastName}" successfully converted to client`
           );
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadStatistics();
 
 
         }
-        this.refreshGrid();
+        this.refreshSpecificGrid();
         this.loadStatistics();
       });
   }
@@ -973,7 +978,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       .subscribe((result: BulkLeadConversionResponse | null) => {
         if (result) {
           this.handleBulkConversionResult(result);
-          this.refreshGrid();
+          this.refreshSpecificGrid();
           this.loadStatistics();
 
 
