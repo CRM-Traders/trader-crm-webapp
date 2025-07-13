@@ -344,7 +344,6 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.alertService.success('Callback scheduled successfully!');
           // Optionally refresh any callback-related data or navigate to callbacks section
           // this.setActiveSection(ClientDetailSection.Callbacks);
         }

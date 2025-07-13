@@ -1,8 +1,20 @@
 // add-wallet-modal.component.ts
 
-import { Component, inject, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  Output,
+  EventEmitter,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { WalletService } from '../../services/wallet.service';
 import { CreateWalletRequest, Wallet } from '../../models/wallet.model';
@@ -43,7 +55,7 @@ export class AddWalletModalComponent implements OnDestroy {
 
   closeModal(): void {
     if (this.isCreating) return; // Prevent closing while creating
-    
+
     this.onClose.emit();
     this.resetForm();
   }
@@ -54,7 +66,9 @@ export class AddWalletModalComponent implements OnDestroy {
 
       // Check if currency already exists
       if (this.existingCurrencies.includes(formData.currency)) {
-        this.alertService.error(`${formData.currency} wallet already exists for this account`);
+        this.alertService.error(
+          `${formData.currency} wallet already exists for this account`
+        );
         return;
       }
 
@@ -70,7 +84,9 @@ export class AddWalletModalComponent implements OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (newWallet) => {
-            this.alertService.success(`${newWallet.currency} wallet created successfully`);
+            this.alertService.success(
+              `${formData.currency} wallet created successfully`
+            );
             this.onWalletCreated.emit(newWallet);
             this.closeModal();
             this.isCreating = false;
@@ -79,14 +95,14 @@ export class AddWalletModalComponent implements OnDestroy {
             console.error('Error creating wallet:', error);
             // Display the specific error message from the backend
             let errorMessage = 'Wallet already exists or an error occurred.';
-            
+
             if (error.error && error.error.detail) {
               // Extract the detail message from the backend response
               errorMessage = error.error.detail;
             } else if (error.message) {
               errorMessage = error.message;
             }
-            
+
             this.alertService.error(errorMessage);
             this.isCreating = false;
           },
@@ -102,7 +118,7 @@ export class AddWalletModalComponent implements OnDestroy {
   }
 
   // Get available currencies (exclude existing ones)
-  get availableCurrencies(): Array<{value: string, label: string}> {
+  get availableCurrencies(): Array<{ value: string; label: string }> {
     const allCurrencies = [
       { value: 'BTC', label: 'Bitcoin (BTC)' },
       { value: 'ETH', label: 'Ethereum (ETH)' },
@@ -119,10 +135,12 @@ export class AddWalletModalComponent implements OnDestroy {
       { value: 'XRP', label: 'Ripple (XRP)' },
       { value: 'LTC', label: 'Litecoin (LTC)' },
       { value: 'BCH', label: 'Bitcoin Cash (BCH)' },
-      { value: 'DOGE', label: 'Dogecoin (DOGE)' }
+      { value: 'DOGE', label: 'Dogecoin (DOGE)' },
     ];
 
-    return allCurrencies.filter(currency => !this.existingCurrencies.includes(currency.value));
+    return allCurrencies.filter(
+      (currency) => !this.existingCurrencies.includes(currency.value)
+    );
   }
 
   // Check if all currencies are already added
