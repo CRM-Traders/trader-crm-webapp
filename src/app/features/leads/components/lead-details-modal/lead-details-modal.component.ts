@@ -705,7 +705,7 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
         // 204 No Content means success
         this.alertService.success('Lead updated successfully');
         this.isEditing = false;
-        this.modalRef.close();
+        this.modalRef.close({ success: true, updated: true });
         this.loadLeadData(); // Reload data to get updated information
       });
   }

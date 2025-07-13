@@ -117,13 +117,13 @@ export class AffiliatesComponent implements OnInit {
       icon: 'view',
       action: (item: Affiliate) => this.openDetailsModal(item),
     },
-    // {
-    //   id: 'delete',
-    //   label: 'Delete',
-    //   icon: 'delete',
-    //   disabled: (item: Affiliate) => item.clientsCount > 0,
-    //   action: (item: Affiliate) => this.confirmDelete(item),
-    // },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      disabled: (item: Affiliate) => item.clientsCount > 0,
+      action: (item: Affiliate) => this.confirmDelete(item),
+    },
     {
       id: 'integration',
       label: 'Integration Document',
@@ -226,8 +226,11 @@ export class AffiliatesComponent implements OnInit {
           return of(null);
         }),
         finalize(() => {
+          this.alertService.success('Affiliate deleted successfully');
           this.showDeleteModal = false;
           this.affiliateToDelete = null;
+          this.loadAffiliates();
+          this.refreshSpecificGrid();
         })
       )
       .subscribe((result) => {

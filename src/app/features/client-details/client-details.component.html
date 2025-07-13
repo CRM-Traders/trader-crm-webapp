@@ -475,7 +475,7 @@
             <app-client-callbacks *ngSwitchCase="'callbacks'" [client]="this.client"></app-client-callbacks>
             <app-client-files *ngSwitchCase="'files'" [client]="this.client"></app-client-files>
             <app-client-call-history *ngSwitchCase="'call-history'" [client]="this.client"></app-client-call-history>
-            <app-client-notes *ngSwitchCase="'notes'" [client]="this.client"></app-client-notes>
+            <app-client-notes *ngSwitchCase="'notes'" [client]="this.client" (notesUpdated)="onNotesUpdated()"></app-client-notes>
             <app-client-feed *ngSwitchCase="'feed'" [client]="this.client"></app-client-feed>
             <app-client-referrals *ngSwitchCase="'referrals'" [client]="this.client"></app-client-referrals>
         </div>
