@@ -1,5 +1,16 @@
 <!-- src/app/features/operators/operators.component.html -->
 
+<!-- Online Status Cell Template -->
+<ng-template #onlineStatusCell let-operator>
+  <div class="flex items-center justify-center">
+    <div 
+      class="w-3 h-3 rounded-full"
+      [ngClass]="operator.isOnline ? 'bg-green-500' : 'bg-red-500'"
+      [title]="operator.isOnline ? 'Online' : 'Offline'"
+    ></div>
+  </div>
+</ng-template>
+
 <div class="general-container bg-white">
   <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Page Header -->

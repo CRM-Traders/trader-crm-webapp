@@ -59,24 +59,45 @@ interface BrandDropdownResponse {
       >
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Team Details - {{ team.name }}
+            Team Details - {{ team.name || 'Loading...' }}
           </h2>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="teamLoading" class="px-6 py-8 flex items-center justify-center">
+        <div class="text-center">
+          <svg
+            class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <p class="text-gray-600 dark:text-gray-400">Loading team data...</p>
         </div>
       </div>
 
       <!-- Modal Body -->
       <div
-        class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[70vh] overflow-y-auto"
+        *ngIf="!teamLoading"
+        class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[100vh] overflow-y-auto"
       >
         <div class="space-y-6">
           <!-- Team Information Section -->
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
-            <h3
-              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
-            >
-              Team Information
-            </h3>
-
             <form [formGroup]="editForm" class="space-y-4">
               <!-- Team Name -->
               <div>
@@ -337,15 +358,6 @@ interface BrandDropdownResponse {
                       >
                         <div class="flex flex-col">
                           <span class="font-medium">{{ desk.value }}</span>
-                          <span
-                            class="text-xs text-gray-500 dark:text-gray-400"
-                          >
-                            Office: {{ desk.officeName }}
-                            <span *ngIf="desk.language">
-                              | Language: {{ desk.language }}</span
-                            >
-                            | Type: {{ desk.type }}
-                          </span>
                         </div>
                       </div>
 
@@ -602,6 +614,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   editForm: FormGroup;
   isEditing = false;
   loading = false;
+  teamLoading = false;
   availableDesks: DeskDropdownItem[] = [];
   availableBrands: BrandDropdownItem[] = [];
 
@@ -642,9 +655,39 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadTeamData();
     this.initializeSearchObservables();
     this.loadInitialBrands();
     this.setupBrandWatcher();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadTeamData(): void {
+    if (!this.team.id) return;
+
+    this.teamLoading = true;
+    this.teamsService
+      .getTeamById(this.team.id)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Error loading team data:', error);
+          this.alertService.error('Failed to load team data');
+          return of(this.team); // Fallback to input team data
+        }),
+        finalize(() => (this.teamLoading = false))
+      )
+      .subscribe((teamData) => {
+        this.team = teamData;
+        this.updateFormWithTeamData();
+      });
+  }
+
+  private updateFormWithTeamData(): void {
     if (this.team) {
       this.editForm.patchValue({
         name: this.team.name,
@@ -653,11 +696,6 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
         isActive: this.team.isActive,
       });
     }
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   private initializeSearchObservables(): void {
@@ -801,6 +839,22 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       .subscribe((response: DeskDropdownResponse) => {
         if (this.deskPageIndex === 0) {
           this.availableDesks = response.items;
+          
+          // Ensure the current desk is always available in the list
+          const selectedDeskId = this.editForm.get('deskId')?.value;
+          if (selectedDeskId && this.team.deskName) {
+            const currentDeskExists = this.availableDesks.find(desk => desk.id === selectedDeskId);
+            if (!currentDeskExists) {
+              // Add the current desk to the list if it's not already there
+              this.availableDesks.unshift({
+                id: selectedDeskId,
+                value: this.team.deskName,
+                officeName: this.team.officeName || '',
+                language: null,
+                type: 1 // Default type
+              });
+            }
+          }
         } else {
           this.availableDesks = [...this.availableDesks, ...response.items];
         }
@@ -837,6 +891,10 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   toggleBrandDropdown(): void {
+    // Close desk dropdown if open
+    if (this.deskDropdownOpen) {
+      this.deskDropdownOpen = false;
+    }
     this.brandDropdownOpen = !this.brandDropdownOpen;
   }
 
@@ -852,7 +910,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     );
     return selectedBrand
       ? selectedBrand.value
-      : this.team?.brandName || 'Select a brand';
+      : this.team.brandName || 'Select a brand';
   }
 
   // Desk dropdown methods
@@ -882,6 +940,10 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
 
   toggleDeskDropdown(): void {
     if (this.editForm.get('brandId')?.value) {
+      // Close brand dropdown if open
+      if (this.brandDropdownOpen) {
+        this.brandDropdownOpen = false;
+      }
       this.deskDropdownOpen = !this.deskDropdownOpen;
     }
   }
@@ -896,9 +958,19 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     const selectedDesk = this.availableDesks.find(
       (desk) => desk.id === selectedDeskId
     );
-    return selectedDesk
-      ? selectedDesk.value
-      : this.team?.deskName || 'Select a desk';
+    
+    // If no desk is selected, show placeholder
+    if (!selectedDeskId) {
+      return 'Select a desk';
+    }
+    
+    // If desk is selected but not found in available desks, show placeholder
+    // This happens when brand changes and the old desk doesn't belong to the new brand
+    if (!selectedDesk) {
+      return 'Select a desk';
+    }
+    
+    return selectedDesk.value;
   }
 
   startEdit(): void {
@@ -911,14 +983,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
 
   cancelEdit(): void {
     this.isEditing = false;
-    if (this.team) {
-      this.editForm.patchValue({
-        name: this.team.name,
-        brandId: this.team.brandId,
-        deskId: this.team.deskId,
-        isActive: this.team.isActive,
-      });
-    }
+    this.updateFormWithTeamData(); // Reset form to current team data
   }
 
   saveTeam(): void {
@@ -947,15 +1012,8 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
         this.alertService.success('Team updated successfully');
         this.isEditing = false;
 
-        // Update the team object with new values
-        this.team = {
-          ...this.team,
-          name: this.editForm.value.name.trim(),
-          brandId: this.editForm.value.brandId,
-          deskId: this.editForm.value.deskId,
-          isActive: this.editForm.value.isActive,
-          lastModifiedAt: new Date(),
-        };
+        // Reload team data to get the updated information
+        this.loadTeamData();
 
         this.modalRef.close({
           updated: true,

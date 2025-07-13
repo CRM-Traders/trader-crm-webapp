@@ -89,42 +89,78 @@ export class PortfolioService {
   }
 
   /**
-   * Get asset type display name
+   * Get currency type display name
    */
-  getAssetTypeDisplay(assetType: string): string {
-    switch (assetType) {
-      case 'STOCK':
-        return 'Stock';
-      case 'CRYPTO':
-        return 'Crypto';
-      case 'FOREX':
-        return 'Forex';
-      case 'COMMODITY':
-        return 'Commodity';
-      case 'INDEX':
-        return 'Index';
+  getCurrencyTypeDisplay(currency: string): string {
+    switch (currency) {
+      case 'BTC':
+        return 'Bitcoin';
+      case 'ETH':
+        return 'Ethereum';
+      case 'BNB':
+        return 'Binance Coin';
+      case 'XRP':
+        return 'Ripple';
+      case 'USDT':
+        return 'Tether';
+      case 'USDC':
+        return 'USD Coin';
+      case 'EUR':
+        return 'Euro';
+      case 'USD':
+        return 'US Dollar';
       default:
-        return assetType;
+        return currency;
     }
   }
 
   /**
-   * Get asset type color class
+   * Get currency type color class
    */
-  getAssetTypeColorClass(assetType: string): string {
-    switch (assetType) {
-      case 'STOCK':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'CRYPTO':
+  getCurrencyTypeColorClass(currency: string): string {
+    switch (currency) {
+      case 'BTC':
         return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
-      case 'FOREX':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'COMMODITY':
+      case 'ETH':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'BNB':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'INDEX':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'XRP':
+        return 'bg-black text-white dark:bg-gray-800 dark:text-gray-200';
+      case 'USDT':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'USDC':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'EUR':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'USD':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     }
+  }
+
+  /**
+   * Format balance for display
+   */
+  formatBalance(balance: number, currency: string): string {
+    if (currency === 'USD' || currency === 'EUR') {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(balance);
+    } else {
+      // For crypto currencies, show more decimal places
+      return `${balance.toFixed(8)} ${currency}`;
+    }
+  }
+
+  /**
+   * Get non-zero holdings
+   */
+  getNonZeroHoldings(holdings: any[]): any[] {
+    return holdings.filter(holding => holding.balance > 0);
   }
 }

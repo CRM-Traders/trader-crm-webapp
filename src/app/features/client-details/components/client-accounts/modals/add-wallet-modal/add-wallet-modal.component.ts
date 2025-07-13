@@ -78,7 +78,15 @@ export class AddWalletModalComponent implements OnDestroy {
           error: (error) => {
             console.error('Error creating wallet:', error);
             // Display the specific error message from the backend
-            const errorMessage = error.message || 'Wallet already exists or an error occurred.';
+            let errorMessage = 'Wallet already exists or an error occurred.';
+            
+            if (error.error && error.error.detail) {
+              // Extract the detail message from the backend response
+              errorMessage = error.error.detail;
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+            
             this.alertService.error(errorMessage);
             this.isCreating = false;
           },

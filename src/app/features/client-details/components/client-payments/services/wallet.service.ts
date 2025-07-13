@@ -1,7 +1,7 @@
 // services/wallet.service.ts
 
 import { Injectable, inject, signal } from '@angular/core';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, map } from 'rxjs';
 import { HttpService } from '../../../../../core/services/http.service';
 import { AlertService } from '../../../../../core/services/alert.service';
 import {
@@ -9,7 +9,9 @@ import {
   WithdrawRequest,
   WalletTransaction,
   TradingAccountSummary,
-  ClientWalletsSummary
+  ClientWalletsSummary,
+  WalletTransactionFilters,
+  WalletTransactionResponse
 } from '../models/wallet.model';
 import { Wallet } from '../../client-accounts/models/wallet.model';
 
@@ -144,17 +146,32 @@ export class WalletService {
   }
 
   /**
-   * Get client transactions by user ID
+   * Get client transactions by user ID with pagination and filtering
    */
-  getClientTransactionsByUserId(userId: string): Observable<WalletTransaction[]> {
-    console.log('WalletService: Getting client transactions for user:', userId);
+  getClientTransactionsByUserId(
+    userId: string,
+    filters?: WalletTransactionFilters
+  ): Observable<WalletTransactionResponse> {
+    console.log('WalletService: Getting client transactions for user:', userId, 'with filters:', filters);
     this._loading.set(true);
 
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('clientUserId', userId);
+    
+    if (filters?.pageNumber) params.append('pageNumber', (filters.pageNumber - 1).toString()); // Adjust for 0-based pageNumber
+    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString()); // pageSize is the actual count
+    if (filters?.transactionType) params.append('transactionType', filters.transactionType);
+    if (filters?.currency) params.append('currency', filters.currency);
+
+    const queryString = params.toString();
+    const url = `traiding/api/Wallets/client-transactions-by-user-id?${queryString}`;
+
     return this.http
-      .get<WalletTransaction[]>(`traiding/api/Wallets/client-transactions-by-user-id?clientUserId=${userId}`)
+      .get<WalletTransactionResponse>(url)
       .pipe(
-        tap((transactions) => {
-          console.log('WalletService: Client transactions loaded:', transactions);
+        tap((response) => {
+          console.log('WalletService: Client transactions loaded:', response);
           this._loading.set(false);
         }),
         catchError((error) => {

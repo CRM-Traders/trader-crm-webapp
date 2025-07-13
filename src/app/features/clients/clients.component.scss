@@ -77,3 +77,23 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+// Increase font size for grid cells by 2px
+:host ::ng-deep {
+  // Target the grid component and its cells
+  app-grid {
+    .ag-cell {
+      font-size: calc(1rem + 2px) !important; // Increase by 2px from default
+    }
+    
+    // Also target any text elements within cells
+    .ag-cell-value {
+      font-size: calc(1rem + 2px) !important;
+    }
+    
+    // Target header cells as well for consistency
+    .ag-header-cell {
+      font-size: calc(1rem + 2px) !important;
+    }
+  }
+}

@@ -31,7 +31,8 @@ export interface AssignClientsToOperatorRequest {
 export interface AssignClientsToOperatorResponse {
   successCount: number;
   failureCount: number;
-  message: string;
+  createdOperatorClientIds: string[];
+  errors: string[];
 }
 
 export enum ClientType {

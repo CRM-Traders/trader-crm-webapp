@@ -92,16 +92,25 @@ export class PortfolioComponent implements OnInit, OnDestroy {
     return this.portfolioService.formatPercentage(value);
   }
 
+  formatBalance(balance: number, currency: string): string {
+    return this.portfolioService.formatBalance(balance, currency);
+  }
+
   getPnLColorClass(value: number): string {
     return this.portfolioService.getPnLColorClass(value);
   }
 
-  getAssetTypeDisplay(assetType: string): string {
-    return this.portfolioService.getAssetTypeDisplay(assetType);
+  getCurrencyTypeDisplay(currency: string): string {
+    return this.portfolioService.getCurrencyTypeDisplay(currency);
   }
 
-  getAssetTypeColorClass(assetType: string): string {
-    return this.portfolioService.getAssetTypeColorClass(assetType);
+  getCurrencyTypeColorClass(currency: string): string {
+    return this.portfolioService.getCurrencyTypeColorClass(currency);
+  }
+
+  getNonZeroHoldings(): any[] {
+    if (!this.portfolio) return [];
+    return this.portfolioService.getNonZeroHoldings(this.portfolio.holdings);
   }
 
   formatDateTime(date: string | null): string {

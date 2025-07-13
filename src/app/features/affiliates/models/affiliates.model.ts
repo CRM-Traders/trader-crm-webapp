@@ -1,6 +1,6 @@
 export interface Affiliate {
   id: string;
-  userId: string;
+  userId?: string;
   name: string;
   email: string;
   phone: string | null;
@@ -30,6 +30,8 @@ export interface AffiliateCreateResponse {
 
 export interface AffiliateUpdateRequest {
   id: string;
+  name: string | null;
+  email: string | null;
   phone: string | null;
   website: string | null;
 }

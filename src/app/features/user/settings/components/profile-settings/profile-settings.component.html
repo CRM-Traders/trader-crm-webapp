@@ -5,6 +5,15 @@
   Update your account profile information and email address.
 </p>
 
+<!-- Debug info -->
+<div *ngIf="!settings" class="mb-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+  <p>Settings not loaded yet...</p>
+</div>
+
+<div *ngIf="settings" class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+  <p>Settings loaded: {{ settings.firstName }} {{ settings.lastName }}</p>
+</div>
+
 <form
   [formGroup]="profileForm"
   (ngSubmit)="saveProfileSettings()"

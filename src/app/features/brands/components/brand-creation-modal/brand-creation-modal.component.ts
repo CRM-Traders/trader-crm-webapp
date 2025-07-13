@@ -218,7 +218,7 @@ import {
 
               <!-- Offices List -->
               <div
-                class="max-h-48 overflow-y-auto"
+                class="max-h-28 overflow-y-auto"
                 (scroll)="onOfficeDropdownScroll($event)"
               >
                 <div
@@ -401,8 +401,15 @@ export class BrandCreationModalComponent implements OnInit {
 
   // Office dropdown methods
   toggleOfficeDropdown(): void {
-    this.officeDropdownOpen = !this.officeDropdownOpen;
-    if (this.officeDropdownOpen && this.availableOffices.length === 0) {
+    // If this dropdown is already open, just close it
+    if (this.officeDropdownOpen) {
+      this.officeDropdownOpen = false;
+      return;
+    }
+    // Close country dropdown and open office dropdown
+    this.countryDropdownOpen = false;
+    this.officeDropdownOpen = true;
+    if (this.availableOffices.length === 0) {
       this.loadOffices();
     }
   }
@@ -488,7 +495,14 @@ export class BrandCreationModalComponent implements OnInit {
   }
 
   toggleCountryDropdown(): void {
-    this.countryDropdownOpen = !this.countryDropdownOpen;
+    // If this dropdown is already open, just close it
+    if (this.countryDropdownOpen) {
+      this.countryDropdownOpen = false;
+      return;
+    }
+    // Close office dropdown and open country dropdown
+    this.officeDropdownOpen = false;
+    this.countryDropdownOpen = true;
   }
 
   onCountrySearch(event: Event): void {
@@ -558,34 +572,17 @@ export class BrandCreationModalComponent implements OnInit {
     this.modalRef.dismiss();
   }
 
-  // Close dropdown if clicked outside
-  @HostListener('document:click', ['$event'])
-  onClickOutside(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    const officeDropdown = document.getElementById('office-dropdown');
-
-    if (
-      this.officeDropdownOpen &&
-      officeDropdown &&
-      !officeDropdown.contains(target)
-    ) {
-      this.officeDropdownOpen = false;
-    }
-  }
-
   // Close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement;
-    const dropdown = target.closest('.relative');
-    
-    if (!dropdown) {
-      if (this.officeDropdownOpen) {
-        this.officeDropdownOpen = false;
-      }
-      if (this.countryDropdownOpen) {
-        this.countryDropdownOpen = false;
-      }
+    // Close dropdowns when clicking outside
+    if (!(event.target as Element).closest('.relative')) {
+      this.closeAllDropdowns();
     }
+  }
+
+  private closeAllDropdowns(): void {
+    this.officeDropdownOpen = false;
+    this.countryDropdownOpen = false;
   }
 }

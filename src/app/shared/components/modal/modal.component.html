@@ -1,7 +1,7 @@
 <!-- src/app/shared/components/modal/modal.component.html -->
 <div
   *ngFor="let modal of modals; trackBy: trackByModalId"
-  class="fixed inset-0 z-50 overflow-y-auto"
+  class="fixed inset-0 z-50 overflow-y-auto max-h-screen"
   [class.animate-fadeIn]="modal.config.animation"
   role="dialog"
   aria-modal="true"
@@ -17,7 +17,7 @@
 
   <!-- Modal Container -->
   <div
-    class="flex min-h-full justify-center p-4 text-center sm:p-0"
+    class="flex min-h-full justify-center p-4 text-center sm:p-0 modal-content"
     [class]="getModalPositionClass(modal.config.centered || false)"
   >
     <!-- Modal Content -->
@@ -64,7 +64,7 @@
       <!-- Modal Body -->
       <div
         class="px-6 py-6"
-        [class.max-h-[calc(100vh-12rem)]]="modal.config.scrollable"
+        [class.max-h-[calc(100vh-1rem)]]="modal.config.scrollable"
         [class.overflow-y-auto]="modal.config.scrollable"
         [class.custom-scrollbar]="modal.config.scrollable"
       >
@@ -163,7 +163,7 @@
       <!-- Modal Body -->
       <div
         class="px-6 py-6"
-        [class.max-h-[calc(100vh-16rem)]]="scrollable"
+        [class.max-h-[calc(100vh-1rem)]]="scrollable"
         [class.overflow-y-auto]="scrollable"
         [class.custom-scrollbar]="scrollable"
       >

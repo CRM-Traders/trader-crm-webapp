@@ -7,6 +7,20 @@ import { HttpClient } from '@angular/common/http';
 import { AlertService } from '../../../core/services/alert.service';
 import { KycDocument } from '../../models/kyc/kyc.model';
 
+// Generic file interface that can work with different file types
+export interface PreviewFile {
+  id: string;
+  fileName: string;
+  fileUrl?: string;
+  fileSize?: number;
+  contentType?: string;
+  createdAt?: string;
+  uploadedAt?: string;
+  isImage?: boolean;
+  isPdf?: boolean;
+  fileExtension?: string;
+}
+
 @Component({
   selector: 'app-file-preview',
   standalone: true,
@@ -134,12 +148,15 @@ import { KycDocument } from '../../models/kyc/kyc.model';
           <p class="text-xl font-medium text-gray-900 dark:text-white mb-2">
             {{ file.fileName }}
           </p>
+          @if (file.fileSize) {
           <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
             {{ formatFileSize(file.fileSize) }}
           </p>
+          }
           <p class="text-sm text-gray-500 mb-4">
             Preview not available for this file type
           </p>
+          @if (file.fileUrl) {
           <a
             [href]="file.fileUrl"
             target="_blank"
@@ -160,6 +177,7 @@ import { KycDocument } from '../../models/kyc/kyc.model';
             </svg>
             Open in New Tab
           </a>
+          }
         </div>
         } } }
       </div>
@@ -169,10 +187,14 @@ import { KycDocument } from '../../models/kyc/kyc.model';
         <div
           class="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400"
         >
+          @if (file.fileSize) {
           <span>Size: {{ formatFileSize(file.fileSize) }}</span>
+          }
+          @if (file.contentType) {
           <span>Type: {{ file.contentType }}</span>
-          @if (file.createdAt) {
-          <span>Uploaded: {{ formatDate(file.createdAt) }}</span>
+          }
+          @if (file.createdAt || file.uploadedAt) {
+          <span>Uploaded: {{ formatDate(file.createdAt || file.uploadedAt) }}</span>
           }
         </div>
       </div>
@@ -217,7 +239,7 @@ import { KycDocument } from '../../models/kyc/kyc.model';
   ],
 })
 export class FilePreviewComponent implements OnInit, OnDestroy {
-  @Input({ required: true }) file!: KycDocument;
+  @Input({ required: true }) file!: PreviewFile;
   @Input() onClose: () => void = () => {};
 
   private readonly http = inject(HttpClient);
@@ -242,20 +264,25 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
   }
 
   private determinePreviewType(): void {
-    const contentType = this.file.contentType.toLowerCase();
+    const contentType = this.file.contentType?.toLowerCase() || '';
     const fileName = this.file.fileName.toLowerCase();
+    const fileExtension = this.file.fileExtension?.toLowerCase() || '';
 
-    if (contentType.startsWith('image/') || this.file.isImage) {
+    if (contentType.startsWith('image/') || this.file.isImage || 
+        fileExtension.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)$/)) {
       this.previewType = 'image';
     } else if (
       contentType === 'application/pdf' ||
       this.file.isPdf ||
-      fileName.endsWith('.pdf')
+      fileName.endsWith('.pdf') ||
+      fileExtension === '.pdf'
     ) {
       this.previewType = 'pdf';
-    } else if (contentType.startsWith('video/')) {
+    } else if (contentType.startsWith('video/') || 
+               fileExtension.match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/)) {
       this.previewType = 'video';
-    } else if (contentType.startsWith('audio/')) {
+    } else if (contentType.startsWith('audio/') || 
+               fileExtension.match(/\.(mp3|wav|ogg|aac|flac|wma)$/)) {
       this.previewType = 'audio';
     } else {
       this.previewType = 'other';
@@ -326,7 +353,7 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Failed to load file:', error);
         // Fallback to direct URL
-        this.previewUrl = this.file.fileUrl;
+        // this.previewUrl = this.file.fileUrl;
         if (this.previewType === 'pdf') {
           this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
             this.file.fileUrl!
@@ -369,7 +396,8 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  formatDate(dateString: string): string {
+  formatDate(dateString: string | undefined): string {
+    if (!dateString) return 'Unknown';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',

@@ -20,6 +20,7 @@ import { ClientNotesComponent } from './components/client-notes/client-notes.com
 import { ClientPaymentsComponent } from './components/client-payments/client-payments.component';
 import { ClientProfileComponent } from './components/client-profile/client-profile.component';
 import { ClientReferralsComponent } from './components/client-referrals/client-referrals.component';
+import { ClientTicketsComponent } from './components/client-tickets/client-tickets.component';
 import { ClientTradingActivityComponent } from './components/client-trading-activity/client-trading-activity.component';
 import { ActivatedRoute, Router } from '@angular/router';
 // Import the notes service and model
@@ -41,6 +42,7 @@ export enum ClientDetailSection {
   Files = 'files',
   CallHistory = 'call-history',
   Notes = 'notes',
+  Tickets = 'tickets',
   Feed = 'feed',
   Referrals = 'referrals',
 }
@@ -59,6 +61,7 @@ export enum ClientDetailSection {
     ClientFilesComponent,
     ClientCallHistoryComponent,
     ClientNotesComponent,
+    ClientTicketsComponent,
     ClientFeedComponent,
     ClientReferralsComponent,
   ],
@@ -111,6 +114,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     { key: ClientDetailSection.Profile, label: 'Profile' },
     { key: ClientDetailSection.Payments, label: 'Payments' },
     { key: ClientDetailSection.TradingActivity, label: 'Trading Activity' },
+    { key: ClientDetailSection.Tickets, label: 'Tickets' },
     { key: ClientDetailSection.Accounts, label: 'Accounts' },
     { key: ClientDetailSection.Callbacks, label: 'Callbacks' },
     { key: ClientDetailSection.Files, label: 'Files' },

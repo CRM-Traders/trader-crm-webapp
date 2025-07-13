@@ -38,6 +38,17 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
   tradingOrders: TradingOrder[] = [];
   loadingClientOrders = false;
 
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 50;
+  totalItems = 0;
+  totalPages = 0;
+  hasNextPage = false;
+  hasPreviousPage = false;
+
+  // Math property for template access
+  Math = Math;
+
   get clientId(): string {
     return this.client?.userId || '';
   }
@@ -124,12 +135,26 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
 
     this.loadingClientOrders = true;
     
+    // Prepare filters for the API call
+    const filters = {
+      pageNumber: this.currentPage,
+      pageSize: this.pageSize,
+      status: this.statusFilter || undefined,
+      symbol: this.symbolFilter || undefined
+    };
+    
     this.tradingActivityService
-      .getClientOrdersByUserId(this.clientId)
+      .getClientOrdersByUserId(this.clientId, filters)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (orders) => {
-          this.tradingOrders = orders;
+        next: (response) => {
+          this.tradingOrders = response.orders;
+          this.totalItems = response.totalCount;
+          this.currentPage = response.pageIndex;
+          this.pageSize = response.pageSize;
+          this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+          this.hasNextPage = this.currentPage < this.totalPages;
+          this.hasPreviousPage = this.currentPage > 1;
           this.loadingClientOrders = false;
         },
         error: (error) => {
@@ -144,7 +169,39 @@ export class ClientTradingActivityComponent implements OnInit, OnDestroy, OnChan
   }
 
   onFilterChange(): void {
-    // Filters are applied through the filteredTradingOrders getter
-    // No additional action needed
+    // Reset to first page when filters change
+    this.currentPage = 1;
+    this.loadClientOrders();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadClientOrders();
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1; // Reset to first page when page size changes
+    this.loadClientOrders();
+  }
+
+  getTotalPages(): number {
+    return this.totalPages;
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const currentPage = this.currentPage;
+    const pages: number[] = [];
+    
+    // Show up to 5 page numbers around the current page
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
   }
 }

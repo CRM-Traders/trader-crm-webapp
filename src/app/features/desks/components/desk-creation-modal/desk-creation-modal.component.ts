@@ -6,6 +6,7 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -90,7 +91,7 @@ import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/
           </div>
 
           <!-- Brand Selection -->
-          <div class="relative">
+          <div class="relative" data-dropdown="brand">
             <label
               for="brandId"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -210,53 +211,141 @@ import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/
             </p>
           </div>
 
-          <!-- Desk Type -->
-          <div>
-            <label
-              for="type"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Desk Type
-            </label>
-            <select
-              id="type"
-              formControlName="type"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-            >
-              <option *ngFor="let type of deskTypes" [value]="type.value">
-                {{ type.label }}
-              </option>
-            </select>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Select the type of desk to create
-            </p>
-          </div>
-
-          <!-- Language Selection -->
-          <div>
+                    <!-- Language Selection -->
+                    <div class="relative" data-dropdown="language">
             <label
               for="language"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Language
             </label>
-            <select
-              id="language"
-              formControlName="language"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+            
+            <!-- Custom Dropdown Button -->
+            <button
+              type="button"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+              (click)="toggleLanguageDropdown()"
             >
-              <option value="">No specific language</option>
-              <option
-                *ngFor="let lang of availableLanguages"
-                [value]="lang.key"
+              <span class="truncate">{{ getSelectedLanguageName() }}</span>
+              <svg
+                class="w-4 h-4 ml-2 transition-transform"
+                [class.rotate-180]="languageDropdownOpen"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {{ lang.value }}
-              </option>
-            </select>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+
+            <!-- Dropdown Panel -->
+            <div
+              *ngIf="languageDropdownOpen"
+              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+            >
+              <!-- Search Input -->
+              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                <input
+                  #languageSearchInput
+                  type="text"
+                  placeholder="Search languages..."
+                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  (input)="onLanguageSearch($event)"
+                  [value]="languageSearchTerm"
+                />
+              </div>
+
+              <!-- Languages List -->
+              <div class="max-h-48 overflow-y-auto">
+                <div
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  (click)="selectLanguage(null)"
+                >
+                  No specific language
+                </div>
+                <div
+                  *ngFor="let lang of filteredLanguages"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  (click)="selectLanguage(lang)"
+                >
+                  {{ lang.value }}
+                </div>
+
+                <!-- No results -->
+                <div
+                  *ngIf="filteredLanguages.length === 0"
+                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  No languages found
+                </div>
+              </div>
+            </div>
+            
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Optional: Select a language for this desk
             </p>
           </div>
+
+          <!-- Desk Type -->
+          <div class="relative" data-dropdown="deskType">
+            <label
+              for="type"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Desk Type
+            </label>
+            
+            <!-- Custom Dropdown Button -->
+            <button
+              type="button"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+              (click)="toggleDeskTypeDropdown()"
+            >
+              <span class="truncate">{{ getSelectedDeskTypeName() }}</span>
+              <svg
+                class="w-4 h-4 ml-2 transition-transform"
+                [class.rotate-180]="deskTypeDropdownOpen"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </button>
+
+            <!-- Dropdown Panel -->
+            <div
+              *ngIf="deskTypeDropdownOpen"
+              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+            >
+              <!-- Desk Types List -->
+              <div class="max-h-48 overflow-y-auto">
+                <div
+                  *ngFor="let type of deskTypes"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  (click)="selectDeskType(type)"
+                >
+                  {{ type.label }}
+                </div>
+              </div>
+            </div>
+            
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Select the type of desk to create
+            </p>
+          </div>
+
+
 
           <!-- Is Active Checkbox -->
           <div>
@@ -354,6 +443,14 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
   brandHasNextPage = false;
   brandDropdownOpen = false;
 
+  // Language dropdown state
+  languageDropdownOpen = false;
+  languageSearchTerm = '';
+  filteredLanguages: any[] = [];
+
+  // Desk type dropdown state
+  deskTypeDropdownOpen = false;
+
   deskTypes = [
     { value: 0, label: 'Sales' },
     { value: 1, label: 'Retention' },
@@ -381,6 +478,7 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
     this.initializeSearchObservable();
     this.loadInitialOffices();
     this.loadAvailableLanguages();
+    this.filteredLanguages = this.availableLanguages;
   }
 
   ngOnDestroy(): void {
@@ -486,7 +584,106 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
   }
 
   toggleOfficeDropdown(): void {
+    // Close other dropdowns if open
+    if (this.languageDropdownOpen) {
+      this.languageDropdownOpen = false;
+    }
+    if (this.deskTypeDropdownOpen) {
+      this.deskTypeDropdownOpen = false;
+    }
+    
+    // Toggle brand dropdown
     this.brandDropdownOpen = !this.brandDropdownOpen;
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    // Check if click is inside dropdown containers
+    const brandDropdown = target.closest('[data-dropdown="brand"]');
+    const languageDropdown = target.closest('[data-dropdown="language"]');
+    const deskTypeDropdown = target.closest('[data-dropdown="deskType"]');
+    
+    // Close dropdowns if click is outside
+    if (!brandDropdown) {
+      this.brandDropdownOpen = false;
+    }
+    if (!languageDropdown) {
+      this.languageDropdownOpen = false;
+    }
+    if (!deskTypeDropdown) {
+      this.deskTypeDropdownOpen = false;
+    }
+  }
+
+  // Language dropdown methods
+  toggleLanguageDropdown(): void {
+    // Close other dropdowns if open
+    if (this.brandDropdownOpen) {
+      this.brandDropdownOpen = false;
+    }
+    if (this.deskTypeDropdownOpen) {
+      this.deskTypeDropdownOpen = false;
+    }
+    
+    // Toggle language dropdown
+    this.languageDropdownOpen = !this.languageDropdownOpen;
+  }
+
+  onLanguageSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.languageSearchTerm = target.value.toLowerCase();
+    
+    this.filteredLanguages = this.availableLanguages.filter(lang =>
+      lang.value.toLowerCase().includes(this.languageSearchTerm)
+    );
+  }
+
+  selectLanguage(lang: any): void {
+    if (lang) {
+      this.deskForm.patchValue({ language: lang.key });
+    } else {
+      this.deskForm.patchValue({ language: '' });
+    }
+    this.languageDropdownOpen = false;
+    this.languageSearchTerm = '';
+    this.filteredLanguages = this.availableLanguages;
+  }
+
+  getSelectedLanguageName(): string {
+    const selectedLanguageKey = this.deskForm.get('language')?.value;
+    if (!selectedLanguageKey) {
+      return 'No specific language';
+    }
+    const selectedLanguage = this.availableLanguages.find(lang => lang.key === selectedLanguageKey);
+    return selectedLanguage ? selectedLanguage.value : 'Select a language...';
+  }
+
+  // Desk type dropdown methods
+  toggleDeskTypeDropdown(): void {
+    // Close other dropdowns if open
+    if (this.brandDropdownOpen) {
+      this.brandDropdownOpen = false;
+    }
+    if (this.languageDropdownOpen) {
+      this.languageDropdownOpen = false;
+    }
+    
+    // Toggle desk type dropdown
+    this.deskTypeDropdownOpen = !this.deskTypeDropdownOpen;
+  }
+
+  selectDeskType(type: any): void {
+    this.deskForm.patchValue({ type: type.value });
+    this.deskTypeDropdownOpen = false;
+  }
+
+  getSelectedDeskTypeName(): string {
+    const selectedTypeValue = this.deskForm.get('type')?.value;
+    const selectedType = this.deskTypes.find(type => type.value === selectedTypeValue);
+    return selectedType ? selectedType.label : 'Select a desk type...';
   }
 
   selectOffice(brand: BrandDropdownItem): void {

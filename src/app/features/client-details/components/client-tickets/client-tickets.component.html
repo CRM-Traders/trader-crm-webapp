@@ -1,0 +1,391 @@
+<div class="space-y-6 max-w-7xl mx-auto">
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+      Tickets
+    </h2>
+    <p class="text-gray-600 dark:text-gray-400">
+      Manage client tickets
+    </p>
+  </div>
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Tickets -->
+    <div class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-6">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-200 dark:bg-blue-700">
+          <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
+            Total Tickets
+          </p>
+          <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">
+            {{ totalTickets }}
+          </p>
+          <p class="text-xs text-blue-700 dark:text-blue-300">
+            All financial tickets
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Tickets -->
+    <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900 dark:to-yellow-800 rounded-lg p-6">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-yellow-200 dark:bg-yellow-700">
+          <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+            Active Tickets
+          </p>
+          <p class="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+            {{ activeTickets }}
+          </p>
+          <p class="text-xs text-yellow-700 dark:text-yellow-300">
+            Pending approval
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Deposits -->
+    <div class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-6">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-green-200 dark:bg-green-700">
+          <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-green-800 dark:text-green-200">
+            Total Deposits
+          </p>
+          <p class="text-2xl font-bold text-green-900 dark:text-green-100">
+            ${{ totalDepositAmount.toLocaleString() }}
+          </p>
+          <p class="text-xs text-green-700 dark:text-green-300">
+            {{ totalDeposits }} transactions
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Withdrawals -->
+    <div class="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 rounded-lg p-6">
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-red-200 dark:bg-red-700">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-red-800 dark:text-red-200">
+            Total Withdrawals
+          </p>
+          <p class="text-2xl font-bold text-red-900 dark:text-red-100">
+            ${{ totalWithdrawalAmount.toLocaleString() }}
+          </p>
+          <p class="text-xs text-red-700 dark:text-red-300">
+            {{ totalWithdrawals }} transactions
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filters</h3>
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+        Clear Filters
+      </button>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Trading Account Filter -->
+      <div>
+        <label for="tradingAccountFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Trading Account
+        </label>
+        <select
+          id="tradingAccountFilter"
+          [(ngModel)]="tradingAccountIdFilter"
+          (change)="onFilterChange()"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        >
+          <option value="">All Trading Accounts</option>
+          <option *ngFor="let accountId of availableTradingAccounts" [value]="accountId">
+            {{ accountId.substring(0, 8) }}...
+          </option>
+        </select>
+      </div>
+
+      <!-- Status Filter -->
+      <div>
+        <label for="statusFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Status
+        </label>
+        <select
+          id="statusFilter"
+          [(ngModel)]="statusFilter"
+          (change)="onFilterChange()"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        >
+          <option value="">All Statuses</option>
+          <option *ngFor="let status of availableStatuses" [value]="status">
+            {{ status }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Currency Filter -->
+      <div>
+        <label for="currencyFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Currency
+        </label>
+        <select
+          id="currencyFilter"
+          [(ngModel)]="currencyFilter"
+          (change)="onFilterChange()"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        >
+          <option value="">All Currencies</option>
+          <option *ngFor="let currency of availableCurrencies" [value]="currency">
+            {{ currency }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active Filters Display -->
+    <div *ngIf="tradingAccountIdFilter || statusFilter || currencyFilter" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-gray-500 dark:text-gray-400">Active filters:</span>
+        <span *ngIf="tradingAccountIdFilter" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+          Account: {{ tradingAccountIdFilter.substring(0, 8) }}...
+          <button type="button" (click)="tradingAccountIdFilter = ''; onFilterChange()" class="ml-1 text-blue-600 hover:text-blue-800">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </span>
+        <span *ngIf="statusFilter" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+          Status: {{ statusFilter }}
+          <button type="button" (click)="statusFilter = ''; onFilterChange()" class="ml-1 text-green-600 hover:text-green-800">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </span>
+        <span *ngIf="currencyFilter" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+          Currency: {{ currencyFilter }}
+          <button type="button" (click)="currencyFilter = ''; onFilterChange()" class="ml-1 text-purple-600 hover:text-purple-800">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tickets Table -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Financial Tickets
+          <span *ngIf="filteredTickets.length !== financialTickets.length" class="text-sm font-normal text-gray-500 dark:text-gray-400">
+            ({{ filteredTickets.length }} of {{ financialTickets.length }})
+          </span>
+        </h3>
+        <button
+          type="button"
+          (click)="refreshTickets()"
+          class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+        >
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loadingTickets" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!loadingTickets && filteredTickets.length === 0" class="text-center py-12">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+        {{ financialTickets.length === 0 ? 'No tickets' : 'No tickets match filters' }}
+      </h3>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        {{ financialTickets.length === 0 ? 'No financial tickets found for this client.' : 'Try adjusting your filters.' }}
+      </p>
+    </div>
+
+    <!-- Tickets Table -->
+    <div *ngIf="!loadingTickets && filteredTickets.length > 0" class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Type
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Amount
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Currency
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Status
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Created
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              ID
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          <tr *ngFor="let ticket of filteredTickets" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getTicketTypeColorClass(ticket.ticketType)">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getTicketTypeIcon(ticket.ticketType)"></path>
+                  </svg>
+                  {{ ticket.ticketTypeName }}
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ formatCurrency(ticket.amount, ticket.walletCurrency) }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-500 dark:text-gray-400">
+                {{ ticket.walletCurrency }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getStatusColorClass(ticket.ticketStatusName)">
+                {{ ticket.ticketStatusName }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-500 dark:text-gray-400">
+                {{ formatDate(ticket.createdAt) }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm text-gray-500 dark:text-gray-400 font-mono">
+                {{ ticket.id.substring(0, 8) }}...
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center space-x-2">
+                <!-- Simple Status Update Dropdown -->
+                <select
+                  [disabled]="isUpdatingStatus(ticket.id)"
+                  class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  (change)="onStatusChange(ticket.id, $event)"
+                >
+                  <option value="" disabled selected>Update Status</option>
+                  <option *ngFor="let status of getAvailableStatuses(ticket.ticketStatus)" [value]="status">
+                    {{ getStatusDisplayName(status) }}
+                  </option>
+                </select>
+                <div *ngIf="isUpdatingStatus(ticket.id)" class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!loadingTickets && filteredTickets.length > 0" class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="text-sm text-gray-700 dark:text-gray-300">
+            Showing {{ (currentPage * pageSize) + 1 }} to {{ Math.min((currentPage + 1) * pageSize, totalItems) }} of {{ totalItems }} results
+          </span>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <!-- Page Size Selector -->
+          <select
+            [(ngModel)]="pageSize"
+            (change)="onPageSizeChange(pageSize)"
+            class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+
+          <!-- Pagination Controls -->
+          <nav class="flex items-center space-x-1">
+            <button
+              type="button"
+              (click)="onPageChange(currentPage)"
+              [disabled]="!hasPreviousPage"
+              class="px-3 py-1 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            
+            <ng-container *ngFor="let page of getPageNumbers()">
+              <button
+                *ngIf="page !== -1"
+                type="button"
+                (click)="onPageChange(page)"
+                [class]="page === (currentPage + 1) ? 'px-3 py-1 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md' : 'px-3 py-1 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700'"
+              >
+                {{ page }}
+              </button>
+              <span *ngIf="page === -1" class="px-3 py-1 text-sm text-gray-500 dark:text-gray-400">...</span>
+            </ng-container>
+            
+            <button
+              type="button"
+              (click)="onPageChange(currentPage + 2)"
+              [disabled]="!hasNextPage"
+              class="px-3 py-1 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

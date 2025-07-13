@@ -99,8 +99,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
           <div class="flex items-center justify-between">
             <div class="flex items-center min-w-0">
               <!-- Node Name -->
-              <span [class]="getNameClasses()">
-                {{ node.name }}
+              <span [class]="getNameClasses()" [innerHTML]="getHighlightedName()">
               </span>
 
               <span
@@ -236,15 +235,58 @@ export class HierarchyNodeComponent {
   }
 
   getNodeClasses(): string {
-    const baseClasses =
-      'flex items-center py-2 px-3 rounded-lg cursor-pointer transition-all duration-200 group relative';
-    const hoverClasses = 'hover:bg-gray-500/10 dark:hover:bg-gray-750/20';
-    const selectedClasses = this.isSelected
-      ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500'
-      : '';
-    const inactiveClasses = !this.node.isActive ? 'opacity-60' : '';
+    const baseClasses = 'flex items-center py-2 px-3 rounded-lg cursor-pointer transition-all duration-200 group relative';
+    const selectedClass = this.isSelected ? ' bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : '';
+    const inactiveClass = !this.node.isActive ? ' opacity-60' : '';
+    const searchMatchClass = this.isSearchMatch ? ' search-match' : '';
+    
+    return baseClasses + selectedClass + inactiveClass + searchMatchClass;
+  }
 
-    return `${baseClasses} ${hoverClasses} ${selectedClasses} ${inactiveClasses}`.trim();
+  get isSearchMatch(): boolean {
+    if (!this.searchQuery.trim()) return false;
+    
+    const query = this.searchQuery.toLowerCase();
+    
+    // Check if node name matches
+    if (this.node.name.toLowerCase().includes(query)) {
+      return true;
+    }
+    
+    // Check additional data based on type
+    if (this.node.type === 'member' && this.node.data?.email) {
+      if (this.node.data.email.toLowerCase().includes(query)) {
+        return true;
+      }
+    }
+    
+    if ((this.node.type === 'brand' || this.node.type === 'office') && this.node.data?.country) {
+      if (this.node.data.country.toLowerCase().includes(query)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  getHighlightedName(): string {
+    if (!this.searchQuery.trim() || !this.isSearchMatch) {
+      return this.node.name;
+    }
+    
+    const query = this.searchQuery.toLowerCase();
+    const name = this.node.name;
+    const index = name.toLowerCase().indexOf(query);
+    
+    if (index === -1) {
+      return name;
+    }
+    
+    const before = name.substring(0, index);
+    const match = name.substring(index, index + query.length);
+    const after = name.substring(index + query.length);
+    
+    return `${before}<span class="search-highlight">${match}</span>${after}`;
   }
 
   getIconClasses(): string {

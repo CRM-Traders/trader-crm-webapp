@@ -28,11 +28,10 @@ export class UsersService {
   }
 
   updateClient(
-    id: string,
     clientData: UpdateProfileRequest
   ): Observable<Profile> {
     return this.httpService.put<Profile>(
-      `identity/api/clients/${id}`,
+      `identity/api/clients/update`,
       clientData
     );
   }
