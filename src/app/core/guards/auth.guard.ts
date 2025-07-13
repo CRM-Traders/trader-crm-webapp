@@ -20,10 +20,11 @@ export const roleGuard = (requiredRole: string[]): CanActivateFn => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    if (requiredRole.includes(authService.userRole())) {
-      return true;
-    }
-
-    return router.createUrlTree(['/auth/unauthorized']);
+    return (
+      authService
+        .userPermissions()
+        .some((permission) => requiredRole.includes(permission)) ||
+      router.createUrlTree(['/auth/unauthorized'])
+    );
   };
 };

@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { publicGuard } from './core/guards/public.guard';
 import { authGuard, roleGuard } from './core/guards/auth.guard';
-import { UserRole } from './core/models/roles.model';
+import { UserPermission, UserRole } from './core/models/roles.model';
 import { brandSelectionGuard } from './core/guards/brand.guard';
 
 export const routes: Routes = [
@@ -53,7 +53,14 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'settings',
@@ -69,7 +76,15 @@ export const routes: Routes = [
           import('./features/calendar-page/calendar-page.component').then(
             (m) => m.CalendarPageComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+            UserPermission.Finance_Executive,
+          ]),
+        ],
       },
       {
         path: 'clients',
@@ -77,7 +92,15 @@ export const routes: Routes = [
           import('./features/clients/clients.component').then(
             (m) => m.ClientsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+            UserPermission.Finance_Executive,
+          ]),
+        ],
       },
       {
         path: 'clients/:id',
@@ -85,27 +108,35 @@ export const routes: Routes = [
           import('./features/client-details/client-details.component').then(
             (m) => m.ClientDetailsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      },
-      {
-        path: 'tickets',
-        loadComponent: () =>
-          import('./features/tickets/tickets.component').then(
-            (m) => m.TicketsComponent
-          ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      },
-      {
-        path: 'api-docs',
-        loadComponent: () =>
-          import(
-            './features/affiliate-portal/api-docs/api-docs.component'
-          ).then((m) => m.ApiDocsComponent),
         canActivate: [
           authGuard,
-          roleGuard([UserRole.SuperAdmin, UserRole.SuperAdmin]),
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+            UserPermission.Finance_Executive,
+          ]),
         ],
       },
+      // {
+      //   path: 'tickets',
+      //   loadComponent: () =>
+      //     import('./features/tickets/tickets.component').then(
+      //       (m) => m.TicketsComponent
+      //     ),
+      //   canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      // },
+      // {
+      //   path: 'api-docs',
+      //   loadComponent: () =>
+      //     import(
+      //       './features/affiliate-portal/api-docs/api-docs.component'
+      //     ).then((m) => m.ApiDocsComponent),
+      //   canActivate: [
+      //     authGuard,
+      //     roleGuard([UserRole.SuperAdmin, UserRole.SuperAdmin]),
+      //   ],
+      // },
       {
         path: 'affiliate-clients',
         loadComponent: () =>
@@ -115,9 +146,10 @@ export const routes: Routes = [
         canActivate: [
           authGuard,
           roleGuard([
-            UserRole.SuperAdmin,
-            UserRole.Affiliate,
-            UserRole.AffiliateManager,
+            UserPermission.AffiliateManager_Executive,
+            UserPermission.AffiliateManager_HOD,
+            UserPermission.AffiliateManager_Manager,
+            UserPermission.AffiliateManager_TeamLead,
           ]),
         ],
       },
@@ -127,7 +159,15 @@ export const routes: Routes = [
           import('./features/affiliates/affiliates.component').then(
             (m) => m.AffiliatesComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.AffiliateManager_Executive,
+            UserPermission.AffiliateManager_HOD,
+            UserPermission.AffiliateManager_Manager,
+            UserPermission.AffiliateManager_TeamLead,
+          ]),
+        ],
       },
       {
         path: 'leads',
@@ -135,7 +175,14 @@ export const routes: Routes = [
           import('./features/leads/leads.component').then(
             (m) => m.LeadsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'operators',
@@ -143,7 +190,14 @@ export const routes: Routes = [
           import('./features/operators/operators.component').then(
             (m) => m.OperatorsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_HOD,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_Manager,
+          ]),
+        ],
       },
       {
         path: 'operators/:id/profile',
@@ -151,31 +205,44 @@ export const routes: Routes = [
           import(
             './features/operators/components/operator-details-page/operator-details-page.component'
           ).then((m) => m.OperatorDetailsPageComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_HOD,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_Manager,
+          ]),
+        ],
       },
-      {
-        path: 'communications',
-        loadComponent: () =>
-          import('./features/communications/communications.component').then(
-            (m) => m.CommunicationsComponent
-          ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      },
-      {
-        path: 'employee-chat',
-        loadComponent: () =>
-          import(
-            './shared/components/employee-chat/employee-chat.component'
-          ).then((m) => m.EmployeeChatComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      },
+      // {
+      //   path: 'communications',
+      //   loadComponent: () =>
+      //     import('./features/communications/communications.component').then(
+      //       (m) => m.CommunicationsComponent
+      //     ),
+      //   canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      // },
+      // {
+      //   path: 'employee-chat',
+      //   loadComponent: () =>
+      //     import(
+      //       './shared/components/employee-chat/employee-chat.component'
+      //     ).then((m) => m.EmployeeChatComponent),
+      //   canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+      // },
       {
         path: 'documents',
         loadComponent: () =>
           import('./features/documents/documents.component').then(
             (m) => m.DocumentsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Compliance,
+            UserPermission.Compliance_Manager,
+          ]),
+        ],
       },
       {
         path: 'documents/:id',
@@ -183,37 +250,50 @@ export const routes: Routes = [
           import(
             './features/documents/components/kyc-details/kyc-details.component'
           ).then((m) => m.KycDetailsComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
-      },
-      {
-        path: 'kyc-verification',
-        loadComponent: () =>
-          import(
-            './features/client-portal/client-kyc/client-kyc.component'
-          ).then((m) => m.ClientKycComponent),
         canActivate: [
           authGuard,
-          roleGuard([UserRole.SuperAdmin, UserRole.Client]),
+          roleGuard([
+            UserPermission.Compliance,
+            UserPermission.Compliance_Manager,
+          ]),
         ],
       },
-      {
-        path: 'trading-accounts',
-        loadComponent: () =>
-          import(
-            './features/client-portal/trading-accounts/trading-accounts.component'
-          ).then((m) => m.TradingAccountsComponent),
-        canActivate: [
-          authGuard,
-          roleGuard([UserRole.SuperAdmin, UserRole.Client]),
-        ],
-      },
+      // {
+      //   path: 'kyc-verification',
+      //   loadComponent: () =>
+      //     import(
+      //       './features/client-portal/client-kyc/client-kyc.component'
+      //     ).then((m) => m.ClientKycComponent),
+      //   canActivate: [
+      //     authGuard,
+      //     roleGuard([UserRole.SuperAdmin, UserRole.Client]),
+      //   ],
+      // },
+      // {
+      //   path: 'trading-accounts',
+      //   loadComponent: () =>
+      //     import(
+      //       './features/client-portal/trading-accounts/trading-accounts.component'
+      //     ).then((m) => m.TradingAccountsComponent),
+      //   canActivate: [
+      //     authGuard,
+      //     roleGuard([UserRole.SuperAdmin, UserRole.Client]),
+      //   ],
+      // },
       {
         path: 'brands',
         loadComponent: () =>
           import('./features/brands/brands.component').then(
             (m) => m.BrandsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'offices',
@@ -221,7 +301,14 @@ export const routes: Routes = [
           import('./features/officies/officies.component').then(
             (m) => m.OfficesComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'offices/:id/rules',
@@ -229,7 +316,14 @@ export const routes: Routes = [
           import(
             './features/officies/components/office-rules/office-rules.component'
           ).then((m) => m.OfficeRulesComponent),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'desks',
@@ -237,7 +331,14 @@ export const routes: Routes = [
           import('./features/desks/desks.component').then(
             (m) => m.DesksComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'salerules',
@@ -245,7 +346,14 @@ export const routes: Routes = [
           import('./features/sales-rules/sales-rules.component').then(
             (m) => m.SalesRulesComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'teams',
@@ -253,7 +361,14 @@ export const routes: Routes = [
           import('./features/teams/teams.component').then(
             (m) => m.TeamsComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'hierarchy',
@@ -261,7 +376,14 @@ export const routes: Routes = [
           import('./features/hierarchy/hierarchy.component').then(
             (m) => m.HierarchyComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [
+          authGuard,
+          roleGuard([
+            UserPermission.Finance_Manager,
+            UserPermission.Finance_TeamLead,
+            UserPermission.Finance_HOD,
+          ]),
+        ],
       },
       {
         path: 'sources',
@@ -269,7 +391,7 @@ export const routes: Routes = [
           import('./features/sources/sources.component').then(
             (m) => m.SourcesComponent
           ),
-        canActivate: [authGuard, roleGuard([UserRole.SuperAdmin])],
+        canActivate: [authGuard, roleGuard([UserRole.MrRobot])],
       },
     ],
   },
