@@ -238,6 +238,83 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
             </div>
           </div>
 
+          <!-- Password Row -->
+          <div>
+            <label
+              for="password"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Password <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                formControlName="password"
+                placeholder="Password"
+                class="w-full px-3 py-2 pr-20 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                [class.border-red-500]="
+                  registrationForm.get('password')?.invalid &&
+                  registrationForm.get('password')?.touched
+                "
+              />
+              <div class="absolute inset-y-0 right-0 flex items-center">
+                <button
+                  type="button"
+                  class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 border-r border-gray-300 dark:border-gray-600"
+                  (click)="generatePassword()"
+                  title="Generate Password"
+                >
+                  Gen
+                </button>
+                <button
+                  type="button"
+                  class="px-2 flex items-center"
+                  (click)="togglePasswordVisibility()"
+                  title="Toggle Password Visibility"
+                >
+                  <svg
+                    class="h-4 w-4 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      *ngIf="!showPassword"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      *ngIf="!showPassword"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                    <path
+                      *ngIf="showPassword"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <p
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+              *ngIf="
+                registrationForm.get('password')?.invalid &&
+                registrationForm.get('password')?.touched
+              "
+            >
+              Password is required
+            </p>
+          </div>
+
           <!-- Country and Language Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -623,6 +700,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   isSubmitting = false;
+  showPassword = false;
   registrationForm: FormGroup;
   generatedPassword: string | null = null;
   passwordCopied = false;
@@ -659,6 +737,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       username: ['', Validators.required],
+      password: ['', Validators.required],
       affiliateId: [null], // Changed from required to optional, default to null
       telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       country: [''],
@@ -677,6 +756,42 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  generatePassword(): void {
+    const length = 12;
+    const charset =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let password = '';
+
+    // Ensure at least one character from each type
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const symbols = '!@#$%^&*';
+
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += symbols[Math.floor(Math.random() * symbols.length)];
+
+    // Fill the rest with random characters
+    for (let i = password.length; i < length; i++) {
+      password += charset[Math.floor(Math.random() * charset.length)];
+    }
+
+    // Shuffle the password
+    password = password
+      .split('')
+      .sort(() => Math.random() - 0.5)
+      .join('');
+
+    this.registrationForm.patchValue({ password });
+    this.showPassword = true; // Show the generated password
   }
 
   private loadCountries(): void {
@@ -874,6 +989,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       lastName: formValue.lastName,
       email: formValue.email,
       username: formValue.username,
+      password: formValue.password,
       affiliateId: formValue.affiliateId === null ? undefined : formValue.affiliateId,
       telephone: formValue.telephone || null,
       country: formValue.country || null,
@@ -885,17 +1001,8 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.clientsService.createClientForAdmin(clientData).subscribe({
       next: (response: ClientRegistrationResponse) => {
         this.isSubmitting = false;
-
-        // Check if a password was generated
-        if (response.generatedPassword) {
-          this.generatedPassword = response.generatedPassword;
-          this.alertService.success(
-            'Client registered successfully! A password has been generated.'
-          );
-        } else {
-          this.alertService.success('Client registered successfully!');
-          this.modalRef.close(true);
-        }
+        this.alertService.success('Client registered successfully!');
+        this.modalRef.close(true);
       },
       error: (error) => {
         this.isSubmitting = false;

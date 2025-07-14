@@ -22,7 +22,7 @@ export type UserType = 0 | 1; // 0 = lead, 1 = client
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-          Assign {{ userType === 0 ? 'Leads' : 'Clients' }} to Operator
+          Assign {{ userType === 0 ? 'Lead(s)' : 'Client(s)' }} to Operator
         </h2>
       </div>
 
