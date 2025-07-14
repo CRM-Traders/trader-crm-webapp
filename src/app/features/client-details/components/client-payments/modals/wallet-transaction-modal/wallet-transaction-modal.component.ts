@@ -255,7 +255,8 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
       'AVAX': '🔺',
       'MATIC': '⬟',
       'LINK': '🔗',
-      'UNI': '🦄'
+      'UNI': '🦄',
+      'USDT': 'USDT'
     };
     return symbols[currency] || currency;
   }

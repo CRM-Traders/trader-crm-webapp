@@ -51,6 +51,7 @@ export interface ClientCreateRequest {
   lastName: string;
   email: string;
   username: string;
+  password: string;
   affiliateId?: string | undefined;
   telephone?: string | null;
   country?: string | null;
