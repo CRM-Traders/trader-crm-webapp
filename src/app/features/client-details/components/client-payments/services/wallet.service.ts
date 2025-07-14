@@ -40,7 +40,6 @@ export class WalletService {
    * Get trading accounts for dropdown selection
    */
   getTradingAccounts(clientUserId: string): Observable<TradingAccountSummary[]> {
-    console.log('WalletService: Getting trading accounts for client:', clientUserId);
     this._loading.set(true);
 
     return this.http
@@ -64,8 +63,7 @@ export class WalletService {
       );
   }
 
-    getWalletsByTradingAccount(tradingAccountId: string): Observable<Wallet[]> {
-    console.log('WalletService: Getting wallets for trading account:', tradingAccountId);
+  getWalletsByTradingAccount(tradingAccountId: string): Observable<Wallet[]> {
     this._loading.set(true);
 
     return this.http
@@ -90,23 +88,20 @@ export class WalletService {
   /**
    * Process deposit transaction
    */
-  deposit(request: DepositRequest): Observable<WalletTransaction> {
+  deposit(request: DepositRequest): Observable<void> {
     console.log('WalletService: Processing deposit:', request);
     this._loading.set(true);
 
     return this.http
-      .post<WalletTransaction>(`${this.tradingBaseEndpoint}/deposit`, request)
+      .post<void>(`${this.tradingBaseEndpoint}/deposit`, request)
       .pipe(
-        tap((transaction) => {
-          console.log('WalletService: Deposit successful:', transaction);
-          this._recentTransaction.set(transaction);
+        tap(() => {
           this._loading.set(false);
           this.alertService.success(
             `Deposit of ${this.formatCurrency(request.amount, request.currency)} has been processed successfully!`
           );
         }),
         catchError((error) => {
-          console.error('WalletService: Error processing deposit:', error);
           this._loading.set(false);
           this.alertService.error(
             'Failed to process deposit. Please try again.'
@@ -119,23 +114,19 @@ export class WalletService {
   /**
    * Process withdrawal transaction
    */
-  withdraw(request: WithdrawRequest): Observable<WalletTransaction> {
-    console.log('WalletService: Processing withdrawal:', request);
+  withdraw(request: WithdrawRequest): Observable<void> {
     this._loading.set(true);
 
     return this.http
-      .post<WalletTransaction>(`${this.tradingBaseEndpoint}/withdraw`, request)
+      .post<void>(`${this.tradingBaseEndpoint}/withdraw`, request)
       .pipe(
-        tap((transaction) => {
-          console.log('WalletService: Withdrawal successful:', transaction);
-          this._recentTransaction.set(transaction);
+        tap(() => {
           this._loading.set(false);
           this.alertService.success(
             `Withdrawal of ${this.formatCurrency(request.amount, request.currency)} has been processed successfully!`
           );
         }),
         catchError((error) => {
-          console.error('WalletService: Error processing withdrawal:', error);
           this._loading.set(false);
           this.alertService.error(
             'Failed to process withdrawal. Please try again.'
@@ -152,13 +143,12 @@ export class WalletService {
     userId: string,
     filters?: WalletTransactionFilters
   ): Observable<WalletTransactionResponse> {
-    console.log('WalletService: Getting client transactions for user:', userId, 'with filters:', filters);
     this._loading.set(true);
 
     // Build query parameters
     const params = new URLSearchParams();
     params.append('clientUserId', userId);
-    
+
     if (filters?.pageNumber) params.append('pageNumber', (filters.pageNumber - 1).toString()); // Adjust for 0-based pageNumber
     if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString()); // pageSize is the actual count
     if (filters?.transactionType) params.append('transactionType', filters.transactionType);
@@ -171,11 +161,9 @@ export class WalletService {
       .get<WalletTransactionResponse>(url)
       .pipe(
         tap((response) => {
-          console.log('WalletService: Client transactions loaded:', response);
           this._loading.set(false);
         }),
         catchError((error) => {
-          console.error('WalletService: Error loading client transactions:', error);
           this._loading.set(false);
           this.alertService.error(
             'Failed to load client transactions. Please try again.'
@@ -189,18 +177,15 @@ export class WalletService {
    * Get client wallets summary
    */
   getClientWalletsSummary(userId: string): Observable<ClientWalletsSummary> {
-    console.log('WalletService: Getting client wallets summary for user:', userId);
     this._loading.set(true);
 
     return this.http
       .get<ClientWalletsSummary>(`traiding/api/Wallets/client-wallets-summary?clientUserId=${userId}`)
       .pipe(
         tap((summary) => {
-          console.log('WalletService: Client wallets summary loaded:', summary);
           this._loading.set(false);
         }),
         catchError((error) => {
-          console.error('WalletService: Error loading client wallets summary:', error);
           this._loading.set(false);
           this.alertService.error(
             'Failed to load client wallets summary. Please try again.'
@@ -214,7 +199,6 @@ export class WalletService {
    * Clear recent transaction
    */
   clearRecentTransaction(): void {
-    console.log('WalletService: Clearing recent transaction');
     this._recentTransaction.set(null);
   }
 
@@ -222,7 +206,6 @@ export class WalletService {
    * Clear trading accounts
    */
   clearTradingAccounts(): void {
-    console.log('WalletService: Clearing trading accounts');
     this._tradingAccounts.set([]);
   }
 
@@ -230,19 +213,32 @@ export class WalletService {
    * Format currency for display
    */
   formatCurrency(amount: number, currency: string = 'USD'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+    // Handle non-standard currencies like USDT, BTC, ETH, etc.
+    const cryptoCurrencies = ['USDT', 'BTC', 'ETH', 'ADA', 'DOT', 'SOL', 'AVAX', 'MATIC', 'LINK', 'UNI'];
+    
+    if (cryptoCurrencies.includes(currency)) {
+      return `${amount.toFixed(2)} ${currency}`;
+    }
+    
+    // For standard currencies, use Intl.NumberFormat
+    try {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    } catch (error) {
+      // Fallback for any currency that might cause issues
+      return `${amount.toFixed(2)} ${currency}`;
+    }
   }
 
   /**
    * Get supported currencies
    */
   getSupportedCurrencies(): string[] {
-    return ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'JPY', 'AUD', 'CAD'];
+    return ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'JPY', 'AUD', 'CAD', ];
   }
 
   /**

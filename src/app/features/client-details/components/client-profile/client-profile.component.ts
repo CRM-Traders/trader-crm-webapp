@@ -15,6 +15,11 @@ import { Profile } from '../../models/profile';
 import { CountryService } from '../../../../core/services/country.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { Country } from '../../../../core/models/country.model';
+import { ModalService } from '../../../../shared/services/modals/modal.service';
+import {
+  PasswordChangeComponent,
+  PasswordChangeData,
+} from '../../../../shared/components/password-change/password-change.component';
 
 @Component({
   selector: 'app-client-profile',
@@ -45,27 +50,50 @@ import { Country } from '../../../../core/models/country.model';
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
               Personal Information
             </h3>
-            <button
-              type="button"
-              *ngIf="!isEditingPersonal"
-              (click)="startEditPersonal()"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
-              <svg
-                class="w-4 h-4 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div class="flex space-x-3">
+              <button
+                type="button"
+                *ngIf="!isEditingPersonal"
+                (click)="openPasswordChangeModal()"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                ></path>
-              </svg>
-              Edit
-            </button>
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  ></path>
+                </svg>
+                Change Password
+              </button>
+              <button
+                type="button"
+                *ngIf="!isEditingPersonal"
+                (click)="startEditPersonal()"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  ></path>
+                </svg>
+                Edit
+              </button>
+            </div>
           </div>
 
           <form [formGroup]="personalForm" class="space-y-6">
@@ -281,6 +309,7 @@ export class ClientProfileComponent implements OnInit {
   private userService = inject(UsersService);
   private countryService = inject(CountryService);
   private languageService = inject(LanguageService);
+  private modalService = inject(ModalService);
 
   personalForm: FormGroup;
   isEditingPersonal = false;
@@ -310,7 +339,6 @@ export class ClientProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('ClientProfileComponent initialized with clientId:', this.client);
     if (this.client.id) {
       this.loadClientData();
     }
@@ -417,5 +445,35 @@ export class ClientProfileComponent implements OnInit {
           this.alertService.error('Failed to update client information');
         }
       });
+  }
+
+  openPasswordChangeModal(): void {
+    const passwordChangeData: PasswordChangeData = {
+      entityId: this.client.id,
+      entityType: 'client',
+      entityName: `${this.client.firstName} ${this.client.lastName}`,
+    };
+
+    const modalRef = this.modalService.open(
+      PasswordChangeComponent,
+      {
+        size: 'md',
+        centered: true,
+        closable: true,
+      },
+      passwordChangeData
+    );
+
+    modalRef.result.then(
+      (result) => {
+        // Handle successful password change
+        if (result) {
+          this.alertService.success('Password changed successfully');
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
   }
 }

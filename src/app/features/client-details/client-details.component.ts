@@ -32,6 +32,8 @@ import { NoteCreationModalComponent } from './components/client-notes/components
 import { UsersService } from './services/user.service';
 import { ClientCommentsService } from './services/client-comments.service';
 import { ClientComment } from './models/client-comment.model';
+import { ClientsService } from '../clients/services/clients.service';
+import { AssignOperatorModalComponent } from '../clients/components/assign-operator-modal/assign-operator-modal.component';
 
 export enum ClientDetailSection {
   Profile = 'profile',
@@ -88,6 +90,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   private _userService = inject(UsersService);
   private notesService = inject(NotesService);
   private clientCommentsService = inject(ClientCommentsService);
+  private clientsService = inject(ClientsService);
 
   private destroy$ = new Subject<void>();
 
@@ -167,8 +170,6 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
         balance: 0, // Not provided in API response, defaulting to 0
       };
 
-      console.log('Client loaded:', this.client, result);
-      // Load pinned notes and comments after client is loaded
       this.loadPinnedNotes();
       this.loadClientComments();
     });
@@ -446,5 +447,46 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/clients']);
+  }
+
+  onAutoLogin(): void {
+    this.clientsService.autoLogin(this.client.id).subscribe((result: any) => {
+      window.open(`http://${result}`, '_blank');
+    });
+  }
+
+  assignToOperator(): void {
+    // Check if client has investments (if that should prevent assignment)
+    if (this.client.hasInvestments) {
+      console.log('Client has investments');
+    }
+
+    // Open the assignment modal
+    const modalRef = this.modalService.open(
+      AssignOperatorModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        selectedClients: [this.client],
+        userType: 1,
+      }
+    );
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          // Assignment was successful, refresh the data
+          this.refreshData();
+          this.alertService.success('Client assigned to operator successfully');
+        }
+      },
+      () => {
+        // Modal was dismissed/cancelled - no action needed
+        console.log('Assignment modal was cancelled');
+      }
+    );
   }
 }
