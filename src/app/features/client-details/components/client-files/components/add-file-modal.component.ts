@@ -152,6 +152,32 @@ export interface FileUploadData {
 
             <!-- Form Fields -->
             <div class="grid grid-cols-1 gap-4">
+              <!-- File Type Selection -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  File Type
+                </label>
+                <select
+                  formControlName="fileType"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                >
+                  <option [value]="FileType.IdFront">ID Front</option>
+                  <option [value]="FileType.IdBack">ID Back</option>
+                  <option [value]="FileType.PassportMain">Passport Main</option>
+                  <option [value]="FileType.FacePhoto">Face Photo</option>
+                  <option [value]="FileType.Document">Document</option>
+                  <option [value]="FileType.Image">Image</option>
+                  <option [value]="FileType.Contract">Contract</option>
+                  <option [value]="FileType.Invoice">Invoice</option>
+                  <option [value]="FileType.Report">Report</option>
+                  <option [value]="FileType.Presentation">Presentation</option>
+                  <option [value]="FileType.Archive">Archive</option>
+                  <option [value]="FileType.Video">Video</option>
+                  <option [value]="FileType.Audio">Audio</option>
+                  <option [value]="FileType.Other">Other</option>
+                </select>
+              </div>
+
               <!-- Description -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -254,6 +280,9 @@ export class AddFileModalComponent implements OnInit, OnChanges {
   @Output() closeEvent = new EventEmitter<void>();
   @Output() uploadSuccess = new EventEmitter<UploadFileResponse[]>();
 
+  // Make FileType enum available in template
+  FileType = FileType;
+
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
   private filesService = inject(FilesService);
@@ -265,7 +294,7 @@ export class AddFileModalComponent implements OnInit, OnChanges {
 
   constructor() {
     this.uploadForm = this.fb.group({
-      fileType: [99], // Always set to "Other" (99)
+      fileType: [FileType.Other], // Default to "Other"
       makePermanent: [true],
       description: [''],
       reference: [''],
@@ -279,14 +308,11 @@ export class AddFileModalComponent implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    // Update ownerId when clientId is available and set fileType to "Other"
+    // Update ownerId when clientId is available
     if (this.clientId) {
       this.uploadForm.patchValue({ 
-        ownerId: this.clientId,
-        fileType: 99 // Always set to "Other"
+        ownerId: this.clientId
       });
-    } else {
-      this.uploadForm.patchValue({ fileType: 99 }); // Always set to "Other"
     }
     console.log('ngOnInit - clientId:', this.clientId);
   }
@@ -295,8 +321,7 @@ export class AddFileModalComponent implements OnInit, OnChanges {
     // Handle changes to clientId input
     if (changes['clientId'] && changes['clientId'].currentValue) {
       this.uploadForm.patchValue({ 
-        ownerId: changes['clientId'].currentValue,
-        fileType: 99 // Always set to "Other"
+        ownerId: changes['clientId'].currentValue
       });
       console.log('ngOnChanges - clientId updated:', changes['clientId'].currentValue);
     }
@@ -307,13 +332,11 @@ export class AddFileModalComponent implements OnInit, OnChanges {
       // Ensure clientId is set when modal opens
       if (this.clientId) {
         this.uploadForm.patchValue({ 
-          ownerId: this.clientId,
-          fileType: 99 // Always set to "Other"
+          ownerId: this.clientId
         });
         console.log('Modal opened - clientId set:', this.clientId);
       } else {
         console.warn('Modal opened but clientId is not available');
-        this.uploadForm.patchValue({ fileType: 99 }); // Always set to "Other"
       }
     }
   }
@@ -324,8 +347,7 @@ export class AddFileModalComponent implements OnInit, OnChanges {
   private refreshClientId(): void {
     if (this.clientId) {
       this.uploadForm.patchValue({ 
-        ownerId: this.clientId,
-        fileType: 99 // Always set to "Other"
+        ownerId: this.clientId
       });
       console.log('Client ID refreshed:', this.clientId);
     }
@@ -515,7 +537,7 @@ export class AddFileModalComponent implements OnInit, OnChanges {
       // Create a simple test to see if the issue is with the file or the API
       const testFormDataObj = new FormData();
       testFormDataObj.append('file', testFile);
-      testFormDataObj.append('fileType', '99');
+      testFormDataObj.append('fileType', testFormData.fileType?.toString() || '99');
       testFormDataObj.append('ownerId', this.clientId || '');
       testFormDataObj.append('makePermanent', 'true');
       testFormDataObj.append('description', testFormData.description || '');
@@ -596,18 +618,8 @@ export class AddFileModalComponent implements OnInit, OnChanges {
       isUndefined: formData.fileType === undefined
     });
 
-    // Ensure we always have a valid fileType
-    let fileType: number;
-    if (formData.fileType && formData.fileType !== null && formData.fileType !== undefined) {
-      fileType = Number(formData.fileType);
-    } else {
-      fileType = this.getFileTypeFromFile(file);
-    }
-    
-    // Fallback to "Other" if still invalid
-    if (!fileType || isNaN(fileType)) {
-      fileType = 99; // FileType.Other
-    }
+    // Use the file type from the form
+    const fileType = formData.fileType || FileType.Other;
     
     const metadata = {
       description: formData.description || '',
@@ -674,7 +686,7 @@ export class AddFileModalComponent implements OnInit, OnChanges {
     
     // Reset form with proper initial values
     this.uploadForm.reset({
-      fileType: 99, // Always set to "Other"
+      fileType: FileType.Other, // Default to "Other"
       makePermanent: true,
       description: '',
       reference: '',

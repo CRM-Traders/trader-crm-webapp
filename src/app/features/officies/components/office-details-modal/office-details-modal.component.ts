@@ -141,6 +141,29 @@ import { Country } from '../../../../core/models/country.model';
                 </span>
               </div>
 
+              <!-- Source -->
+              <div>
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Source
+                </label>
+                <div *ngIf="isEditing">
+                  <input
+                    type="text"
+                    formControlName="source"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Enter source (optional)"
+                  />
+                </div>
+                <span
+                  *ngIf="!isEditing"
+                  class="text-sm text-gray-900 dark:text-white"
+                >
+                  {{ office.source || 'Not specified' }}
+                </span>
+              </div>
+
               <!-- Created Information -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -293,6 +316,7 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
         ],
       ],
       isActive: [true],
+      source: [''],
     });
   }
 
@@ -304,6 +328,7 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
       this.editForm.patchValue({
         name: this.office.name,
         isActive: this.office.isActive,
+        source: this.office.source || '',
       });
     }
   }
@@ -440,6 +465,7 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
         name: this.office.name,
         country: this.office.country,
         isActive: this.office.isActive,
+        source: this.office.source || '',
       });
     }
   }
@@ -453,6 +479,7 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
       country: this.editForm.value.country,
       brandId: this.editForm.value.brandId,
       isActive: this.editForm.value.isActive,
+      source: this.editForm.value.source?.trim() || undefined,
     };
 
     this.loading = true;
@@ -475,6 +502,7 @@ export class OfficeDetailsModalComponent implements OnInit, OnDestroy {
           ...this.office,
           name: this.editForm.value.name.trim(),
           country: this.editForm.value.country,
+          source: this.editForm.value.source?.trim() || undefined,
           isActive: this.editForm.value.isActive,
           lastModifiedAt: new Date(),
         };

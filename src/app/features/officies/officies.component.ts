@@ -65,6 +65,13 @@ export class OfficesComponent implements OnInit, OnDestroy {
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
     {
+      field: 'source',
+      header: 'Source',
+      sortable: true,
+      filterable: true,
+      selector: (row: Office) => row.source || 'Not specified',
+    },
+    {
       field: 'isActive',
       header: 'Status',
       sortable: true,

@@ -95,6 +95,26 @@ import { Country } from '../../../../core/models/country.model';
             </p>
           </div>
 
+          <!-- Source -->
+          <div>
+            <label
+              for="source"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Source
+            </label>
+            <input
+              type="text"
+              id="source"
+              formControlName="source"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              placeholder="Enter source (optional)"
+            />
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Optional field to track the source of this office
+            </p>
+          </div>
+
           <!-- Is Active Checkbox -->
           <div>
             <div class="flex items-center">
@@ -203,6 +223,7 @@ export class OfficeCreationModalComponent implements OnInit, OnDestroy {
         ],
       ],
       isActive: [true],
+      source: [''],
     });
   }
 
@@ -351,6 +372,7 @@ export class OfficeCreationModalComponent implements OnInit, OnDestroy {
       name: formValue.name.trim(),
       country: formValue.country,
       isActive: formValue.isActive,
+      source: formValue.source?.trim() || undefined,
     };
 
     this.officesService
