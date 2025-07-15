@@ -33,6 +33,7 @@ export interface Client {
   balance: number;
   lastComment?: LastComment | null;
   isOnline?: boolean;
+  clientOperator?: ClientOperator | null;
 }
 
 export interface LastComment {
@@ -44,6 +45,12 @@ export interface LastComment {
   createdAt: Date;
   createdBy: string;
   createdById: string;
+}
+
+export interface ClientOperator {
+  operatorId: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface ClientCreateRequest {
