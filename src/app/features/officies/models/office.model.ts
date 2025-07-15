@@ -2,6 +2,7 @@ export interface Office {
   id: string;
   name: string;
   country?: string;
+  source?: string;
   // brandId: string;
   // brandName: string;
   isActive: boolean;
@@ -16,6 +17,7 @@ export interface OfficeCreateRequest {
   name: string;
   country: string;
   isActive?: boolean;
+  source?: string;
 }
 
 export interface OfficeUpdateRequest {
@@ -24,6 +26,7 @@ export interface OfficeUpdateRequest {
   country: string;
   brandId: string;
   isActive: boolean;
+  source?: string;
 }
 
 export interface OfficesListRequest {

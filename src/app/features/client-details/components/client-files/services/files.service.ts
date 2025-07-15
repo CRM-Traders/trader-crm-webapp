@@ -64,9 +64,10 @@ export enum FileType {
 }
 
 export enum FileStatus {
-  Temporary = 0,
-  Permanent = 1,
-  Deleted = 2
+  Temporary = 1,
+  Permanent = 2,
+  Processing = 3,
+  Deleted = 4
 }
 
 @Injectable({
