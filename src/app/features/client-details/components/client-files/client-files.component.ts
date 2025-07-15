@@ -28,8 +28,8 @@ interface ClientFile {
   uploadedBy?: string;
   uploadDate?: Date;
   kycNote?: string;
-  isKycDocument?: boolean;
-  displayStatus?: 'approved' | 'pending' | 'rejected';
+  isKycDocument?: boolean;  
+  displayStatus?: 'temporary' | 'permanent' | 'processing' | 'deleted';
   fileCategory?: string;
 }
 
@@ -423,11 +423,13 @@ interface ClientFile {
                       class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                       [ngClass]="{
                         'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                          getDisplayStatus(file) === 'approved',
+                          getDisplayStatus(file) === 'permanent',
                         'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
-                          getDisplayStatus(file) === 'pending',
+                          getDisplayStatus(file) === 'processing',
                         'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                          getDisplayStatus(file) === 'rejected'
+                          getDisplayStatus(file) === 'temporary',
+                        'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200':
+                          getDisplayStatus(file) === 'deleted'
                       }"
                     >
                       {{ getDisplayStatus(file) | titlecase }}
@@ -717,16 +719,18 @@ export class ClientFilesComponent implements OnInit {
   /**
    * Map FileStatus enum to display status
    */
-  private mapFileStatusToDisplayStatus(status: FileStatus): 'approved' | 'pending' | 'rejected' {
+  private mapFileStatusToDisplayStatus(status: FileStatus): 'temporary' | 'permanent' | 'processing' | 'deleted' {
     switch (status) {
-      case FileStatus.Permanent: // 1
-        return 'approved';
-      case FileStatus.Temporary: // 0
-        return 'pending';
-      case FileStatus.Deleted: // 2
-        return 'rejected';
+      case FileStatus.Temporary: // 1
+        return 'temporary';
+      case FileStatus.Permanent: // 2
+        return 'permanent';
+      case FileStatus.Processing: // 3
+        return 'processing';
+      case FileStatus.Deleted: // 4
+        return 'deleted';
       default:
-        return 'pending';
+        return 'processing';
     }
   }
 
@@ -826,12 +830,12 @@ export class ClientFilesComponent implements OnInit {
 
   getApprovedKycCount(): number {
     return this.files.filter(
-      (file) => file.isKycDocument && file.displayStatus === 'approved'
+      (file) => file.isKycDocument && file.displayStatus === 'permanent'
     ).length;
   }
 
   getPendingFilesCount(): number {
-    return this.files.filter((file) => file.displayStatus === 'pending').length;
+    return this.files.filter((file) => file.displayStatus === 'processing').length;
   }
 
   getImageFilesCount(): number {
@@ -995,7 +999,7 @@ export class ClientFilesComponent implements OnInit {
       )
       .subscribe(response => {
         if (response?.success) {
-          file.displayStatus = 'approved';
+          file.displayStatus = 'permanent';
           file.status = FileStatus.Permanent;
           this.alertService.success(`KYC document ${file.fileName} approved`);
           this.loadClientFiles(); // Reload to get updated data
