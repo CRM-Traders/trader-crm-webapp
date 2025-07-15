@@ -55,6 +55,7 @@ import { TeamsService } from '../teams/services/teams.service';
 import { DesksService } from '../desks/services/desks.service';
 import { OfficeRulesService } from '../officies/services/office-rules.service';
 import { AssignOperatorModalComponent } from './components/assign-operator-modal/assign-operator-modal.component';
+import { OperatorDetailsModalComponent } from '../operators/components/operator-details-modal/operator-details-modal.component';
 
 interface InlineCommentState {
   clientId: string;
@@ -99,6 +100,8 @@ export class ClientsComponent implements OnInit {
   autoLoginCellTemplate!: TemplateRef<any>;
   @ViewChild('latestCommentCell', { static: true })
   latestCommentCellTemplate!: TemplateRef<any>;
+  @ViewChild('clientOperatorCell', { static: true })
+  clientOperatorCellTemplate!: TemplateRef<any>;
 
   updatingSalesStatus: string | null = null;
 
@@ -278,6 +281,14 @@ export class ClientsComponent implements OnInit {
       filterType: 'select',
       filterOptions: [], // Will be populated in ngOnInit
       hidden: true,
+    },
+    {
+      field: 'clientOperator',
+      header: 'Assigned Operator',
+      sortable: false,
+      filterable: false,
+      cellTemplate: null, // Will be set in ngOnInit
+      selector: (row: Client) => row.clientOperator || null,
     },
     {
       field: 'affiliateName',
@@ -779,6 +790,13 @@ export class ClientsComponent implements OnInit {
     if (latestCommentColumn) {
       latestCommentColumn.cellTemplate = this.latestCommentCellTemplate;
     }
+
+    const clientOperatorColumn = this.gridColumns.find(
+      (col) => col.field === 'clientOperator'
+    );
+    if (clientOperatorColumn) {
+      clientOperatorColumn.cellTemplate = this.clientOperatorCellTemplate;
+    }
   }
 
   private loadClientStatistics() {
@@ -919,6 +937,31 @@ export class ClientsComponent implements OnInit {
         if (result) {
           this.alertService.success('Password changed successfully');
         }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  openOperatorDetailsModal(clientOperator: any): void {
+    const modalRef = this.modalService.open(
+      OperatorDetailsModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        operatorId: clientOperator.operatorId,
+        firstName: clientOperator.firstName,
+        lastName: clientOperator.lastName,
+      }
+    );
+
+    modalRef.result.then(
+      (result) => {
+        // Handle modal result if needed
       },
       () => {
         // Modal dismissed

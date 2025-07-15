@@ -345,6 +345,35 @@
                 </div>
               </div>
             </ng-template>
+
+            <!-- Client Operator Cell Template -->
+            <ng-template #clientOperatorCell let-value="value" let-row="row">
+              <div *ngIf="value && value.operatorId; else noOperator">
+                <button
+                  class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                  (click)="openOperatorDetailsModal(value)"
+                  title="View operator details"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  {{ value.firstName }} {{ value.lastName }}
+                </button>
+              </div>
+              <ng-template #noOperator>
+                <span class="text-gray-400 text-sm">No operator assigned</span>
+              </ng-template>
+            </ng-template>
           </app-grid>
         </div>
       </div>
