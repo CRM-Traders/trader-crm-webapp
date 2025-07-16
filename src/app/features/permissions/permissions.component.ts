@@ -66,7 +66,7 @@ export class PermissionsComponent implements OnInit {
       role = '';
     }
 
-    this._service.allPermissions(role).subscribe((result) => {
+    this._service.allPermissions(this.operatorId).subscribe((result) => {
       this.permissionSections = result;
     });
   }
