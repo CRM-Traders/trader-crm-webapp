@@ -19,7 +19,6 @@ import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
-import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 
 @Component({
   selector: 'app-affiliates',
@@ -360,20 +359,5 @@ export class AffiliatesComponent implements OnInit {
       detail: { gridId: this.gridId },
     });
     window.dispatchEvent(event);
-  }
-
-  openPermissionDialog(user: any) {
-    this.modalService.open(
-      PermissionTableComponent,
-      {
-        size: 'xl',
-        centered: true,
-        closable: true,
-        customClass: 'max-h-screen',
-      },
-      {
-        userId: user.id,
-      }
-    );
   }
 }

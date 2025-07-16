@@ -56,18 +56,9 @@ export class PermissionsComponent implements OnInit {
     this.loading = true;
     const role = this.activeRole === 'All' ? '' : this.activeRole;
 
-    forkJoin({
-      allPermissions: this._service.allPermissions(role),
-      userPermissions: this._service.userPermissions(this.operatorId),
-    })
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe({
-        next: ({ allPermissions, userPermissions }) => {
-          this.permissionSections = allPermissions;
-          this.selectedPermissions = userPermissions;
-        },
-        error: (error) => {},
-      });
+    this._service.allPermissions(role).subscribe((result) => {
+      this.permissionSections = result;
+    });
   }
 
   fetchPermissions(role: string): void {

@@ -34,7 +34,6 @@ import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
-import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { Router } from '@angular/router';
 import { OperatorRegistrationModalComponent } from './components/operator-registration-modal/operator-registration-modal.component';
 
@@ -155,12 +154,6 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       icon: 'view',
       action: (item: Operator) => this.openOperatorDetailsModal(item),
     },
-    // {
-    //   id: 'edit',
-    //   label: 'Edit',
-    //   icon: 'edit',
-    //   action: (item: Operator) => this.openOperatorDetailsModal(item),
-    // },
     {
       id: 'password',
       label: 'Change Password',
@@ -170,7 +163,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
     {
       id: 'permissions',
       label: 'Permissions',
-      icon: 'permissions',
+      icon: 'permission',
       action: (item: Operator) => this.navigateToPermissions(item),
     },
   ];
@@ -368,21 +361,6 @@ export class OperatorsComponent implements OnInit, OnDestroy {
     if (gridComponent) {
       (gridComponent as any).refresh?.();
     }
-  }
-
-  openPermissionDialog(user: any): void {
-    this.modalService.open(
-      PermissionTableComponent,
-      {
-        size: 'xl',
-        centered: true,
-        closable: true,
-        customClass: 'max-h-screen',
-      },
-      {
-        userId: user.userId,
-      }
-    );
   }
 
   navigateToPermissions(operator: Operator): void {
