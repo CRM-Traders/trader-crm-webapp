@@ -225,7 +225,6 @@ export class BrandSelectionComponent implements OnInit {
   readonly selectedBrandId = signal<string>('');
 
   ngOnInit(): void {
-    // Check if user is authenticated
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/auth/login']);
       return;
@@ -289,7 +288,7 @@ export class BrandSelectionComponent implements OnInit {
           }
 
           // Navigate to dashboard
-          this.router.navigate(['/']);
+          this.router.navigate(['']);
         }
       });
   }

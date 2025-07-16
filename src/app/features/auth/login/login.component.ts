@@ -47,8 +47,7 @@ export class LoginComponent {
   userId: string | null = null;
 
   ngOnInit(): void {
-    this.returnUrl =
-      this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '';
     this.sessionExpired =
       this.route.snapshot.queryParams['sessionExpired'] === 'true';
   }
