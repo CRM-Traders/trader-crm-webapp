@@ -33,7 +33,10 @@ import {
   OfficeDropdownItem,
   OfficeDropdownRequest,
 } from '../../models/desk.model';
-import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/brand.model';
+import {
+  BrandDropdownItem,
+  BrandDropdownRequest,
+} from '../../../brands/models/brand.model';
 
 @Component({
   selector: 'app-desk-creation-modal',
@@ -155,9 +158,7 @@ import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/
                 >
                   <div class="flex justify-between items-center">
                     <span>{{ brand.value }}</span>
-                    <span class="text-xs text-gray-500">{{
-                      brand.value
-                    }}</span>
+                    <span class="text-xs text-gray-500">{{ brand.value }}</span>
                   </div>
                 </div>
 
@@ -211,15 +212,15 @@ import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/
             </p>
           </div>
 
-                    <!-- Language Selection -->
-                    <div class="relative" data-dropdown="language">
+          <!-- Language Selection -->
+          <div class="relative" data-dropdown="language">
             <label
               for="language"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Language
             </label>
-            
+
             <!-- Custom Dropdown Button -->
             <button
               type="button"
@@ -285,7 +286,7 @@ import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/
                 </div>
               </div>
             </div>
-            
+
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Optional: Select a language for this desk
             </p>
@@ -299,7 +300,7 @@ import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/
             >
               Desk Type
             </label>
-            
+
             <!-- Custom Dropdown Button -->
             <button
               type="button"
@@ -339,13 +340,11 @@ import { BrandDropdownItem, BrandDropdownRequest } from '../../../brands/models/
                 </div>
               </div>
             </div>
-            
+
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Select the type of desk to create
             </p>
           </div>
-
-
 
           <!-- Is Active Checkbox -->
           <div>
@@ -529,7 +528,6 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading brands:', error);
           this.alertService.error('Failed to load brands');
           return of({
             items: [],
@@ -591,7 +589,7 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
     if (this.deskTypeDropdownOpen) {
       this.deskTypeDropdownOpen = false;
     }
-    
+
     // Toggle brand dropdown
     this.brandDropdownOpen = !this.brandDropdownOpen;
   }
@@ -600,12 +598,12 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    
+
     // Check if click is inside dropdown containers
     const brandDropdown = target.closest('[data-dropdown="brand"]');
     const languageDropdown = target.closest('[data-dropdown="language"]');
     const deskTypeDropdown = target.closest('[data-dropdown="deskType"]');
-    
+
     // Close dropdowns if click is outside
     if (!brandDropdown) {
       this.brandDropdownOpen = false;
@@ -627,7 +625,7 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
     if (this.deskTypeDropdownOpen) {
       this.deskTypeDropdownOpen = false;
     }
-    
+
     // Toggle language dropdown
     this.languageDropdownOpen = !this.languageDropdownOpen;
   }
@@ -635,8 +633,8 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
   onLanguageSearch(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.languageSearchTerm = target.value.toLowerCase();
-    
-    this.filteredLanguages = this.availableLanguages.filter(lang =>
+
+    this.filteredLanguages = this.availableLanguages.filter((lang) =>
       lang.value.toLowerCase().includes(this.languageSearchTerm)
     );
   }
@@ -657,7 +655,9 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
     if (!selectedLanguageKey) {
       return 'No specific language';
     }
-    const selectedLanguage = this.availableLanguages.find(lang => lang.key === selectedLanguageKey);
+    const selectedLanguage = this.availableLanguages.find(
+      (lang) => lang.key === selectedLanguageKey
+    );
     return selectedLanguage ? selectedLanguage.value : 'Select a language...';
   }
 
@@ -670,7 +670,7 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
     if (this.languageDropdownOpen) {
       this.languageDropdownOpen = false;
     }
-    
+
     // Toggle desk type dropdown
     this.deskTypeDropdownOpen = !this.deskTypeDropdownOpen;
   }
@@ -682,7 +682,9 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
 
   getSelectedDeskTypeName(): string {
     const selectedTypeValue = this.deskForm.get('type')?.value;
-    const selectedType = this.deskTypes.find(type => type.value === selectedTypeValue);
+    const selectedType = this.deskTypes.find(
+      (type) => type.value === selectedTypeValue
+    );
     return selectedType ? selectedType.label : 'Select a desk type...';
   }
 

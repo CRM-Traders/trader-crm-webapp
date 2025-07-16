@@ -1,6 +1,13 @@
 // src/app/features/leads/components/lead-details-modal/lead-details-modal.component.ts
 
-import { Component, inject, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnInit,
+  OnDestroy,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -15,7 +22,13 @@ import { LanguageService } from '../../../../core/services/language.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import { Country } from '../../../../core/models/country.model';
 import { LeadsService } from '../../services/leads.service';
-import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors } from '../../models/leads.model';
+import {
+  Lead,
+  LeadUpdateRequest,
+  LeadStatus,
+  LeadStatusLabels,
+  LeadStatusColors,
+} from '../../models/leads.model';
 
 @Component({
   selector: 'app-lead-details-modal',
@@ -35,7 +48,10 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="leadLoading" class="px-6 py-8 flex items-center justify-center">
+      <div
+        *ngIf="leadLoading"
+        class="px-6 py-8 flex items-center justify-center"
+      >
         <div class="text-center">
           <svg
             class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4"
@@ -71,10 +87,14 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
             <form [formGroup]="editForm" class="space-y-4">
               <!-- Lead ID (Read-only) -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   ID
                 </label>
-                <span class="text-sm text-gray-900 dark:text-white font-mono bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-md block">
+                <span
+                  class="text-sm text-gray-900 dark:text-white font-mono bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-md block"
+                >
                   {{ lead?.id }}
                 </span>
               </div>
@@ -82,7 +102,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
               <!-- Name Row -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     First Name
                   </label>
                   <div *ngIf="isEditing">
@@ -106,7 +128,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Last Name
                   </label>
                   <div *ngIf="isEditing">
@@ -133,7 +157,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
               <!-- Email and Phone Row -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Email
                   </label>
                   <div *ngIf="isEditing">
@@ -148,7 +174,10 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       "
                     />
                   </div>
-                  <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white">
+                  <span
+                    *ngIf="!isEditing"
+                    class="text-sm text-gray-900 dark:text-white"
+                  >
                     <a
                       [href]="'mailto:' + lead?.email"
                       class="text-blue-600 hover:text-blue-800 hover:underline"
@@ -159,7 +188,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Phone
                   </label>
                   <div *ngIf="isEditing">
@@ -174,7 +205,10 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       "
                     />
                   </div>
-                  <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white">
+                  <span
+                    *ngIf="!isEditing"
+                    class="text-sm text-gray-900 dark:text-white"
+                  >
                     <a
                       *ngIf="lead?.telephone"
                       [href]="'tel:' + lead?.telephone"
@@ -182,10 +216,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                     >
                       {{ lead?.telephone }}
                     </a>
-                    <span
-                      *ngIf="!lead?.telephone"
-                      class="text-gray-400"
-                    >-</span>
+                    <span *ngIf="!lead?.telephone" class="text-gray-400"
+                      >-</span
+                    >
                   </span>
                 </div>
               </div>
@@ -194,7 +227,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Country Selection -->
                 <div class="relative" data-dropdown="country">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Country
                   </label>
                   <div *ngIf="isEditing">
@@ -204,7 +239,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
                       (click)="toggleCountryDropdown()"
                     >
-                      <span class="truncate">{{ getSelectedCountryName() }}</span>
+                      <span class="truncate">{{
+                        getSelectedCountryName()
+                      }}</span>
                       <svg
                         class="w-4 h-4 ml-2 transition-transform"
                         [class.rotate-180]="countryDropdownOpen"
@@ -227,7 +264,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                     >
                       <!-- Search Input -->
-                      <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                      <div
+                        class="p-3 border-b border-gray-200 dark:border-gray-700"
+                      >
                         <input
                           #countrySearchInput
                           type="text"
@@ -258,14 +297,19 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       </div>
                     </div>
                   </div>
-                  <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white">
-                    {{ getCountryNameByCode(lead?.country || null) || "-" }}
+                  <span
+                    *ngIf="!isEditing"
+                    class="text-sm text-gray-900 dark:text-white"
+                  >
+                    {{ getCountryNameByCode(lead?.country || null) || '-' }}
                   </span>
                 </div>
 
                 <!-- Language Selection -->
                 <div class="relative" data-dropdown="language">
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Language
                   </label>
                   <div *ngIf="isEditing">
@@ -275,7 +319,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
                       (click)="toggleLanguageDropdown()"
                     >
-                      <span class="truncate">{{ getSelectedLanguageName() }}</span>
+                      <span class="truncate">{{
+                        getSelectedLanguageName()
+                      }}</span>
                       <svg
                         class="w-4 h-4 ml-2 transition-transform"
                         [class.rotate-180]="languageDropdownOpen"
@@ -298,7 +344,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                     >
                       <!-- Search Input -->
-                      <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                      <div
+                        class="p-3 border-b border-gray-200 dark:border-gray-700"
+                      >
                         <input
                           #languageSearchInput
                           type="text"
@@ -329,15 +377,20 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                       </div>
                     </div>
                   </div>
-                  <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white">
-                    {{ getLanguageNameByKey(lead?.language || null) || "-" }}
+                  <span
+                    *ngIf="!isEditing"
+                    class="text-sm text-gray-900 dark:text-white"
+                  >
+                    {{ getLanguageNameByKey(lead?.language || null) || '-' }}
                   </span>
                 </div>
               </div>
 
               <!-- Date of Birth -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Date of Birth
                 </label>
                 <div *ngIf="isEditing">
@@ -347,11 +400,14 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
-                <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white">
+                <span
+                  *ngIf="!isEditing"
+                  class="text-sm text-gray-900 dark:text-white"
+                >
                   {{
                     lead?.dateOfBirth
-                      ? (lead?.dateOfBirth | date : "MMMM d, y")
-                      : "-"
+                      ? (lead?.dateOfBirth | date : 'MMMM d, y')
+                      : '-'
                   }}
                 </span>
               </div>
@@ -363,12 +419,16 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <!-- Status -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Status
                 </label>
                 <span
                   class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
-                  [ngClass]="LeadStatusColors[lead?.status || LeadStatus.Inactive]"
+                  [ngClass]="
+                    LeadStatusColors[lead?.status || LeadStatus.Inactive]
+                  "
                 >
                   <span
                     class="w-2 h-2 rounded-full mr-2"
@@ -385,17 +445,21 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
 
               <!-- Affiliate -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Affiliate
                 </label>
                 <span class="text-sm text-gray-900 dark:text-white">
-                  {{ lead?.affiliateName || "-" }}
+                  {{ lead?.affiliateName || '-' }}
                 </span>
               </div>
 
               <!-- Flags -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Flags
                 </label>
                 <div class="flex flex-wrap gap-1">
@@ -436,25 +500,24 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
             <div class="space-y-3">
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Registration Date
                 </label>
                 <span class="text-sm text-gray-600 dark:text-gray-400">
-                  {{
-                    lead?.registrationDate
-                      | date : "MMMM d, y 'at' h:mm a"
-                  }}
+                  {{ lead?.registrationDate | date : "MMMM d, y 'at' h:mm a" }}
                 </span>
               </div>
 
               <div *ngIf="lead?.lastLogin">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
                   Last Login
                 </label>
                 <span class="text-sm text-gray-600 dark:text-gray-400">
-                  {{
-                    lead?.lastLogin | date : "MMMM d, y 'at' h:mm a"
-                  }}
+                  {{ lead?.lastLogin | date : "MMMM d, y 'at' h:mm a" }}
                 </span>
               </div>
             </div>
@@ -463,7 +526,9 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
       </div>
 
       <!-- Modal Footer -->
-      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      <div
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700"
+      >
         <div class="flex gap-3">
           <button
             *ngIf="!isEditing"
@@ -531,7 +596,7 @@ import { Lead, LeadUpdateRequest, LeadStatus, LeadStatusLabels, LeadStatusColors
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            {{ loading ? "Saving..." : "Save Changes" }}
+            {{ loading ? 'Saving...' : 'Save Changes' }}
           </button>
 
           <button
@@ -626,7 +691,6 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading lead data:', error);
           this.alertService.error('Failed to load lead data');
           return of(null);
         }),
@@ -650,15 +714,21 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
       telephone: this.lead.telephone || '',
       country: this.lead.country || '',
       language: this.lead.language || '',
-      dateOfBirth: this.lead.dateOfBirth ? this.lead.dateOfBirth.split('T')[0] : '',
+      dateOfBirth: this.lead.dateOfBirth
+        ? this.lead.dateOfBirth.split('T')[0]
+        : '',
     });
 
     // Set selected country and language
     if (this.lead.country) {
-      this.selectedCountry = this.availableCountries.find(c => c.code === this.lead?.country) || null;
+      this.selectedCountry =
+        this.availableCountries.find((c) => c.code === this.lead?.country) ||
+        null;
     }
     if (this.lead.language) {
-      this.selectedLanguage = this.availableLanguages.find(l => l.key === this.lead?.language) || null;
+      this.selectedLanguage =
+        this.availableLanguages.find((l) => l.key === this.lead?.language) ||
+        null;
     }
   }
 
@@ -678,7 +748,7 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     const formValue = this.editForm.value;
-    
+
     const updateRequest: LeadUpdateRequest = {
       id: this.lead.id,
       firstName: formValue.firstName,
@@ -695,7 +765,6 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error updating lead:', error);
           this.alertService.error('Failed to update lead');
           return of(null);
         }),
@@ -754,7 +823,7 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
     }
     const formValue = this.editForm.get('country')?.value;
     if (formValue) {
-      const country = this.availableCountries.find(c => c.code === formValue);
+      const country = this.availableCountries.find((c) => c.code === formValue);
       return country ? country.name : formValue;
     }
     return 'Select Country';
@@ -777,7 +846,9 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLInputElement;
     this.languageSearchTerm = target.value;
     this.filteredLanguages = this.availableLanguages.filter((language) =>
-      language.value.toLowerCase().includes(this.languageSearchTerm.toLowerCase())
+      language.value
+        .toLowerCase()
+        .includes(this.languageSearchTerm.toLowerCase())
     );
   }
 
@@ -795,7 +866,7 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
     }
     const formValue = this.editForm.get('language')?.value;
     if (formValue) {
-      const language = this.availableLanguages.find(l => l.key === formValue);
+      const language = this.availableLanguages.find((l) => l.key === formValue);
       return language ? language.value : formValue;
     }
     return 'Select Language';
@@ -803,13 +874,13 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
 
   getCountryNameByCode(countryCode: string | null): string {
     if (!countryCode) return '';
-    const country = this.availableCountries.find(c => c.code === countryCode);
+    const country = this.availableCountries.find((c) => c.code === countryCode);
     return country ? country.name : countryCode;
   }
 
   getLanguageNameByKey(languageKey: string | null): string {
     if (!languageKey) return '';
-    const language = this.availableLanguages.find(l => l.key === languageKey);
+    const language = this.availableLanguages.find((l) => l.key === languageKey);
     return language ? language.value : languageKey;
   }
 
@@ -822,4 +893,4 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
       this.languageDropdownOpen = false;
     }
   }
-} 
+}

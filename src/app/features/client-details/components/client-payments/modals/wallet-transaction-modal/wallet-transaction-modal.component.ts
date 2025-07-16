@@ -1,11 +1,29 @@
-// wallet-transaction-modal.component.ts
-
-import { Component, inject, Input, OnDestroy, OnInit, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnDestroy,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { WalletService } from '../../services/wallet.service';
-import { DepositRequest, TradingAccountSummary, TransactionType, Wallet, WithdrawRequest } from '../../models/wallet.model';
+import {
+  DepositRequest,
+  TransactionType,
+  Wallet,
+  WithdrawRequest,
+} from '../../models/wallet.model';
 import { AdminTradingAccountService } from '../../../client-accounts/services/admin-trading-accounts.service';
 import { TradingAccount } from '../../../client-accounts/models/trading-account.model';
 
@@ -16,7 +34,9 @@ import { TradingAccount } from '../../../client-accounts/models/trading-account.
   templateUrl: './wallet-transaction-modal.component.html',
   styleUrls: ['./wallet-transaction-modal.component.scss'],
 })
-export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnChanges {
+export class WalletTransactionModalComponent
+  implements OnInit, OnDestroy, OnChanges
+{
   @Input() isVisible = false;
   @Input() clientId: string | null = null;
   @Input() transactionType: TransactionType = 'deposit';
@@ -30,8 +50,7 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
 
   transactionForm!: FormGroup;
   quickAmounts = [100, 500, 1000, 5000];
-  
-  // Wallet-related properties
+
   availableWallets: Wallet[] = [];
   loadingWallets = false;
 
@@ -73,16 +92,21 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
   }
 
   get loadingAccounts(): boolean {
-    return this.adminTradingAccountsService.loading() && this.tradingAccounts.length === 0;
+    return (
+      this.adminTradingAccountsService.loading() &&
+      this.tradingAccounts.length === 0
+    );
   }
 
   get selectedAccount(): TradingAccount | null {
     const selectedId = this.transactionForm?.get('tradingAccountId')?.value;
-    return this.tradingAccounts.find(account => account.id === selectedId) || null;
+    return (
+      this.tradingAccounts.find((account) => account.id === selectedId) || null
+    );
   }
 
   get availableCurrencies(): string[] {
-    return this.availableWallets.map(wallet => wallet.currency);
+    return this.availableWallets.map((wallet) => wallet.currency);
   }
 
   get hasWallets(): boolean {
@@ -96,9 +120,9 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
       amount: ['', [Validators.required, Validators.min(0.01)]],
     });
 
-    // Watch for trading account changes to load wallets
-    this.transactionForm.get('tradingAccountId')?.valueChanges
-      .pipe(takeUntil(this.destroy$))
+    this.transactionForm
+      .get('tradingAccountId')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
       .subscribe((accountId: string) => {
         if (accountId) {
           this.loadWalletsForAccount(accountId);
@@ -115,9 +139,7 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
       .getUserAccounts(this.clientId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        error: (error) => {
-          console.error('Error loading trading accounts for wallet:', error);
-        },
+        error: (error) => {},
       });
   }
 
@@ -128,7 +150,7 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
     }
 
     this.loadingWallets = true;
-    
+
     this.walletService
       .getWalletsByTradingAccount(accountId)
       .pipe(takeUntil(this.destroy$))
@@ -136,19 +158,14 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
         next: (wallets: any[]) => {
           this.availableWallets = wallets;
           this.loadingWallets = false;
-          
-          // Reset currency selection when wallets change
+
           this.transactionForm.get('currency')?.setValue('');
-          
-          // If only one currency available, auto-select it
+
           if (wallets.length === 1) {
             this.transactionForm.get('currency')?.setValue(wallets[0].currency);
           }
-          
-          console.log('Loaded wallets for account:', accountId, wallets);
         },
         error: (error: any) => {
-          console.error('Error loading wallets for account:', error);
           this.clearWalletData();
           this.loadingWallets = false;
         },
@@ -168,7 +185,7 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
       this.transactionForm.reset({
         tradingAccountId: '',
         currency: '',
-        amount: ''
+        amount: '',
       });
     }
   }
@@ -179,10 +196,11 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
     }
 
     const formValue = this.transactionForm.value;
-    const selectedWallet = this.availableWallets.find(w => w.currency === formValue.currency);
-    
+    const selectedWallet = this.availableWallets.find(
+      (w) => w.currency === formValue.currency
+    );
+
     if (!selectedWallet) {
-      console.error('Selected currency wallet not found');
       return;
     }
 
@@ -190,7 +208,7 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
       const request: DepositRequest = {
         tradingAccountId: formValue.tradingAccountId,
         currency: formValue.currency,
-        amount: parseFloat(formValue.amount)
+        amount: parseFloat(formValue.amount),
       };
 
       this.walletService
@@ -201,22 +219,17 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
             this.onSuccess.emit();
             this.onModalClose();
           },
-          error: (error) => {
-            console.error('Error processing deposit:', error);
-          },
+          error: (error) => {},
         });
     } else {
-      // For withdrawals, check if sufficient balance
       if (selectedWallet.balance < parseFloat(formValue.amount)) {
-        console.error('Insufficient balance for withdrawal');
-        // You might want to show an error message to the user
         return;
       }
 
       const request: WithdrawRequest = {
         tradingAccountId: formValue.tradingAccountId,
         currency: formValue.currency,
-        amount: parseFloat(formValue.amount)
+        amount: parseFloat(formValue.amount),
       };
 
       this.walletService
@@ -227,9 +240,7 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
             this.onSuccess.emit();
             this.onModalClose();
           },
-          error: (error) => {
-            console.error('Error processing withdrawal:', error);
-          },
+          error: (error) => {},
         });
     }
   }
@@ -241,29 +252,31 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
   getCurrencySymbol(): string {
     const currency = this.transactionForm?.get('currency')?.value;
     const symbols: { [key: string]: string } = {
-      'USD': '$',
-      'EUR': '€',
-      'GBP': '£',
-      'BTC': '₿',
-      'ETH': 'Ξ',
-      'JPY': '¥',
-      'AUD': 'A$',
-      'CAD': 'C$',
-      'ADA': '₳',
-      'DOT': '●',
-      'SOL': '◎',
-      'AVAX': '🔺',
-      'MATIC': '⬟',
-      'LINK': '🔗',
-      'UNI': '🦄',
-      'USDT': 'USDT'
+      USD: '$',
+      EUR: '€',
+      GBP: '£',
+      BTC: '₿',
+      ETH: 'Ξ',
+      JPY: '¥',
+      AUD: 'A$',
+      CAD: 'C$',
+      ADA: '₳',
+      DOT: '●',
+      SOL: '◎',
+      AVAX: '🔺',
+      MATIC: '⬟',
+      LINK: '🔗',
+      UNI: '🦄',
+      USDT: 'USDT',
     };
     return symbols[currency] || currency;
   }
 
   getWalletBalance(): number {
     const selectedCurrency = this.transactionForm?.get('currency')?.value;
-    const wallet = this.availableWallets.find(w => w.currency === selectedCurrency);
+    const wallet = this.availableWallets.find(
+      (w) => w.currency === selectedCurrency
+    );
     return wallet ? wallet.balance : 0;
   }
 
@@ -279,15 +292,14 @@ export class WalletTransactionModalComponent implements OnInit, OnDestroy, OnCha
   }
 
   onModalClose(): void {
-    console.log('Closing wallet transaction modal');
     this.resetForm();
     this.clearWalletData();
     this.onClose.emit();
   }
 
-  // Utility methods
   formatCurrency(amount: number, currency?: string): string {
-    const curr = currency || this.transactionForm?.get('currency')?.value || 'USD';
+    const curr =
+      currency || this.transactionForm?.get('currency')?.value || 'USD';
     return this.walletService.formatCurrency(amount, curr);
   }
 }

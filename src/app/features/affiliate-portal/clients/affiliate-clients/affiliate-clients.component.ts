@@ -214,7 +214,6 @@ export class AffiliateClientsComponent {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to update client');
-          console.error('Error updating client:', error);
           return of(null);
         }),
         finalize(() => (this.loading = false))
@@ -246,7 +245,6 @@ export class AffiliateClientsComponent {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import clients');
-          console.error('Error importing clients:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -318,7 +316,6 @@ export class AffiliateClientsComponent {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )

@@ -1,4 +1,11 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -43,7 +50,6 @@ export class ProfileSettingsComponent implements OnInit, OnChanges {
       phone: ['', [Validators.pattern(/^\+?[0-9\s\-\(\)]+$/)]],
     });
 
-    // If settings are already available, populate the form
     if (this.settings) {
       this.populateFormWithSettings();
     }
@@ -51,8 +57,6 @@ export class ProfileSettingsComponent implements OnInit, OnChanges {
 
   populateFormWithSettings(): void {
     if (!this.settings || !this.profileForm) return;
-
-    console.log('Populating form with settings:', this.settings);
 
     this.profileForm.patchValue({
       firstName: this.settings.firstName || '',

@@ -189,12 +189,12 @@ export interface PreviewFile {
         >
           @if (file.fileSize) {
           <span>Size: {{ formatFileSize(file.fileSize) }}</span>
-          }
-          @if (file.contentType) {
+          } @if (file.contentType) {
           <span>Type: {{ file.contentType }}</span>
-          }
-          @if (file.createdAt || file.uploadedAt) {
-          <span>Uploaded: {{ formatDate(file.createdAt || file.uploadedAt) }}</span>
+          } @if (file.createdAt || file.uploadedAt) {
+          <span
+            >Uploaded: {{ formatDate(file.createdAt || file.uploadedAt) }}</span
+          >
           }
         </div>
       </div>
@@ -268,8 +268,11 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
     const fileName = this.file.fileName.toLowerCase();
     const fileExtension = this.file.fileExtension?.toLowerCase() || '';
 
-    if (contentType.startsWith('image/') || this.file.isImage || 
-        fileExtension.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)$/)) {
+    if (
+      contentType.startsWith('image/') ||
+      this.file.isImage ||
+      fileExtension.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)$/)
+    ) {
       this.previewType = 'image';
     } else if (
       contentType === 'application/pdf' ||
@@ -278,11 +281,15 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
       fileExtension === '.pdf'
     ) {
       this.previewType = 'pdf';
-    } else if (contentType.startsWith('video/') || 
-               fileExtension.match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/)) {
+    } else if (
+      contentType.startsWith('video/') ||
+      fileExtension.match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/)
+    ) {
       this.previewType = 'video';
-    } else if (contentType.startsWith('audio/') || 
-               fileExtension.match(/\.(mp3|wav|ogg|aac|flac|wma)$/)) {
+    } else if (
+      contentType.startsWith('audio/') ||
+      fileExtension.match(/\.(mp3|wav|ogg|aac|flac|wma)$/)
+    ) {
       this.previewType = 'audio';
     } else {
       this.previewType = 'other';
@@ -351,9 +358,6 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Failed to load file:', error);
-        // Fallback to direct URL
-        // this.previewUrl = this.file.fileUrl;
         if (this.previewType === 'pdf') {
           this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
             this.file.fileUrl!

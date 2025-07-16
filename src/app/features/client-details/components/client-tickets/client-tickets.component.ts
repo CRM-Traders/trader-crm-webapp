@@ -13,16 +13,16 @@ import { Subject, takeUntil } from 'rxjs';
 import { Client } from '../../../clients/models/clients.model';
 import { AlertService } from '../../../../core/services/alert.service';
 import { TicketService } from './services/ticket.service';
-import { FinancialTicket, FinancialTicketSummary, TicketStatus } from './models/ticket.model';
+import {
+  FinancialTicket,
+  FinancialTicketSummary,
+  TicketStatus,
+} from './models/ticket.model';
 
 @Component({
   selector: 'app-client-tickets',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    FormsModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './client-tickets.component.html',
   styles: [
     `
@@ -128,20 +128,22 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
     let filtered = this.financialTickets;
 
     if (this.tradingAccountIdFilter) {
-      filtered = filtered.filter(ticket => 
-        ticket.tradingAccountId === this.tradingAccountIdFilter
+      filtered = filtered.filter(
+        (ticket) => ticket.tradingAccountId === this.tradingAccountIdFilter
       );
     }
 
     if (this.statusFilter) {
-      filtered = filtered.filter(ticket => 
-        ticket.ticketStatusName.toLowerCase() === this.statusFilter.toLowerCase()
+      filtered = filtered.filter(
+        (ticket) =>
+          ticket.ticketStatusName.toLowerCase() ===
+          this.statusFilter.toLowerCase()
       );
     }
 
     if (this.currencyFilter) {
-      filtered = filtered.filter(ticket => 
-        ticket.walletCurrency === this.currencyFilter
+      filtered = filtered.filter(
+        (ticket) => ticket.walletCurrency === this.currencyFilter
       );
     }
 
@@ -164,10 +166,10 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
             this.totalPages = response.pagination.totalPages;
             this.hasNextPage = response.pagination.hasNext;
             this.hasPreviousPage = response.pagination.hasPrevious;
-            
+
             // Calculate summary from response data
             this.calculateSummaryFromResponse(data);
-            
+
             // Extract filter options from tickets
             this.extractFilterOptions();
           } else {
@@ -182,7 +184,6 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
           this.loadingTickets = false;
         },
         error: (error) => {
-          console.error('Error loading financial tickets:', error);
           this.loadingTickets = false;
         },
       });
@@ -190,7 +191,10 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
 
   private calculateSummaryFromResponse(data: any): void {
     // Calculate amounts from the tickets array
-    const totalAmount = data.tickets.reduce((sum: number, ticket: FinancialTicket) => sum + ticket.amount, 0);
+    const totalAmount = data.tickets.reduce(
+      (sum: number, ticket: FinancialTicket) => sum + ticket.amount,
+      0
+    );
     const totalWithdrawalAmount = data.tickets
       .filter((ticket: FinancialTicket) => ticket.ticketType === 1)
       .reduce((sum: number, ticket: FinancialTicket) => sum + ticket.amount, 0);
@@ -205,19 +209,29 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
       totalDeposits: data.totalDeposits,
       totalAmount: totalAmount,
       totalWithdrawalAmount: totalWithdrawalAmount,
-      totalDepositAmount: totalDepositAmount
+      totalDepositAmount: totalDepositAmount,
     };
   }
 
   private extractFilterOptions(): void {
     // Extract unique trading account IDs
-    this.availableTradingAccounts = [...new Set(this.financialTickets.map(ticket => ticket.tradingAccountId))];
-    
+    this.availableTradingAccounts = [
+      ...new Set(
+        this.financialTickets.map((ticket) => ticket.tradingAccountId)
+      ),
+    ];
+
     // Extract unique statuses
-    this.availableStatuses = [...new Set(this.financialTickets.map(ticket => ticket.ticketStatusName))];
-    
+    this.availableStatuses = [
+      ...new Set(
+        this.financialTickets.map((ticket) => ticket.ticketStatusName)
+      ),
+    ];
+
     // Extract unique currencies
-    this.availableCurrencies = [...new Set(this.financialTickets.map(ticket => ticket.walletCurrency))];
+    this.availableCurrencies = [
+      ...new Set(this.financialTickets.map((ticket) => ticket.walletCurrency)),
+    ];
   }
 
   private clearFilterOptions(): void {
@@ -302,10 +316,13 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
     if (this.updatingStatus[ticketId]) return;
 
     // Convert string to TicketStatus enum if needed
-    const status = typeof newStatus === 'string' ? parseInt(newStatus) as TicketStatus : newStatus;
-    
+    const status =
+      typeof newStatus === 'string'
+        ? (parseInt(newStatus) as TicketStatus)
+        : newStatus;
+
     this.updatingStatus[ticketId] = true;
-    
+
     this.ticketService
       .updateTicketStatus(ticketId, status)
       .pipe(takeUntil(this.destroy$))
@@ -318,7 +335,7 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
         },
         error: () => {
           this.updatingStatus[ticketId] = false;
-        }
+        },
       });
   }
 
@@ -343,10 +360,12 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
    * Get available status options for a ticket
    */
   getAvailableStatuses(currentStatus: number): TicketStatus[] {
-    const allStatuses = Object.values(TicketStatus).filter(value => typeof value === 'number') as TicketStatus[];
-    
+    const allStatuses = Object.values(TicketStatus).filter(
+      (value) => typeof value === 'number'
+    ) as TicketStatus[];
+
     // Filter out the current status and return available options
-    return allStatuses.filter(status => status !== currentStatus);
+    return allStatuses.filter((status) => status !== currentStatus);
   }
 
   /**
@@ -371,8 +390,6 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
     }
   }
 
-
-
   getStatusColorClass(status: string): string {
     return this.ticketService.getFinancialTicketStatusColorClass(status);
   }
@@ -395,7 +412,7 @@ export class ClientTicketsComponent implements OnInit, OnDestroy {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   }
-} 
+}

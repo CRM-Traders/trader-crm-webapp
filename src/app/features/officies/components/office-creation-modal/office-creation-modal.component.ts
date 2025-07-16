@@ -281,7 +281,6 @@ export class OfficeCreationModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading brands:', error);
           this.alertService.error('Failed to load brands');
           return of({
             items: [],

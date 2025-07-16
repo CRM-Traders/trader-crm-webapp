@@ -7,9 +7,9 @@ import {
   OnInit,
   Renderer2,
   ViewEncapsulation,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { HasRoleDirective } from '../../../core/directives/has-role.directive';
 import { NavItem } from '../../../core/models/nav-item.model';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
@@ -26,6 +26,7 @@ export class SidebarComponent implements OnInit {
   private navService = inject(NavigationService);
   private elementRef = inject(ElementRef);
   private renderer = inject(Renderer2);
+  private cdr = inject(ChangeDetectorRef);
   public router = inject(Router);
 
   @Input() expanded = true;
@@ -33,6 +34,8 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit(): void {
     this.navItems = this.navService.getNavigationItems();
+
+    this.cdr.detectChanges();
 
     this.navService.expanded$.subscribe((expanded) => {
       this.expanded = expanded;

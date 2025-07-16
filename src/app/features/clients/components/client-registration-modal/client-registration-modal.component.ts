@@ -1,6 +1,13 @@
 // src/app/features/clients/components/client-registration-modal/client-registration-modal.component.ts
 
-import { Component, inject, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnInit,
+  OnDestroy,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -354,7 +361,9 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                 >
                   <!-- Search Input -->
-                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div
+                    class="p-3 border-b border-gray-200 dark:border-gray-700"
+                  >
                     <input
                       #countrySearchInput
                       type="text"
@@ -424,7 +433,9 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                 >
                   <!-- Search Input -->
-                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div
+                    class="p-3 border-b border-gray-200 dark:border-gray-700"
+                  >
                     <input
                       #languageSearchInput
                       type="text"
@@ -497,7 +508,9 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                 >
                   <!-- Search Input -->
-                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div
+                    class="p-3 border-b border-gray-200 dark:border-gray-700"
+                  >
                     <input
                       #affiliateSearchInput
                       type="text"
@@ -549,7 +562,9 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
 
                     <!-- No results -->
                     <div
-                      *ngIf="!affiliateLoading && availableAffiliates.length === 0"
+                      *ngIf="
+                        !affiliateLoading && availableAffiliates.length === 0
+                      "
                       class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
                       No affiliates found
@@ -803,9 +818,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
           this.countries = countries;
           this.filteredCountries = countries;
         },
-        error: (error) => {
-          console.error('Failed to load countries:', error);
-        },
+        error: (error) => {},
       });
   }
 
@@ -835,7 +848,10 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
         if (reset) {
           this.availableAffiliates = response.items;
         } else {
-          this.availableAffiliates = [...this.availableAffiliates, ...response.items];
+          this.availableAffiliates = [
+            ...this.availableAffiliates,
+            ...response.items,
+          ];
         }
         this.hasMoreAffiliates = response.hasNextPage;
         this.affiliateLoading = false;
@@ -856,15 +872,15 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     if (this.affiliateDropdownOpen) {
       this.affiliateDropdownOpen = false;
     }
-    
+
     this.countryDropdownOpen = !this.countryDropdownOpen;
   }
 
   onCountrySearch(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.countrySearchTerm = target.value.toLowerCase();
-    
-    this.filteredCountries = this.countries.filter(country =>
+
+    this.filteredCountries = this.countries.filter((country) =>
       country.name.toLowerCase().includes(this.countrySearchTerm)
     );
   }
@@ -893,17 +909,18 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     if (this.affiliateDropdownOpen) {
       this.affiliateDropdownOpen = false;
     }
-    
+
     this.languageDropdownOpen = !this.languageDropdownOpen;
   }
 
   onLanguageSearch(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.languageSearchTerm = target.value.toLowerCase();
-    
-    this.filteredLanguages = this.languages.filter(language =>
-      language.value.toLowerCase().includes(this.languageSearchTerm) ||
-      language.key.toLowerCase().includes(this.languageSearchTerm)
+
+    this.filteredLanguages = this.languages.filter(
+      (language) =>
+        language.value.toLowerCase().includes(this.languageSearchTerm) ||
+        language.key.toLowerCase().includes(this.languageSearchTerm)
     );
   }
 
@@ -931,9 +948,9 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     if (this.languageDropdownOpen) {
       this.languageDropdownOpen = false;
     }
-    
+
     this.affiliateDropdownOpen = !this.affiliateDropdownOpen;
-    
+
     if (this.affiliateDropdownOpen && this.availableAffiliates.length === 0) {
       this.loadAffiliates();
     }
@@ -990,11 +1007,14 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       email: formValue.email,
       username: formValue.username,
       password: formValue.password,
-      affiliateId: formValue.affiliateId === null ? undefined : formValue.affiliateId,
+      affiliateId:
+        formValue.affiliateId === null ? undefined : formValue.affiliateId,
       telephone: formValue.telephone || null,
       country: formValue.country || null,
       language: formValue.language || null,
-      dateOfBirth: formValue.dateOfBirth ? new Date(formValue.dateOfBirth).toISOString() : null,
+      dateOfBirth: formValue.dateOfBirth
+        ? new Date(formValue.dateOfBirth).toISOString()
+        : null,
       source: formValue.source || null,
     };
 
@@ -1065,12 +1085,12 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    
+
     // Check if click is inside any dropdown container
     const countryDropdown = target.closest('[data-dropdown="country"]');
     const languageDropdown = target.closest('[data-dropdown="language"]');
     const affiliateDropdown = target.closest('[data-dropdown="affiliate"]');
-    
+
     // Close dropdowns if click is outside all dropdowns
     if (!countryDropdown && !languageDropdown && !affiliateDropdown) {
       this.countryDropdownOpen = false;
@@ -1080,12 +1100,12 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   }
 
   getCountryNameByCode(countryCode: string): string {
-    const country = this.countries.find(c => c.code === countryCode);
+    const country = this.countries.find((c) => c.code === countryCode);
     return country ? country.name : countryCode;
   }
 
   getLanguageNameByKey(languageKey: string): string {
-    const language = this.languages.find(l => l.key === languageKey);
+    const language = this.languages.find((l) => l.key === languageKey);
     return language ? language.value : languageKey;
   }
 }

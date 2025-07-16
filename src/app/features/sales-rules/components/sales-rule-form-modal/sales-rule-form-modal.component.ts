@@ -51,10 +51,12 @@ interface OperatorSelection {
       <!-- Form -->
       <div class="px-6 py-6 max-h-[90vh] overflow-y-auto">
         <form [formGroup]="ruleForm" class="space-y-6">
-          
           <!-- Rule Name -->
           <div>
-            <label for="ruleName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="ruleName"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Rule Name *
             </label>
             <input
@@ -62,11 +64,19 @@ interface OperatorSelection {
               id="ruleName"
               formControlName="ruleName"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              [class.border-red-500]="ruleForm.get('ruleName')?.invalid && ruleForm.get('ruleName')?.touched"
+              [class.border-red-500]="
+                ruleForm.get('ruleName')?.invalid &&
+                ruleForm.get('ruleName')?.touched
+              "
               placeholder="Enter rule name"
             />
-            <p class="mt-1 text-sm text-red-600 dark:text-red-400" 
-               *ngIf="ruleForm.get('ruleName')?.invalid && ruleForm.get('ruleName')?.touched">
+            <p
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+              *ngIf="
+                ruleForm.get('ruleName')?.invalid &&
+                ruleForm.get('ruleName')?.touched
+              "
+            >
               Rule name is required
             </p>
           </div>
@@ -74,43 +84,66 @@ interface OperatorSelection {
           <!-- Priority and Type -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="priority" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                for="priority"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Priority *
               </label>
               <select
                 id="priority"
                 formControlName="priority"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                [class.border-red-500]="ruleForm.get('priority')?.invalid && ruleForm.get('priority')?.touched"
+                [class.border-red-500]="
+                  ruleForm.get('priority')?.invalid &&
+                  ruleForm.get('priority')?.touched
+                "
               >
                 <option value="">Select priority</option>
-                <option *ngFor="let priority of priorities" [value]="priority.value">
+                <option
+                  *ngFor="let priority of priorities"
+                  [value]="priority.value"
+                >
                   {{ priority.label }}
                 </option>
               </select>
-              <p class="mt-1 text-sm text-red-600 dark:text-red-400"
-                 *ngIf="ruleForm.get('priority')?.invalid && ruleForm.get('priority')?.touched">
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  ruleForm.get('priority')?.invalid &&
+                  ruleForm.get('priority')?.touched
+                "
+              >
                 Priority is required
               </p>
             </div>
 
             <div>
-              <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                for="type"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Type *
               </label>
               <select
                 id="type"
                 formControlName="type"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                [class.border-red-500]="ruleForm.get('type')?.invalid && ruleForm.get('type')?.touched"
+                [class.border-red-500]="
+                  ruleForm.get('type')?.invalid && ruleForm.get('type')?.touched
+                "
               >
                 <option value="">Select type</option>
                 <option *ngFor="let type of types" [value]="type.value">
                   {{ type.label }}
                 </option>
               </select>
-              <p class="mt-1 text-sm text-red-600 dark:text-red-400"
-                 *ngIf="ruleForm.get('type')?.invalid && ruleForm.get('type')?.touched">
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  ruleForm.get('type')?.invalid && ruleForm.get('type')?.touched
+                "
+              >
                 Type is required
               </p>
             </div>
@@ -121,11 +154,14 @@ interface OperatorSelection {
             <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">
               Targeting Options
             </h4>
-            
+
             <div class="space-y-4">
               <!-- Country -->
               <div>
-                <label for="country" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="country"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Country
                 </label>
                 <select
@@ -135,7 +171,10 @@ interface OperatorSelection {
                   (change)="onTargetingChange()"
                 >
                   <option value="">All countries</option>
-                  <option *ngFor="let country of countries" [value]="country.code">
+                  <option
+                    *ngFor="let country of countries"
+                    [value]="country.code"
+                  >
                     {{ country.name }}
                   </option>
                 </select>
@@ -143,7 +182,10 @@ interface OperatorSelection {
 
               <!-- Language -->
               <div>
-                <label for="language" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="language"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Language
                 </label>
                 <select
@@ -153,7 +195,10 @@ interface OperatorSelection {
                   (change)="onTargetingChange()"
                 >
                   <option value="">All languages</option>
-                  <option *ngFor="let language of languages" [value]="language.key">
+                  <option
+                    *ngFor="let language of languages"
+                    [value]="language.key"
+                  >
                     {{ language.value }}
                   </option>
                 </select>
@@ -161,7 +206,10 @@ interface OperatorSelection {
 
               <!-- Source -->
               <div>
-                <label for="sources" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  for="sources"
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Source
                 </label>
                 <input
@@ -190,21 +238,38 @@ interface OperatorSelection {
                   type="button"
                   class="px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   (click)="toggleOperatorDropdown()"
-                  [disabled]="selectedOperators.length >= 4 || isLoadingOperators"
+                  [disabled]="
+                    selectedOperators.length >= 4 || isLoadingOperators
+                  "
                 >
                   <span class="flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    <svg
+                      class="w-4 h-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      ></path>
                     </svg>
                     Select Operator
                   </span>
                 </button>
 
                 <!-- Dropdown Menu -->
-                <div *ngIf="showOperatorDropdown" class="absolute bottom-[120%] right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50">
+                <div
+                  *ngIf="showOperatorDropdown"
+                  class="absolute bottom-[120%] right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50"
+                >
                   <div class="p-4">
                     <div class="flex items-center justify-between mb-3">
-                      <h5 class="text-sm font-medium text-gray-900 dark:text-white">
+                      <h5
+                        class="text-sm font-medium text-gray-900 dark:text-white"
+                      >
                         Select Operator
                       </h5>
                       <button
@@ -212,40 +277,87 @@ interface OperatorSelection {
                         class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                         (click)="hideOperatorDropdown()"
                       >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          ></path>
                         </svg>
                       </button>
                     </div>
 
-                    <div *ngIf="isLoadingOperators" class="flex items-center justify-center py-4">
-                      <svg class="animate-spin h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <div
+                      *ngIf="isLoadingOperators"
+                      class="flex items-center justify-center py-4"
+                    >
+                      <svg
+                        class="animate-spin h-5 w-5 text-blue-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
-                      <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading operators...</span>
+                      <span
+                        class="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                        >Loading operators...</span
+                      >
                     </div>
 
-                    <div *ngIf="!isLoadingOperators && availableOperators.length === 0" class="text-center py-4">
+                    <div
+                      *ngIf="
+                        !isLoadingOperators && availableOperators.length === 0
+                      "
+                      class="text-center py-4"
+                    >
                       <p class="text-sm text-gray-500 dark:text-gray-400">
                         No operators available
                       </p>
                     </div>
 
-                    <div *ngIf="!isLoadingOperators && availableOperators.length > 0" class="space-y-2 max-h-60 overflow-y-auto">
+                    <div
+                      *ngIf="
+                        !isLoadingOperators && availableOperators.length > 0
+                      "
+                      class="space-y-2 max-h-60 overflow-y-auto"
+                    >
                       <div
                         *ngFor="let operator of availableOperators"
                         class="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/20 cursor-pointer"
                         (click)="selectOperator(operator)"
                       >
                         <div class="flex items-center">
-                          <div class="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-2">
-                            <span class="text-xs font-medium text-blue-600 dark:text-blue-400">
+                          <div
+                            class="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-2"
+                          >
+                            <span
+                              class="text-xs font-medium text-blue-600 dark:text-blue-400"
+                            >
                               {{ getOperatorInitials(operator.value) }}
                             </span>
                           </div>
                           <div>
-                            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            <p
+                              class="text-sm font-medium text-gray-900 dark:text-white"
+                            >
                               {{ operator.value }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -267,13 +379,19 @@ interface OperatorSelection {
                 class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
               >
                 <div class="flex items-center">
-                  <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-3">
-                    <span class="text-xs font-medium text-blue-600 dark:text-blue-400">
+                  <div
+                    class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-3"
+                  >
+                    <span
+                      class="text-xs font-medium text-blue-600 dark:text-blue-400"
+                    >
                       {{ getOperatorInitials(operator.name) }}
                     </span>
                   </div>
                   <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    <p
+                      class="text-sm font-medium text-gray-900 dark:text-white"
+                    >
                       {{ operator.name }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -288,17 +406,29 @@ interface OperatorSelection {
                     min="1"
                     max="100"
                     [(ngModel)]="operator.ratio"
-                    [ngModelOptions]="{standalone: true}"
+                    [ngModelOptions]="{ standalone: true }"
                     (input)="onRatioChange()"
                   />
-                  <span class="text-sm text-gray-500 dark:text-gray-400">%</span>
+                  <span class="text-sm text-gray-500 dark:text-gray-400"
+                    >%</span
+                  >
                   <button
                     type="button"
                     class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                     (click)="removeOperator(i)"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      ></path>
                     </svg>
                   </button>
                 </div>
@@ -306,11 +436,17 @@ interface OperatorSelection {
             </div>
 
             <!-- Operators Info (for edit mode) -->
-            <div *ngIf="rule && rule.operators && rule.operators.length > 0" class="mt-4">
-              <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <div
+              *ngIf="rule && rule.operators && rule.operators.length > 0"
+              class="mt-4"
+            >
+              <div
+                class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+              >
                 <p class="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Note:</strong> This rule already has {{ rule.operators.length }} assigned operator(s). 
-                  Any operators added here will be in addition to the existing ones.
+                  <strong>Note:</strong> This rule already has
+                  {{ rule.operators.length }} assigned operator(s). Any
+                  operators added here will be in addition to the existing ones.
                 </p>
               </div>
             </div>
@@ -318,16 +454,23 @@ interface OperatorSelection {
             <!-- Total Ratio Validation -->
             <div *ngIf="selectedOperators.length > 0" class="mt-3">
               <div class="flex items-center justify-ends gap-2 text-sm">
-                <span class="text-gray-600 dark:text-gray-400">Total Ratio:</span>
-                <span class="font-medium"
-                      [class.text-red-600]="getTotalRatio() !== 100"
-                      [class.text-green-600]="getTotalRatio() === 100"
-                      [class.dark:text-red-400]="getTotalRatio() !== 100"
-                      [class.dark:text-green-400]="getTotalRatio() === 100">
+                <span class="text-gray-600 dark:text-gray-400"
+                  >Total Ratio:</span
+                >
+                <span
+                  class="font-medium"
+                  [class.text-red-600]="getTotalRatio() !== 100"
+                  [class.text-green-600]="getTotalRatio() === 100"
+                  [class.dark:text-red-400]="getTotalRatio() !== 100"
+                  [class.dark:text-green-400]="getTotalRatio() === 100"
+                >
                   {{ getTotalRatio() }}%
                 </span>
               </div>
-              <p *ngIf="getTotalRatio() !== 100" class="text-xs text-red-600 dark:text-red-400 mt-1">
+              <p
+                *ngIf="getTotalRatio() !== 100"
+                class="text-xs text-red-600 dark:text-red-400 mt-1"
+              >
                 Total ratio must equal 100%
               </p>
             </div>
@@ -336,7 +479,9 @@ interface OperatorSelection {
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+      <div
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3"
+      >
         <button
           type="button"
           class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -352,11 +497,29 @@ interface OperatorSelection {
           [disabled]="!isFormValid()"
         >
           <span class="flex items-center">
-            <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              *ngIf="isSubmitting"
+              class="animate-spin -ml-1 mr-2 h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
-            {{ isSubmitting ? 'Saving...' : rule ? 'Update Rule' : 'Create Rule' }}
+            {{
+              isSubmitting ? 'Saving...' : rule ? 'Update Rule' : 'Create Rule'
+            }}
           </span>
         </button>
       </div>
@@ -427,7 +590,7 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
   }
 
   private loadCountries(): void {
-    this.countryService.getCountries().subscribe(countries => {
+    this.countryService.getCountries().subscribe((countries) => {
       this.countries = countries;
     });
   }
@@ -450,12 +613,12 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
 
     // Populate existing operators
     if (this.rule.operators && this.rule.operators.length > 0) {
-      this.selectedOperators = this.rule.operators.map(op => ({
+      this.selectedOperators = this.rule.operators.map((op) => ({
         id: op.userId,
         name: op.operatorName,
         department: '', // Will be populated when loading operators
         role: '', // Will be populated when loading operators
-        ratio: op.ratio
+        ratio: op.ratio,
       }));
     }
   }
@@ -480,20 +643,29 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
     this.isLoadingOperators = true;
     const formValue = this.ruleForm.value;
 
-    this.salesRulesService.getOperatorsDropdown({})
+    this.salesRulesService
+      .getOperatorsDropdown({})
       .pipe(
         takeUntil(this.destroy$),
-        catchError(error => {
+        catchError((error) => {
           this.alertService.error('Failed to load operators');
-          console.error('Error loading operators:', error);
-          return of({ items: [], totalCount: 0, pageIndex: 0, pageSize: 0, totalPages: 0, hasPreviousPage: false, hasNextPage: false } as OperatorDropdownResponse);
+          return of({
+            items: [],
+            totalCount: 0,
+            pageIndex: 0,
+            pageSize: 0,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          } as OperatorDropdownResponse);
         }),
-        finalize(() => this.isLoadingOperators = false)
+        finalize(() => (this.isLoadingOperators = false))
       )
-      .subscribe(response => {
-        // Filter out already selected operators
-        const selectedIds = this.selectedOperators.map(op => op.id);
-        this.availableOperators = response.items.filter(op => !selectedIds.includes(op.id));
+      .subscribe((response) => {
+        const selectedIds = this.selectedOperators.map((op) => op.id);
+        this.availableOperators = response.items.filter(
+          (op) => !selectedIds.includes(op.id)
+        );
       });
   }
 
@@ -509,7 +681,7 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
       name: operator.value,
       department: operator.department,
       role: operator.role,
-      ratio: 0 // will be set below
+      ratio: 0, // will be set below
     });
 
     // Distribute ratio equally among all selected operators
@@ -519,10 +691,12 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
     // Set all but last to floor, last to remainder for exact 100
     let total = 0;
     for (let i = 0; i < count - 1; i++) {
-      this.selectedOperators[i].ratio = Math.floor(equalRatio * 1000000) / 1000000;
+      this.selectedOperators[i].ratio =
+        Math.floor(equalRatio * 1000000) / 1000000;
       total += this.selectedOperators[i].ratio;
     }
-    this.selectedOperators[count - 1].ratio = Math.round((100 - total) * 1000000) / 1000000;
+    this.selectedOperators[count - 1].ratio =
+      Math.round((100 - total) * 1000000) / 1000000;
 
     this.hideOperatorDropdown();
   }
@@ -537,7 +711,10 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
   }
 
   getTotalRatio(): number {
-    return this.selectedOperators.reduce((total, op) => total + (op.ratio || 0), 0);
+    return this.selectedOperators.reduce(
+      (total, op) => total + (op.ratio || 0),
+      0
+    );
   }
 
   updateOperatorRatio(index: number, value: number): void {
@@ -552,7 +729,7 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
     if (!name) return '';
     return name
       .split(' ')
-      .map(n => n.charAt(0))
+      .map((n) => n.charAt(0))
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -560,7 +737,8 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
 
   isFormValid(): boolean {
     const formValid = this.ruleForm.valid;
-    const operatorsValid = this.selectedOperators.length > 0 && this.getTotalRatio() === 100;
+    const operatorsValid =
+      this.selectedOperators.length > 0 && this.getTotalRatio() === 100;
     return formValid && operatorsValid && !this.isSubmitting;
   }
 
@@ -590,68 +768,71 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
       country: formValue.country || '',
       language: formValue.language || '',
       sources: formValue.sources || '',
-      operators: this.selectedOperators.map(op => ({
+      operators: this.selectedOperators.map((op) => ({
         userId: op.id,
-        ratio: op.ratio
+        ratio: op.ratio,
       })),
       partners: '',
-      affiliateReferrals: ''
+      affiliateReferrals: '',
     };
 
     if (this.rule) {
       // Update existing rule - use batch operator update for better consistency
-      this.salesRulesService.updateSalesRule(this.rule.id, request)
+      this.salesRulesService
+        .updateSalesRule(this.rule.id, request)
         .pipe(
           takeUntil(this.destroy$),
-          catchError(error => {
+          catchError((error) => {
             this.alertService.error('Failed to update sales rule');
-            console.error('Error updating rule:', error);
             return of(null);
           }),
-          finalize(() => this.isSubmitting = false)
+          finalize(() => (this.isSubmitting = false))
         )
-        .subscribe(result => {
+        .subscribe((result) => {
           if (result !== null) {
-            // Update operators separately using batch operation
-            const operatorRequests = this.selectedOperators.map(op => ({
+            const operatorRequests = this.selectedOperators.map((op) => ({
               userId: op.id,
-              ratio: op.ratio
+              ratio: op.ratio,
             }));
-            
-            this.salesRulesService.batchUpdateOperators(this.rule!.id, operatorRequests)
+
+            this.salesRulesService
+              .batchUpdateOperators(this.rule!.id, operatorRequests)
               .pipe(
                 takeUntil(this.destroy$),
-                catchError(error => {
-                  this.alertService.error('Rule updated but failed to update operators');
-                  console.error('Error updating operators:', error);
+                catchError((error) => {
+                  this.alertService.error(
+                    'Rule updated but failed to update operators'
+                  );
                   return of(null);
                 })
               )
-              .subscribe(operatorResult => {
+              .subscribe((operatorResult) => {
                 if (operatorResult !== null) {
-                  this.alertService.success('Sales rule and operators updated successfully!');
+                  this.alertService.success(
+                    'Sales rule and operators updated successfully!'
+                  );
                 }
                 this.modalRef.close({
                   id: this.rule!.id,
                   ...request,
-                  operators: operatorRequests
+                  operators: operatorRequests,
                 });
               });
           }
         });
     } else {
       // Create new rule
-      this.salesRulesService.createSalesRule(request)
+      this.salesRulesService
+        .createSalesRule(request)
         .pipe(
           takeUntil(this.destroy$),
-          catchError(error => {
+          catchError((error) => {
             this.alertService.error('Failed to create sales rule');
-            console.error('Error creating rule:', error);
             return of(null);
           }),
-          finalize(() => this.isSubmitting = false)
+          finalize(() => (this.isSubmitting = false))
         )
-        .subscribe(result => {
+        .subscribe((result) => {
           if (result !== null) {
             this.alertService.success('Sales rule created successfully!');
             this.modalRef.close(result);

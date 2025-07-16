@@ -168,7 +168,6 @@ export class DesksComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading desk statistics:', error);
           this.totalCount = 0;
           this.activeCount = 0;
           return of(null);
@@ -272,7 +271,6 @@ export class DesksComponent implements OnInit, OnDestroy {
           } else {
             this.alertService.error('Failed to delete desk');
           }
-          console.error('Error deleting desk:', error);
           return of(null);
         }),
         finalize(() => {
@@ -308,7 +306,6 @@ export class DesksComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import desks');
-          console.error('Error importing desks:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -336,7 +333,6 @@ export class DesksComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export desks');
-          console.error('Error exporting desks:', error);
           return of(null);
         })
       )
@@ -366,7 +362,6 @@ export class DesksComponent implements OnInit, OnDestroy {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )

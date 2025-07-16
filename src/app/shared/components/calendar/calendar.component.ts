@@ -186,9 +186,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         next: () => {
           this.updateEventsDisplay();
         },
-        error: (error) => {
-          console.error('Failed to load calendar events:', error);
-        },
+        error: (error) => {},
       });
   }
 
@@ -401,9 +399,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
           this.closeEventModal();
           this.updateEventsDisplay();
         },
-        error: (error) => {
-          console.error('Failed to create event:', error);
-        },
+        error: (error) => {},
       });
   }
 
@@ -438,9 +434,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
           this.closeEventDetails();
           this.updateEventsDisplay();
         },
-        error: (error) => {
-          console.error('Failed to update event:', error);
-        },
+        error: (error) => {},
       });
   }
 
@@ -465,7 +459,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
           this.updateEventsDisplay();
         },
         error: (error) => {
-          console.error('Failed to delete event:', error);
           this.showDeleteConfirm = false;
         },
       });

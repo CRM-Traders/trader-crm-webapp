@@ -753,7 +753,9 @@ export class ClientsComponent implements OnInit {
   }
 
   private initializeGridTemplates(): void {
-    const onlineStatusColumn = this.gridColumns.find((col) => col.field === 'isOnline');
+    const onlineStatusColumn = this.gridColumns.find(
+      (col) => col.field === 'isOnline'
+    );
     if (onlineStatusColumn) {
       onlineStatusColumn.cellTemplate = this.onlineStatusCellTemplate;
     }
@@ -824,16 +826,6 @@ export class ClientsComponent implements OnInit {
       return;
     }
 
-    // Check if any clients have investments (if that should prevent assignment)
-    const clientsWithInvestments = clients.filter(
-      (client) => client.hasInvestments
-    );
-    if (clientsWithInvestments.length > 0) {
-      // Optional: You can either warn or proceed - adjust based on business rules
-      console.log(`${clientsWithInvestments.length} clients have investments`);
-    }
-
-    // Open the assignment modal
     const modalRef = this.modalService.open(
       AssignOperatorModalComponent,
       {
@@ -850,35 +842,21 @@ export class ClientsComponent implements OnInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          // Assignment was successful, refresh the grid and statistics
           this.refreshGrid();
           this.loadClientStatistics();
 
-          // Clear the selection after successful assignment
           this.clearGridSelection();
         }
       },
-      () => {
-        // Modal was dismissed/cancelled - no action needed
-        console.log('Assignment modal was cancelled');
-      }
+      () => {}
     );
   }
 
-  private bulkAssignAffiliate(clients: Client[]): void {}
+  onBulkActionExecuted(event: { action: GridAction; items: any[] }): void {}
 
-  onBulkActionExecuted(event: { action: GridAction; items: any[] }): void {
-    // Handle bulk action execution
-  }
+  onDataLoaded(clients: Client[]): void {}
 
-  onDataLoaded(clients: Client[]): void {
-    // Load comments for all displayed clients
-    //this.loadCommentsForClients(clients);
-  }
-
-  onSelectionChange(selectedItems: any[]): void {
-    // Update selection state and action availability
-  }
+  onSelectionChange(selectedItems: any[]): void {}
 
   onRowClick(client: Client): void {
     this.openClientDetailsModal(client);
@@ -905,12 +883,8 @@ export class ClientsComponent implements OnInit {
     );
 
     modalRef.result.then(
-      (result) => {
-        // Handle modal result if needed
-      },
-      () => {
-        // Modal dismissed
-      }
+      (result) => {},
+      () => {}
     );
   }
 
@@ -933,14 +907,11 @@ export class ClientsComponent implements OnInit {
 
     modalRef.result.then(
       (result) => {
-        // Handle successful password change
         if (result) {
           this.alertService.success('Password changed successfully');
         }
       },
-      () => {
-        // Modal dismissed
-      }
+      () => {}
     );
   }
 
@@ -960,16 +931,11 @@ export class ClientsComponent implements OnInit {
     );
 
     modalRef.result.then(
-      (result) => {
-        // Handle modal result if needed
-      },
-      () => {
-        // Modal dismissed
-      }
+      (result) => {},
+      () => {}
     );
   }
 
-  // Inline Comment Methods
   openInlineComment(
     clientId: string,
     mode: 'view' | 'create',
@@ -984,8 +950,8 @@ export class ClientsComponent implements OnInit {
       clientId,
       mode,
       position: {
-        top: rect.top + window.scrollY - 240, // Position above the icon
-        left: rect.left + window.scrollX - 50, // Adjust to center the box
+        top: rect.top + window.scrollY - 240,
+        left: rect.left + window.scrollX - 50,
       },
       comments: [],
       isLoading: false,
@@ -1028,7 +994,6 @@ export class ClientsComponent implements OnInit {
         },
         error: (error) => {
           this.alertService.error('Failed to load comments');
-          console.error('Error loading comments:', error);
           this.closeInlineComment();
         },
       });
@@ -1061,10 +1026,8 @@ export class ClientsComponent implements OnInit {
         next: (newComment) => {
           this.alertService.success('Comment added successfully');
 
-          // Refresh the comments cache for this client
           this.refreshClientComments(this.inlineCommentState!.clientId);
 
-          // Refresh the grid to show the latest comment
           this.refreshGrid();
 
           this.closeInlineComment();
@@ -1077,9 +1040,9 @@ export class ClientsComponent implements OnInit {
 
   private resetInlineCommentForm(): void {
     this.inlineCommentForm.reset();
-    this.inlineCommentForm.patchValue({ 
+    this.inlineCommentForm.patchValue({
       subject: '',
-      isPinnedComment: false 
+      isPinnedComment: false,
     });
   }
 
@@ -1092,14 +1055,12 @@ export class ClientsComponent implements OnInit {
     });
   }
   private clearGridSelection(): void {
-    // Emit event to clear grid selection
     window.dispatchEvent(
       new CustomEvent('clearGridSelection', {
         detail: { gridId: 'clients-grid' },
       })
     );
-    
-    // Also try to clear selection directly on the grid component
+
     const gridComponent = document.querySelector(
       `app-grid[gridId="clients-grid"]`
     ) as any;
@@ -1141,7 +1102,6 @@ export class ClientsComponent implements OnInit {
           } else {
             this.alertService.error('Failed to delete client');
           }
-          console.error('Error deleting client:', error);
           return of(null);
         }),
         finalize(() => {
@@ -1174,7 +1134,6 @@ export class ClientsComponent implements OnInit {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import clients');
-          console.error('Error importing clients:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -1201,7 +1160,6 @@ export class ClientsComponent implements OnInit {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export clients');
-          console.error('Error exporting clients:', error);
           return of(null);
         })
       )
@@ -1230,13 +1188,13 @@ export class ClientsComponent implements OnInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          // Refresh grid and statistics when modal closes with success
           this.refreshGrid();
-          this.alertService.success('Client registration completed successfully');
+          this.alertService.success(
+            'Client registration completed successfully'
+          );
         }
       },
-      () => {
-      }
+      () => {}
     );
   }
 
@@ -1253,7 +1211,6 @@ export class ClientsComponent implements OnInit {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )
@@ -1273,13 +1230,10 @@ export class ClientsComponent implements OnInit {
   }
 
   refreshGrid(): void {
-    // Clear comments cache when refreshing grid
     this.clearCommentsCache();
 
-    // Refresh client statistics
     this.loadClientStatistics();
 
-    // Trigger grid refresh
     const gridComponent = document.querySelector(
       `app-grid[gridId="clients-grid"]`
     );
@@ -1287,7 +1241,6 @@ export class ClientsComponent implements OnInit {
       (gridComponent as any).refresh?.();
     }
 
-    // Alternative: Dispatch custom event to refresh grid
     window.dispatchEvent(
       new CustomEvent('refreshGrid', {
         detail: { gridId: 'clients-grid' },
@@ -1296,9 +1249,7 @@ export class ClientsComponent implements OnInit {
   }
 
   onSaleStatusChanged(clientId: string, newStatus: KycStatus): void {
-    // Update the client's sales status in the grid data if needed
-    // The grid should automatically refresh or update the display
-    this.loadClientStatistics(); // Refresh statistics if needed
+    this.loadClientStatistics();
   }
 
   openPermissionDialog(user: any): void {
@@ -1318,7 +1269,7 @@ export class ClientsComponent implements OnInit {
 
   onAutoLogin(client: Client): void {
     this.clientsService.autoLogin(client.id).subscribe((result: any) => {
-      window.open(`http://${result}`, '_blank');
+      window.open(`https://${result}`, '_blank');
     });
   }
 
@@ -1326,7 +1277,6 @@ export class ClientsComponent implements OnInit {
     const selectElement = event.target as HTMLSelectElement;
     const newSalesStatus = Number(selectElement.value);
 
-    // Handle both full client object and value structure from selector
     const clientId = clientData?.id || clientData?.row?.id;
     const currentSalesStatus = this.normalizeSalesStatus(
       clientData?.salesStatus || clientData?.row?.salesStatus
@@ -1343,7 +1293,6 @@ export class ClientsComponent implements OnInit {
       return;
     }
 
-    // Set loading state
     this.updatingSalesStatus = clientId;
 
     this.clientsService
@@ -1351,10 +1300,8 @@ export class ClientsComponent implements OnInit {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          // Revert the dropdown to the original value on error
           selectElement.value = currentSalesStatus.toString();
           this.alertService.error('Failed to update sales status');
-          console.error('Error updating sales status:', error);
           return of(null);
         }),
         finalize(() => {
@@ -1363,7 +1310,6 @@ export class ClientsComponent implements OnInit {
       )
       .subscribe((result) => {
         if (result !== null) {
-          // Update the client object with the new status if it's accessible
           if (
             clientData?.row &&
             typeof clientData.row === 'object' &&
@@ -1386,19 +1332,14 @@ export class ClientsComponent implements OnInit {
             }`
           );
 
-          // Refresh the grid to ensure data consistency
           this.refreshGrid();
           this.loadClientStatistics();
-          this.refreshClientComments(clientId); // Refresh comments after status change
+          this.refreshClientComments(clientId);
         }
       });
   }
 
-  /**
-   * Initialize filter options for dropdown columns
-   */
   private initializeFilterOptions(): void {
-    // Load all filter options concurrently
     forkJoin({
       countries: this.countryService.getCountries(),
       languages: of(this.languageService.getAllLanguages()),
@@ -1412,7 +1353,6 @@ export class ClientsComponent implements OnInit {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading filter options:', error);
           return of({
             countries: [],
             languages: [],
@@ -1436,7 +1376,6 @@ export class ClientsComponent implements OnInit {
           timezones,
           statistics,
         }) => {
-          // Update country filter options
           this.updateColumnFilterOptions(
             'country',
             countries.map((c) => ({ value: c.code, label: c.name }))
@@ -1446,38 +1385,24 @@ export class ClientsComponent implements OnInit {
             countries.map((c) => ({ value: c.code, label: c.name }))
           );
 
-          // Update language filter options
           this.updateColumnFilterOptions(
             'language',
             languages.map((l) => ({ value: l.key, label: l.value }))
           );
 
-          // Update office filter options
           this.updateColumnFilterOptions('officeId', offices);
-
-          // Update desk filter options
           this.updateColumnFilterOptions('deskId', desks);
-
-          // Update team filter options
           this.updateColumnFilterOptions('teamId', teams);
-
-          // Update operator filter options
           this.updateColumnFilterOptions('operatorId', operators);
           this.updateColumnFilterOptions('retentionOperatorId', operators);
           this.updateColumnFilterOptions('salesOperatorId', operators);
-
-          // Update timezone filter options
           this.updateColumnFilterOptions('timezone', timezones);
 
-          // Load affiliates separately as it might be a different endpoint
           this.loadAffiliatesDropdown();
         }
       );
   }
 
-  /**
-   * Update filter options for a specific column
-   */
   private updateColumnFilterOptions(field: string, options: any[]): void {
     const column = this.gridColumns.find((col) => col.field === field);
     if (column) {
@@ -1485,9 +1410,6 @@ export class ClientsComponent implements OnInit {
     }
   }
 
-  /**
-   * Load offices dropdown options
-   */
   private loadOfficesDropdown() {
     return this.officesService
       .getOfficeDropdown({
@@ -1510,9 +1432,6 @@ export class ClientsComponent implements OnInit {
       );
   }
 
-  /**
-   * Load desks dropdown options
-   */
   private loadDesksDropdown() {
     return this.operatorsService
       .getDesksDropdown({
@@ -1557,9 +1476,6 @@ export class ClientsComponent implements OnInit {
       );
   }
 
-  /**
-   * Load operators dropdown options
-   */
   private loadOperatorsDropdown() {
     return this.officeRulesService
       .getAvailableOperators(0, 1000, '')
@@ -1577,27 +1493,17 @@ export class ClientsComponent implements OnInit {
       );
   }
 
-  /**
-   * Load affiliates dropdown options
-   */
   private loadAffiliatesDropdown(): void {
-    // This would typically be a separate service call
-    // For now, we'll create a placeholder
     const affiliateOptions = [
       { value: 'affiliate1', label: 'Affiliate 1' },
       { value: 'affiliate2', label: 'Affiliate 2' },
-      // Add more as needed
     ];
 
     this.updateColumnFilterOptions('affiliateName', affiliateOptions);
     this.updateColumnFilterOptions('affiliateReferral', affiliateOptions);
   }
 
-  /**
-   * Load timezone options
-   */
   private loadTimezones() {
-    // Common timezones - this could be from a service
     const timezones = [
       { value: 'UTC', label: 'UTC' },
       { value: 'GMT', label: 'GMT' },
@@ -1614,9 +1520,6 @@ export class ClientsComponent implements OnInit {
     return Promise.resolve(timezones);
   }
 
-  /**
-   * Get the latest comment for a client
-   */
   getLatestComment(client: Client): ClientComment | null {
     if (client.lastComment) {
       return {
@@ -1638,7 +1541,7 @@ export class ClientsComponent implements OnInit {
 
   loadClientComments(clientId: string): void {
     if (this.clientCommentsCache.has(clientId)) {
-      return; // Already loaded
+      return;
     }
 
     this.clientsService
@@ -1646,7 +1549,6 @@ export class ClientsComponent implements OnInit {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading comments for client:', clientId, error);
           return of([]);
         })
       )
@@ -1654,14 +1556,10 @@ export class ClientsComponent implements OnInit {
         const commentArray = Array.isArray(comments) ? comments : [comments];
         this.clientCommentsCache.set(clientId, commentArray);
 
-        // Trigger change detection to update the grid
         this.cdr.detectChanges();
       });
   }
 
-  /**
-   * Load comments for multiple clients
-   */
   loadCommentsForClients(clients: Client[]): void {
     const clientsToLoad = clients.filter(
       (client) => !this.clientCommentsCache.has(client.id)
@@ -1674,7 +1572,6 @@ export class ClientsComponent implements OnInit {
     const commentRequests = clientsToLoad.map((client) =>
       this.clientsService.getClientComments(client.id).pipe(
         catchError((error) => {
-          console.error('Error loading comments for client:', client.id, error);
           return of([]);
         })
       )
@@ -1705,14 +1602,14 @@ export class ClientsComponent implements OnInit {
   showTooltip(event: MouseEvent, text: string): void {
     const target = event.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();
-    
+
     this.tooltipState = {
       visible: true,
       text: text,
       position: {
-        x: rect.left + window.scrollX + 300, // Center on the text
-        y: rect.top + window.scrollY + 90  // Just above the text
-      }
+        x: rect.left + window.scrollX + 300,
+        y: rect.top + window.scrollY + 90,
+      },
     };
   }
 

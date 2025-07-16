@@ -2,16 +2,25 @@
 
 import { Component, OnInit, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
 import { ModalService } from '../../../../shared/services/modals/modal.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { OperatorDropdownItem } from '../../../officies/models/office-rules.model';
 import { Client } from '../../models/clients.model';
-import { AssignClientsToOperatorRequest, ClientsService, ClientType } from '../../services/clients.service';
+import {
+  AssignClientsToOperatorRequest,
+  ClientsService,
+  ClientType,
+} from '../../services/clients.service';
 
 export type UserType = 0 | 1; // 0 = lead, 1 = client
-
 
 @Component({
   selector: 'app-assign-operator-modal',
@@ -29,23 +38,46 @@ export type UserType = 0 | 1; // 0 = lead, 1 = client
       <!-- Content -->
       <div class="space-y-6">
         <!-- Selected Clients Info -->
-        <div class="bg-blue-50 dark:bg-blue-900/5 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div
+          class="bg-blue-50 dark:bg-blue-900/5 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
+        >
           <div class="flex items-center">
-            <svg class="w-5 h-5 text-blue-800 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            <svg
+              class="w-5 h-5 text-blue-800 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
             </svg>
             <span class="text-blue-800 dark:text-blue-400 font-medium">
-              {{ selectedClients.length }} {{ userType === 0 ? 'lead' : 'client' }}{{ selectedClients.length === 1 ? '' : 's' }} selected for assignment
+              {{ selectedClients.length }}
+              {{ userType === 0 ? 'lead' : 'client'
+              }}{{ selectedClients.length === 1 ? '' : 's' }} selected for
+              assignment
             </span>
           </div>
-          
+
           <!-- Client Names Preview -->
           <div class="mt-2 max-h-32 overflow-y-auto">
             <div class="text-sm text-blue-700 dark:text-blue-500">
-              <div *ngFor="let client of selectedClients.slice(0, 5)" class="truncate">
-                {{ client.firstName }} {{ client.lastName }} ({{ client.email }})
+              <div
+                *ngFor="let client of selectedClients.slice(0, 5)"
+                class="truncate"
+              >
+                {{ client.firstName }} {{ client.lastName }} ({{
+                  client.email
+                }})
               </div>
-              <div *ngIf="selectedClients.length > 5" class="text-blue-600 dark:text-blue-400 font-medium">
+              <div
+                *ngIf="selectedClients.length > 5"
+                class="text-blue-600 dark:text-blue-400 font-medium"
+              >
                 ... and {{ selectedClients.length - 5 }} more
               </div>
             </div>
@@ -53,10 +85,17 @@ export type UserType = 0 | 1; // 0 = lead, 1 = client
         </div>
 
         <!-- Assignment Form -->
-        <form [formGroup]="assignmentForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <form
+          [formGroup]="assignmentForm"
+          (ngSubmit)="onSubmit()"
+          class="space-y-4"
+        >
           <!-- Operator Selection -->
           <div>
-            <label for="operatorId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label
+              for="operatorId"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
               Select Operator <span class="text-red-500">*</span>
             </label>
             <div class="relative">
@@ -70,25 +109,53 @@ export type UserType = 0 | 1; // 0 = lead, 1 = client
                 [disabled]="loadingOperators || isSubmitting"
               >
                 <option value="" disabled>
-                  {{ loadingOperators ? 'Loading operators...' : 'Choose an operator' }}
+                  {{
+                    loadingOperators
+                      ? 'Loading operators...'
+                      : 'Choose an operator'
+                  }}
                 </option>
-                <option *ngFor="let operator of operators" [value]="operator.id">
+                <option
+                  *ngFor="let operator of operators"
+                  [value]="operator.id"
+                >
                   {{ operator.value }}
                 </option>
               </select>
-              
+
               <!-- Loading indicator for operators -->
-              <div *ngIf="loadingOperators" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <div
+                *ngIf="loadingOperators"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <svg
+                  class="animate-spin h-4 w-4 text-gray-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
               </div>
             </div>
-            
+
             <!-- Validation Error -->
-            <div *ngIf="assignmentForm.get('operatorId')?.touched && assignmentForm.get('operatorId')?.errors?.['required']" 
-                 class="mt-1 text-sm text-red-600 dark:text-red-400">
+            <div
+              *ngIf="assignmentForm.get('operatorId')?.touched && assignmentForm.get('operatorId')?.errors?.['required']"
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+            >
               Please select an operator
             </div>
           </div>
@@ -100,8 +167,11 @@ export type UserType = 0 | 1; // 0 = lead, 1 = client
               type="checkbox"
               formControlName="isActive"
               class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label
+              for="isActive"
+              class="ml-2 block text-sm text-gray-700 dark:text-gray-300"
             >
-            <label for="isActive" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
               Set assignment as active
             </label>
           </div>
@@ -109,7 +179,9 @@ export type UserType = 0 | 1; // 0 = lead, 1 = client
       </div>
 
       <!-- Footer Actions -->
-      <div class="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+      <div
+        class="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"
+      >
         <button
           type="button"
           (click)="closeModal()"
@@ -121,26 +193,49 @@ export type UserType = 0 | 1; // 0 = lead, 1 = client
         >
           Cancel
         </button>
-        
+
         <button
           type="submit"
           (click)="onSubmit()"
-          [disabled]="assignmentForm.invalid || isSubmitting || loadingOperators"
+          [disabled]="
+            assignmentForm.invalid || isSubmitting || loadingOperators
+          "
           class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent 
                  rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
                  focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed 
                  transition-colors flex items-center"
         >
-          <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <svg
+            *ngIf="isSubmitting"
+            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
-          {{ isSubmitting ? 'Assigning...' : 'Assign ' + (userType === 0 ? 'Leads' : 'Clients') }}
+          {{
+            isSubmitting
+              ? 'Assigning...'
+              : 'Assign ' + (userType === 0 ? 'Leads' : 'Clients')
+          }}
         </button>
       </div>
     </div>
   `,
-  styleUrls: []
+  styleUrls: [],
 })
 export class AssignOperatorModalComponent implements OnInit {
   private clientsService = inject(ClientsService);
@@ -160,7 +255,7 @@ export class AssignOperatorModalComponent implements OnInit {
   constructor() {
     this.assignmentForm = this.fb.group({
       operatorId: ['', [Validators.required]],
-      isActive: [true]
+      isActive: [true],
     });
   }
 
@@ -176,11 +271,11 @@ export class AssignOperatorModalComponent implements OnInit {
   private loadOperators(): void {
     this.loadingOperators = true;
 
-    this.clientsService.getAvailableOperators(0, 1000, '')
+    this.clientsService
+      .getAvailableOperators(0, 1000, '')
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading operators:', error);
           this.alertService.error('Failed to load operators');
           return of([]);
         }),
@@ -199,18 +294,19 @@ export class AssignOperatorModalComponent implements OnInit {
     }
 
     const formValue = this.assignmentForm.value;
-    const clientIds = this.selectedClients.map(client => client.id);
+    const clientIds = this.selectedClients.map((client) => client.id);
 
     const request: AssignClientsToOperatorRequest = {
       operatorId: formValue.operatorId,
       clientType: Number(this.userType), // Always Client type as specified
       entityIds: clientIds,
-      isActive: formValue.isActive
+      isActive: formValue.isActive,
     };
 
     this.isSubmitting = true;
 
-    this.clientsService.assignClientsToOperator(request)
+    this.clientsService
+      .assignClientsToOperator(request)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -219,14 +315,18 @@ export class AssignOperatorModalComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          const selectedOperator = this.operators.find(op => op.id === formValue.operatorId);
+          const selectedOperator = this.operators.find(
+            (op) => op.id === formValue.operatorId
+          );
           const operatorName = selectedOperator?.value || 'Selected operator';
 
           if (response.successCount > 0) {
             // Check if this is for leads or clients based on userType
             const entityType = this.userType === 0 ? 'lead' : 'client';
             this.alertService.success(
-              `Successfully assigned ${response.successCount} ${entityType}${response.successCount === 1 ? '' : 's'} to ${operatorName}`
+              `Successfully assigned ${response.successCount} ${entityType}${
+                response.successCount === 1 ? '' : 's'
+              } to ${operatorName}`
             );
           }
 
@@ -235,30 +335,33 @@ export class AssignOperatorModalComponent implements OnInit {
             if (response.errors && response.errors.length > 0) {
               if (response.failureCount === 1) {
                 // Single failure - show the specific error with name
-                const errorWithName = this.replaceEntityIdWithName(response.errors[0]);
+                const errorWithName = this.replaceEntityIdWithName(
+                  response.errors[0]
+                );
                 this.alertService.warning(errorWithName);
               } else {
                 // Multiple failures - show all failed names
                 const failedNames = this.getFailedEntityNames(response.errors);
                 const entityType = this.userType === 0 ? 'leads' : 'clients';
-              this.alertService.warning(`${entityType} already assigned to an active operator`);
-                
+                this.alertService.warning(
+                  `${entityType} already assigned to an active operator`
+                );
               }
             } else {
               // Check if this is for leads or clients based on userType
               const entityType = this.userType === 0 ? 'lead' : 'client';
-              this.alertService.warning(`${entityType} already assigned to an active operator`);
+              this.alertService.warning(
+                `${entityType} already assigned to an active operator`
+              );
             }
           }
 
           this.modalService.closeAll(); // Close with success result
         },
         error: (error) => {
-          console.error('Error assigning clients:', error);
-          // Check if this is for leads or clients based on userType
           const entityType = this.userType === 0 ? 'leads' : 'clients';
           this.alertService.error(`Failed to assign ${entityType} to operator`);
-        }
+        },
       });
   }
 
@@ -275,12 +378,17 @@ export class AssignOperatorModalComponent implements OnInit {
     if (entityIdMatch) {
       const entityId = entityIdMatch[1];
       // Find the corresponding client/lead by ID
-      const entity = this.selectedClients.find(client => client.id === entityId);
+      const entity = this.selectedClients.find(
+        (client) => client.id === entityId
+      );
       if (entity) {
         const entityName = `${entity.firstName} ${entity.lastName}`;
         // Replace the ID with the name
         const entityType = this.userType === 0 ? 'Lead' : 'Client';
-        return errorMessage.replace(`Entity ${entityId}`, `${entityType} "${entityName}"`);
+        return errorMessage.replace(
+          `Entity ${entityId}`,
+          `${entityType} "${entityName}"`
+        );
       }
     }
     return errorMessage;
@@ -291,18 +399,20 @@ export class AssignOperatorModalComponent implements OnInit {
    */
   private getFailedEntityNames(errors: string[]): string[] {
     const failedNames: string[] = [];
-    
+
     for (const error of errors) {
       const entityIdMatch = error.match(/Entity ([a-f0-9-]+)/);
       if (entityIdMatch) {
         const entityId = entityIdMatch[1];
-        const entity = this.selectedClients.find(client => client.id === entityId);
+        const entity = this.selectedClients.find(
+          (client) => client.id === entityId
+        );
         if (entity) {
           failedNames.push(`${entity.firstName} ${entity.lastName}`);
         }
       }
     }
-    
+
     return failedNames;
   }
 }

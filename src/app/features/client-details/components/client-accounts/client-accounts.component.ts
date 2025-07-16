@@ -134,9 +134,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
       .getUserAccounts(this.clientId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        error: (error) => {
-          console.error('Error loading accounts:', error);
-        },
+        error: (error) => {},
       });
   }
 
@@ -191,9 +189,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
             this.toggleCreateModal();
             this.loadAccounts(); // Refresh accounts after creation
           },
-          error: (error) => {
-            console.error('Error creating account:', error);
-          },
+          error: (error) => {},
         });
     } else {
       this.alertService.error('Please fill in all required fields');
@@ -206,9 +202,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
         .activateAccount(account.id, this.clientId)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          error: (error) => {
-            console.error('Error activating account:', error);
-          },
+          error: (error) => {},
         });
     }
   }
@@ -219,9 +213,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
         .deactivateAccount(account.id, this.clientId)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          error: (error) => {
-            console.error('Error deactivating account:', error);
-          },
+          error: (error) => {},
         });
     }
   }
@@ -232,9 +224,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
         .suspendAccount(account.id, this.clientId)
         .pipe(takeUntil(this.destroy$))
         .subscribe({
-          error: (error) => {
-            console.error('Error suspending account:', error);
-          },
+          error: (error) => {},
         });
     }
   }
@@ -301,7 +291,6 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   onWalletCreated(): void {
     // You can add any additional logic here if needed
     // For example, refresh wallet data or show success message
-    console.log('Wallet created successfully');
   }
 
   // Context Menu Methods

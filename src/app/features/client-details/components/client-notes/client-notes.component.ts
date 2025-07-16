@@ -1,4 +1,12 @@
-import { Component, inject, Input, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnInit,
+  OnDestroy,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
@@ -180,7 +188,6 @@ import { NoteCreationModalComponent } from './components/note-creation-modal/not
                       {{ note.createdAt | date : 'short' }}
                     </div>
                   </td>
-
                 </tr>
               </tbody>
             </table>
@@ -411,7 +418,6 @@ export class ClientNotesComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading notes:', error);
           this.alertService.error('Failed to load notes');
           return of([]);
         })
@@ -498,37 +504,6 @@ export class ClientNotesComponent implements OnInit, OnDestroy {
     );
   }
 
-  // togglePinNote(note: ClientNote): void {
-  //   note.isPinnedComment = !note.isPinnedComment;
-  //   this.applyFilters(); // Reapply filters to update the view
-  //   this.alertService.success(
-  //     note.isPinnedComment
-  //       ? 'Note pinned successfully'
-  //       : 'Note unpinned successfully'
-  //   );
-  //   // Here you would typically call an API to update the pin status
-  //   // this.notesService.updateNotePin(note.id, note.isPinnedComment).subscribe(...)
-  // }
-
-  // editNote(note: ClientNote): void {
-  //   // Implement edit note modal
-  //   console.log('Edit note:', note);
-  // }
-
-  // deleteNote(note: ClientNote): void {
-  //   if (confirm('Are you sure you want to delete this note?')) {
-  //     const index = this.notes.findIndex((n) => n.id === note.id);
-  //     if (index > -1) {
-  //       this.notes.splice(index, 1);
-  //       this.applyFilters();
-  //       this.alertService.success('Note deleted successfully');
-  //     }
-  //     // Here you would typically call an API to delete the note
-  //     // this.notesService.deleteNote(note.id).subscribe(...)
-  //   }
-  // }
-
-  // Pagination methods
   previousPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;

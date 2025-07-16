@@ -44,7 +44,6 @@ export class ConfirmAuthComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Unexpected error during auth confirmation:', error);
         this.handleError('An unexpected error occurred. Please try again.');
       },
     });

@@ -114,9 +114,7 @@ export class EmployeeChatComponent
       const accessToken = this.getAccessToken();
       await this.chatService.initialize(accessToken, ChatType.PersonToPerson);
       await this.employeeChatService.initialize(accessToken);
-    } catch (error) {
-      console.error('Failed to initialize employee chat service:', error);
-    }
+    } catch (error) {}
   }
 
   private setupSubscriptions(): void {
@@ -211,9 +209,7 @@ export class EmployeeChatComponent
       const employees = await this.employeeChatService.getAllEmployees();
       this.newChatModal.employees = employees;
       this.newChatModal.filteredEmployees = employees;
-    } catch (error) {
-      console.error('Failed to load employees:', error);
-    }
+    } catch (error) {}
   }
 
   selectChat(chat: ChatSummaryDto): void {
@@ -234,9 +230,7 @@ export class EmployeeChatComponent
         this.typingSubject.next(false);
         this.changeDetector.markForCheck();
       })
-      .catch((error) => {
-        console.error('Failed to send message:', error);
-      });
+      .catch((error) => {});
   }
 
   onMessageInput(): void {
@@ -291,9 +285,7 @@ export class EmployeeChatComponent
         this.closeNewChatModal();
         this.chatService.selectChat(chatId);
       }
-    } catch (error) {
-      console.error('Failed to start new chat:', error);
-    }
+    } catch (error) {}
   }
 
   getFilteredChats(): ChatSummaryDto[] {
@@ -396,18 +388,14 @@ export class EmployeeChatComponent
         this.messagesContainer.nativeElement.scrollTop =
           this.messagesContainer.nativeElement.scrollHeight;
       }
-    } catch (err) {
-      console.error('Could not scroll to bottom:', err);
-    }
+    } catch (err) {}
   }
 
   private getAccessToken(): string {
-    // Get from your auth service
     return localStorage.getItem('iFC03fkUWhcdYGciaclPyeqySdQE6qCd') || '';
   }
 
   private getCurrentUserId(): string {
-    // This will be extracted from JWT token in the backend
     return 'current-user-id';
   }
 
@@ -427,12 +415,8 @@ export class EmployeeChatComponent
     if (confirm('Are you sure you want to delete this message?')) {
       this.employeeChatService
         .deleteMessage(messageId)
-        .then(() => {
-          console.log('Message deleted successfully');
-        })
-        .catch((error) => {
-          console.error('Failed to delete message:', error);
-        });
+        .then(() => {})
+        .catch((error) => {});
     }
   }
 
@@ -441,12 +425,8 @@ export class EmployeeChatComponent
     if (newContent && newContent !== message.content) {
       this.employeeChatService
         .editMessage(message.id, newContent)
-        .then(() => {
-          console.log('Message edited successfully');
-        })
-        .catch((error) => {
-          console.error('Failed to edit message:', error);
-        });
+        .then(() => {})
+        .catch((error) => {});
     }
   }
 }

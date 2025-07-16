@@ -148,13 +148,8 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
       .getWallets(this.tradingAccountId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (response) => {
-          // Wallet data is already set in the service via signals
-          // No need to manually set it here since we're using reactive signals
-        },
-        error: (error) => {
-          console.error('Error loading wallets:', error);
-        },
+        next: (response) => {},
+        error: (error) => {},
       });
   }
 
@@ -210,7 +205,6 @@ export class WalletModalComponent implements OnInit, OnDestroy, OnChanges {
             this.addingWallet = false;
           },
           error: (error) => {
-            console.error('Error creating wallet:', error);
             this.alertService.error('Failed to create wallet');
             this.addingWallet = false;
           },

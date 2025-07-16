@@ -15,16 +15,15 @@ export const authGuard: CanActivateFn = (): boolean | UrlTree => {
   });
 };
 
-export const roleGuard = (requiredRole: string[]): CanActivateFn => {
+export const roleGuard = (permissionIndex: number): CanActivateFn => {
   return (): boolean | UrlTree => {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    return (
-      authService
-        .userPermissions()
-        .some((permission) => requiredRole.includes(permission)) ||
-      router.createUrlTree(['/auth/unauthorized'])
-    );
+    if (authService.hasPermission(permissionIndex)) {
+      return true;
+    }
+
+    return router.createUrlTree(['/auth/unauthorized']);
   };
 };

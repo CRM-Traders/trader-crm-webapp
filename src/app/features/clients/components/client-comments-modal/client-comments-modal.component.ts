@@ -44,7 +44,7 @@ export class ClientCommentsModalComponent implements OnInit, OnDestroy {
   currentPage = 0;
   pageSize = 10;
   hasNextPage = false;
-  
+
   // Form visibility control
   showCommentForm = false;
 
@@ -84,7 +84,6 @@ export class ClientCommentsModalComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.alertService.error('Failed to load comments');
-          console.error('Error loading comments:', error);
         },
       });
   }
@@ -141,7 +140,6 @@ export class ClientCommentsModalComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.alertService.error('Failed to add comment');
-          console.error('Error adding comment:', error);
         },
       });
   }
@@ -172,7 +170,6 @@ export class ClientCommentsModalComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.alertService.error('Failed to delete comment');
-          console.error('Error deleting comment:', error);
         },
       });
   }

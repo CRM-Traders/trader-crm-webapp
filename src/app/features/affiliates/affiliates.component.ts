@@ -6,10 +6,7 @@ import {
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { AffiliatesService } from './services/affiliates.service';
 import { Affiliate } from './models/affiliates.model';
@@ -133,8 +130,6 @@ export class AffiliatesComponent implements OnInit {
     },
   ];
 
-
-
   ngOnInit(): void {
     const websiteColumn = this.gridColumns.find(
       (col) => col.field === 'website'
@@ -222,7 +217,6 @@ export class AffiliatesComponent implements OnInit {
           } else {
             this.alertService.error('Failed to delete affiliate');
           }
-          console.error('Error deleting affiliate:', error);
           return of(null);
         }),
         finalize(() => {
@@ -258,7 +252,6 @@ export class AffiliatesComponent implements OnInit {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import affiliates');
-          console.error('Error importing affiliates:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -278,30 +271,6 @@ export class AffiliatesComponent implements OnInit {
       sortDirection: options.sortDirection,
       globalFilter: options.globalFilter,
     };
-
-    // this.affiliatesService
-    //   .exportAffiliates(request)
-    //   .pipe(
-    //     takeUntil(this.destroy$),
-    //     catchError((error) => {
-    //       this.alertService.error('Failed to export affiliates');
-    //       console.error('Error exporting affiliates:', error);
-    //       return of(null);
-    //     })
-    //   )
-    //   .subscribe((blob) => {
-    //     if (blob) {
-    //       const url = window.URL.createObjectURL(blob);
-    //       const link = document.createElement('a');
-    //       link.href = url;
-    //       link.download = `affiliates_${
-    //         new Date().toISOString().split('T')[0]
-    //       }.csv`;
-    //       link.click();
-    //       window.URL.revokeObjectURL(url);
-    //       this.alertService.success('Export completed successfully');
-    //     }
-    //   });
   }
 
   openRegistrationModal(): void {
@@ -329,27 +298,30 @@ export class AffiliatesComponent implements OnInit {
   }
 
   downloadIntegrationDoc(affiliateId: string): void {
-    this.affiliatesService.generateClientDocumentation(affiliateId).pipe(
-      takeUntil(this.destroy$),
-      catchError((error) => {
-        this.alertService.error('Failed to download integration document');
-        console.error('Error downloading integration document:', error);
-        return of(null);
-      })
-    ).subscribe((response) => {
-      if (response) {
-        const url = window.URL.createObjectURL(response);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `integration_document_${affiliateId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-        this.alertService.success('Integration document downloaded successfully!');
-      }
-    }
-    )
+    this.affiliatesService
+      .generateClientDocumentation(affiliateId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to download integration document');
+          return of(null);
+        })
+      )
+      .subscribe((response) => {
+        if (response) {
+          const url = window.URL.createObjectURL(response);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `integration_document_${affiliateId}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          this.alertService.success(
+            'Integration document downloaded successfully!'
+          );
+        }
+      });
   }
 
   downloadTemplate(): void {
@@ -365,7 +337,6 @@ export class AffiliatesComponent implements OnInit {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )

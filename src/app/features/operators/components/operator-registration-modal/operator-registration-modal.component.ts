@@ -278,7 +278,9 @@ interface RoleDropdownItem {
                   class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                 >
                   <!-- Search Input -->
-                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div
+                    class="p-3 border-b border-gray-200 dark:border-gray-700"
+                  >
                     <input
                       #userTypeSearchInput
                       type="text"
@@ -296,10 +298,12 @@ interface RoleDropdownItem {
                       class="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
                     >
                       <!-- Group Header -->
-                      <div class="px-3 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                      <div
+                        class="px-3 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+                      >
                         {{ group.group }}
                       </div>
-                      
+
                       <!-- Group Options -->
                       <div
                         *ngFor="let option of group.options"
@@ -315,8 +319,12 @@ interface RoleDropdownItem {
                       *ngIf="getFilteredUserTypeGroups().length === 0"
                       class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
-                      <span *ngIf="userTypeSearchTerm">No user types match your search</span>
-                      <span *ngIf="!userTypeSearchTerm">No user types found</span>
+                      <span *ngIf="userTypeSearchTerm"
+                        >No user types match your search</span
+                      >
+                      <span *ngIf="!userTypeSearchTerm"
+                        >No user types found</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -353,7 +361,9 @@ interface RoleDropdownItem {
                   "
                   (click)="toggleDepartmentDropdown()"
                 >
-                  <span class="truncate">{{ getSelectedDepartmentName() }}</span>
+                  <span class="truncate">{{
+                    getSelectedDepartmentName()
+                  }}</span>
                   <svg
                     class="w-4 h-4 ml-2 transition-transform"
                     [class.rotate-180]="departmentDropdownOpen"
@@ -376,7 +386,9 @@ interface RoleDropdownItem {
                   class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                 >
                   <!-- Search Input -->
-                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div
+                    class="p-3 border-b border-gray-200 dark:border-gray-700"
+                  >
                     <input
                       #departmentSearchInput
                       type="text"
@@ -428,11 +440,18 @@ interface RoleDropdownItem {
 
                     <!-- No results -->
                     <div
-                      *ngIf="!departmentLoading && getFilteredDepartments().length === 0"
+                      *ngIf="
+                        !departmentLoading &&
+                        getFilteredDepartments().length === 0
+                      "
                       class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                     >
-                      <span *ngIf="departmentSearchTerm">No departments match your search</span>
-                      <span *ngIf="!departmentSearchTerm">No departments found</span>
+                      <span *ngIf="departmentSearchTerm"
+                        >No departments match your search</span
+                      >
+                      <span *ngIf="!departmentSearchTerm"
+                        >No departments found</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -490,7 +509,9 @@ interface RoleDropdownItem {
                   class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                 >
                   <!-- Search Input -->
-                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div
+                    class="p-3 border-b border-gray-200 dark:border-gray-700"
+                  >
                     <input
                       #roleSearchInput
                       type="text"
@@ -639,7 +660,9 @@ interface RoleDropdownItem {
                   class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                 >
                   <!-- Search Input -->
-                  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                  <div
+                    class="p-3 border-b border-gray-200 dark:border-gray-700"
+                  >
                     <input
                       #branchSearchInput
                       type="text"
@@ -782,7 +805,6 @@ export class OperatorRegistrationModalComponent implements OnInit {
   availableRoles: RoleDropdownItem[] = [];
   availableBranches: BranchDropdownItem[] = [];
 
-  // Department dropdown properties
   departmentDropdownOpen = false;
   departmentLoading = false;
   departmentSearchTerm = '';
@@ -792,13 +814,11 @@ export class OperatorRegistrationModalComponent implements OnInit {
   departmentPageSize = 20;
   hasMoreDepartments = false;
 
-  // Role dropdown properties
   roleDropdownOpen = false;
   roleLoading = false;
   roleSearchTerm = '';
   selectedRole: RoleDropdownItem | null = null;
 
-  // Branch dropdown properties
   branchDropdownOpen = false;
   branchLoading = false;
   branchSearchTerm = '';
@@ -807,7 +827,6 @@ export class OperatorRegistrationModalComponent implements OnInit {
   branchPageSize = 20;
   hasMoreBranches = false;
 
-  // User Type dropdown properties
   userTypeDropdownOpen = false;
   userTypeSearchTerm = '';
   selectedUserType: { id: number; value: string; group: string } | null = null;
@@ -815,62 +834,119 @@ export class OperatorRegistrationModalComponent implements OnInit {
   BranchType = BranchType;
   UserType = UserType;
 
-  // User Type options organized by groups
   userTypeOptions = [
     {
       group: 'Administrators',
       options: [
-        { id: UserType.CompanyAdmin, value: 'Company Admin', group: 'Administrators' },
-        { id: UserType.BrandAdmin, value: 'Brand Admin', group: 'Administrators' }
-      ]
+        {
+          id: UserType.CompanyAdmin,
+          value: 'Company Admin',
+          group: 'Administrators',
+        },
+        {
+          id: UserType.BrandAdmin,
+          value: 'Brand Admin',
+          group: 'Administrators',
+        },
+      ],
     },
     {
       group: 'Heads of Department',
       options: [
-        { id: UserType.SalesHOD, value: 'Sales HOD', group: 'Heads of Department' },
-        { id: UserType.RetentionHOD, value: 'Retention HOD', group: 'Heads of Department' },
-        { id: UserType.SupportHOD, value: 'Support HOD', group: 'Heads of Department' },
-        { id: UserType.PspHOD, value: 'PSP HOD', group: 'Heads of Department' }
-      ]
+        {
+          id: UserType.SalesHOD,
+          value: 'Sales HOD',
+          group: 'Heads of Department',
+        },
+        {
+          id: UserType.RetentionHOD,
+          value: 'Retention HOD',
+          group: 'Heads of Department',
+        },
+        {
+          id: UserType.SupportHOD,
+          value: 'Support HOD',
+          group: 'Heads of Department',
+        },
+        { id: UserType.PspHOD, value: 'PSP HOD', group: 'Heads of Department' },
+      ],
     },
     {
       group: 'Managers',
       options: [
-        { id: UserType.SalesManager, value: 'Sales Manager', group: 'Managers' },
-        { id: UserType.RetentionManager, value: 'Retention Manager', group: 'Managers' },
-        { id: UserType.SupportManager, value: 'Support Manager', group: 'Managers' },
+        {
+          id: UserType.SalesManager,
+          value: 'Sales Manager',
+          group: 'Managers',
+        },
+        {
+          id: UserType.RetentionManager,
+          value: 'Retention Manager',
+          group: 'Managers',
+        },
+        {
+          id: UserType.SupportManager,
+          value: 'Support Manager',
+          group: 'Managers',
+        },
         { id: UserType.PSPManager, value: 'PSP Manager', group: 'Managers' },
         { id: UserType.BOManager, value: 'BO Manager', group: 'Managers' },
-        { id: UserType.ComplianceManager, value: 'Compliance Manager', group: 'Managers' },
-        { id: UserType.OperationsManager, value: 'Operations Manager', group: 'Managers' },
-        { id: UserType.DealingManager, value: 'Dealing Manager', group: 'Managers' }
-      ]
+        {
+          id: UserType.ComplianceManager,
+          value: 'Compliance Manager',
+          group: 'Managers',
+        },
+        {
+          id: UserType.OperationsManager,
+          value: 'Operations Manager',
+          group: 'Managers',
+        },
+        {
+          id: UserType.DealingManager,
+          value: 'Dealing Manager',
+          group: 'Managers',
+        },
+      ],
     },
     {
       group: 'Team Leads',
       options: [
         { id: UserType.SalesLead, value: 'Sales Lead', group: 'Team Leads' },
-        { id: UserType.RetentionLead, value: 'Retention Lead', group: 'Team Leads' },
-        { id: UserType.SupportLead, value: 'Support Lead', group: 'Team Leads' }
-      ]
+        {
+          id: UserType.RetentionLead,
+          value: 'Retention Lead',
+          group: 'Team Leads',
+        },
+        {
+          id: UserType.SupportLead,
+          value: 'Support Lead',
+          group: 'Team Leads',
+        },
+      ],
     },
     {
       group: 'Agents',
       options: [
         { id: UserType.SalesAgent, value: 'Sales Agent', group: 'Agents' },
-        { id: UserType.RetentionAgent, value: 'Retention Agent', group: 'Agents' },
-        { id: UserType.SupportAgent, value: 'Support Agent', group: 'Agents' }
-      ]
+        {
+          id: UserType.RetentionAgent,
+          value: 'Retention Agent',
+          group: 'Agents',
+        },
+        { id: UserType.SupportAgent, value: 'Support Agent', group: 'Agents' },
+      ],
     },
     {
       group: 'Other',
       options: [
-        { id: UserType.AffiliateManager, value: 'Affiliate Manager', group: 'Other' }
-      ]
-    }
+        {
+          id: UserType.AffiliateManager,
+          value: 'Affiliate Manager',
+          group: 'Other',
+        },
+      ],
+    },
   ];
-
-
 
   constructor() {
     this.registrationForm = this.fb.group({
@@ -888,31 +964,23 @@ export class OperatorRegistrationModalComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Initialize component and set up form change listeners
     this.setupFormChangeListeners();
     this.loadDepartments();
   }
 
   private setupFormChangeListeners(): void {
-    // Listen to department changes via form control value changes
     this.registrationForm
       .get('departmentId')
       ?.valueChanges.subscribe((value) => {
-        console.log('Department form control changed:', value);
         this.handleDepartmentChange(value);
       });
 
-    // Listen to branch type changes via form control value changes
     this.registrationForm.get('branchType')?.valueChanges.subscribe((value) => {
-      console.log('Branch type form control changed:', value);
       this.onBranchTypeChange({ target: { value } } as any);
     });
   }
 
   private handleDepartmentChange(departmentId: any): void {
-    console.log('Handling department change:', departmentId);
-
-    // Clear existing roles first
     this.availableRoles = [];
     this.selectedRole = null;
     this.registrationForm.patchValue({ roleId: '' }, { emitEvent: false });
@@ -925,9 +993,6 @@ export class OperatorRegistrationModalComponent implements OnInit {
   onBranchTypeChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     const branchType = target.value;
-    console.log('Handling branch type change:', branchType);
-
-    // Reset branch selection when branch type changes
     this.registrationForm.patchValue({ branchId: '' }, { emitEvent: false });
     this.selectedBranch = null;
     this.availableBranches = [];
@@ -975,8 +1040,6 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.showPassword = true; // Show the generated password
   }
 
-
-
   private loadRolesForDepartment(departmentId: string): void {
     this.roleLoading = true;
     this.operatorsService.getOperatorRolesByDepartment(departmentId).subscribe({
@@ -985,14 +1048,16 @@ export class OperatorRegistrationModalComponent implements OnInit {
         this.roleLoading = false;
       },
       error: (error) => {
-        console.error('Error loading roles:', error);
         this.availableRoles = [];
         this.roleLoading = false;
       },
     });
   }
 
-  private loadBranchesForType(branchType: BranchType, reset: boolean = false): void {
+  private loadBranchesForType(
+    branchType: BranchType,
+    reset: boolean = false
+  ): void {
     if (this.branchLoading) return;
 
     if (reset) {
@@ -1032,13 +1097,15 @@ export class OperatorRegistrationModalComponent implements OnInit {
         if (reset) {
           this.availableBranches = response.items || [];
         } else {
-          this.availableBranches = [...this.availableBranches, ...(response.items || [])];
+          this.availableBranches = [
+            ...this.availableBranches,
+            ...(response.items || []),
+          ];
         }
         this.hasMoreBranches = response.hasNextPage;
         this.branchLoading = false;
       },
       error: (error) => {
-        console.error('Error loading branches:', error);
         this.availableBranches = [];
         this.branchLoading = false;
         this.alertService.error('Failed to load branches');
@@ -1129,10 +1196,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
     // Close other dropdowns
     this.roleDropdownOpen = false;
     this.branchDropdownOpen = false;
-    
+
     // Toggle department dropdown
     this.departmentDropdownOpen = !this.departmentDropdownOpen;
-    
+
     if (this.departmentDropdownOpen) {
       if (this.availableDepartments.length === 0) {
         this.loadDepartments();
@@ -1165,7 +1232,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
         if (reset) {
           this.availableDepartments = response.items;
         } else {
-          this.availableDepartments = [...this.availableDepartments, ...response.items];
+          this.availableDepartments = [
+            ...this.availableDepartments,
+            ...response.items,
+          ];
         }
         this.hasMoreDepartments = response.hasNextPage;
         this.departmentLoading = false;
@@ -1222,10 +1292,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
     // Close other dropdowns
     this.departmentDropdownOpen = false;
     this.branchDropdownOpen = false;
-    
+
     // Toggle role dropdown
     this.roleDropdownOpen = !this.roleDropdownOpen;
-    
+
     if (this.roleDropdownOpen) {
       // Reset search when opening dropdown
       this.roleSearchTerm = '';
@@ -1241,7 +1311,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     if (!this.roleSearchTerm) {
       return this.availableRoles;
     }
-    return this.availableRoles.filter(role =>
+    return this.availableRoles.filter((role) =>
       role.value.toLowerCase().includes(this.roleSearchTerm)
     );
   }
@@ -1271,10 +1341,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
     // Close other dropdowns
     this.departmentDropdownOpen = false;
     this.roleDropdownOpen = false;
-    
+
     // Toggle branch dropdown
     this.branchDropdownOpen = !this.branchDropdownOpen;
-    
+
     if (this.branchDropdownOpen) {
       const branchType = this.registrationForm.get('branchType')?.value;
       if (branchType) {
@@ -1292,10 +1362,13 @@ export class OperatorRegistrationModalComponent implements OnInit {
     const target = event.target as HTMLInputElement;
     this.branchSearchTerm = target.value;
     this.currentBranchPage = 0;
-    
+
     // Reload branches with search term
     this.availableBranches = [];
-    this.loadBranchesForType(parseInt(this.registrationForm.get('branchType')?.value), true);
+    this.loadBranchesForType(
+      parseInt(this.registrationForm.get('branchType')?.value),
+      true
+    );
   }
 
   onBranchDropdownScroll(event: Event): void {
@@ -1308,7 +1381,9 @@ export class OperatorRegistrationModalComponent implements OnInit {
       !this.branchLoading
     ) {
       this.currentBranchPage++;
-      this.loadBranchesForType(parseInt(this.registrationForm.get('branchType')?.value));
+      this.loadBranchesForType(
+        parseInt(this.registrationForm.get('branchType')?.value)
+      );
     }
   }
 
@@ -1358,10 +1433,10 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.departmentDropdownOpen = false;
     this.roleDropdownOpen = false;
     this.branchDropdownOpen = false;
-    
+
     // Toggle user type dropdown
     this.userTypeDropdownOpen = !this.userTypeDropdownOpen;
-    
+
     if (this.userTypeDropdownOpen) {
       // Reset search when opening dropdown
       this.userTypeSearchTerm = '';
@@ -1391,13 +1466,16 @@ export class OperatorRegistrationModalComponent implements OnInit {
     if (!this.userTypeSearchTerm) {
       return this.userTypeOptions;
     }
-    
-    return this.userTypeOptions.map(group => ({
-      ...group,
-      options: group.options.filter(option =>
-        option.value.toLowerCase().includes(this.userTypeSearchTerm) ||
-        option.group.toLowerCase().includes(this.userTypeSearchTerm)
-      )
-    })).filter(group => group.options.length > 0);
+
+    return this.userTypeOptions
+      .map((group) => ({
+        ...group,
+        options: group.options.filter(
+          (option) =>
+            option.value.toLowerCase().includes(this.userTypeSearchTerm) ||
+            option.group.toLowerCase().includes(this.userTypeSearchTerm)
+        ),
+      }))
+      .filter((group) => group.options.length > 0);
   }
 }

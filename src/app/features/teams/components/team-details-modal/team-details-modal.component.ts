@@ -65,7 +65,10 @@ interface BrandDropdownResponse {
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="teamLoading" class="px-6 py-8 flex items-center justify-center">
+      <div
+        *ngIf="teamLoading"
+        class="px-6 py-8 flex items-center justify-center"
+      >
         <div class="text-center">
           <svg
             class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4"
@@ -675,7 +678,6 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading team data:', error);
           this.alertService.error('Failed to load team data');
           return of(this.team); // Fallback to input team data
         }),
@@ -778,7 +780,6 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading brands:', error);
           this.alertService.error('Failed to load brands');
           return of({
             items: [],
@@ -825,7 +826,6 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading desks:', error);
           this.alertService.error('Failed to load desks');
           return of({
             items: [],
@@ -839,11 +839,13 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       .subscribe((response: DeskDropdownResponse) => {
         if (this.deskPageIndex === 0) {
           this.availableDesks = response.items;
-          
+
           // Ensure the current desk is always available in the list
           const selectedDeskId = this.editForm.get('deskId')?.value;
           if (selectedDeskId && this.team.deskName) {
-            const currentDeskExists = this.availableDesks.find(desk => desk.id === selectedDeskId);
+            const currentDeskExists = this.availableDesks.find(
+              (desk) => desk.id === selectedDeskId
+            );
             if (!currentDeskExists) {
               // Add the current desk to the list if it's not already there
               this.availableDesks.unshift({
@@ -851,7 +853,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
                 value: this.team.deskName,
                 officeName: this.team.officeName || '',
                 language: null,
-                type: 1 // Default type
+                type: 1, // Default type
               });
             }
           }
@@ -958,18 +960,18 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     const selectedDesk = this.availableDesks.find(
       (desk) => desk.id === selectedDeskId
     );
-    
+
     // If no desk is selected, show placeholder
     if (!selectedDeskId) {
       return 'Select a desk';
     }
-    
+
     // If desk is selected but not found in available desks, show placeholder
     // This happens when brand changes and the old desk doesn't belong to the new brand
     if (!selectedDesk) {
       return 'Select a desk';
     }
-    
+
     return selectedDesk.value;
   }
 

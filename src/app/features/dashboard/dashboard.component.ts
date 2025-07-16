@@ -13,7 +13,7 @@ import { DashboardData } from './models/dashboard.models';
 })
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
-  
+
   dashboardData: DashboardData | null = null;
   loading = true;
   error: string | null = null;
@@ -32,8 +32,7 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         this.error = 'Failed to load dashboard data';
         this.loading = false;
-        console.error('Dashboard error:', err);
-      }
+      },
     });
   }
 
@@ -49,7 +48,7 @@ export class DashboardComponent implements OnInit {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0 || diffDays === 1) {
       return 'Today';
     } else if (diffDays === 2) {
@@ -68,31 +67,31 @@ export class DashboardComponent implements OnInit {
     if (country.startsWith('+') || /^\d+$/.test(country)) {
       return 'Unknown';
     }
-    
+
     // Country code mapping for better display
     const countryMap: { [key: string]: string } = {
-      'AF': 'Afghanistan',
-      'AL': 'Albania',
-      'AR': 'Argentina',
-      'AS': 'American Samoa',
-      'AW': 'Aruba',
-      'AX': 'Åland Islands',
-      'BA': 'Bosnia and Herzegovina',
-      'BS': 'Bahamas',
-      'GE': 'Georgia',
-      'MX': 'Mexico',
+      AF: 'Afghanistan',
+      AL: 'Albania',
+      AR: 'Argentina',
+      AS: 'American Samoa',
+      AW: 'Aruba',
+      AX: 'Åland Islands',
+      BA: 'Bosnia and Herzegovina',
+      BS: 'Bahamas',
+      GE: 'Georgia',
+      MX: 'Mexico',
     };
-    
+
     return countryMap[country] || country;
   }
 
   getValidCountries(): string[] {
     if (!this.dashboardData?.registrationCountries) return [];
-    
+
     return this.dashboardData.registrationCountries
-      .filter(country => !country.startsWith('+') && !/^\d+$/.test(country))
-      .map(country => this.getCountryDisplayName(country))
-      .filter(country => country !== 'Unknown');
+      .filter((country) => !country.startsWith('+') && !/^\d+$/.test(country))
+      .map((country) => this.getCountryDisplayName(country))
+      .filter((country) => country !== 'Unknown');
   }
 
   refreshData(): void {

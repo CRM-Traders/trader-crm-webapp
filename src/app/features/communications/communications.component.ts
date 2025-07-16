@@ -127,9 +127,7 @@ export class CommunicationsComponent
     try {
       const accessToken = this.getAccessToken(); // Implement based on your auth service
       await this.chatService.initialize(accessToken, ChatType.CustomerSupport);
-    } catch (error) {
-      console.error('Failed to initialize communications service:', error);
-    }
+    } catch (error) {}
   }
 
   private setupSubscriptions(): void {
@@ -236,9 +234,7 @@ export class CommunicationsComponent
         this.typingSubject.next(false);
         this.changeDetector.markForCheck();
       })
-      .catch((error) => {
-        console.error('Failed to send message:', error);
-      });
+      .catch((error) => {});
   }
 
   onMessageInput(): void {
@@ -254,9 +250,7 @@ export class CommunicationsComponent
   async setOperatorStatus(status: OperatorStatus): Promise<void> {
     try {
       await this.chatService.setOperatorStatus(status);
-    } catch (error) {
-      console.error('Failed to set operator status:', error);
-    }
+    } catch (error) {}
   }
 
   openTransferModal(chatId: string): void {
@@ -293,9 +287,7 @@ export class CommunicationsComponent
         this.transferModal.reason
       );
       this.closeTransferModal();
-    } catch (error) {
-      console.error('Failed to transfer chat:', error);
-    }
+    } catch (error) {}
   }
 
   openCloseModal(chatId: string): void {
@@ -323,9 +315,7 @@ export class CommunicationsComponent
         this.closeModal.reason
       );
       this.closeCloseModal();
-    } catch (error) {
-      console.error('Failed to close chat:', error);
-    }
+    } catch (error) {}
   }
 
   getFilteredChats(): ChatSummaryDto[] {
@@ -440,9 +430,7 @@ export class CommunicationsComponent
         this.messagesContainer.nativeElement.scrollTop =
           this.messagesContainer.nativeElement.scrollHeight;
       }
-    } catch (err) {
-      console.error('Could not scroll to bottom:', err);
-    }
+    } catch (err) {}
   }
 
   private getAccessToken(): string {

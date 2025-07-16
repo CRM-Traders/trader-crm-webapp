@@ -159,9 +159,7 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
     const script = document.createElement('script');
     script.src = 'https://s3.tradingview.com/tv.js';
     script.async = true;
-    script.onload = () => {
-      console.log('TradingView library loaded');
-    };
+    script.onload = () => {};
     document.head.appendChild(script);
 
     // Load additional widget scripts
@@ -672,7 +670,6 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   closePosition(position: Position): void {
-    console.log('Closing position:', position);
     this.socketService.send('trading-live', {
       type: 'close-position',
       payload: {
@@ -699,8 +696,6 @@ export class ChartsComponent implements OnInit, OnDestroy, AfterViewInit {
       takeProfit: this.takeProfit() || null,
       timestamp: new Date(),
     };
-
-    console.log('Placing order:', order);
 
     // Send order via WebSocket
     this.socketService.send('trading-live', {

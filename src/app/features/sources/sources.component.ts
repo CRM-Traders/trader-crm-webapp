@@ -34,7 +34,6 @@ export class SourcesComponent implements OnInit {
       .get<string[]>(this.DOMAINS_API_URL)
       .pipe(
         catchError((error) => {
-          console.error('Error loading domains:', error);
           this.error.set(
             'Failed to load domains. Please check if the API server is running.'
           );

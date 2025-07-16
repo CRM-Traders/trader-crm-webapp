@@ -538,7 +538,6 @@ export class ClientCallbacksComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading callbacks:', error);
           this.alertService.error('Failed to load callbacks');
           return of([]);
         })
@@ -669,7 +668,6 @@ export class ClientCallbacksComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error opening reminder:', error);
           this.alertService.error('Failed to open reminder');
           return of(null);
         })
@@ -688,7 +686,6 @@ export class ClientCallbacksComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error completing callback:', error);
           this.alertService.error('Failed to complete callback');
           return of(null);
         })
@@ -715,7 +712,6 @@ export class ClientCallbacksComponent implements OnInit, OnDestroy {
         .pipe(
           takeUntil(this.destroy$),
           catchError((error) => {
-            console.error('Error deleting callback:', error);
             this.alertService.error('Failed to delete callback');
             return of(null);
           })

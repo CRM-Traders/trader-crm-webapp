@@ -83,7 +83,6 @@ export class TradingAccountsComponent implements OnInit {
         this.loading.set(false);
       },
       error: (error) => {
-        console.error('Error loading accounts:', error);
         this.alertService.error('Failed to load trading accounts');
         this.loading.set(false);
       },
@@ -110,7 +109,6 @@ export class TradingAccountsComponent implements OnInit {
           this.loading.set(false);
         },
         error: (error) => {
-          console.error('Error creating account:', error);
           this.alertService.error('Failed to create trading account');
           this.loading.set(false);
         },

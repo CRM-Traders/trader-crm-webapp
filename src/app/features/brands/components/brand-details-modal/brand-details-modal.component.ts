@@ -1,6 +1,13 @@
 // src/app/features/brands/components/brand-details-modal/brand-details-modal.component.ts
 
-import { Component, inject, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnInit,
+  OnDestroy,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -15,9 +22,9 @@ import { Country } from '../../../../core/models/country.model';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import { BrandsService } from '../../services/brands.service';
 import { Brand, BrandUpdateRequest } from '../../models/brand.model';
-import { 
-  OfficeDropdownItem, 
-  OfficesListRequest 
+import {
+  OfficeDropdownItem,
+  OfficesListRequest,
 } from '../../../officies/models/office.model';
 
 @Component({
@@ -38,7 +45,10 @@ import {
       </div>
 
       <!-- Loading State -->
-      <div *ngIf="brandLoading" class="px-6 py-8 flex items-center justify-center">
+      <div
+        *ngIf="brandLoading"
+        class="px-6 py-8 flex items-center justify-center"
+      >
         <div class="text-center">
           <svg
             class="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4"
@@ -153,7 +163,9 @@ import {
                     class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                   >
                     <!-- Search Input -->
-                    <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <div
+                      class="p-3 border-b border-gray-200 dark:border-gray-700"
+                    >
                       <input
                         #countrySearchInput
                         type="text"
@@ -246,7 +258,9 @@ import {
                     class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                   >
                     <!-- Search Input -->
-                    <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <div
+                      class="p-3 border-b border-gray-200 dark:border-gray-700"
+                    >
                       <input
                         #officeSearchInput
                         type="text"
@@ -314,7 +328,9 @@ import {
                       editForm.get('officeId')?.touched
                     "
                   >
-                    <span *ngIf="editForm.get('officeId')?.errors?.['required']">
+                    <span
+                      *ngIf="editForm.get('officeId')?.errors?.['required']"
+                    >
                       Office selection is required
                     </span>
                   </p>
@@ -553,9 +569,8 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading brand data:', error);
           this.alertService.error('Failed to load brand data');
-          return of(this.brand); // Fallback to input brand data
+          return of(this.brand);
         }),
         finalize(() => (this.brandLoading = false))
       )
@@ -632,10 +647,10 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     if (this.countryDropdownOpen) {
       this.countryDropdownOpen = false;
     }
-    
+
     // Toggle office dropdown
     this.officeDropdownOpen = !this.officeDropdownOpen;
-    
+
     if (this.officeDropdownOpen && this.availableOffices.length === 0) {
       this.loadOffices();
     }
@@ -666,7 +681,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
         }
         this.hasMoreOffices = response.hasNextPage;
         this.officeLoading = false;
-        
+
         // Set selected office from office name if we have the brand's office name
         if (this.brand.officeName && !this.selectedOffice) {
           this.setSelectedOfficeFromName(this.brand.officeName);
@@ -707,7 +722,8 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   setSelectedOfficeFromName(officeName: string): void {
-    this.selectedOffice = this.availableOffices.find(o => o.value === officeName) || null;
+    this.selectedOffice =
+      this.availableOffices.find((o) => o.value === officeName) || null;
   }
 
   getSelectedOfficeName(): string {
@@ -723,7 +739,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
       next: (countries) => {
         this.availableCountries = countries;
         this.filteredCountries = countries;
-        
+
         // Set selected country if we have the brand's country code
         if (this.brand.country) {
           this.setSelectedCountryFromCode(this.brand.country);
@@ -741,7 +757,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     if (this.officeDropdownOpen) {
       this.officeDropdownOpen = false;
     }
-    
+
     // Toggle country dropdown
     this.countryDropdownOpen = !this.countryDropdownOpen;
   }
@@ -749,8 +765,8 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   onCountrySearch(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.countrySearchTerm = target.value.toLowerCase();
-    
-    this.filteredCountries = this.availableCountries.filter(country =>
+
+    this.filteredCountries = this.availableCountries.filter((country) =>
       country.name.toLowerCase().includes(this.countrySearchTerm)
     );
   }
@@ -764,11 +780,13 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   setSelectedCountryFromCode(countryCode: string): void {
-    this.selectedCountry = this.availableCountries.find(c => c.code === countryCode) || null;
+    this.selectedCountry =
+      this.availableCountries.find((c) => c.code === countryCode) || null;
   }
 
-    setSelectedCountryFromName(countryName: string): void {
-    this.selectedCountry = this.availableCountries.find(c => c.name === countryName) || null;
+  setSelectedCountryFromName(countryName: string): void {
+    this.selectedCountry =
+      this.availableCountries.find((c) => c.name === countryName) || null;
   }
 
   getSelectedCountryName(): string {
@@ -779,7 +797,7 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   getCountryNameByCode(countryCode: string): string {
-    const country = this.availableCountries.find(c => c.code === countryCode);
+    const country = this.availableCountries.find((c) => c.code === countryCode);
     return country ? country.name : countryCode;
   }
 
@@ -787,11 +805,11 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    
+
     // Check if click is inside any dropdown container
     const officeDropdown = target.closest('[data-dropdown="office"]');
     const countryDropdown = target.closest('[data-dropdown="country"]');
-    
+
     // Close dropdowns if click is outside both dropdowns
     if (!officeDropdown && !countryDropdown) {
       this.officeDropdownOpen = false;

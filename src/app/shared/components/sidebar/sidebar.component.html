@@ -46,7 +46,7 @@
   <nav class="flex-1 py-1 overflow-y-auto overflow-x-hidden">
     <ul class="space-y-1 px-1">
       <li *ngFor="let item of navItems">
-        <ng-container *hasPermission="item.requiredRoles!">
+        <ng-container *hasPermission="item.permission">
           <a
             [routerLink]="item.route"
             routerLinkActive="active-nav-item"
