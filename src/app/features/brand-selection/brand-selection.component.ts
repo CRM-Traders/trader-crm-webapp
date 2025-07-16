@@ -289,7 +289,7 @@ export class BrandSelectionComponent implements OnInit {
           }
 
           // Navigate to dashboard
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/']);
         }
       });
   }
