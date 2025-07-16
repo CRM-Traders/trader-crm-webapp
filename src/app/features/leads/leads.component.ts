@@ -8,7 +8,6 @@ import {
   Output,
   EventEmitter,
 } from '@angular/core';
-import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
@@ -633,21 +632,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       this.totalCount = result.totalUsers;
       this.activeCount = result.activeUsersTotalCount;
     });
-  }
-
-  openPermissionDialog(user: any): void {
-    this.modalService.open(
-      PermissionTableComponent,
-      {
-        size: 'xl',
-        centered: true,
-        closable: true,
-        customClass: 'max-h-screen',
-      },
-      {
-        userId: user.id,
-      }
-    );
   }
 
   openPasswordChangeModal(lead: Lead): void {

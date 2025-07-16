@@ -8,15 +8,9 @@ import { PermissionSection } from '../../models/permissions/permission.model';
 export class PermissionTableService {
   private _http = inject(HttpService);
 
-  allPermissions(role: string | undefined) {
+  allPermissions(userId: string) {
     return this._http.get<PermissionSection[]>(
-      `identity/api/permissions/all?role=${role}`
-    );
-  }
-
-  userPermissions(userId: string) {
-    return this._http.get<string[]>(
-      `identity/api/permissions/user/${userId}/ids`
+      `identity/api/permissions/all?userId=${userId}`
     );
   }
 

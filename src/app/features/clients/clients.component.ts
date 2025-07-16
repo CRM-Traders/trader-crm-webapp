@@ -39,7 +39,6 @@ import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
-import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
 import { ClientRegistrationModalComponent } from './components/client-registration-modal/client-registration-modal.component';
 import { ClientCommentsModalComponent } from './components/client-comments-modal/client-comments-modal.component';
 import {
@@ -1250,21 +1249,6 @@ export class ClientsComponent implements OnInit {
 
   onSaleStatusChanged(clientId: string, newStatus: KycStatus): void {
     this.loadClientStatistics();
-  }
-
-  openPermissionDialog(user: any): void {
-    this.modalService.open(
-      PermissionTableComponent,
-      {
-        size: 'xl',
-        centered: true,
-        closable: true,
-        customClass: 'max-h-screen',
-      },
-      {
-        userId: user.id,
-      }
-    );
   }
 
   onAutoLogin(client: Client): void {
