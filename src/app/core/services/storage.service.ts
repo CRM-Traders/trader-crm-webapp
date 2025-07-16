@@ -180,9 +180,7 @@ export class StorageService {
 
         window.URL.revokeObjectURL(url);
       },
-      error: (error) => {
-        console.error('Error downloading file:', error);
-      },
+      error: (error) => {},
     });
   }
 

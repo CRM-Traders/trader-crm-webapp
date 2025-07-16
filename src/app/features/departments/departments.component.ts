@@ -139,7 +139,6 @@ export class DepartmentsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading department statistics:', error);
           this.totalCount = 0;
           this.activeCount = 0;
           return of(null);
@@ -233,7 +232,6 @@ export class DepartmentsComponent implements OnInit, OnDestroy {
           } else {
             this.alertService.error('Failed to delete department');
           }
-          console.error('Error deleting department:', error);
           return of(null);
         }),
         finalize(() => {
@@ -267,7 +265,6 @@ export class DepartmentsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import departments');
-          console.error('Error importing departments:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -295,7 +292,6 @@ export class DepartmentsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export departments');
-          console.error('Error exporting departments:', error);
           return of(null);
         })
       )
@@ -327,7 +323,6 @@ export class DepartmentsComponent implements OnInit, OnDestroy {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )

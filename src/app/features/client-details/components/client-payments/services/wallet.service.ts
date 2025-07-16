@@ -11,7 +11,7 @@ import {
   TradingAccountSummary,
   ClientWalletsSummary,
   WalletTransactionFilters,
-  WalletTransactionResponse
+  WalletTransactionResponse,
 } from '../models/wallet.model';
 import { Wallet } from '../../client-accounts/models/wallet.model';
 
@@ -36,10 +36,9 @@ export class WalletService {
   readonly tradingAccounts = this._tradingAccounts.asReadonly();
   readonly recentTransaction = this._recentTransaction.asReadonly();
 
-  /**
-   * Get trading accounts for dropdown selection
-   */
-  getTradingAccounts(clientUserId: string): Observable<TradingAccountSummary[]> {
+  getTradingAccounts(
+    clientUserId: string
+  ): Observable<TradingAccountSummary[]> {
     this._loading.set(true);
 
     return this.http
@@ -48,12 +47,10 @@ export class WalletService {
       )
       .pipe(
         tap((accounts) => {
-          console.log('WalletService: Trading accounts loaded:', accounts);
           this._tradingAccounts.set(accounts);
           this._loading.set(false);
         }),
         catchError((error) => {
-          console.error('WalletService: Error loading trading accounts:', error);
           this._loading.set(false);
           this.alertService.error(
             'Failed to load trading accounts. Please try again.'
@@ -70,16 +67,12 @@ export class WalletService {
       .get<Wallet[]>(`${this.tradingBaseEndpoint}/${tradingAccountId}`)
       .pipe(
         tap((wallets) => {
-          console.log('WalletService: Wallets loaded for account:', wallets);
           this._selectedAccountWallets.set(wallets);
           this._loading.set(false);
         }),
         catchError((error) => {
-          console.error('WalletService: Error loading wallets:', error);
           this._loading.set(false);
-          this.alertService.error(
-            'Failed to load wallets. Please try again.'
-          );
+          this.alertService.error('Failed to load wallets. Please try again.');
           return throwError(() => error);
         })
       );
@@ -89,7 +82,6 @@ export class WalletService {
    * Process deposit transaction
    */
   deposit(request: DepositRequest): Observable<void> {
-    console.log('WalletService: Processing deposit:', request);
     this._loading.set(true);
 
     return this.http
@@ -98,7 +90,10 @@ export class WalletService {
         tap(() => {
           this._loading.set(false);
           this.alertService.success(
-            `Deposit of ${this.formatCurrency(request.amount, request.currency)} has been processed successfully!`
+            `Deposit of ${this.formatCurrency(
+              request.amount,
+              request.currency
+            )} has been processed successfully!`
           );
         }),
         catchError((error) => {
@@ -111,9 +106,6 @@ export class WalletService {
       );
   }
 
-  /**
-   * Process withdrawal transaction
-   */
   withdraw(request: WithdrawRequest): Observable<void> {
     this._loading.set(true);
 
@@ -123,7 +115,10 @@ export class WalletService {
         tap(() => {
           this._loading.set(false);
           this.alertService.success(
-            `Withdrawal of ${this.formatCurrency(request.amount, request.currency)} has been processed successfully!`
+            `Withdrawal of ${this.formatCurrency(
+              request.amount,
+              request.currency
+            )} has been processed successfully!`
           );
         }),
         catchError((error) => {
@@ -136,51 +131,47 @@ export class WalletService {
       );
   }
 
-  /**
-   * Get client transactions by user ID with pagination and filtering
-   */
   getClientTransactionsByUserId(
     userId: string,
     filters?: WalletTransactionFilters
   ): Observable<WalletTransactionResponse> {
     this._loading.set(true);
 
-    // Build query parameters
     const params = new URLSearchParams();
     params.append('clientUserId', userId);
 
-    if (filters?.pageNumber) params.append('pageNumber', (filters.pageNumber - 1).toString()); // Adjust for 0-based pageNumber
-    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString()); // pageSize is the actual count
-    if (filters?.transactionType) params.append('transactionType', filters.transactionType);
+    if (filters?.pageNumber)
+      params.append('pageNumber', (filters.pageNumber - 1).toString());
+    if (filters?.pageSize)
+      params.append('pageSize', filters.pageSize.toString());
+    if (filters?.transactionType)
+      params.append('transactionType', filters.transactionType);
     if (filters?.currency) params.append('currency', filters.currency);
 
     const queryString = params.toString();
     const url = `traiding/api/Wallets/client-transactions-by-user-id?${queryString}`;
 
-    return this.http
-      .get<WalletTransactionResponse>(url)
-      .pipe(
-        tap((response) => {
-          this._loading.set(false);
-        }),
-        catchError((error) => {
-          this._loading.set(false);
-          this.alertService.error(
-            'Failed to load client transactions. Please try again.'
-          );
-          return throwError(() => error);
-        })
-      );
+    return this.http.get<WalletTransactionResponse>(url).pipe(
+      tap((response) => {
+        this._loading.set(false);
+      }),
+      catchError((error) => {
+        this._loading.set(false);
+        this.alertService.error(
+          'Failed to load client transactions. Please try again.'
+        );
+        return throwError(() => error);
+      })
+    );
   }
 
-  /**
-   * Get client wallets summary
-   */
   getClientWalletsSummary(userId: string): Observable<ClientWalletsSummary> {
     this._loading.set(true);
 
     return this.http
-      .get<ClientWalletsSummary>(`traiding/api/Wallets/client-wallets-summary?clientUserId=${userId}`)
+      .get<ClientWalletsSummary>(
+        `traiding/api/Wallets/client-wallets-summary?clientUserId=${userId}`
+      )
       .pipe(
         tap((summary) => {
           this._loading.set(false);
@@ -195,32 +186,32 @@ export class WalletService {
       );
   }
 
-  /**
-   * Clear recent transaction
-   */
   clearRecentTransaction(): void {
     this._recentTransaction.set(null);
   }
 
-  /**
-   * Clear trading accounts
-   */
   clearTradingAccounts(): void {
     this._tradingAccounts.set([]);
   }
 
-  /**
-   * Format currency for display
-   */
   formatCurrency(amount: number, currency: string = 'USD'): string {
-    // Handle non-standard currencies like USDT, BTC, ETH, etc.
-    const cryptoCurrencies = ['USDT', 'BTC', 'ETH', 'ADA', 'DOT', 'SOL', 'AVAX', 'MATIC', 'LINK', 'UNI'];
-    
+    const cryptoCurrencies = [
+      'USDT',
+      'BTC',
+      'ETH',
+      'ADA',
+      'DOT',
+      'SOL',
+      'AVAX',
+      'MATIC',
+      'LINK',
+      'UNI',
+    ];
+
     if (cryptoCurrencies.includes(currency)) {
       return `${amount.toFixed(2)} ${currency}`;
     }
-    
-    // For standard currencies, use Intl.NumberFormat
+
     try {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -229,21 +220,14 @@ export class WalletService {
         maximumFractionDigits: 2,
       }).format(amount);
     } catch (error) {
-      // Fallback for any currency that might cause issues
       return `${amount.toFixed(2)} ${currency}`;
     }
   }
 
-  /**
-   * Get supported currencies
-   */
   getSupportedCurrencies(): string[] {
-    return ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'JPY', 'AUD', 'CAD', ];
+    return ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'JPY', 'AUD', 'CAD'];
   }
 
-  /**
-   * Get account type display information
-   */
   getAccountTypeDisplay(accountType: string): string {
     switch (accountType?.toLowerCase()) {
       case 'demo':
@@ -257,9 +241,6 @@ export class WalletService {
     }
   }
 
-  /**
-   * Get account type color class
-   */
   getAccountTypeColorClass(accountType: string): string {
     switch (accountType?.toLowerCase()) {
       case 'demo':

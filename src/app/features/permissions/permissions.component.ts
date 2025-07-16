@@ -1,27 +1,27 @@
-import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PermissionTableService } from '../../shared/services/permission-table/permission-table.service';
 import {
-  PermissionSection,
   ActionType,
   Permission,
-} from '../../models/permissions/permission.model';
-import { PermissionTableService } from '../../services/permission-table/permission-table.service';
+  PermissionSection,
+} from '../../shared/models/permissions/permission.model';
 import { forkJoin, finalize } from 'rxjs';
-import { ModalRef } from '../../models/modals/modal.model';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-permission-table',
-  standalone: true,
+  selector: 'app-permissions',
   imports: [CommonModule, FormsModule],
-  templateUrl: './permission-table.component.html',
-  styleUrls: ['./permission-table.component.scss'],
+  templateUrl: './permissions.component.html',
+  styleUrl: './permissions.component.scss',
 })
-export class PermissionTableComponent implements OnInit {
-  @Input() userId!: string;
-  @Input() modalRef?: ModalRef;
-
+export class PermissionsComponent implements OnInit {
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
   private _service = inject(PermissionTableService);
+
+  operatorId!: string;
 
   permissionSections: PermissionSection[] = [];
 
@@ -33,7 +33,7 @@ export class PermissionTableComponent implements OnInit {
   updatingPermissions = new Set<string>();
 
   actionTypes = [
-    { value: ActionType.View, label: 'View' },
+    { value: ActionType.View, label: 'Read' },
     { value: ActionType.Edit, label: 'Edit' },
     { value: ActionType.Create, label: 'Create' },
     { value: ActionType.Delete, label: 'Delete' },
@@ -42,7 +42,14 @@ export class PermissionTableComponent implements OnInit {
   selectedPermissions: string[] = [];
 
   ngOnInit(): void {
-    this.loadPermissions();
+    const operatorId = this.activatedRoute.snapshot.paramMap.get('id');
+
+    if (!operatorId) {
+      this.router.navigate(['/']);
+      return;
+    }
+
+    this.operatorId = operatorId;
   }
 
   private loadPermissions(): void {
@@ -51,7 +58,7 @@ export class PermissionTableComponent implements OnInit {
 
     forkJoin({
       allPermissions: this._service.allPermissions(role),
-      userPermissions: this._service.userPermissions(this.userId),
+      userPermissions: this._service.userPermissions(this.operatorId),
     })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
@@ -79,7 +86,6 @@ export class PermissionTableComponent implements OnInit {
   }
 
   togglePermission(permissionId: string): void {
-    // Prevent multiple simultaneous requests for the same permission
     if (this.updatingPermissions.has(permissionId)) {
       return;
     }
@@ -88,7 +94,7 @@ export class PermissionTableComponent implements OnInit {
     this.updatingPermissions.add(permissionId);
 
     var json = {
-      userId: this.userId,
+      userId: this.operatorId,
       permissionId: permissionId,
     };
 
@@ -149,14 +155,5 @@ export class PermissionTableComponent implements OnInit {
 
   resetPermissions(): void {
     this.loadPermissions();
-  }
-
-  savePermissions(): void {
-    if (this.modalRef) {
-      this.modalRef.close({
-        userId: this.userId,
-        permissions: this.selectedPermissions,
-      });
-    }
   }
 }

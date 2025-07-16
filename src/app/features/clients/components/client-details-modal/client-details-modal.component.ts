@@ -329,7 +329,6 @@ export class ClientDetailsModalComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to update client');
-          console.error('Error updating client:', error);
           return of(null);
         }),
         finalize(() => (this.loading = false))

@@ -271,7 +271,7 @@ export class BrandSelectionComponent implements OnInit {
       .setBrandId(brand.id)
       .pipe(
         catchError((error) => {
-          this.errorMessage.set('Failed to select brand. Please try again.');
+          this.errorMessage.set('Failed to select office. Please try again.');
           return of(null);
         }),
         finalize(() => {
@@ -279,15 +279,10 @@ export class BrandSelectionComponent implements OnInit {
           this.selectedBrandId.set('');
         })
       )
-      .subscribe((response) => {
+      .subscribe((response: any) => {
         if (response) {
-          // Update auth tokens if provided in response
-          if (response.accessToken) {
-            // The brand service should handle token updates if needed
-            // For now, we'll just navigate to dashboard
-          }
+          this.authService.handleAuthResponse(response);
 
-          // Navigate to dashboard
           this.router.navigate(['']);
         }
       });

@@ -67,16 +67,14 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
 
   officeId!: string;
   office: Office | null = null;
-  managers: OfficeManager[] = []; // Changed to array
+  managers: OfficeManager[] = [];
   loading = false;
   gridId = 'office-rules-grid';
 
-  // Manager deletion state
   showDeleteManagerModal = false;
   managerToDelete: OfficeManager | null = null;
   deletingManager = false;
 
-  // Rule deletion state
   showDeleteModal = false;
   ruleToDelete: OfficeRule | null = null;
   deletingRule = false;
@@ -103,15 +101,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       filterType: 'text',
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
     },
-    // {
-    //   field: 'category',
-    //   header: 'Category',
-    //   sortable: true,
-    //   filterable: true,
-    //   filterType: 'select',
-    //   filterOptions: [],
-    //   cellTemplate: null,
-    // },
     {
       field: 'priority',
       header: 'Priority',
@@ -258,16 +247,8 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
           this.office = office;
           this.managers = managers;
           this.operators = operators;
-
-          console.log('Loaded office data:', {
-            office: office?.name,
-            managersCount: this.managers.length,
-            operatorsCount: this.operators.length,
-            managers: managers,
-          });
         },
         error: (error) => {
-          console.error('Failed to load office data:', error);
           this.alertService.error('Failed to load office data');
           this.navigateBack();
         },
@@ -280,13 +261,11 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading all operators:', error);
           return of([]);
         })
       )
       .subscribe((operators) => {
         this.allOperators = operators;
-        console.log('Loaded all operators:', operators.length);
       });
   }
 
@@ -300,7 +279,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading lookup data:', error);
           return of({
             categories: [],
             priorities: [],
@@ -316,12 +294,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
 
         this.prepareFilterOptions(data);
         this.updateGridColumnFilterOptions();
-
-        console.log('Loaded lookup data:', {
-          categoriesCount: this.categories.length,
-          prioritiesCount: this.priorities.length,
-          typesCount: this.types.length,
-        });
       });
   }
 
@@ -503,7 +475,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
   }
 
   openAddManagerModal(): void {
-    // Filter out operators who are already managers
     const existingManagerIds = this.managers.map((m: any) => m.operatorId);
     const availableOperators = (
       this.operators.length > 0 ? this.operators : this.allOperators
@@ -519,7 +490,7 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       {
         officeId: this.officeId,
         officeName: this.office?.name || '',
-        currentManager: null, // No current manager when adding to multiple
+        currentManager: null,
         operators: availableOperators,
       }
     );
@@ -564,7 +535,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
           this.loadOfficeData();
         },
         error: (error) => {
-          console.error('Failed to remove manager:', error);
           this.alertService.error(
             'Failed to remove manager. Please try again.'
           );
@@ -572,7 +542,6 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Helper methods
   get hasManagers(): boolean {
     return this.managers.length > 0;
   }

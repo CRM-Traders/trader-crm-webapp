@@ -1,10 +1,8 @@
-import { UserPermission, UserRole } from './roles.model';
-
 export interface NavItem {
   label: string;
   icon: string;
   route: string;
-  requiredRoles?: UserPermission[];
+  permission: number;
   children?: NavItem[];
   notificationCount?: number;
 }

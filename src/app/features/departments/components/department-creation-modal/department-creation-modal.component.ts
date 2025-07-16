@@ -399,7 +399,6 @@ export class DepartmentCreationModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading desks:', error);
           this.alertService.error('Failed to load desks');
           return of({
             items: [],

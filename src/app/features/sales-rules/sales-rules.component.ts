@@ -123,7 +123,10 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       filterType: 'text',
-      selector: (row: SalesRule) => (row.country && row.country.trim() !== '') ? row.country : 'All Countries',
+      selector: (row: SalesRule) =>
+        row.country && row.country.trim() !== ''
+          ? row.country
+          : 'All Countries',
     },
     {
       field: 'language',
@@ -131,7 +134,10 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       filterType: 'text',
-      selector: (row: SalesRule) => (row.language && row.language.trim() !== '') ? row.language : 'All Languages',
+      selector: (row: SalesRule) =>
+        row.language && row.language.trim() !== ''
+          ? row.language
+          : 'All Languages',
     },
     {
       field: 'operators',
@@ -148,7 +154,8 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       filterType: 'text',
-      selector: (row: SalesRule) => (row.sources && row.sources.trim() !== '') ? row.sources : 'All Sources',
+      selector: (row: SalesRule) =>
+        row.sources && row.sources.trim() !== '' ? row.sources : 'All Sources',
     },
     {
       field: 'createdAt',
@@ -168,8 +175,6 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       action: (item: SalesRule) => this.viewRule(item),
     },
   ];
-
-
 
   ngOnInit(): void {
     this.setupCellTemplates();
@@ -271,15 +276,11 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to load sales rules');
-          console.error('Error loading sales rules:', error);
           return of([]);
         }),
         finalize(() => (this.loading = false))
       )
-      .subscribe((rules) => {
-        // Handle loaded rules if needed
-        console.log('Loaded sales rules:', rules);
-      });
+      .subscribe((rules) => {});
   }
 
   refreshSpecificGrid(): void {
@@ -318,7 +319,6 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
     return RuleTypeLabels[value as RuleType];
   }
 
-  // Helper methods for displaying empty values
   getCountryDisplay(country: string): string {
     return country && country.trim() !== '' ? country : 'All Countries';
   }

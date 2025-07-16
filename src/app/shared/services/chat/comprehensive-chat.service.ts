@@ -156,7 +156,6 @@ export class ComprehensiveChatService implements OnDestroy {
 
       this.loadingSubject.next(false);
     } catch (error) {
-      console.error('Failed to initialize chat service:', error);
       this.loadingSubject.next(false);
       throw error;
     }
@@ -233,7 +232,6 @@ export class ComprehensiveChatService implements OnDestroy {
         await this.signalR.joinChatGroup(chat.id);
       }
     } catch (error) {
-      console.error('Failed to load operator chats:', error);
       throw error;
     }
   }
@@ -249,7 +247,6 @@ export class ComprehensiveChatService implements OnDestroy {
         await this.signalR.joinChatGroup(chat.id);
       }
     } catch (error) {
-      console.error('Failed to load user chats:', error);
       throw error;
     }
   }
@@ -284,7 +281,6 @@ export class ComprehensiveChatService implements OnDestroy {
 
       this.loadingSubject.next(false);
     } catch (error) {
-      console.error('Failed to select chat:', error);
       this.loadingSubject.next(false);
       throw error;
     }
@@ -300,7 +296,6 @@ export class ComprehensiveChatService implements OnDestroy {
       }
       throw new Error('Failed to create chat');
     } catch (error) {
-      console.error('Failed to create chat:', error);
       throw error;
     }
   }
@@ -332,7 +327,6 @@ export class ComprehensiveChatService implements OnDestroy {
 
       this.addMessageToChat(chatId, optimisticMessage);
     } catch (error) {
-      console.error('Failed to send message:', error);
       throw error;
     }
   }
@@ -341,9 +335,7 @@ export class ComprehensiveChatService implements OnDestroy {
     try {
       await this.chatApi.sendTypingIndicator(chatId, { isTyping }).toPromise();
       await this.signalR.sendTypingIndicator(chatId);
-    } catch (error) {
-      console.error('Failed to send typing indicator:', error);
-    }
+    } catch (error) {}
   }
 
   async closeChat(chatId: string, reason?: string): Promise<void> {
@@ -352,7 +344,6 @@ export class ComprehensiveChatService implements OnDestroy {
       await this.signalR.leaveChatGroup(chatId);
       this.refreshChats$.next();
     } catch (error) {
-      console.error('Failed to close chat:', error);
       throw error;
     }
   }
@@ -368,7 +359,6 @@ export class ComprehensiveChatService implements OnDestroy {
         .toPromise();
       this.refreshChats$.next();
     } catch (error) {
-      console.error('Failed to transfer chat:', error);
       throw error;
     }
   }
@@ -378,12 +368,10 @@ export class ComprehensiveChatService implements OnDestroy {
       await this.chatApi.setOperatorStatus({ status }).toPromise();
       this.operatorStatusSubject.next(status);
     } catch (error) {
-      console.error('Failed to set operator status:', error);
       throw error;
     }
   }
 
-  // Private helper methods
   private async loadChatMessages(
     chatId: string,
     pageIndex: number = 1
@@ -393,12 +381,11 @@ export class ComprehensiveChatService implements OnDestroy {
         .getChatMessages(chatId, pageIndex)
         .toPromise();
       if (result) {
-        const messages = result.items.reverse(); // Reverse to show oldest first
+        const messages = result.items.reverse();
         this.state.messages.set(chatId, messages);
         this.messagesSubject.next(new Map(this.state.messages));
       }
     } catch (error) {
-      console.error('Failed to load chat messages:', error);
       throw error;
     }
   }
@@ -412,9 +399,7 @@ export class ComprehensiveChatService implements OnDestroy {
     for (const message of unreadMessages) {
       try {
         await this.chatApi.markMessageAsRead(message.id).toPromise();
-      } catch (error) {
-        console.error('Failed to mark message as read:', error);
-      }
+      } catch (error) {}
     }
 
     this.state.unreadCounts.set(chatId, 0);
@@ -529,9 +514,7 @@ export class ComprehensiveChatService implements OnDestroy {
         this.state.activeChats = chats;
         this.activeChatsSubject.next(this.state.activeChats);
       }
-    } catch (error) {
-      console.error('Failed to reload active chats:', error);
-    }
+    } catch (error) {}
   }
 
   private getCurrentUserId(): string {
@@ -545,9 +528,7 @@ export class ComprehensiveChatService implements OnDestroy {
     for (const chat of this.state.activeChats) {
       try {
         await this.signalR.leaveChatGroup(chat.id);
-      } catch (error) {
-        console.error(`Failed to leave chat group ${chat.id}:`, error);
-      }
+      } catch (error) {}
     }
 
     // Disconnect from SignalR

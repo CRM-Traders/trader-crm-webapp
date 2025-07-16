@@ -1,10 +1,4 @@
-import {
-  Component,
-  Input,
-  OnInit,
-  OnDestroy,
-  inject,
-} from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -12,13 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import {
-  Subject,
-  takeUntil,
-  catchError,
-  of,
-  finalize,
-} from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import { AffiliatesService } from '../../services/affiliates.service';
@@ -55,15 +43,25 @@ import {
               <dl class="space-y-4">
                 <!-- ID -->
                 <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">ID</dt>
-                  <dd class="text-sm text-gray-900 dark:text-white font-mono bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-md break-all">
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    ID
+                  </dt>
+                  <dd
+                    class="text-sm text-gray-900 dark:text-white font-mono bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-md break-all"
+                  >
                     {{ affiliate.id }}
                   </dd>
                 </div>
 
                 <!-- Full Name -->
                 <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Full Name</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Full Name
+                  </dt>
                   <dd>
                     <form [formGroup]="editForm">
                       <input
@@ -78,7 +76,10 @@ import {
                         placeholder="Enter full name"
                       />
                     </form>
-                    <span *ngIf="!isEditing" class="text-base font-medium text-gray-900 dark:text-white">
+                    <span
+                      *ngIf="!isEditing"
+                      class="text-base font-medium text-gray-900 dark:text-white"
+                    >
                       {{ affiliate.name || '-' }}
                     </span>
                     <p
@@ -96,7 +97,11 @@ import {
 
                 <!-- Email -->
                 <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Email</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Email
+                  </dt>
                   <dd>
                     <form [formGroup]="editForm">
                       <input
@@ -111,7 +116,10 @@ import {
                         placeholder="Enter email address"
                       />
                     </form>
-                    <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white break-all">
+                    <span
+                      *ngIf="!isEditing"
+                      class="text-sm text-gray-900 dark:text-white break-all"
+                    >
                       <a
                         [href]="'mailto:' + affiliate.email"
                         class="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
@@ -127,15 +135,23 @@ import {
                       "
                       class="mt-2 text-sm text-red-600 dark:text-red-400"
                     >
-                      <span *ngIf="editForm.get('email')?.errors?.['required']">Email is required</span>
-                      <span *ngIf="editForm.get('email')?.errors?.['email']">Please enter a valid email</span>
+                      <span *ngIf="editForm.get('email')?.errors?.['required']"
+                        >Email is required</span
+                      >
+                      <span *ngIf="editForm.get('email')?.errors?.['email']"
+                        >Please enter a valid email</span
+                      >
                     </p>
                   </dd>
                 </div>
 
                 <!-- Phone -->
                 <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Phone</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Phone
+                  </dt>
                   <dd>
                     <form [formGroup]="editForm">
                       <input
@@ -150,7 +166,10 @@ import {
                         placeholder="+1 (555) 123-4567"
                       />
                     </form>
-                    <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white">
+                    <span
+                      *ngIf="!isEditing"
+                      class="text-sm text-gray-900 dark:text-white"
+                    >
                       <a
                         *ngIf="affiliate.phone"
                         [href]="'tel:' + affiliate.phone"
@@ -161,7 +180,8 @@ import {
                       <span
                         *ngIf="!affiliate.phone"
                         class="text-gray-400 dark:text-gray-500"
-                      >-</span>
+                        >-</span
+                      >
                     </span>
                     <p
                       *ngIf="
@@ -178,7 +198,11 @@ import {
 
                 <!-- Website -->
                 <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Website</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Website
+                  </dt>
                   <dd>
                     <form [formGroup]="editForm">
                       <input
@@ -217,7 +241,8 @@ import {
                     <span
                       *ngIf="!isEditing && !affiliate.website"
                       class="text-sm text-gray-400 dark:text-gray-500"
-                    >-</span>
+                      >-</span
+                    >
                     <p
                       *ngIf="
                         isEditing &&
@@ -233,14 +258,19 @@ import {
 
                 <!-- Status -->
                 <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Status</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Status
+                  </dt>
                   <dd>
                     <span
                       class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
                       [ngClass]="{
                         'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
                           affiliate.isActive,
-                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300': !affiliate.isActive
+                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300':
+                          !affiliate.isActive
                       }"
                     >
                       <span
@@ -250,14 +280,18 @@ import {
                           'bg-gray-600 dark:bg-gray-400': !affiliate.isActive
                         }"
                       ></span>
-                      {{ affiliate.isActive ? "Active" : "Inactive" }}
+                      {{ affiliate.isActive ? 'Active' : 'Inactive' }}
                     </span>
                   </dd>
                 </div>
 
                 <!-- Clients -->
                 <div>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Clients</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Clients
+                  </dt>
                   <dd class="text-2xl font-bold text-gray-900 dark:text-white">
                     {{ affiliate.clientsCount }}
                   </dd>
@@ -265,7 +299,11 @@ import {
 
                 <!-- Created Date -->
                 <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Created</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Created
+                  </dt>
                   <dd class="text-sm text-gray-600 dark:text-gray-400">
                     {{ affiliate.createdAt | date : "MMMM d, y 'at' h:mm a" }}
                   </dd>
@@ -273,9 +311,15 @@ import {
 
                 <!-- Last Modified -->
                 <div *ngIf="affiliate?.lastModifiedAt">
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Last Modified</dt>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Last Modified
+                  </dt>
                   <dd class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ affiliate.lastModifiedAt | date : "MMMM d, y 'at' h:mm a" }}
+                    {{
+                      affiliate.lastModifiedAt | date : "MMMM d, y 'at' h:mm a"
+                    }}
                   </dd>
                 </div>
               </dl>
@@ -284,16 +328,34 @@ import {
         </ng-container>
         <ng-template #loadingTpl>
           <div class="flex items-center justify-center min-h-[200px]">
-            <svg class="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              class="animate-spin h-8 w-8 text-blue-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
           </div>
         </ng-template>
       </div>
 
       <!-- Modal Footer -->
-      <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 space-y-3">
+      <div
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 space-y-3"
+      >
         <div class="flex gap-3">
           <button
             *ngIf="!isEditing && !loadingDetails"
@@ -361,7 +423,7 @@ import {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            {{ loading ? "Saving..." : "Save Changes" }}
+            {{ loading ? 'Saving...' : 'Save Changes' }}
           </button>
 
           <button
@@ -431,7 +493,8 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (this.affiliate?.id) {
       this.loadingDetails = true;
-      this.affiliatesService.getAffiliateById(this.affiliate.id)
+      this.affiliatesService
+        .getAffiliateById(this.affiliate.id)
         .pipe(
           takeUntil(this.destroy$),
           catchError((error) => {
@@ -499,7 +562,6 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to update affiliate');
-          console.error('Error updating affiliate:', error);
           return of(null);
         }),
         finalize(() => (this.loading = false))
@@ -514,7 +576,7 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
           name: this.editForm.value.name || '',
           email: this.editForm.value.email || '',
           phone: this.editForm.value.phone || null,
-          website: this.editForm.value.website || null
+          website: this.editForm.value.website || null,
         };
         this.modalRef.close(true);
       });
@@ -526,7 +588,11 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (confirm(`Are you sure you want to delete ${this.affiliate?.name}? This action cannot be undone.`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete ${this.affiliate?.name}? This action cannot be undone.`
+      )
+    ) {
       this.deleteAffiliate();
     }
   }
@@ -546,7 +612,6 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
           } else {
             this.alertService.error('Failed to delete affiliate');
           }
-          console.error('Error deleting affiliate:', error);
           return of(null);
         }),
         finalize(() => (this.loading = false))

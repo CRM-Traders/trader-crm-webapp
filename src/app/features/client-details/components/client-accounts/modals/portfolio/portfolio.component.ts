@@ -58,9 +58,7 @@ export class PortfolioComponent implements OnInit, OnDestroy {
       .getPortfolio(this.tradingAccountId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        error: (error) => {
-          console.error('Error loading portfolio:', error);
-        },
+        error: (error) => {},
       });
   }
 

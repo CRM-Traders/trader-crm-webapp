@@ -169,7 +169,6 @@ export class ClientsService {
     });
   }
 
-  // Enhanced method to get affiliates with pagination and filtering
   getAffiliatesDropdown(
     params: AffiliateSearchParams = {}
   ): Observable<AffiliateSearchResponse> {
@@ -237,14 +236,12 @@ export class ClientsService {
           }));
         }),
         catchError((error) => {
-          console.error('Error fetching operators:', error);
           return of([]);
         })
       );
   }
 }
 
-// Enhanced interfaces for paginated affiliate search
 export interface AffiliateDropdownItem {
   affiliateId: string;
   userFullName: string;

@@ -8,7 +8,7 @@ import {
   TradingOrder,
   TradingActivitySummary,
   TradingActivityFilters,
-  TradingActivityResponse
+  TradingActivityResponse,
 } from '../models/trading-activity.model';
 
 @Injectable({
@@ -20,7 +20,6 @@ export class TradingActivityService {
 
   private readonly baseEndpoint = 'trading/api/Trading';
 
-  // Reactive state management
   private readonly _orders = signal<TradingOrder[]>([]);
   private readonly _summary = signal<TradingActivitySummary | null>(null);
   private readonly _loading = signal<boolean>(false);
@@ -35,11 +34,8 @@ export class TradingActivityService {
   readonly pageIndex = this._pageIndex.asReadonly();
   readonly pageSize = this._pageSize.asReadonly();
 
-  /**
-   * Get client orders by user ID with pagination and filtering
-   */
   getClientOrdersByUserId(
-    userId: string, 
+    userId: string,
     filters?: {
       pageNumber?: number;
       pageSize?: number;
@@ -47,15 +43,15 @@ export class TradingActivityService {
       symbol?: string;
     }
   ): Observable<TradingActivityResponse> {
-    console.log('TradingActivityService: Getting client orders for user:', userId, 'with filters:', filters);
     this._loading.set(true);
 
-    // Build query parameters
     const params = new URLSearchParams();
     params.append('clientUserId', userId);
-    
-    if (filters?.pageNumber) params.append('pageNumber', (filters.pageNumber - 1).toString()); // Adjust for 0-based pageNumber
-    if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString()); // pageSize is the actual count, not 0-based
+
+    if (filters?.pageNumber)
+      params.append('pageNumber', (filters.pageNumber - 1).toString());
+    if (filters?.pageSize)
+      params.append('pageSize', filters.pageSize.toString());
     if (filters?.status) params.append('status', filters.status);
     if (filters?.symbol) params.append('symbol', filters.symbol);
 
@@ -74,13 +70,12 @@ export class TradingActivityService {
       }>(url)
       .pipe(
         map((response) => {
-          // Convert the response to match our TradingActivityResponse interface
           const tradingResponse: TradingActivityResponse = {
             orders: response.items,
             totalCount: response.totalCount,
-            pageIndex: response.pageNumber + 1, // Convert from 0-based to 1-based
-            pageSize: response.pageSize, // pageSize is already the correct count
-            summary: this.calculateSummary(response.items)
+            pageIndex: response.pageNumber + 1,
+            pageSize: response.pageSize,
+            summary: this.calculateSummary(response.items),
           };
           return tradingResponse;
         }),
@@ -92,7 +87,6 @@ export class TradingActivityService {
           this._loading.set(false);
         }),
         catchError((error) => {
-          console.error('TradingActivityService: Error loading client orders:', error);
           this._loading.set(false);
           this.alertService.error(
             'Failed to load client orders. Please try again.'
@@ -102,17 +96,12 @@ export class TradingActivityService {
       );
   }
 
-  /**
-   * Get trading orders for a specific trading account
-   */
   getTradingOrders(
     tradingAccountId: string,
     filters?: Partial<TradingActivityFilters>
   ): Observable<TradingActivityResponse> {
-    console.log('TradingActivityService: Getting orders for account:', tradingAccountId, 'with filters:', filters);
     this._loading.set(true);
 
-    // Build query parameters
     const params = new URLSearchParams();
     if (filters?.status) params.append('status', filters.status);
     if (filters?.symbol) params.append('symbol', filters.symbol);
@@ -123,66 +112,63 @@ export class TradingActivityService {
     params.append('pageSize', (filters?.pageSize || 50).toString());
 
     const queryString = params.toString();
-    const url = `${this.baseEndpoint}/orders/${tradingAccountId}${queryString ? '?' + queryString : ''}`;
+    const url = `${this.baseEndpoint}/orders/${tradingAccountId}${
+      queryString ? '?' + queryString : ''
+    }`;
 
-    return this.http
-      .get<TradingActivityResponse>(url)
-      .pipe(
-        tap((response) => {
-          console.log('TradingActivityService: Orders loaded:', response.orders);
+    return this.http.get<TradingActivityResponse>(url).pipe(
+      tap((response) => {
+        const summary =
+          response.summary ?? this.calculateSummary(response.orders);
 
-          // If the API provides a summary, use it; otherwise, calculate it
-          const summary = response.summary ?? this.calculateSummary(response.orders);
-
-          this._orders.set(response.orders);
-          this._summary.set(summary);
-          this._totalCount.set(response.totalCount);
-          this._pageIndex.set(response.pageIndex);
-          this._pageSize.set(response.pageSize);
-          this._loading.set(false);
-        }),
-        catchError((error) => {
-          console.error('TradingActivityService: Error loading orders:', error);
-          this._loading.set(false);
-          this.alertService.error(
-            'Failed to load trading activity. Please try again.'
-          );
-          return throwError(() => error);
-        })
-      );
+        this._orders.set(response.orders);
+        this._summary.set(summary);
+        this._totalCount.set(response.totalCount);
+        this._pageIndex.set(response.pageIndex);
+        this._pageSize.set(response.pageSize);
+        this._loading.set(false);
+      }),
+      catchError((error) => {
+        this._loading.set(false);
+        this.alertService.error(
+          'Failed to load trading activity. Please try again.'
+        );
+        return throwError(() => error);
+      })
+    );
   }
 
-  /**
-   * Refresh trading orders
-   */
-  refreshOrders(tradingAccountId: string, filters?: Partial<TradingActivityFilters>): void {
+  refreshOrders(
+    tradingAccountId: string,
+    filters?: Partial<TradingActivityFilters>
+  ): void {
     this.getTradingOrders(tradingAccountId, filters).subscribe();
   }
 
-  /**
-   * Clear trading orders data
-   */
   clearOrders(): void {
-    console.log('TradingActivityService: Clearing orders data');
     this._orders.set([]);
     this._summary.set(null);
     this._totalCount.set(0);
     this._loading.set(false);
   }
 
-  /**
-   * Calculate trading activity summary from orders
-   */
   private calculateSummary(orders: TradingOrder[]): TradingActivitySummary {
-    const pendingOrders = orders.filter(order => order.status === 'Pending');
-    const filledOrders = orders.filter(order => order.filledQuantity > 0);
-    const cancelledOrders = orders.filter(order => order.status === 'Cancelled');
+    const pendingOrders = orders.filter((order) => order.status === 'Pending');
+    const filledOrders = orders.filter((order) => order.filledQuantity > 0);
+    const cancelledOrders = orders.filter(
+      (order) => order.status === 'Cancelled'
+    );
 
     const totalVolume = orders.reduce((sum, order) => sum + order.quantity, 0);
-    const filledVolume = filledOrders.reduce((sum, order) => sum + order.filledQuantity, 0);
-    const pendingVolume = pendingOrders.reduce((sum, order) => sum + order.remainingQuantity, 0);
+    const filledVolume = filledOrders.reduce(
+      (sum, order) => sum + order.filledQuantity,
+      0
+    );
+    const pendingVolume = pendingOrders.reduce(
+      (sum, order) => sum + order.remainingQuantity,
+      0
+    );
 
-    // Since the new API doesn't provide profit/loss data, we'll set these to 0
     const totalProfit = 0;
     const totalLoss = 0;
     const netPnL = 0;
@@ -200,28 +186,22 @@ export class TradingActivityService {
       openTrades: pendingOrders.length,
       closedTrades: filledOrders.length + cancelledOrders.length,
       averageWin,
-      averageLoss
+      averageLoss,
     };
   }
 
-  /**
-   * Get order type display information
-   */
   getOrderTypeDisplay(orderType: string): string {
     const typeMap: { [key: string]: string } = {
-      'buy': 'Buy',
-      'sell': 'Sell',
-      'buy_limit': 'Buy Limit',
-      'sell_limit': 'Sell Limit',
-      'buy_stop': 'Buy Stop',
-      'sell_stop': 'Sell Stop'
+      buy: 'Buy',
+      sell: 'Sell',
+      buy_limit: 'Buy Limit',
+      sell_limit: 'Sell Limit',
+      buy_stop: 'Buy Stop',
+      sell_stop: 'Sell Stop',
     };
     return typeMap[orderType] || orderType;
   }
 
-  /**
-   * Get order type color class
-   */
   getOrderTypeColorClass(orderType: string): string {
     switch (orderType) {
       case 'buy':
@@ -237,9 +217,6 @@ export class TradingActivityService {
     }
   }
 
-  /**
-   * Get status color class
-   */
   getStatusColorClass(status: string, profit?: number): string {
     switch (status) {
       case 'open':
@@ -261,9 +238,6 @@ export class TradingActivityService {
     }
   }
 
-  /**
-   * Format currency for display
-   */
   formatCurrency(amount: number, currency: string = 'USD'): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -273,9 +247,6 @@ export class TradingActivityService {
     }).format(amount);
   }
 
-  /**
-   * Format number with specific decimal places
-   */
   formatNumber(value: number, decimals: number = 5): string {
     return value.toFixed(decimals);
   }

@@ -10,5 +10,5 @@ export const publicGuard: CanActivateFn = (): boolean | UrlTree => {
     return true;
   }
 
-  return router.createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/']);
 };

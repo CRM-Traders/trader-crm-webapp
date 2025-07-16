@@ -321,10 +321,7 @@ export class CalendarService {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
     this.getEvents(startOfMonth, endOfMonth).subscribe({
-      error: () => {
-        // Silent error handling for initial load
-        console.warn('Failed to load initial calendar events');
-      },
+      error: () => {},
     });
   }
 

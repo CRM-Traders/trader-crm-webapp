@@ -323,9 +323,7 @@ export class ApiDocsComponent implements OnInit {
   ngOnInit(): void {}
 
   copyToClipboard(text: string): void {
-    navigator.clipboard.writeText(text).then(() => {
-      console.log('Copied to clipboard');
-    });
+    navigator.clipboard.writeText(text).then(() => {});
   }
 
   printDocumentation(): void {

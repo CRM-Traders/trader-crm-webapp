@@ -217,9 +217,7 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                       editForm.get('brandId')?.touched
                     "
                   >
-                    <span
-                      *ngIf="editForm.get('brandId')?.errors?.['required']"
-                    >
+                    <span *ngIf="editForm.get('brandId')?.errors?.['required']">
                       Brand selection is required
                     </span>
                   </p>
@@ -247,14 +245,20 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                 >
                   Language
                 </label>
-                <div *ngIf="isEditing" class="relative" data-dropdown="language">
+                <div
+                  *ngIf="isEditing"
+                  class="relative"
+                  data-dropdown="language"
+                >
                   <!-- Custom Dropdown Button -->
                   <button
                     type="button"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
                     (click)="toggleLanguageDropdown()"
                   >
-                    <span class="truncate">{{ getSelectedLanguageName() }}</span>
+                    <span class="truncate">{{
+                      getSelectedLanguageName()
+                    }}</span>
                     <svg
                       class="w-4 h-4 ml-2 transition-transform"
                       [class.rotate-180]="languageDropdownOpen"
@@ -277,7 +281,9 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                     class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
                   >
                     <!-- Search Input -->
-                    <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                    <div
+                      class="p-3 border-b border-gray-200 dark:border-gray-700"
+                    >
                       <input
                         #languageSearchInput
                         type="text"
@@ -334,14 +340,20 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                 >
                   Desk Type
                 </label>
-                <div *ngIf="isEditing" class="relative" data-dropdown="deskType">
+                <div
+                  *ngIf="isEditing"
+                  class="relative"
+                  data-dropdown="deskType"
+                >
                   <!-- Custom Dropdown Button -->
                   <button
                     type="button"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
                     (click)="toggleDeskTypeDropdown()"
                   >
-                    <span class="truncate">{{ getSelectedDeskTypeName() }}</span>
+                    <span class="truncate">{{
+                      getSelectedDeskTypeName()
+                    }}</span>
                     <svg
                       class="w-4 h-4 ml-2 transition-transform"
                       [class.rotate-180]="deskTypeDropdownOpen"
@@ -383,8 +395,6 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                   {{ getTypeLabel(desk.type) }}
                 </span>
               </div>
-
-
 
               <!-- Status -->
               <div>
@@ -666,7 +676,6 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading brands:', error);
           this.alertService.error('Failed to load brands');
           return of({
             items: [],
@@ -769,7 +778,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLInputElement;
     this.languageSearchTerm = target.value.toLowerCase();
 
-    this.filteredLanguages = this.availableLanguages.filter(lang =>
+    this.filteredLanguages = this.availableLanguages.filter((lang) =>
       lang.value.toLowerCase().includes(this.languageSearchTerm)
     );
   }
@@ -790,7 +799,9 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
     if (!selectedLanguageKey) {
       return 'No specific language';
     }
-    const selectedLanguage = this.availableLanguages.find(lang => lang.key === selectedLanguageKey);
+    const selectedLanguage = this.availableLanguages.find(
+      (lang) => lang.key === selectedLanguageKey
+    );
     return selectedLanguage ? selectedLanguage.value : 'Select a language...';
   }
 
@@ -815,7 +826,9 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
 
   getSelectedDeskTypeName(): string {
     const selectedTypeValue = this.editForm.get('type')?.value;
-    const selectedType = this.deskTypes.find(type => type.value === selectedTypeValue);
+    const selectedType = this.deskTypes.find(
+      (type) => type.value === selectedTypeValue
+    );
     return selectedType ? selectedType.label : 'Select a desk type...';
   }
 

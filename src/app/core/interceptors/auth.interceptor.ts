@@ -10,8 +10,15 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
-const getTokenFromStorage = (key: string): string | null => {
-  return localStorage.getItem(key);
+const getTokenFromStorage = (name: string): string | null => {
+  const cookies = document.cookie ? document.cookie.split('; ') : [];
+  for (const cookie of cookies) {
+    const [key, val] = cookie.split('=');
+    if (key === name) {
+      return decodeURIComponent(val);
+    }
+  }
+  return null;
 };
 
 export const authInterceptor: HttpInterceptorFn = (

@@ -51,12 +51,10 @@ export class SettingsComponent implements OnInit {
     this.isLoading = true;
     this.settingsService.getUserSettings().subscribe({
       next: (settings: Settings) => {
-        console.log('Settings loaded:', settings);
         this.userSettings = settings;
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading settings:', error);
         this.isLoading = false;
       },
     });

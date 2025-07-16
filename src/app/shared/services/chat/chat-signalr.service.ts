@@ -103,10 +103,7 @@ export class ChatSignalRService {
 
       await this.hubConnection.start();
       this.connectionState.next('connected');
-
-      console.log('Connected to Chat Hub');
     } catch (error) {
-      console.error('Failed to connect to Chat Hub:', error);
       this.connectionState.next('disconnected');
       throw error;
     }

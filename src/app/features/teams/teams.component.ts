@@ -145,7 +145,6 @@ export class TeamsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading team statistics:', error);
           this.totalCount = 0;
           this.activeCount = 0;
           return of(null);
@@ -208,9 +207,7 @@ export class TeamsComponent implements OnInit, OnDestroy {
           this.loadTeamStatistics();
         }
       },
-      () => {
-        // Modal dismissed
-      }
+      () => {}
     );
   }
 
@@ -239,7 +236,6 @@ export class TeamsComponent implements OnInit, OnDestroy {
           } else {
             this.alertService.error('Failed to delete team');
           }
-          console.error('Error deleting team:', error);
           return of(null);
         }),
         finalize(() => {
@@ -273,7 +269,6 @@ export class TeamsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import teams');
-          console.error('Error importing teams:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -301,7 +296,6 @@ export class TeamsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export teams');
-          console.error('Error exporting teams:', error);
           return of(null);
         })
       )
@@ -331,7 +325,6 @@ export class TeamsComponent implements OnInit, OnDestroy {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )

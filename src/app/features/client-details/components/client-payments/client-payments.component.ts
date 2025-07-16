@@ -1,5 +1,3 @@
-// Updated client-payments.component.ts with trading history integration
-
 import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -54,20 +52,16 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   tradingSearchTerm = '';
   activeTab: 'transactions' | 'trading' = 'transactions';
 
-  // Wallet modal state
   showDepositModal = false;
   showWithdrawModal = false;
 
-  // Trading history state
   selectedTradingAccountId = '';
   tradingOrders: TradingOrder[] = [];
   loadingTradingHistory = false;
 
-  // Wallet transactions state
   walletTransactions: WalletTransaction[] = [];
   loadingWalletTransactions = false;
 
-  // Pagination properties
   currentPage = 1;
   pageSize = 50;
   totalItems = 0;
@@ -75,14 +69,11 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   hasNextPage = false;
   hasPreviousPage = false;
 
-  // Filter properties
   transactionTypeFilter = '';
   currencyFilter = '';
 
-  // Math property for template access
   Math = Math;
 
-  // Wallet summary state
   walletSummary: ClientWalletsSummary | null = null;
   loadingWalletSummary = false;
 
@@ -93,8 +84,6 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   get tradingAccounts(): TradingAccount[] {
     return this.adminTradingAccountService.accounts();
   }
-
-
 
   constructor() {
     this.transactionForm = this.fb.group({
@@ -132,7 +121,8 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
         transaction.id.toLowerCase().includes(term) ||
         transaction.transactionType.toLowerCase().includes(term) ||
         transaction.accountNumber.toLowerCase().includes(term) ||
-        (transaction.description && transaction.description.toLowerCase().includes(term))
+        (transaction.description &&
+          transaction.description.toLowerCase().includes(term))
     );
   }
 
@@ -152,21 +142,29 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Summary calculations
   get totalDeposits(): number {
-    return this.walletSummary?.totalDeposits || this.walletTransactions
-      .filter(t => t.transactionType === 'Deposit')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    return (
+      this.walletSummary?.totalDeposits ||
+      this.walletTransactions
+        .filter((t) => t.transactionType === 'Deposit')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    );
   }
 
   get totalWithdrawals(): number {
-    return this.walletSummary?.totalWithdrawals || this.walletTransactions
-      .filter(t => t.transactionType === 'Withdrawal')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    return (
+      this.walletSummary?.totalWithdrawals ||
+      this.walletTransactions
+        .filter((t) => t.transactionType === 'Withdrawal')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+    );
   }
 
   get netBalance(): number {
-    return this.walletSummary?.totalBalance || (this.totalDeposits - this.totalWithdrawals);
+    return (
+      this.walletSummary?.totalBalance ||
+      this.totalDeposits - this.totalWithdrawals
+    );
   }
 
   get totalUsdEquivalent(): number {
@@ -182,11 +180,15 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   }
 
   get depositCount(): number {
-    return this.walletTransactions.filter(t => t.transactionType === 'Deposit').length;
+    return this.walletTransactions.filter(
+      (t) => t.transactionType === 'Deposit'
+    ).length;
   }
 
   get withdrawalCount(): number {
-    return this.walletTransactions.filter(t => t.transactionType === 'Withdrawal').length;
+    return this.walletTransactions.filter(
+      (t) => t.transactionType === 'Withdrawal'
+    ).length;
   }
 
   get totalTradingOrders(): number {
@@ -202,14 +204,12 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
       .getUserAccounts(this.clientId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        error: (error) => {
-          console.error('Error loading trading accounts:', error);
-        },
+        error: (error) => {},
       });
   }
 
   private loadTradingHistoryForAllAccounts(): void {
-    this.tradingAccounts.forEach(account => {
+    this.tradingAccounts.forEach((account) => {
       this.loadTradingHistory(account.id);
     });
   }
@@ -218,20 +218,20 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     if (!accountId) return;
 
     this.loadingTradingHistory = true;
-    
+
     this.tradingService
-      .getTradingOrdersPaginated(accountId, 1, 100) // Get first 100 orders
+      .getTradingOrdersPaginated(accountId, 1, 100)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          // Merge orders from different accounts
-          const existingIds = this.tradingOrders.map(o => o.id);
-          const newOrders = response.items.filter(o => !existingIds.includes(o.id));
+          const existingIds = this.tradingOrders.map((o) => o.id);
+          const newOrders = response.items.filter(
+            (o) => !existingIds.includes(o.id)
+          );
           this.tradingOrders = [...this.tradingOrders, ...newOrders];
           this.loadingTradingHistory = false;
         },
         error: (error) => {
-          console.error('Error loading trading history:', error);
           this.loadingTradingHistory = false;
         },
       });
@@ -241,15 +241,14 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     if (!this.clientId) return;
 
     this.loadingWalletTransactions = true;
-    
-    // Prepare filters for the API call
+
     const filters = {
       pageNumber: this.currentPage,
       pageSize: this.pageSize,
       transactionType: this.transactionTypeFilter || undefined,
-      currency: this.currencyFilter || undefined
+      currency: this.currencyFilter || undefined,
     };
-    
+
     this.walletService
       .getClientTransactionsByUserId(this.clientId, filters)
       .pipe(takeUntil(this.destroy$))
@@ -257,7 +256,7 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.walletTransactions = response.items;
           this.totalItems = response.totalCount;
-          this.currentPage = response.pageNumber + 1; // Convert from 0-based to 1-based
+          this.currentPage = response.pageNumber + 1;
           this.pageSize = response.pageSize;
           this.totalPages = response.totalPages;
           this.hasNextPage = response.hasNextPage;
@@ -265,7 +264,6 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
           this.loadingWalletTransactions = false;
         },
         error: (error) => {
-          console.error('Error loading wallet transactions:', error);
           this.loadingWalletTransactions = false;
         },
       });
@@ -275,7 +273,7 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     if (!this.clientId) return;
 
     this.loadingWalletSummary = true;
-    
+
     this.walletService
       .getClientWalletsSummary(this.clientId)
       .pipe(takeUntil(this.destroy$))
@@ -285,7 +283,6 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
           this.loadingWalletSummary = false;
         },
         error: (error) => {
-          console.error('Error loading wallet summary:', error);
           this.loadingWalletSummary = false;
         },
       });
@@ -299,38 +296,30 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Wallet Modal Methods
   openDepositModal(): void {
-    console.log('Opening deposit modal for client:', this.clientId);
     this.showDepositModal = true;
   }
 
   closeDepositModal(): void {
-    console.log('Closing deposit modal');
     this.showDepositModal = false;
   }
 
   openWithdrawModal(): void {
-    console.log('Opening withdraw modal for client:', this.clientId);
     this.showWithdrawModal = true;
   }
 
   closeWithdrawModal(): void {
-    console.log('Closing withdraw modal');
     this.showWithdrawModal = false;
   }
 
   onTransactionSuccess(): void {
-    console.log('Transaction successful - refreshing data');
     this.alertService.success('Transaction completed successfully!');
-    
-    // Refresh data
+
     this.loadWalletTransactions();
     this.loadWalletSummary();
   }
 
   refreshTransactions(): void {
-    console.log('Refreshing transactions data');
     this.loadWalletTransactions();
     this.loadWalletSummary();
   }
@@ -342,12 +331,11 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
 
   onPageSizeChange(size: number): void {
     this.pageSize = size;
-    this.currentPage = 1; // Reset to first page when page size changes
+    this.currentPage = 1;
     this.loadWalletTransactions();
   }
 
   onFilterChange(): void {
-    // Reset to first page when filters change
     this.currentPage = 1;
     this.loadWalletTransactions();
   }
@@ -360,26 +348,21 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     const totalPages = this.getTotalPages();
     const currentPage = this.currentPage;
     const pages: number[] = [];
-    
-    // Show up to 5 page numbers around the current page
+
     const start = Math.max(1, currentPage - 2);
     const end = Math.min(totalPages, currentPage + 2);
-    
+
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
-    
+
     return pages;
   }
 
-
   exportTransactions(): void {
-    // Implement export functionality
-    console.log('Exporting transactions...');
     this.alertService.info('Export functionality will be implemented soon');
   }
 
-  // Existing methods...
   toggleAddTransaction(): void {
     this.showAddForm = !this.showAddForm;
     if (!this.showAddForm) {
@@ -391,17 +374,11 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     if (this.transactionForm.valid) {
       const formData = this.transactionForm.value;
 
-      // For manual transactions, we'll just show a success message
-      // In a real implementation, you might want to call the wallet service
-      // to create a manual transaction entry
-
-      // Reset form and hide
       this.transactionForm.reset();
       this.showAddForm = false;
 
       this.alertService.success('Manual transaction created successfully');
-      
-      // Refresh wallet transactions
+
       this.loadWalletTransactions();
     } else {
       this.alertService.error('Please fill in all required fields');

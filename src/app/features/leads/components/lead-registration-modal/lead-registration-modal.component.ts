@@ -1,4 +1,11 @@
-import { Component, inject, Input, OnInit, OnDestroy, HostListener } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnInit,
+  OnDestroy,
+  HostListener,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -34,10 +41,7 @@ import { LeadsService } from '../../services/leads.service';
       <!-- Modal Body -->
       <div class="px-6 py-6">
         <!-- Registration Form -->
-        <form
-          [formGroup]="registrationForm"
-          class="space-y-4"
-        >
+        <form [formGroup]="registrationForm" class="space-y-4">
           <!-- First Name and Last Name Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -197,7 +201,7 @@ import { LeadsService } from '../../services/leads.service';
 
           <!-- Phone and Country Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <!-- Language Selection -->
+            <!-- Language Selection -->
             <div class="relative">
               <label
                 for="language"
@@ -278,7 +282,9 @@ import { LeadsService } from '../../services/leads.service';
                   registrationForm.get('language')?.touched
                 "
               >
-                <span *ngIf="registrationForm.get('language')?.errors?.['required']">
+                <span
+                  *ngIf="registrationForm.get('language')?.errors?.['required']"
+                >
                   Language is required
                 </span>
               </p>
@@ -364,7 +370,9 @@ import { LeadsService } from '../../services/leads.service';
                   registrationForm.get('country')?.touched
                 "
               >
-                <span *ngIf="registrationForm.get('country')?.errors?.['required']">
+                <span
+                  *ngIf="registrationForm.get('country')?.errors?.['required']"
+                >
                   Country is required
                 </span>
               </p>
@@ -373,8 +381,7 @@ import { LeadsService } from '../../services/leads.service';
 
           <!-- Language and Date of Birth Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-           <div>
+            <div>
               <label
                 for="telephone"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -470,7 +477,9 @@ import { LeadsService } from '../../services/leads.service';
       </div>
 
       <!-- Modal Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+      <div
+        class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3"
+      >
         <button
           type="button"
           class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
@@ -559,12 +568,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
       username: ['', [Validators.required, Validators.minLength(3)]],
       telephone: [
         '',
-        [
-          Validators.required,
-          Validators.pattern(
-            /^\+?[1-9]\d{1,14}$/
-          ),
-        ],
+        [Validators.required, Validators.pattern(/^\+?[1-9]\d{1,14}$/)],
       ],
       country: ['', [Validators.required]],
       language: ['', [Validators.required]],
@@ -583,7 +587,6 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
           this.filteredCountries = countries;
         },
         error: (error) => {
-          console.error('Error loading countries:', error);
           this.alertService.error('Failed to load countries');
         },
       });
@@ -608,9 +611,10 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLInputElement;
     this.countrySearchTerm = target.value.toLowerCase();
 
-    this.filteredCountries = this.availableCountries.filter(country =>
-      country.name.toLowerCase().includes(this.countrySearchTerm) ||
-      country.code.toLowerCase().includes(this.countrySearchTerm)
+    this.filteredCountries = this.availableCountries.filter(
+      (country) =>
+        country.name.toLowerCase().includes(this.countrySearchTerm) ||
+        country.code.toLowerCase().includes(this.countrySearchTerm)
     );
   }
 
@@ -643,9 +647,10 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLInputElement;
     this.languageSearchTerm = target.value.toLowerCase();
 
-    this.filteredLanguages = this.availableLanguages.filter(language =>
-      language.value.toLowerCase().includes(this.languageSearchTerm) ||
-      language.key.toLowerCase().includes(this.languageSearchTerm)
+    this.filteredLanguages = this.availableLanguages.filter(
+      (language) =>
+        language.value.toLowerCase().includes(this.languageSearchTerm) ||
+        language.key.toLowerCase().includes(this.languageSearchTerm)
     );
   }
 
@@ -705,7 +710,6 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
           }
 
           this.alertService.error(errorMessage);
-          console.error('Registration error:', error);
           return of(null);
         }),
         finalize(() => (this.isSubmitting = false))

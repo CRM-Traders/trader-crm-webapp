@@ -90,9 +90,7 @@ export class EmployeeChatService implements OnDestroy {
         this.employeesSubject.next(employees);
         this.updateOnlineEmployees();
       }
-    } catch (error) {
-      console.error('Failed to load employees:', error);
-    }
+    } catch (error) {}
   }
 
   async updateEmployeePresence(): Promise<void> {
@@ -108,9 +106,7 @@ export class EmployeeChatService implements OnDestroy {
         this.employeePresenceSubject.next(presenceMap);
         this.updateOnlineEmployees();
       }
-    } catch (error) {
-      console.error('Failed to update employee presence:', error);
-    }
+    } catch (error) {}
   }
 
   private updateOnlineEmployees(): void {
@@ -173,7 +169,6 @@ export class EmployeeChatService implements OnDestroy {
 
       return chatId;
     } catch (error) {
-      console.error('Failed to create direct chat:', error);
       throw error;
     }
   }
@@ -205,7 +200,6 @@ export class EmployeeChatService implements OnDestroy {
       }
       return null;
     } catch (error) {
-      console.error('Failed to find existing direct chat:', error);
       return null;
     }
   }
@@ -214,7 +208,6 @@ export class EmployeeChatService implements OnDestroy {
     try {
       await this.chatApi.deleteMessage(messageId).toPromise();
     } catch (error) {
-      console.error('Failed to delete message:', error);
       throw error;
     }
   }
@@ -223,7 +216,6 @@ export class EmployeeChatService implements OnDestroy {
     try {
       await this.chatApi.editMessage(messageId, { newContent }).toPromise();
     } catch (error) {
-      console.error('Failed to edit message:', error);
       throw error;
     }
   }

@@ -167,6 +167,12 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       icon: 'password',
       action: (item: Operator) => this.openPasswordChangeModal(item),
     },
+    {
+      id: 'permissions',
+      label: 'Permissions',
+      icon: 'permissions',
+      action: (item: Operator) => this.navigateToPermissions(item),
+    },
   ];
 
   constructor() {}
@@ -247,7 +253,6 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to delete operator');
-          console.error('Error deleting operator:', error);
           return of(null);
         }),
         finalize(() => {
@@ -279,7 +284,6 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export operators');
-          console.error('Error exporting operators:', error);
           return of(null);
         })
       )
@@ -332,7 +336,6 @@ export class OperatorsComponent implements OnInit, OnDestroy {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )
@@ -380,6 +383,10 @@ export class OperatorsComponent implements OnInit, OnDestroy {
         userId: user.userId,
       }
     );
+  }
+
+  navigateToPermissions(operator: Operator): void {
+    this.router.navigate(['/operators', operator.userId, 'permissions']);
   }
 
   openPasswordChangeModal(operator: Operator): void {

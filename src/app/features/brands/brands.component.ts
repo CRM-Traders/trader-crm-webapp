@@ -161,7 +161,6 @@ export class BrandsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading brand statistics:', error);
           this.totalCount = 0;
           this.activeCount = 0;
           return of(null);
@@ -233,9 +232,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
 
   confirmDelete(brand: Brand): void {
     if (brand.desksCount !== undefined && brand.desksCount > 0) {
-      this.alertService.error(
-        'Cannot delete brand that has associated desks'
-      );
+      this.alertService.error('Cannot delete brand that has associated desks');
       return;
     }
 
@@ -264,7 +261,6 @@ export class BrandsComponent implements OnInit, OnDestroy {
           } else {
             this.alertService.error('Failed to delete brand');
           }
-          console.error('Error deleting brand:', error);
           return of(null);
         }),
         finalize(() => {
@@ -298,7 +294,6 @@ export class BrandsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import brands');
-          console.error('Error importing brands:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -326,7 +321,6 @@ export class BrandsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export brands');
-          console.error('Error exporting brands:', error);
           return of(null);
         })
       )
@@ -358,7 +352,6 @@ export class BrandsComponent implements OnInit, OnDestroy {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )

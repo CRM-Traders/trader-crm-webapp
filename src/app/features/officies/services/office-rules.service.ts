@@ -239,7 +239,6 @@ export class OfficeRulesService {
           }));
         }),
         catchError((error) => {
-          console.error('Error fetching branch operators:', error);
           return of([]);
         })
       );
@@ -270,7 +269,6 @@ export class OfficeRulesService {
           }));
         }),
         catchError((error) => {
-          console.error('Error fetching operators:', error);
           return of([]);
         })
       );

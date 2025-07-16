@@ -570,7 +570,6 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading brands:', error);
           this.alertService.error('Failed to load brands');
           return of({
             items: [],
@@ -617,7 +616,6 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading desks:', error);
           this.alertService.error('Failed to load desks');
           return of({
             items: [],
@@ -641,7 +639,6 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Brand dropdown methods
   onBrandDropdownScroll(event: any): void {
     const element = event.target;
     const threshold = 100;

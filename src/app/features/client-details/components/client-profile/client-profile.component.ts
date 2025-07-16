@@ -29,7 +29,9 @@ import {
     <div class="max-w-6xl mx-auto">
       <!-- Loading Spinner -->
       <div *ngIf="loading" class="flex justify-center items-center py-8">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+        ></div>
       </div>
 
       <div *ngIf="!loading" class="mb-6">
@@ -113,8 +115,13 @@ import {
                   [class.bg-gray-50]="!isEditingPersonal"
                   [class.dark:bg-gray-800]="!isEditingPersonal"
                 />
-                <div *ngIf="personalForm.get('firstName')?.invalid && personalForm.get('firstName')?.touched" 
-                     class="text-red-500 text-sm mt-1">
+                <div
+                  *ngIf="
+                    personalForm.get('firstName')?.invalid &&
+                    personalForm.get('firstName')?.touched
+                  "
+                  class="text-red-500 text-sm mt-1"
+                >
                   First name is required
                 </div>
               </div>
@@ -132,8 +139,13 @@ import {
                   [class.bg-gray-50]="!isEditingPersonal"
                   [class.dark:bg-gray-800]="!isEditingPersonal"
                 />
-                <div *ngIf="personalForm.get('lastName')?.invalid && personalForm.get('lastName')?.touched" 
-                     class="text-red-500 text-sm mt-1">
+                <div
+                  *ngIf="
+                    personalForm.get('lastName')?.invalid &&
+                    personalForm.get('lastName')?.touched
+                  "
+                  class="text-red-500 text-sm mt-1"
+                >
                   Last name is required
                 </div>
               </div>
@@ -170,7 +182,10 @@ import {
                   [class.opacity-50]="!isEditingPersonal"
                 >
                   <option value="">Select Language</option>
-                  <option *ngFor="let language of languages" [value]="language.key">
+                  <option
+                    *ngFor="let language of languages"
+                    [value]="language.key"
+                  >
                     {{ language.value }}
                   </option>
                 </select>
@@ -194,7 +209,10 @@ import {
                 [class.opacity-50]="!isEditingPersonal"
               >
                 <option value="">Select Country</option>
-                <option *ngFor="let country of countries$ | async" [value]="country.code">
+                <option
+                  *ngFor="let country of countries$ | async"
+                  [value]="country.code"
+                >
                   {{ country.name }}
                 </option>
               </select>
@@ -255,10 +273,19 @@ import {
                   [class.bg-gray-50]="!isEditingPersonal"
                   [class.dark:bg-gray-800]="!isEditingPersonal"
                 />
-                <div *ngIf="personalForm.get('email')?.invalid && personalForm.get('email')?.touched" 
-                     class="text-red-500 text-sm mt-1">
-                  <span *ngIf="personalForm.get('email')?.errors?.['required']">Email is required</span>
-                  <span *ngIf="personalForm.get('email')?.errors?.['email']">Please enter a valid email</span>
+                <div
+                  *ngIf="
+                    personalForm.get('email')?.invalid &&
+                    personalForm.get('email')?.touched
+                  "
+                  class="text-red-500 text-sm mt-1"
+                >
+                  <span *ngIf="personalForm.get('email')?.errors?.['required']"
+                    >Email is required</span
+                  >
+                  <span *ngIf="personalForm.get('email')?.errors?.['email']"
+                    >Please enter a valid email</span
+                  >
                 </div>
               </div>
             </div>
@@ -282,7 +309,10 @@ import {
                 [disabled]="savingPersonal || personalForm.invalid"
                 class="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 flex items-center"
               >
-                <div *ngIf="savingPersonal" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div
+                  *ngIf="savingPersonal"
+                  class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+                ></div>
                 {{ savingPersonal ? 'Saving...' : 'Save Changes' }}
               </button>
             </div>
@@ -316,7 +346,7 @@ export class ClientProfileComponent implements OnInit {
   loading = true;
   savingPersonal = false;
   clientProfile?: Profile;
-  
+
   // Data for dropdowns
   countries$: Observable<Country[]>;
   languages: Array<{ key: string; value: string }> = [];
@@ -332,7 +362,7 @@ export class ClientProfileComponent implements OnInit {
       secondTelephone: [''],
       email: ['', [Validators.required, Validators.email]],
     });
-    
+
     // Initialize dropdown data
     this.countries$ = this.countryService.getCountries();
     this.languages = this.languageService.getAllLanguages();
@@ -346,18 +376,18 @@ export class ClientProfileComponent implements OnInit {
 
   private loadClientData(): void {
     this.loading = true;
-    
-    this.userService.getClient(this.client.id)
-      .pipe(finalize(() => this.loading = false))
+
+    this.userService
+      .getClient(this.client.id)
+      .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (client) => {
           this.clientProfile = client;
           this.initializeForm(client);
         },
         error: (error) => {
-          console.error('Error loading client data:', error);
           this.alertService.error('Failed to load client data');
-        }
+        },
       });
   }
 
@@ -365,8 +395,8 @@ export class ClientProfileComponent implements OnInit {
     this.personalForm.patchValue({
       firstName: client.firstName || '',
       lastName: client.lastName || '',
-      dateOfBirth: client.dateOfBirth 
-        ? new Date(client.dateOfBirth).toISOString().split('T')[0] 
+      dateOfBirth: client.dateOfBirth
+        ? new Date(client.dateOfBirth).toISOString().split('T')[0]
         : '',
       language: client.language || '',
       country: client.country || '',
@@ -374,7 +404,7 @@ export class ClientProfileComponent implements OnInit {
       secondTelephone: client.secondTelephone || '',
       email: client.email || '',
     });
-    
+
     // Disable form controls after initialization
     this.disableFormControls();
   }
@@ -414,7 +444,7 @@ export class ClientProfileComponent implements OnInit {
 
     this.savingPersonal = true;
     const formData = this.personalForm.value;
-    
+
     // Prepare the data for API call
     const updateData = {
       id: this.client.id,
@@ -425,25 +455,31 @@ export class ClientProfileComponent implements OnInit {
       secondTelephone: formData.secondTelephone,
       country: formData.country,
       language: formData.language,
-      dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : null,
+      dateOfBirth: formData.dateOfBirth
+        ? new Date(formData.dateOfBirth).toISOString()
+        : null,
     };
 
-    this.userService.updateClient(updateData)
-      .pipe(finalize(() => {
-        this.savingPersonal = false;
-      }))
+    this.userService
+      .updateClient(updateData)
+      .pipe(
+        finalize(() => {
+          this.savingPersonal = false;
+        })
+      )
       .subscribe({
         next: (updatedClient) => {
           this.clientProfile = updatedClient;
           this.initializeForm(updatedClient);
           this.isEditingPersonal = false;
           this.disableFormControls();
-          this.alertService.success('Personal information updated successfully');
+          this.alertService.success(
+            'Personal information updated successfully'
+          );
         },
         error: (error) => {
-          console.error('Error updating client:', error);
           this.alertService.error('Failed to update client information');
-        }
+        },
       });
   }
 

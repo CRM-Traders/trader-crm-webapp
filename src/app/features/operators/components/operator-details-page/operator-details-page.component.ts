@@ -721,9 +721,7 @@ export enum OperatorDetailSection {
                     >
                       <option value="">
                         {{
-                          availableRoles.length
-                            ? 'Select'
-                            : '-- No items --'
+                          availableRoles.length ? 'Select' : '-- No items --'
                         }}
                       </option>
                       <option
@@ -1089,7 +1087,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading operator details:', error);
           this.alertService.error('Failed to load operator details');
           this.router.navigate(['/operators']);
           return of(null);
@@ -1099,14 +1096,12 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         if (operator) {
           this.operator = operator;
           this.initializeForms();
-          console.log('Operator loaded:', this.operator);
         }
       });
   }
 
   private initializeForms(): void {
     if (this.operator) {
-      // Parse full name into first and last name
       const names = this.operator.userFullName.split(' ');
       const firstName = names[0] || '';
       const lastName = names.slice(1).join(' ') || '';
@@ -1115,7 +1110,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         firstName: firstName,
         lastName: lastName,
         email: this.operator.userEmail,
-        phoneNumber: '', // Will be loaded separately if needed
+        phoneNumber: '',
         userType: this.operator.userType,
       });
 
@@ -1124,27 +1119,19 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   private loadUserDetails(): void {
-    // Load email
     this.userService.getEmail(this.operator.userId).subscribe(
       (email) => {
         this.profileForm.patchValue({ email: email.email });
       },
-      (error) => {
-        console.error('Error loading email:', error);
-      }
+      (error) => {}
     );
 
-    // Load phone
     this.userService.getPhone(this.operator.userId).subscribe(
       (phone) => {
         this.profileForm.patchValue({ phoneNumber: phone.phoneNumber });
       },
-      (error) => {
-        console.error('Error loading phone:', error);
-      }
+      (error) => {}
     );
-
-    // For now, defaulting to empty
   }
 
   private loadDepartments(): void {
@@ -1152,9 +1139,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       (response) => {
         this.availableDepartments = response.items;
       },
-      (error) => {
-        console.error('Error loading departments:', error);
-      }
+      (error) => {}
     );
   }
 
@@ -1186,7 +1171,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   getRoleName(operatorDepartmentRoleId: string): string {
-    // TODO: Implement role name lookup
     return 'Role';
   }
 
@@ -1217,14 +1201,11 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
     modalRef.result.then(
       (result) => {
-        // Handle successful password change
         if (result) {
           this.alertService.success('Password changed successfully');
         }
       },
-      () => {
-        // Modal dismissed
-      }
+      () => {}
     );
   }
 
@@ -1239,7 +1220,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Profile editing methods
   startEditProfile(): void {
     this.isEditingProfile = true;
   }
@@ -1253,7 +1233,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
     if (this.profileForm.valid) {
       this.isSavingProfile = true;
 
-      // Use the new endpoint for updating personal information
       const personalInfoRequest: OperatorPersonalInfoUpdateRequest = {
         id: this.operator.id,
         firstname: this.profileForm.value.firstName,
@@ -1269,7 +1248,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
           takeUntil(this.destroy$),
           catchError((error) => {
             this.alertService.error('Failed to update profile');
-            console.error('Error updating profile:', error);
             this.isSavingProfile = false;
             return of(null);
           })
@@ -1278,7 +1256,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
           this.alertService.success('Profile updated successfully');
           this.isEditingProfile = false;
           this.isSavingProfile = false;
-          this.loadOperatorDetails(); // Refresh data
+          this.loadOperatorDetails();
         });
     } else {
       this.alertService.error('Please fill in all required fields');
@@ -1297,7 +1275,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
             this.availableRoles = roles.items;
           },
           error: (error) => {
-            console.error('Error loading roles:', error);
             this.availableRoles = [];
           },
         });
@@ -1319,7 +1296,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
           takeUntil(this.destroy$),
           catchError((error) => {
             this.alertService.error('Failed to add department');
-            console.error('Error adding department:', error);
             this.isAddingDepartment = false;
             return of(null);
           })
@@ -1329,18 +1305,16 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
             this.alertService.success('Department added successfully');
             this.isAddingDepartment = false;
             this.departmentForm.reset();
-            this.loadOperatorDetails(); // Refresh data
+            this.loadOperatorDetails();
           }
         });
     }
   }
 
   removeDepartment(operatorDepartmentRoleId: string): void {
-    // TODO: Need to implement this based on the API
     this.alertService.info('Remove department functionality coming soon');
   }
 
-  // Branch management methods
   onBranchTypeChange(): void {
     const branchType = this.branchForm.get('branchType')?.value;
     this.branchForm.patchValue({ branchId: '' });
@@ -1379,7 +1353,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         this.loadingBranches = false;
       },
       error: (error) => {
-        console.error('Error loading branches:', error);
         this.availableBranches = [];
         this.loadingBranches = false;
         this.alertService.error('Failed to load branches');
@@ -1403,7 +1376,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
           takeUntil(this.destroy$),
           catchError((error) => {
             this.alertService.error('Failed to add branch');
-            console.error('Error adding branch:', error);
             this.isAddingBranch = false;
             return of(null);
           })
@@ -1421,7 +1393,5 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   removeBranch(branchId: string): void {
     this.operatorsService.removeUserOrganization(branchId).subscribe();
-    // TODO: Need to implement this based on the API
-    // this.alertService.info('Remove branch functionality coming soon');
   }
 }

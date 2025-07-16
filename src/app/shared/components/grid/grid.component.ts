@@ -15,7 +15,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil, finalize, debounceTime, distinctUntilChanged } from 'rxjs';
+import {
+  Subject,
+  takeUntil,
+  finalize,
+  debounceTime,
+  distinctUntilChanged,
+} from 'rxjs';
 import {
   GridAction,
   GridColumn,
@@ -191,7 +197,7 @@ export class GridComponent implements OnInit, OnDestroy {
 
     // Get the current state for other properties (sort, visible columns, etc.)
     const currentState = this.gridService.getCurrentState(this.gridId);
-    
+
     // Restore other state properties (but keep pageIndex at 0)
     this.currentSort = currentState.sort;
 
@@ -269,8 +275,14 @@ export class GridComponent implements OnInit, OnDestroy {
           // or if they don't match what was requested
           const currentState = this.gridService.getCurrentState(this.gridId);
           const newPagination = {
-            pageIndex: response.pageIndex !== undefined ? response.pageIndex : currentState.pagination.pageIndex,
-            pageSize: response.pageSize !== undefined ? response.pageSize : currentState.pagination.pageSize,
+            pageIndex:
+              response.pageIndex !== undefined
+                ? response.pageIndex
+                : currentState.pagination.pageIndex,
+            pageSize:
+              response.pageSize !== undefined
+                ? response.pageSize
+                : currentState.pagination.pageSize,
             totalItems: response.totalCount || 0,
             totalPages: response.totalPages || 0,
           };
@@ -281,7 +293,6 @@ export class GridComponent implements OnInit, OnDestroy {
           this.dataLoaded.emit(this.data);
         },
         error: (err) => {
-          console.error('Error fetching grid data:', err);
           this.error.emit(err);
         },
       });
@@ -434,7 +445,7 @@ export class GridComponent implements OnInit, OnDestroy {
 
     // Clear selection when filtering
     this.clearSelection();
-    
+
     // Reset loading state
     this.globalFilterLoading = false;
   }
@@ -584,7 +595,10 @@ export class GridComponent implements OnInit, OnDestroy {
     this.refresh.emit();
 
     // Preserve the current pagination state after refresh
-    if (this.pagination.pageSize !== currentPageSize || this.pagination.pageIndex !== currentPageIndex) {
+    if (
+      this.pagination.pageSize !== currentPageSize ||
+      this.pagination.pageIndex !== currentPageIndex
+    ) {
       this.pagination.pageSize = currentPageSize;
       this.pagination.pageIndex = currentPageIndex;
       this.gridService.setPagination(this.gridId, {

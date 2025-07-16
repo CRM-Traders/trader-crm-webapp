@@ -1,16 +1,10 @@
-import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
-import { ModalRef } from '../../shared/models/modals/modal.model';
 import { ModalService } from '../../shared/services/modals/modal.service';
-import { Client, ClientStatus } from '../clients/models/clients.model';
+import { Client } from '../clients/models/clients.model';
 import { ClientAccountsComponent } from './components/client-accounts/client-accounts.component';
 import { ClientCallHistoryComponent } from './components/client-call-history/client-call-history.component';
 import { ClientCallbacksComponent } from './components/client-callbacks/client-callbacks.component';
@@ -23,10 +17,8 @@ import { ClientReferralsComponent } from './components/client-referrals/client-r
 import { ClientTicketsComponent } from './components/client-tickets/client-tickets.component';
 import { ClientTradingActivityComponent } from './components/client-trading-activity/client-trading-activity.component';
 import { ActivatedRoute, Router } from '@angular/router';
-// Import the notes service and model
 import { NotesService } from './components/client-notes/services/notes.service';
 import { ClientNote } from './components/client-notes/models/note.model';
-// Import callback creation modal
 import { CallbackCreationModalComponent } from './components/client-callbacks/components/callback-creation-modal/callback-creation-modal.component';
 import { NoteCreationModalComponent } from './components/client-notes/components/note-creation-modal/note-creation-modal.component';
 import { UsersService } from './services/user.service';
@@ -189,19 +181,17 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading pinned notes:', error);
           return of([]);
         })
       )
       .subscribe((notes) => {
-        // Filter only pinned notes and sort by creation date (newest first)
         this.pinnedNotes = notes
           .filter((note) => note.isPinnedComment)
           .sort(
             (a, b) =>
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           )
-          .slice(0, 5); // Show only the first 5 pinned notes in the summary
+          .slice(0, 5);
 
         this.loadingPinnedNotes = false;
       });
@@ -216,7 +206,6 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading client comments:', error);
           return of([]);
         })
       )
@@ -231,10 +220,8 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  // Email visibility methods
   toggleEmailVisibility(): void {
     if (!this.showEmail && !this.emailFetched) {
-      // Fetch email when showing for the first time
       this.emailLoading = true;
       this._userService.getEmail(this.client.userId).subscribe(
         (email) => {
@@ -242,12 +229,9 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
           this.emailFetched = true;
           this.emailLoading = false;
           this.showEmail = true;
-          console.log('Client email loaded:', this.client.email);
         },
         (error) => {
-          console.error('Error loading client email:', error);
           this.emailLoading = false;
-          // Still show the toggle even if fetch failed
           this.showEmail = true;
         }
       );
@@ -292,12 +276,9 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
           this.phoneFetched = true;
           this.phoneLoading = false;
           this.showPhone = true;
-          console.log('Client phone loaded:', this.client.telephone);
         },
         (error) => {
-          console.error('Error loading client phone:', error);
           this.phoneLoading = false;
-          // Still show the toggle even if fetch failed
           this.showPhone = true;
         }
       );
@@ -458,7 +439,6 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   assignToOperator(): void {
     // Check if client has investments (if that should prevent assignment)
     if (this.client.hasInvestments) {
-      console.log('Client has investments');
     }
 
     // Open the assignment modal
@@ -485,7 +465,6 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       },
       () => {
         // Modal was dismissed/cancelled - no action needed
-        console.log('Assignment modal was cancelled');
       }
     );
   }

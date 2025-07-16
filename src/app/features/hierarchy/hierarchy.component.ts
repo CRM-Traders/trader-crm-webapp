@@ -48,39 +48,26 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
           *ngIf="hierarchyStats()"
           class="grid grid-cols-1 md:grid-cols-4 gap-4"
         >
-
-          <div
-            class="text-center p-4 bg-[#8B5CF6]/60 rounded-lg"
-          >
-            <div
-              class="text-2xl font-bold text-white"
-            >
+          <div class="text-center p-4 bg-[#8B5CF6]/60 rounded-lg">
+            <div class="text-2xl font-bold text-white">
               {{ hierarchyStats()!.offices }}
             </div>
             <div class="text-sm text-white/90">Offices</div>
           </div>
-                    <div
-            class="text-center p-4 bg-[#10B981]/60 rounded-lg"
-          >
+          <div class="text-center p-4 bg-[#10B981]/60 rounded-lg">
             <div class="text-2xl font-bold text-white">
               {{ hierarchyStats()!.brands }}
             </div>
             <div class="text-sm text-white/90">Brands</div>
           </div>
-          <div
-            class="text-center p-4 bg-[#FF6B9D]/60 rounded-lg"
-          >
+          <div class="text-center p-4 bg-[#FF6B9D]/60 rounded-lg">
             <div class="text-2xl font-bold text-white">
               {{ hierarchyStats()!.desks }}
             </div>
             <div class="text-sm text-white/90">Desks</div>
           </div>
-          <div
-            class="text-center p-4 bg-[#F59E0B]/60 rounded-lg"
-          >
-            <div
-              class="text-2xl font-bold text-white"
-            >
+          <div class="text-center p-4 bg-[#F59E0B]/60 rounded-lg">
+            <div class="text-2xl font-bold text-white">
               {{ hierarchyStats()!.members }}
             </div>
             <div class="text-sm text-white/90">Members</div>
@@ -119,7 +106,12 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
               [(ngModel)]="searchQuery"
               (input)="onSearchInput($event)"
               placeholder="Search by name, email, or country..."
-              [class]="'block w-80 !pl-10 pr-3 py-3 border rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ' + (searchResults().length > 0 ? 'border-green-500 focus:border-green-500' : 'border-gray-300 dark:border-gray-600')"
+              [class]="
+                'block w-80 !pl-10 pr-3 py-3 border rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ' +
+                (searchResults().length > 0
+                  ? 'border-green-500 focus:border-green-500'
+                  : 'border-gray-300 dark:border-gray-600')
+              "
             />
             <div
               *ngIf="searchQuery"
@@ -212,10 +204,16 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
         </div>
 
         <!-- Search Results -->
-        <div *ngIf="searchResults().length > 0" class="mb-4 border-b border-gray-200 dark:border-gray-600 pb-4">
+        <div
+          *ngIf="searchResults().length > 0"
+          class="mb-4 border-b border-gray-200 dark:border-gray-600 pb-4"
+        >
           <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
             Found {{ searchResults().length }} result(s)
-            <span *ngIf="searchQueryTrimmed()" class="text-green-600 dark:text-green-400">
+            <span
+              *ngIf="searchQueryTrimmed()"
+              class="text-green-600 dark:text-green-400"
+            >
               • Auto-expanded matching nodes
             </span>
           </div>
@@ -225,10 +223,16 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
               (click)="navigateToNode(result)"
               class="p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/10 transition-colors"
             >
-              <div class="font-medium text-gray-900 dark:text-gray-100" [innerHTML]="getHighlightedText(result.node.name, searchQuery)">
-              </div>
-              <div class="text-sm text-gray-500 dark:text-gray-400" [innerHTML]="getHighlightedText(result.path.join(' > '), searchQuery)">
-              </div>
+              <div
+                class="font-medium text-gray-900 dark:text-gray-100"
+                [innerHTML]="getHighlightedText(result.node.name, searchQuery)"
+              ></div>
+              <div
+                class="text-sm text-gray-500 dark:text-gray-400"
+                [innerHTML]="
+                  getHighlightedText(result.path.join(' > '), searchQuery)
+                "
+              ></div>
               <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">
                 Matches: {{ result.matches.join(', ') }}
               </div>
@@ -330,7 +334,7 @@ export class HierarchyComponent implements OnInit, OnDestroy {
 
   // Computed values
   searchQueryTrimmed = computed(() => this.searchQuery.trim());
-  
+
   hierarchyStats = computed(() => {
     const nodes = this.hierarchyNodes();
     if (!nodes.length) return null;
@@ -407,7 +411,6 @@ export class HierarchyComponent implements OnInit, OnDestroy {
           this.loading.set(false);
         },
         error: (error) => {
-          console.error('Error loading hierarchy:', error);
           this.alertService.error('Failed to load organization hierarchy');
           this.loading.set(false);
         },
@@ -429,31 +432,23 @@ export class HierarchyComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { results, expandedNodeIds } = this.hierarchyService.searchAndExpandHierarchy(query);
+    const { results, expandedNodeIds } =
+      this.hierarchyService.searchAndExpandHierarchy(query);
     this.searchResults.set(results);
-    
-    // Log expanded nodes for debugging
-    if (expandedNodeIds.length > 0) {
-      console.log('Auto-expanded nodes:', expandedNodeIds);
-    }
   }
 
   clearSearch() {
     this.searchQuery = '';
     this.searchResults.set([]);
-    
-    // Clear any search highlighting by triggering a re-render
-    // This will cause the hierarchy nodes to re-evaluate their search match status
+
     const currentNodes = this.hierarchyNodes();
     this.hierarchyNodes.set([...currentNodes]);
   }
 
   navigateToNode(result: HierarchySearchResult) {
-    // Expand all parent nodes to make the target visible
     const pathIds = this.hierarchyService.getNodePathIds(result.node);
     pathIds.forEach((id: string) => this.hierarchyService.expandNode(id));
 
-    // Scroll to the node
     setTimeout(() => {
       const element = document.querySelector(
         `[data-node-id="${result.node.id}"]`
@@ -472,11 +467,10 @@ export class HierarchyComponent implements OnInit, OnDestroy {
     if (!query.trim()) {
       return text;
     }
-    
+
     const regex = new RegExp(`(${query})`, 'gi');
     return text.replace(regex, '<span class="search-highlight">$1</span>');
   }
-
 
   expandAll() {
     this.hierarchyService.expandAll();
@@ -490,8 +484,5 @@ export class HierarchyComponent implements OnInit, OnDestroy {
     this.hierarchyService.toggleNode(nodeId);
   }
 
-  onNodeSelect(node: HierarchyNode) {
-    // Handle node selection (could emit events, navigate, etc.)
-    console.log('Node selected:', node);
-  }
+  onNodeSelect(node: HierarchyNode) {}
 }

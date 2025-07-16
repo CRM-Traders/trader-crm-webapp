@@ -9,10 +9,7 @@ import {
   EventEmitter,
 } from '@angular/core';
 import { PermissionTableComponent } from '../../shared/components/permission-table/permission-table.component';
-import {
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
 import {
@@ -453,7 +450,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
           } else {
             this.alertService.error('Failed to delete lead');
           }
-          console.error('Error deleting lead:', error);
           return of(null);
         }),
         finalize(() => {
@@ -483,16 +479,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check if any leads have investments (if that should prevent assignment)
     const clientsWithInvestments = leads.filter(
       (client) => client.hasInvestments
     );
     if (clientsWithInvestments.length > 0) {
-      // Optional: You can either warn or proceed - adjust based on business rules
-      console.log(`${clientsWithInvestments.length} leads have investments`);
     }
 
-    // Open the assignment modal
     const modalRef = this.modalService.open(
       AssignOperatorModalComponent,
       {
@@ -509,18 +501,13 @@ export class LeadsComponent implements OnInit, OnDestroy {
     modalRef.result.then(
       (result) => {
         if (result) {
-          // Assignment was successful, refresh the grid and statistics
           this.refreshSpecificGrid();
           this.loadStatistics();
-          // Clear the selection after successful assignment
           this.clearGridSelection();
           this.selectionChange.emit([]);
         }
       },
-      () => {
-        // Modal was dismissed/cancelled - no action needed
-        console.log('Assignment modal was cancelled');
-      }
+      () => {}
     );
     this.refreshSpecificGrid();
   }
@@ -533,7 +520,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import leads');
-          console.error('Error importing leads:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -547,7 +533,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       });
   }
   private clearGridSelection(): void {
-    // Emit event to clear grid selection
     window.dispatchEvent(
       new CustomEvent('clearGridSelection', {
         detail: { gridId: this.gridId },
@@ -568,7 +553,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export leads');
-          console.error('Error exporting leads:', error);
           return of(null);
         })
       )
@@ -585,8 +569,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       });
   }
 
-
-
   openRegistrationModal(): void {
     const modalRef = this.modalService.open(LeadRegistrationModalComponent, {
       size: 'lg',
@@ -602,7 +584,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
         }
       },
       () => {
-        // Modal dismissed - still refresh to ensure data is up to date
         this.refreshSpecificGrid();
         this.loadStatistics();
       }
@@ -622,7 +603,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )
@@ -642,7 +622,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
   }
 
   refreshSpecificGrid(): void {
-    console.log('Refreshing grid with ID:', this.gridId);
     const event = new CustomEvent('refreshGrid', {
       detail: { gridId: this.gridId },
     });
@@ -690,20 +669,14 @@ export class LeadsComponent implements OnInit, OnDestroy {
 
     modalRef.result.then(
       (result) => {
-        // Handle successful password change
         if (result) {
           this.alertService.success('Password changed successfully');
         }
       },
-      () => {
-        // Modal dismissed
-      }
+      () => {}
     );
   }
 
-  /**
-   * Initialize grid templates
-   */
   private initializeGridTemplates(): void {
     const statusColumn = this.gridColumns.find((col) => col.field === 'status');
     if (statusColumn) {
@@ -718,11 +691,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Initialize filter options for dropdown columns
-   */
   private initializeFilterOptions(): void {
-    // Load all filter options concurrently
     forkJoin({
       countries: this.countryService.getCountries(),
       languages: of(this.languageService.getAllLanguages()),
@@ -734,7 +703,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          console.error('Error loading filter options:', error);
           return of({
             countries: [],
             languages: [],
@@ -747,36 +715,24 @@ export class LeadsComponent implements OnInit, OnDestroy {
       )
       .subscribe(
         ({ countries, languages, desks, teams, salesAgents, timezones }) => {
-          // Update country filter options
           this.updateColumnFilterOptions(
             'country',
             countries.map((c) => ({ value: c.code, label: c.name }))
           );
 
-          // Update language filter options
           this.updateColumnFilterOptions(
             'language',
             languages.map((l) => ({ value: l.key, label: l.value }))
           );
 
-          // Update desk filter options
           this.updateColumnFilterOptions('deskId', desks);
-
-          // Update team filter options
           this.updateColumnFilterOptions('teamId', teams);
-
-          // Update sales agents filter options
           this.updateColumnFilterOptions('salesAgentId', salesAgents);
-
-          // Update timezone filter options
           this.updateColumnFilterOptions('timezone', timezones);
         }
       );
   }
 
-  /**
-   * Update filter options for a specific column
-   */
   private updateColumnFilterOptions(field: string, options: any[]): void {
     const column = this.gridColumns.find((col) => col.field === field);
     if (column) {
@@ -784,9 +740,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Load desks dropdown options
-   */
   private loadDesksDropdown() {
     return this.operatorsService
       .getDesksDropdown({
@@ -809,9 +762,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       );
   }
 
-  /**
-   * Load teams dropdown options
-   */
   private loadTeamsDropdown() {
     return this.operatorsService
       .getTeamsDropdown({
@@ -834,9 +784,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       );
   }
 
-  /**
-   * Load sales agents dropdown options
-   */
   private loadSalesAgentsDropdown() {
     return this.officeRulesService
       .getAvailableOperators(0, 1000, '')
@@ -854,11 +801,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       );
   }
 
-  /**
-   * Load timezone options
-   */
   private loadTimezones() {
-    // Common timezones - this could be from a service
     const timezones = [
       { value: 'UTC', label: 'UTC' },
       { value: 'GMT', label: 'GMT' },
@@ -899,7 +842,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
           }
 
           this.alertService.error(errorMessage);
-          console.error('Error converting lead:', error);
           return of(null);
         }),
         finalize(() => {
@@ -915,31 +857,25 @@ export class LeadsComponent implements OnInit, OnDestroy {
           );
           this.refreshSpecificGrid();
           this.loadStatistics();
-
-
         }
         this.refreshSpecificGrid();
         this.loadStatistics();
       });
   }
 
-  /**
-   * Convert multiple leads to clients (bulk operation)
-   */
   convertLeadsToClients(leads: Lead[]): void {
     if (!leads || leads.length === 0) {
       this.alertService.error('No leads selected for conversion');
       return;
     }
 
-    const leadIds = leads.map((lead) => lead.id).filter((id) => id); // Filter out any undefined IDs
+    const leadIds = leads.map((lead) => lead.id).filter((id) => id);
 
     if (leadIds.length === 0) {
       this.alertService.error('Invalid leads selected');
       return;
     }
 
-    // For single selection, use the single conversion endpoint
     if (leadIds.length === 1) {
       const lead = leads.find((l) => l.id === leadIds[0]);
       if (lead) {
@@ -948,7 +884,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Confirm bulk conversion
     const confirmMessage = `Are you sure you want to convert ${leads.length} leads to clients?`;
     if (!confirm(confirmMessage)) {
       return;
@@ -970,7 +905,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
           }
 
           this.alertService.error(errorMessage);
-          console.error('Error converting leads:', error);
           return of(null);
         }),
         finalize(() => (this.loading = false))
@@ -980,8 +914,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
           this.handleBulkConversionResult(result);
           this.refreshSpecificGrid();
           this.loadStatistics();
-
-
         }
       });
   }
@@ -990,25 +922,19 @@ export class LeadsComponent implements OnInit, OnDestroy {
     const { successCount, failureCount, errors } = result;
 
     if (successCount > 0 && failureCount === 0) {
-      // All conversions successful
       this.alertService.success(
         `Successfully converted ${successCount} lead${
           successCount > 1 ? 's' : ''
         } to client${successCount > 1 ? 's' : ''}`
       );
     } else if (successCount > 0 && failureCount > 0) {
-      // Partial success
       this.alertService.warning(
         `Converted ${successCount} lead${
           successCount > 1 ? 's' : ''
         } successfully. ${failureCount} failed.`
       );
 
-      // Log detailed errors for debugging
       if (errors && errors.length > 0) {
-        console.error('Conversion errors:', errors);
-
-        // Optionally show detailed error information
         const errorDetails = errors
           .slice(0, 3)
           .map((err) => `${err.email}: ${err.reason}`)
@@ -1025,14 +951,9 @@ export class LeadsComponent implements OnInit, OnDestroy {
         }
       }
     } else {
-      // All conversions failed
       this.alertService.error(
         `Failed to convert ${failureCount} lead${failureCount > 1 ? 's' : ''}`
       );
-
-      if (errors && errors.length > 0) {
-        console.error('All conversion errors:', errors);
-      }
     }
   }
 }

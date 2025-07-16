@@ -1,4 +1,13 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output, OnChanges, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -8,7 +17,11 @@ import {
   Validators,
 } from '@angular/forms';
 import { AlertService } from '../../../../../core/services/alert.service';
-import { FilesService, FileType, UploadFileResponse } from '../services/files.service';
+import {
+  FilesService,
+  FileType,
+  UploadFileResponse,
+} from '../services/files.service';
 import { catchError, finalize, of } from 'rxjs';
 
 export interface FileUploadData {
@@ -36,7 +49,9 @@ export interface FileUploadData {
         (click)="$event.stopPropagation()"
       >
         <!-- Modal Header -->
-        <div class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+        <div
+          class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700"
+        >
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Upload Photo
           </h3>
@@ -45,7 +60,12 @@ export interface FileUploadData {
             (click)="closeModal()"
             class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -82,9 +102,13 @@ export interface FileUploadData {
               </svg>
               <div class="mt-4">
                 <label for="file-upload" class="cursor-pointer">
-                  <span class="mt-2 block text-sm font-medium text-gray-900 dark:text-white">
+                  <span
+                    class="mt-2 block text-sm font-medium text-gray-900 dark:text-white"
+                  >
                     Drop a photo here or
-                    <span class="text-blue-600 dark:text-blue-400 hover:text-blue-500">
+                    <span
+                      class="text-blue-600 dark:text-blue-400 hover:text-blue-500"
+                    >
                       browse
                     </span>
                   </span>
@@ -114,7 +138,12 @@ export interface FileUploadData {
                   class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <div class="flex items-center space-x-2">
-                    <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      class="h-6 w-6 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -123,7 +152,9 @@ export interface FileUploadData {
                       ></path>
                     </svg>
                     <div>
-                      <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p
+                        class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                      >
                         {{ selectedFiles[0].name }}
                       </p>
                       <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -137,7 +168,12 @@ export interface FileUploadData {
                     [disabled]="isUploading"
                     class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50"
                   >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg
+                      class="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -154,7 +190,9 @@ export interface FileUploadData {
             <div class="grid grid-cols-1 gap-4">
               <!-- File Type Selection -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   File Type
                 </label>
                 <select
@@ -180,7 +218,9 @@ export interface FileUploadData {
 
               <!-- Description -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Description
                 </label>
                 <textarea
@@ -193,7 +233,9 @@ export interface FileUploadData {
 
               <!-- Reference -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Reference (Optional)
                 </label>
                 <input
@@ -222,7 +264,9 @@ export interface FileUploadData {
         </div>
 
         <!-- Modal Footer -->
-        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
+        <div
+          class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6"
+        >
           <button
             type="button"
             (click)="closeModal()"
@@ -302,41 +346,35 @@ export class AddFileModalComponent implements OnInit, OnChanges {
     });
 
     // Debug form changes
-    this.uploadForm.valueChanges.subscribe(value => {
-      console.log('Form value changed:', value);
-    });
+    this.uploadForm.valueChanges.subscribe((value) => {});
   }
 
   ngOnInit(): void {
     // Update ownerId when clientId is available
     if (this.clientId) {
-      this.uploadForm.patchValue({ 
-        ownerId: this.clientId
+      this.uploadForm.patchValue({
+        ownerId: this.clientId,
       });
     }
-    console.log('ngOnInit - clientId:', this.clientId);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     // Handle changes to clientId input
     if (changes['clientId'] && changes['clientId'].currentValue) {
-      this.uploadForm.patchValue({ 
-        ownerId: changes['clientId'].currentValue
+      this.uploadForm.patchValue({
+        ownerId: changes['clientId'].currentValue,
       });
-      console.log('ngOnChanges - clientId updated:', changes['clientId'].currentValue);
     }
-    
+
     // Handle changes to isOpen input - reset form when modal opens
     if (changes['isOpen'] && changes['isOpen'].currentValue === true) {
       this.resetModal();
       // Ensure clientId is set when modal opens
       if (this.clientId) {
-        this.uploadForm.patchValue({ 
-          ownerId: this.clientId
+        this.uploadForm.patchValue({
+          ownerId: this.clientId,
         });
-        console.log('Modal opened - clientId set:', this.clientId);
       } else {
-        console.warn('Modal opened but clientId is not available');
       }
     }
   }
@@ -346,10 +384,9 @@ export class AddFileModalComponent implements OnInit, OnChanges {
    */
   private refreshClientId(): void {
     if (this.clientId) {
-      this.uploadForm.patchValue({ 
-        ownerId: this.clientId
+      this.uploadForm.patchValue({
+        ownerId: this.clientId,
       });
-      console.log('Client ID refreshed:', this.clientId);
     }
   }
 
@@ -360,16 +397,7 @@ export class AddFileModalComponent implements OnInit, OnChanges {
     const formValid = this.uploadForm.valid;
     const hasFile = this.selectedFiles.length === 1;
     const canUpload = formValid && hasFile;
-    
-    console.log('canUpload check:', {
-      formValid,
-      hasFile,
-      selectedFilesCount: this.selectedFiles.length,
-      formErrors: this.uploadForm.errors,
-      formValue: this.uploadForm.value,
-      canUpload
-    });
-    
+
     return canUpload;
   }
 
@@ -418,20 +446,18 @@ export class AddFileModalComponent implements OnInit, OnChanges {
    * Process selected files
    */
   private handleFiles(files: File[]): void {
-    console.log('Processing files:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
-    
     // Only allow one file at a time
     const file = files[0];
-    
+
     if (!file) {
-      console.log('No file provided');
       return;
     }
 
     // Check if file is empty
     if (file.size === 0) {
-      console.log('File is empty:', file.name);
-      this.alertService.error('Selected file is empty. Please select a valid file.');
+      this.alertService.error(
+        'Selected file is empty. Please select a valid file.'
+      );
       return;
     }
 
@@ -449,9 +475,7 @@ export class AddFileModalComponent implements OnInit, OnChanges {
       return;
     }
 
-    console.log('Valid file:', { name: file.name, size: file.size, type: file.type });
     this.selectedFiles = [file]; // Replace any existing files with the new one
-    console.log('Selected file:', this.selectedFiles[0]);
   }
 
   /**
@@ -486,7 +510,10 @@ export class AddFileModalComponent implements OnInit, OnChanges {
       return FileType.Document;
     } else if (file.type.includes('document') || file.type.includes('word')) {
       return FileType.Document;
-    } else if (file.type.includes('presentation') || file.type.includes('powerpoint')) {
+    } else if (
+      file.type.includes('presentation') ||
+      file.type.includes('powerpoint')
+    ) {
       return FileType.Presentation;
     } else if (file.type.includes('zip') || file.type.includes('archive')) {
       return FileType.Archive;
@@ -499,29 +526,25 @@ export class AddFileModalComponent implements OnInit, OnChanges {
    * Upload selected files
    */
   uploadFiles(): void {
-    console.log('Starting upload process...');
-    console.log('Form data:', this.uploadForm.value);
-    console.log('Selected files:', this.selectedFiles);
-    console.log('Client ID:', this.clientId);
-
     if (!this.canUpload()) {
-      console.log('Upload validation failed');
       this.alertService.error('Please select a photo to upload');
       return;
     }
 
     // Validate that clientId is available
     if (!this.clientId) {
-      console.log('Client ID not available');
-      this.alertService.error('Client ID is not available. Please refresh the page and try again.');
+      this.alertService.error(
+        'Client ID is not available. Please refresh the page and try again.'
+      );
       return;
     }
 
     // Validate file is not empty
     const selectedFile = this.selectedFiles[0];
     if (!selectedFile || selectedFile.size === 0) {
-      console.log('File is empty or invalid');
-      this.alertService.error('Selected file is empty or invalid. Please select a valid file.');
+      this.alertService.error(
+        'Selected file is empty or invalid. Please select a valid file.'
+      );
       return;
     }
 
@@ -530,53 +553,41 @@ export class AddFileModalComponent implements OnInit, OnChanges {
 
     // Test with the selected file
     if (this.selectedFiles.length === 1) {
-      console.log('Testing with selected file:', this.selectedFiles[0]);
       const testFile = this.selectedFiles[0];
       const testFormData = this.uploadForm.value;
-      
+
       // Create a simple test to see if the issue is with the file or the API
       const testFormDataObj = new FormData();
       testFormDataObj.append('file', testFile);
-      testFormDataObj.append('fileType', testFormData.fileType?.toString() || '99');
+      testFormDataObj.append(
+        'fileType',
+        testFormData.fileType?.toString() || '99'
+      );
       testFormDataObj.append('ownerId', this.clientId || '');
       testFormDataObj.append('makePermanent', 'true');
       testFormDataObj.append('description', testFormData.description || '');
       testFormDataObj.append('reference', testFormData.reference || '');
-      
-      console.log('Test FormData entries:', Array.from(testFormDataObj.entries()));
     }
 
     this.isUploading = true;
     const formData = this.uploadForm.value;
-    
-    console.log('About to upload photo:', {
-      formData,
-      clientId: this.clientId,
-      formValid: this.uploadForm.valid,
-      formErrors: this.uploadForm.errors,
-      formRawValue: this.uploadForm.getRawValue()
-    });
 
-    const uploadPromise = this.uploadSingleFile(this.selectedFiles[0], formData);
+    const uploadPromise = this.uploadSingleFile(
+      this.selectedFiles[0],
+      formData
+    );
 
     uploadPromise
       .then((response: UploadFileResponse) => {
-        console.log('Upload successful:', response);
         this.alertService.success('Photo uploaded successfully');
         this.uploadSuccess.emit([response]);
         this.resetModal();
         this.closeModal();
       })
-      .catch(error => {
-        console.error('Upload error:', error);
-        console.error('Error details:', {
-          message: error.message,
-          status: error.status,
-          statusText: error.statusText,
-          url: error.url,
-          error: error.error
-        });
-        this.alertService.error(`Upload failed: ${error.message || 'Unknown error'}`);
+      .catch((error) => {
+        this.alertService.error(
+          `Upload failed: ${error.message || 'Unknown error'}`
+        );
       })
       .finally(() => {
         this.isUploading = false;
@@ -584,92 +595,53 @@ export class AddFileModalComponent implements OnInit, OnChanges {
       });
   }
 
-  /**
-   * Upload a single file
-   */
-  private async uploadSingleFile(file: File, formData: FileUploadData): Promise<UploadFileResponse> {
-    // Validate file before upload
+  private async uploadSingleFile(
+    file: File,
+    formData: FileUploadData
+  ): Promise<UploadFileResponse> {
     if (!file || file.size === 0) {
       throw new Error('File is empty or invalid');
     }
 
-    // Additional validation to ensure file can be read
     try {
       const arrayBuffer = await file.arrayBuffer();
       if (arrayBuffer.byteLength === 0) {
         throw new Error('File content is empty');
       }
-      console.log(`File ${file.name} can be read successfully, size: ${arrayBuffer.byteLength} bytes`);
     } catch (error) {
-      console.error(`Error reading file ${file.name}:`, error);
       throw new Error(`File cannot be read: ${error}`);
     }
 
-    console.log(`Uploading file: ${file.name}`, {
-      fileSize: file.size,
-      fileType: file.type,
-      formData
-    });
-
-    console.log('Form data fileType:', {
-      raw: formData.fileType,
-      type: typeof formData.fileType,
-      isNull: formData.fileType === null,
-      isUndefined: formData.fileType === undefined
-    });
-
-    // Use the file type from the form
     const fileType = formData.fileType || FileType.Other;
-    
+
     const metadata = {
       description: formData.description || '',
       reference: formData.reference || '',
       fileType: fileType,
       ownerId: formData.ownerId || this.clientId,
-      makePermanent: formData.makePermanent
+      makePermanent: formData.makePermanent,
     };
 
-    console.log('Upload metadata:', metadata);
-
     return new Promise<UploadFileResponse>((resolve, reject) => {
-      this.filesService.uploadFile(file, metadata)
+      this.filesService
+        .uploadFile(file, metadata)
         .pipe(
-          catchError(error => {
-            console.error(`Error uploading ${file.name}:`, error);
-            console.error(`File ${file.name} error details:`, {
-              message: error.message,
-              status: error.status,
-              statusText: error.statusText,
-              url: error.url,
-              error: error.error
-            });
+          catchError((error) => {
             reject(error);
             return [];
           })
         )
         .subscribe({
           next: (response) => {
-            console.log(`File ${file.name} uploaded successfully:`, response);
             resolve(response);
           },
           error: (error) => {
-            console.error(`File ${file.name} upload failed:`, error);
-            console.error(`File ${file.name} error details:`, {
-              message: error.message,
-              status: error.status,
-              statusText: error.statusText,
-              url: error.url,
-              error: error.error
-            });
             reject(error);
-          }
+          },
         });
     });
   }
 
-  /**
-   * Close the modal
-   */
   closeModal(): void {
     if (!this.isUploading) {
       this.resetModal();
@@ -677,20 +649,16 @@ export class AddFileModalComponent implements OnInit, OnChanges {
     }
   }
 
-  /**
-   * Reset modal state
-   */
   private resetModal(): void {
     this.selectedFiles = [];
     this.isDragOver = false;
-    
-    // Reset form with proper initial values
+
     this.uploadForm.reset({
-      fileType: FileType.Other, // Default to "Other"
+      fileType: FileType.Other,
       makePermanent: true,
       description: '',
       reference: '',
-      ownerId: this.clientId || ''
+      ownerId: this.clientId || '',
     });
   }
 }

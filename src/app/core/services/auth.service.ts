@@ -36,9 +36,7 @@ export class AuthService implements OnDestroy {
 
   private readonly _isAuthenticated = signal<boolean>(this.hasValidToken());
   private readonly _userRole = signal<string>(this.getRole());
-  private readonly _userPermissions = signal<string[]>(
-    this.getUserPermissions()
-  );
+  private readonly _userPermissions = signal<string>(this.getUserPermissions());
 
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly userRole = this._userRole.asReadonly();
@@ -50,6 +48,28 @@ export class AuthService implements OnDestroy {
 
   ngOnDestroy(): void {
     this.stopTokenCheck();
+  }
+
+  private setCookie(name: string, value: string, days = 7): void {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(
+      value
+    )}; expires=${expires}; path=/; Secure; SameSite=Strict`;
+  }
+
+  private getCookie(name: string): string | null {
+    const cookies = document.cookie ? document.cookie.split('; ') : [];
+    for (const cookie of cookies) {
+      const [key, val] = cookie.split('=');
+      if (key === name) {
+        return decodeURIComponent(val);
+      }
+    }
+    return null;
+  }
+
+  private deleteCookie(name: string): void {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; Secure; SameSite=Strict`;
   }
 
   login(
@@ -74,7 +94,7 @@ export class AuthService implements OnDestroy {
             this.initTokenRefresh();
           }
         }),
-        catchError((error) =>
+        catchError(() =>
           throwError(
             () =>
               new Error('Authentication failed. Please check your credentials.')
@@ -91,7 +111,7 @@ export class AuthService implements OnDestroy {
           this.handleAuthResponse(response);
           this.initTokenRefresh();
         }),
-        catchError((error) =>
+        catchError(() =>
           throwError(() => new Error('Authentication token validation failed.'))
         )
       );
@@ -135,6 +155,8 @@ export class AuthService implements OnDestroy {
             refreshToken: this.getRefreshToken() || '',
             role: this.getRole(),
             exp: this.getTokenExpiration(),
+            name: this.getName(),
+            permission: this.getUserPermissions(),
           } as AuthResponse)
         )
       );
@@ -143,7 +165,7 @@ export class AuthService implements OnDestroy {
     this.refreshTokenInProgress = true;
     this.refreshTokenSubject.next(null);
 
-    const body = { accessToken: accessToken, refreshToken: refreshToken };
+    const body = { accessToken, refreshToken };
 
     return this._http
       .post<AuthResponse>('identity/api/auth/refresh-token', body)
@@ -165,33 +187,34 @@ export class AuthService implements OnDestroy {
   }
 
   hasRole(requiredRole: string): boolean {
-    const userRole = this.getRole();
-    return userRole === requiredRole;
+    return this.getRole() === requiredRole;
   }
 
+  // ====== COOKIE-BASED GETTERS ======
+
   getAccessToken(): string | null {
-    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+    return this.getCookie(this.ACCESS_TOKEN_KEY);
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    return this.getCookie(this.REFRESH_TOKEN_KEY);
   }
 
   getRole(): string {
-    return localStorage.getItem(this.ROLE_KEY) || '';
+    return this.getCookie(this.ROLE_KEY) || '';
   }
 
-  getUserPermissions(): string[] {
-    const stored = localStorage.getItem(this.PERMISSION_KEY);
-    return stored ? JSON.parse(stored) : [];
+  getUserPermissions(): string {
+    const stored = this.getCookie(this.PERMISSION_KEY);
+    return stored ?? '';
   }
 
   getName(): string {
-    return localStorage.getItem(this.NAME_KEY) || '';
+    return this.getCookie(this.NAME_KEY) || '';
   }
 
   getTokenExpiration(): number {
-    const expString = localStorage.getItem(this.EXPIRATION_KEY);
+    const expString = this.getCookie(this.EXPIRATION_KEY);
     return expString ? parseInt(expString, 10) : 0;
   }
 
@@ -203,40 +226,40 @@ export class AuthService implements OnDestroy {
       const expTime = this.getTokenExpiration();
       const currentTime = Math.floor(Date.now() / 1000);
       return expTime > currentTime;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  private handleAuthResponse(response: AuthResponse): void {
+  public handleAuthResponse(response: AuthResponse): void {
     if (response && response.accessToken) {
       this.storeAuthData(response);
       this._isAuthenticated.set(true);
       this._userRole.set(response.role);
+      this._userPermissions.set(response.permission);
     }
   }
 
   private storeAuthData(authData: AuthResponse): void {
-    localStorage.setItem(this.ACCESS_TOKEN_KEY, authData.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, authData.refreshToken);
-    localStorage.setItem(this.ROLE_KEY, authData.role);
-    localStorage.setItem(this.EXPIRATION_KEY, `${authData.exp}`);
-    localStorage.setItem(this.NAME_KEY, authData.name);
-    localStorage.setItem(
-      this.PERMISSION_KEY,
-      JSON.stringify(authData.permissions)
-    );
+    this.setCookie(this.ACCESS_TOKEN_KEY, authData.accessToken, 7);
+    this.setCookie(this.REFRESH_TOKEN_KEY, authData.refreshToken, 7);
+    this.setCookie(this.ROLE_KEY, authData.role, 7);
+    this.setCookie(this.EXPIRATION_KEY, `${authData.exp}`, 7);
+    this.setCookie(this.NAME_KEY, authData.name, 7);
+    this.setCookie(this.PERMISSION_KEY, authData.permission, 7);
   }
 
   private clearAuthData(): void {
-    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.ROLE_KEY);
-    localStorage.removeItem(this.EXPIRATION_KEY);
-    localStorage.removeItem(this.NAME_KEY);
-    localStorage.removeItem(this.PERMISSION_KEY);
+    this.deleteCookie(this.ACCESS_TOKEN_KEY);
+    this.deleteCookie(this.REFRESH_TOKEN_KEY);
+    this.deleteCookie(this.ROLE_KEY);
+    this.deleteCookie(this.EXPIRATION_KEY);
+    this.deleteCookie(this.NAME_KEY);
+    this.deleteCookie(this.PERMISSION_KEY);
     this.clearBrandSelection();
   }
+
+  // ====== TOKEN REFRESH LOGIC ======
 
   private initTokenRefresh(): void {
     this.stopTokenCheck();
@@ -267,8 +290,10 @@ export class AuthService implements OnDestroy {
     const currentTime = Math.floor(Date.now() / 1000);
     const timeUntilExpiry = expTime - currentTime;
 
+    // Assuming tokens last 5 minutes (300 sec)
     const totalTokenLifetime = 300;
 
+    // Refresh if less than 25% time left
     const refreshThreshold = totalTokenLifetime * 0.25;
 
     if (timeUntilExpiry < refreshThreshold) {
@@ -276,15 +301,23 @@ export class AuthService implements OnDestroy {
     }
   }
 
+  hasPermission(permissionIndex: number): boolean {
+    const permissions = this._userPermissions();
+    if (!permissions) return false;
+    return permissions.charAt(permissionIndex - 1) === '1';
+  }
+
+  // ====== BRAND SELECTION (still uses cookies) ======
+
   hasSelectedBrand(): boolean {
-    return localStorage.getItem('brand-selected') === 'true';
+    return this.getCookie('brand-selected') === 'true';
   }
 
   markBrandAsSelected(): void {
-    localStorage.setItem('brand-selected', 'true');
+    this.setCookie('brand-selected', 'true', 7);
   }
 
   clearBrandSelection(): void {
-    localStorage.removeItem('brand-selected');
+    this.deleteCookie('brand-selected');
   }
 }

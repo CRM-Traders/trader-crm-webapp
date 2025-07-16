@@ -290,7 +290,6 @@ export class OfficesComponent implements OnInit, OnDestroy {
           } else {
             this.alertService.error('Failed to delete office');
           }
-          console.error('Error deleting office:', error);
           return of(null);
         }),
         finalize(() => {
@@ -325,7 +324,6 @@ export class OfficesComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to import offices');
-          console.error('Error importing offices:', error);
           return of(null);
         }),
         finalize(() => (this.importLoading = false))
@@ -353,7 +351,6 @@ export class OfficesComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to export offices');
-          console.error('Error exporting offices:', error);
           return of(null);
         })
       )
@@ -385,7 +382,6 @@ export class OfficesComponent implements OnInit, OnDestroy {
               'Failed to download template. Please try again.'
             );
           }
-          console.error('Error downloading template:', error);
           return of(null);
         })
       )
