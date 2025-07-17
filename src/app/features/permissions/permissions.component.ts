@@ -284,4 +284,10 @@ export class PermissionsComponent implements OnInit {
         }
       });
   }
+
+  areAnyPermissionsGrantedByActionType(actionType: ActionType): boolean {
+    return this.permissionSections.some(section =>
+      section.permissions.some(p => p.actionType === actionType && p.isGranted)
+    );
+  }
 }
