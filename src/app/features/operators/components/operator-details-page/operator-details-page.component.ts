@@ -125,6 +125,26 @@ export enum OperatorDetailSection {
               </button>
               <button
                 type="button"
+                (click)="openPermissions()"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  ></path>
+                </svg>
+                Permissions
+              </button>
+              <button
+                type="button"
                 (click)="refreshData()"
                 class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
@@ -1180,6 +1200,10 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   changePassword(): void {
     this.openPasswordChangeModal(this.operator);
+  }
+
+  openPermissions(): void {
+    window.open(`/operators/${this.operator.userId}/permissions`, '_blank');
   }
 
   openPasswordChangeModal(operator: Operator): void {

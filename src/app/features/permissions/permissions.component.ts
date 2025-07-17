@@ -25,9 +25,6 @@ export class PermissionsComponent implements OnInit {
 
   permissionSections: PermissionSection[] = [];
 
-  roles: string[] = ['All', 'Admin', 'User', 'Manager'];
-  activeRole: string = 'All';
-
   isDarkMode = false;
   loading = false;
   updatingPermissions = new Set<string>();
@@ -40,6 +37,7 @@ export class PermissionsComponent implements OnInit {
   ];
 
   selectedPermissions: string[] = [];
+  expandedSections = new Set<string>();
 
   ngOnInit(): void {
     const operatorId = this.activatedRoute.snapshot.paramMap.get('id');
@@ -50,30 +48,22 @@ export class PermissionsComponent implements OnInit {
     }
 
     this.operatorId = operatorId;
+    this.loadPermissions();
   }
 
   private loadPermissions(): void {
     this.loading = true;
-    const role = this.activeRole === 'All' ? '' : this.activeRole;
 
-    this._service.allPermissions(role).subscribe((result) => {
-      this.permissionSections = result;
-    });
-  }
-
-  fetchPermissions(role: string): void {
-    if (role === 'All') {
-      role = '';
-    }
-
-    this._service.allPermissions(this.operatorId).subscribe((result) => {
-      this.permissionSections = result;
-    });
-  }
-
-  selectRole(role: string): void {
-    this.activeRole = role;
-    this.fetchPermissions(this.activeRole);
+    this._service.allPermissions(this.operatorId)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (result) => {
+          this.permissionSections = result;
+        },
+        error: (error) => {
+          console.error('Error loading permissions:', error);
+        }
+      });
   }
 
   togglePermission(permissionId: string): void {
@@ -81,7 +71,7 @@ export class PermissionsComponent implements OnInit {
       return;
     }
 
-    const isCurrentlySelected = this.isPermissionSelected(permissionId);
+    const isCurrentlyGranted = this.isPermissionSelected(permissionId);
     this.updatingPermissions.add(permissionId);
 
     var json = {
@@ -89,7 +79,7 @@ export class PermissionsComponent implements OnInit {
       permissionId: permissionId,
     };
 
-    const apiCall = isCurrentlySelected
+    const apiCall = isCurrentlyGranted
       ? this._service.removeUserPermission(json)
       : this._service.addUserPermission(json);
 
@@ -98,23 +88,29 @@ export class PermissionsComponent implements OnInit {
       .subscribe({
         next: () => {
           // Update local state based on the action performed
-          if (isCurrentlySelected) {
-            this.selectedPermissions = this.selectedPermissions.filter(
-              (id) => id !== permissionId
-            );
-          } else {
-            this.selectedPermissions = [
-              ...this.selectedPermissions,
-              permissionId,
-            ];
+          for (const section of this.permissionSections) {
+            const permission = section.permissions.find(p => p.id === permissionId);
+            if (permission) {
+              permission.isGranted = !isCurrentlyGranted;
+              break;
+            }
           }
         },
-        error: (error) => {},
+        error: (error) => {
+          console.error('Error toggling permission:', error);
+        },
       });
   }
 
   isPermissionSelected(permissionId: string): boolean {
-    return this.selectedPermissions.includes(permissionId);
+    // Find the permission in the sections and check its isGranted property
+    for (const section of this.permissionSections) {
+      const permission = section.permissions.find(p => p.id === permissionId);
+      if (permission) {
+        return permission.isGranted;
+      }
+    }
+    return false;
   }
 
   isPermissionUpdating(permissionId: string): boolean {
@@ -146,5 +142,146 @@ export class PermissionsComponent implements OnInit {
 
   resetPermissions(): void {
     this.loadPermissions();
+  }
+
+  toggleSection(section: string): void {
+    if (this.expandedSections.has(section)) {
+      this.expandedSections.delete(section);
+    } else {
+      this.expandedSections.add(section);
+    }
+  }
+
+  isSectionExpanded(section: string): boolean {
+    return this.expandedSections.has(section);
+  }
+
+  getTotalPermissionsInSection(section: string): number {
+    const sectionData = this.permissionSections.find(s => s.section === section);
+    return sectionData ? sectionData.permissions.length : 0;
+  }
+
+  getGrantedPermissionsCount(): number {
+    return this.permissionSections
+      .flatMap(section => section.permissions)
+      .filter(permission => permission.isGranted)
+      .length;
+  }
+
+  areAnyPermissionsGrantedInSection(section: string): boolean {
+    const sectionData = this.permissionSections.find(s => s.section === section);
+    if (!sectionData) return false;
+    return sectionData.permissions.some(p => p.isGranted);
+  }
+
+  toggleAllPermissionsInSection(section: string): void {
+    const sectionData = this.permissionSections.find(s => s.section === section);
+    if (!sectionData) return;
+
+    // If any permissions are granted, disable all. Otherwise, enable all.
+    const anyGranted = this.areAnyPermissionsGrantedInSection(section);
+    const enable = !anyGranted;
+
+    const permissionsToToggle = sectionData.permissions.filter(p => p.isGranted !== enable);
+    if (permissionsToToggle.length === 0) return;
+
+    // Add all permissions to updating set
+    permissionsToToggle.forEach(p => this.updatingPermissions.add(p.id));
+
+    // Create array of API calls
+    const apiCalls = permissionsToToggle.map(permission => {
+      const json = {
+        userId: this.operatorId,
+        permissionId: permission.id,
+      };
+      return enable 
+        ? this._service.addUserPermission(json)
+        : this._service.removeUserPermission(json);
+    });
+
+    // Execute all API calls
+    forkJoin(apiCalls)
+      .pipe(finalize(() => {
+        // Remove all permissions from updating set
+        permissionsToToggle.forEach(p => this.updatingPermissions.delete(p.id));
+      }))
+      .subscribe({
+        next: () => {
+          // Update local state for all permissions
+          permissionsToToggle.forEach(permission => {
+            permission.isGranted = enable;
+          });
+        },
+        error: (error) => {
+          console.error('Error toggling all permissions:', error);
+        }
+      });
+  }
+
+  getSectionGrantedCount(section: string): number {
+    const sectionData = this.permissionSections.find(s => s.section === section);
+    return sectionData ? sectionData.permissions.filter(p => p.isGranted).length : 0;
+  }
+
+  isSectionUpdating(section: string): boolean {
+    const sectionData = this.permissionSections.find(s => s.section === section);
+    if (!sectionData) return false;
+    return sectionData.permissions.some(p => this.updatingPermissions.has(p.id));
+  }
+
+  areAllPermissionsGrantedByActionType(section: string, actionType: ActionType): boolean {
+    const sectionData = this.permissionSections.find(s => s.section === section);
+    if (!sectionData) return false;
+    
+    const permissionsOfType = sectionData.permissions.filter(p => p.actionType === actionType);
+    if (permissionsOfType.length === 0) return false;
+    
+    return permissionsOfType.every(p => p.isGranted);
+  }
+
+  toggleAllPermissionsByActionType(section: string, actionType: ActionType): void {
+    const sectionData = this.permissionSections.find(s => s.section === section);
+    if (!sectionData) return;
+
+    const permissionsOfType = sectionData.permissions.filter(p => p.actionType === actionType);
+    if (permissionsOfType.length === 0) return;
+
+    const allGranted = this.areAllPermissionsGrantedByActionType(section, actionType);
+    const enable = !allGranted; // Toggle to opposite state
+
+    const permissionsToToggle = permissionsOfType.filter(p => p.isGranted !== enable);
+    if (permissionsToToggle.length === 0) return;
+
+    // Add all permissions to updating set
+    permissionsToToggle.forEach(p => this.updatingPermissions.add(p.id));
+
+    // Create array of API calls
+    const apiCalls = permissionsToToggle.map(permission => {
+      const json = {
+        userId: this.operatorId,
+        permissionId: permission.id,
+      };
+      return enable 
+        ? this._service.addUserPermission(json)
+        : this._service.removeUserPermission(json);
+    });
+
+    // Execute all API calls
+    forkJoin(apiCalls)
+      .pipe(finalize(() => {
+        // Remove all permissions from updating set
+        permissionsToToggle.forEach(p => this.updatingPermissions.delete(p.id));
+      }))
+      .subscribe({
+        next: () => {
+          // Update local state for all permissions
+          permissionsToToggle.forEach(permission => {
+            permission.isGranted = enable;
+          });
+        },
+        error: (error) => {
+          console.error('Error toggling permissions by action type:', error);
+        }
+      });
   }
 }
