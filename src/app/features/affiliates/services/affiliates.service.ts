@@ -79,7 +79,7 @@ export class AffiliatesService {
   }
 
   getActiveAffiliates() {
-    return this.httpService.get(`identity/api/users/get-active-users?role=5`);
+    return this.httpService.get(`identity/api/users/get-active-users?role=23`);
   }
 
   generateClientDocumentation(

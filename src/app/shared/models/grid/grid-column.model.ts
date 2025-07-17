@@ -15,6 +15,7 @@ export interface GridColumn<T = any> {
   cellClass?: string;
   headerClass?: string;
   exportable?: boolean;
+  permission?: number;
   selector?: (item: T) => any;
 }
 

@@ -1,3 +1,4 @@
+@if (client){
 <div class="general-container w-full mx-auto bg-white dark:bg-gray-900">
   <!-- Header Section -->
   <div class="relative z-10 bg-white dark:bg-gray-900">
@@ -32,7 +33,7 @@
             <div
               class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg"
             >
-              {{ getInitials(client.firstName, client.lastName) }}
+              {{ getInitials(client.firstName, client.lastName!) }}
             </div>
             <div>
               <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
@@ -886,3 +887,4 @@
     </div>
   </div>
 </div>
+}

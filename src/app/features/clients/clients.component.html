@@ -155,10 +155,9 @@
     <!-- Main Content Area -->
     <div class="relative">
       <!-- Grid Container -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl">
+      <div class="bg-white dark:bg-gray-800 rounded-xl" *hasPermission="52">
         <div class="overflow-x-auto">
           <app-grid
-            *hasPermission="52"
             gridId="clients-grid"
             [endpoint]="'identity/api/clients/grid'"
             [columns]="gridColumns"
@@ -177,8 +176,6 @@
             (selectionChange)="onSelectionChange($event)"
             (bulkActionExecuted)="onBulkActionExecuted($event)"
             (export)="onExport($event)"
-            (refresh)="refreshGrid()"
-            (dataLoaded)="onDataLoaded($event)"
           >
             <!-- Online Status Cell Template -->
             <ng-template #onlineStatusCell let-value="value">
@@ -236,29 +233,30 @@
               </span>
             </ng-template>
 
-            <!-- Auto Login Cell Template -->
-            <ng-template #autoLoginCell let-value="value" let-row="row">
-              <button
-                *hasPermission="1"
-                class="p-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
-                (click)="onAutoLogin(value)"
-                title="Auto Login"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <ng-container *hasPermission="1">
+              <!-- Auto Login Cell Template -->
+              <ng-template #autoLoginCell let-value="value" let-row="row">
+                <button
+                  class="p-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
+                  (click)="onAutoLogin(value)"
+                  title="Auto Login"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                  />
-                </svg>
-              </button>
-            </ng-template>
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    />
+                  </svg>
+                </button>
+              </ng-template>
+            </ng-container>
 
             <!-- Latest Comment Cell Template -->
             <ng-template #latestCommentCell let-value="value" let-row="row">
