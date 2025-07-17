@@ -38,6 +38,7 @@ import { GridFilterComponent } from '../grid-filter/grid-filter.component';
 import { GridActionButtonsComponent } from '../grid-action-buttons/grid-action-buttons.component';
 import { ContextMenuComponent } from '../context-menu/context-menu.component';
 import { GridDataResponse } from '../../models/grid/grid-state.model';
+import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-grid',
@@ -50,6 +51,7 @@ import { GridDataResponse } from '../../models/grid/grid-state.model';
     GridColumnSelectorComponent,
     GridActionButtonsComponent,
     ContextMenuComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './grid.component.html',
   styleUrls: ['./grid.component.scss'],

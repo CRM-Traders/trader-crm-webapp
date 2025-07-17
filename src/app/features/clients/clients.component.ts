@@ -679,12 +679,6 @@ export class ClientsComponent implements OnInit {
       action: (item: Client) => this.openClientDetailsModal(item),
       permission: 7,
     },
-    // {
-    //   id: 'edit',
-    //   label: 'Edit',
-    //   icon: 'edit',
-    //   action: (item: Client) => this.openClientDetailsModal(item),
-    // },
     {
       id: 'password',
       label: 'Change Password',

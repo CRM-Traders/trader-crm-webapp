@@ -1,40 +1,41 @@
 <div class="flex items-center space-x-1">
   <ng-container *ngFor="let action of primaryActions">
-    <ng-container *hasPermission="action.permission"></ng-container>
-    <button
-      *ngIf="isActionVisible(action)"
-      [disabled]="isActionDisabled(action)"
-      (click)="executeAction(action, $event)"
-      [title]="action.label"
-      class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-300/30 hover:bg-gray-300 dark:bg-white dark:hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      [ngClass]="{
-        'text-gray-700 dark:text-gray-200':
-          !isActionDisabled(action) && action.type !== 'danger',
-        'text-red-600 dark:text-red-400':
-          !isActionDisabled(action) && action.type === 'danger',
-        'text-green-600 dark:text-green-400':
-          !isActionDisabled(action) && action.type === 'success',
-        'text-blue-600 dark:text-blue-400':
-          !isActionDisabled(action) && action.type === 'primary',
-        'text-yellow-600 dark:text-yellow-400':
-          !isActionDisabled(action) && action.type === 'warning',
-        'border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20':
-          action.type === 'danger' && !isActionDisabled(action),
-        'border-green-300 dark:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20':
-          action.type === 'success' && !isActionDisabled(action),
-        'border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20':
-          action.type === 'primary' && !isActionDisabled(action),
-        'border-yellow-300 dark:border-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20':
-          action.type === 'warning' && !isActionDisabled(action)
-      }"
-    >
-      <img
-        *ngIf="action.icon"
-        [src]="getIconSvg(action.icon)"
-        class="w-4 h-4"
-        [alt]="action.label"
-      />
-    </button>
+    <ng-container *hasPermission="action.permission">
+      <button
+        *ngIf="isActionVisible(action)"
+        [disabled]="isActionDisabled(action)"
+        (click)="executeAction(action, $event)"
+        [title]="action.label"
+        class="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-300/30 hover:bg-gray-300 dark:bg-white dark:hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        [ngClass]="{
+          'text-gray-700 dark:text-gray-200':
+            !isActionDisabled(action) && action.type !== 'danger',
+          'text-red-600 dark:text-red-400':
+            !isActionDisabled(action) && action.type === 'danger',
+          'text-green-600 dark:text-green-400':
+            !isActionDisabled(action) && action.type === 'success',
+          'text-blue-600 dark:text-blue-400':
+            !isActionDisabled(action) && action.type === 'primary',
+          'text-yellow-600 dark:text-yellow-400':
+            !isActionDisabled(action) && action.type === 'warning',
+          'border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20':
+            action.type === 'danger' && !isActionDisabled(action),
+          'border-green-300 dark:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20':
+            action.type === 'success' && !isActionDisabled(action),
+          'border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20':
+            action.type === 'primary' && !isActionDisabled(action),
+          'border-yellow-300 dark:border-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20':
+            action.type === 'warning' && !isActionDisabled(action)
+        }"
+      >
+        <img
+          *ngIf="action.icon"
+          [src]="getIconSvg(action.icon)"
+          class="w-4 h-4"
+          [alt]="action.label"
+        />
+      </button>
+    </ng-container>
   </ng-container>
 
   <!-- More actions dropdown -->
