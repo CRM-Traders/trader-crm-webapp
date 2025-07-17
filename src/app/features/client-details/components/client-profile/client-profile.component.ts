@@ -20,11 +20,12 @@ import {
   PasswordChangeComponent,
   PasswordChangeData,
 } from '../../../../shared/components/password-change/password-change.component';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   template: `
     <div class="max-w-6xl mx-auto">
       <!-- Loading Spinner -->
@@ -53,48 +54,52 @@ import {
               Personal Information
             </h3>
             <div class="flex space-x-3">
-              <button
-                type="button"
-                *ngIf="!isEditingPersonal"
-                (click)="openPasswordChangeModal()"
-                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                <svg
-                  class="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <ng-container *hasPermission="26">
+                <button
+                  type="button"
+                  *ngIf="!isEditingPersonal"
+                  (click)="openPasswordChangeModal()"
+                  class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                  ></path>
-                </svg>
-                Change Password
-              </button>
-              <button
-                type="button"
-                *ngIf="!isEditingPersonal"
-                (click)="startEditPersonal()"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                <svg
-                  class="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  <svg
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                    ></path>
+                  </svg>
+                  Change Password
+                </button>
+              </ng-container>
+              <ng-container *hasPermission="27">
+                <button
+                  type="button"
+                  *ngIf="!isEditingPersonal"
+                  (click)="startEditPersonal()"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  ></path>
-                </svg>
-                Edit
-              </button>
+                  <svg
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    ></path>
+                  </svg>
+                  Edit
+                </button>
+              </ng-container>
             </div>
           </div>
 
@@ -193,7 +198,7 @@ import {
             </div>
 
             <!-- Country -->
-            <div>
+            <div *hasPermission="10">
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
@@ -227,7 +232,7 @@ import {
               </h4>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div *hasPermission="8">
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
@@ -242,7 +247,7 @@ import {
                     [class.dark:bg-gray-800]="!isEditingPersonal"
                   />
                 </div>
-                <div>
+                <div *hasPermission="8">
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
@@ -259,7 +264,7 @@ import {
                 </div>
               </div>
 
-              <div class="mt-4">
+              <div class="mt-4" *hasPermission="9">
                 <label
                   class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
@@ -291,31 +296,33 @@ import {
             </div>
 
             <!-- Action Buttons for Personal Info -->
-            <div
-              *ngIf="isEditingPersonal"
-              class="flex justify-end space-x-3 pt-4"
-            >
-              <button
-                type="button"
-                (click)="cancelEditPersonal()"
-                [disabled]="savingPersonal"
-                class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+            <ng-container *hasPermission="27">
+              <div
+                *ngIf="isEditingPersonal"
+                class="flex justify-end space-x-3 pt-4"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                (click)="savePersonalInfo()"
-                [disabled]="savingPersonal || personalForm.invalid"
-                class="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 flex items-center"
-              >
-                <div
-                  *ngIf="savingPersonal"
-                  class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
-                ></div>
-                {{ savingPersonal ? 'Saving...' : 'Save Changes' }}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  (click)="cancelEditPersonal()"
+                  [disabled]="savingPersonal"
+                  class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  (click)="savePersonalInfo()"
+                  [disabled]="savingPersonal || personalForm.invalid"
+                  class="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 flex items-center"
+                >
+                  <div
+                    *ngIf="savingPersonal"
+                    class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+                  ></div>
+                  {{ savingPersonal ? 'Saving...' : 'Save Changes' }}
+                </button>
+              </div>
+            </ng-container>
           </form>
         </div>
       </div>

@@ -16,11 +16,12 @@ import { Client } from '../../../clients/models/clients.model';
 import { NotesService } from './services/notes.service';
 import { ClientNote } from './models/note.model';
 import { NoteCreationModalComponent } from './components/note-creation-modal/note-creation-modal.component';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-notes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   template: `
     <div class="max-w-7xl mx-auto">
       <div class="mb-6 flex items-center justify-between">
@@ -34,6 +35,7 @@ import { NoteCreationModalComponent } from './components/note-creation-modal/not
         </div>
         <div>
           <button
+            *hasPermission="4"
             type="button"
             (click)="openCreateModal()"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -60,6 +62,7 @@ import { NoteCreationModalComponent } from './components/note-creation-modal/not
       <div class="space-y-4" *ngIf="!loading; else loadingTemplate">
         <!-- All Notes -->
         <div
+          *hasPermission="28"
           class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
         >
           <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">

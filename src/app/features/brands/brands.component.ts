@@ -1,5 +1,3 @@
-// src/app/features/brands/brands.component.ts
-
 import {
   Component,
   OnInit,
@@ -23,11 +21,18 @@ import {
 import { BrandCreationModalComponent } from './components/brand-creation-modal/brand-creation-modal.component';
 import { BrandDetailsModalComponent } from './components/brand-details-modal/brand-details-modal.component';
 import { GridService } from '../../shared/services/grid/grid.service';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-brands',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './brands.component.html',
   styleUrls: ['./brands.component.scss'],
 })
@@ -110,21 +115,8 @@ export class BrandsComponent implements OnInit, OnDestroy {
       label: 'View Details',
       icon: 'view',
       action: (item: Brand) => this.openDetailsModal(item),
+      permission: 69,
     },
-    // {
-    //   id: 'edit',
-    //   label: 'Edit',
-    //   icon: 'edit',
-    //   action: (item: Brand) => this.openDetailsModal(item),
-    // },
-    // {
-    //   id: 'delete',
-    //   label: 'Delete',
-    //   icon: 'delete',
-    //   disabled: (item: Brand) =>
-    //     item.departmentsCount !== undefined && item.departmentsCount > 0,
-    //   action: (item: Brand) => this.confirmDelete(item),
-    // },
   ];
 
   constructor() {}

@@ -11,16 +11,17 @@ import {
   Callback,
   CallbackCreateRequest,
   CallbackUpdateRequest,
-  CallbackCreateResponse
+  CallbackCreateResponse,
 } from '../../models/callback.model';
 import { ModalRef } from '../../../../../../shared/models/modals/modal.model';
 import { Client } from '../../../../../clients/models/clients.model';
 import { AlertService } from '../../../../../../core/services/alert.service';
+import { HasPermissionDirective } from '../../../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-callback-creation-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   template: `
     <div class="w-full">
       <!-- Modal Header -->
@@ -46,13 +47,15 @@ import { AlertService } from '../../../../../../core/services/alert.service';
                 formControlName="callbackDateTime"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 [class.border-red-500]="
-                  callbackForm.get('callbackDateTime')?.invalid && callbackForm.get('callbackDateTime')?.touched
+                  callbackForm.get('callbackDateTime')?.invalid &&
+                  callbackForm.get('callbackDateTime')?.touched
                 "
               />
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
-                  callbackForm.get('callbackDateTime')?.invalid && callbackForm.get('callbackDateTime')?.touched
+                  callbackForm.get('callbackDateTime')?.invalid &&
+                  callbackForm.get('callbackDateTime')?.touched
                 "
               >
                 Callback date and time is required
@@ -73,23 +76,31 @@ import { AlertService } from '../../../../../../core/services/alert.service';
                 max="1440"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 [class.border-red-500]="
-                  callbackForm.get('reminderInMinutes')?.invalid && callbackForm.get('reminderInMinutes')?.touched
+                  callbackForm.get('reminderInMinutes')?.invalid &&
+                  callbackForm.get('reminderInMinutes')?.touched
                 "
                 placeholder="15"
               />
               <p
                 class="mt-1 text-sm text-red-600 dark:text-red-400"
                 *ngIf="
-                  callbackForm.get('reminderInMinutes')?.invalid && callbackForm.get('reminderInMinutes')?.touched
+                  callbackForm.get('reminderInMinutes')?.invalid &&
+                  callbackForm.get('reminderInMinutes')?.touched
                 "
               >
-                <span *ngIf="callbackForm.get('reminderInMinutes')?.errors?.['required']">
+                <span
+                  *ngIf="callbackForm.get('reminderInMinutes')?.errors?.['required']"
+                >
                   Reminder time is required
                 </span>
-                <span *ngIf="callbackForm.get('reminderInMinutes')?.errors?.['min']">
+                <span
+                  *ngIf="callbackForm.get('reminderInMinutes')?.errors?.['min']"
+                >
                   Reminder must be at least 0 minutes
                 </span>
-                <span *ngIf="callbackForm.get('reminderInMinutes')?.errors?.['max']">
+                <span
+                  *ngIf="callbackForm.get('reminderInMinutes')?.errors?.['max']"
+                >
                   Reminder cannot exceed 1440 minutes (24 hours)
                 </span>
               </p>
@@ -98,7 +109,9 @@ import { AlertService } from '../../../../../../core/services/alert.service';
 
           <!-- Client Information (Read-only) -->
           <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-            <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <h4
+              class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
+            >
               Client Information
             </h4>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -122,7 +135,10 @@ import { AlertService } from '../../../../../../core/services/alert.service';
                 <label class="block text-xs text-gray-500 dark:text-gray-400">
                   Email
                 </label>
-                <p class="text-sm text-gray-900 dark:text-white">
+                <p
+                  class="text-sm text-gray-900 dark:text-white"
+                  *hasPermission="9"
+                >
                   {{ client.email }}
                 </p>
               </div>
@@ -171,7 +187,15 @@ import { AlertService } from '../../../../../../core/services/alert.service';
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            {{ isSubmitting ? (isEditMode ? 'Updating...' : 'Scheduling...') : (isEditMode ? 'Update Callback' : 'Schedule Callback') }}
+            {{
+              isSubmitting
+                ? isEditMode
+                  ? 'Updating...'
+                  : 'Scheduling...'
+                : isEditMode
+                ? 'Update Callback'
+                : 'Schedule Callback'
+            }}
           </span>
         </button>
       </div>
@@ -195,7 +219,10 @@ export class CallbackCreationModalComponent implements OnInit {
   constructor() {
     this.callbackForm = this.fb.group({
       callbackDateTime: ['', Validators.required],
-      reminderInMinutes: [15, [Validators.required, Validators.min(0), Validators.max(1440)]],
+      reminderInMinutes: [
+        15,
+        [Validators.required, Validators.min(0), Validators.max(1440)],
+      ],
     });
   }
 
@@ -269,9 +296,13 @@ export class CallbackCreationModalComponent implements OnInit {
       error: (error) => {
         this.isSubmitting = false;
         if (error.status === 400) {
-          this.alertService.error('Invalid data provided. Please check your inputs.');
+          this.alertService.error(
+            'Invalid data provided. Please check your inputs.'
+          );
         } else {
-          this.alertService.error('Failed to schedule callback. Please try again.');
+          this.alertService.error(
+            'Failed to schedule callback. Please try again.'
+          );
         }
       },
     });
@@ -288,23 +319,29 @@ export class CallbackCreationModalComponent implements OnInit {
       reminderInMinutes: formValue.reminderInMinutes,
     };
 
-    this.callbacksService.updateCallback(this.callback.id, updateData).subscribe({
-      next: () => {
-        this.isSubmitting = false;
-        this.alertService.success('Callback updated successfully!');
-        this.modalRef.close(true);
-      },
-      error: (error) => {
-        this.isSubmitting = false;
-        if (error.status === 400) {
-          this.alertService.error('Invalid data provided. Please check your inputs.');
-        } else if (error.status === 404) {
-          this.alertService.error('Callback not found.');
-        } else {
-          this.alertService.error('Failed to update callback. Please try again.');
-        }
-      },
-    });
+    this.callbacksService
+      .updateCallback(this.callback.id, updateData)
+      .subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.alertService.success('Callback updated successfully!');
+          this.modalRef.close(true);
+        },
+        error: (error) => {
+          this.isSubmitting = false;
+          if (error.status === 400) {
+            this.alertService.error(
+              'Invalid data provided. Please check your inputs.'
+            );
+          } else if (error.status === 404) {
+            this.alertService.error('Callback not found.');
+          } else {
+            this.alertService.error(
+              'Failed to update callback. Please try again.'
+            );
+          }
+        },
+      });
   }
 
   onCancel(): void {

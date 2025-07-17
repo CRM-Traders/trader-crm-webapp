@@ -26,6 +26,7 @@ import { ClientCommentsService } from './services/client-comments.service';
 import { ClientComment } from './models/client-comment.model';
 import { ClientsService } from '../clients/services/clients.service';
 import { AssignOperatorModalComponent } from '../clients/components/assign-operator-modal/assign-operator-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 export enum ClientDetailSection {
   Profile = 'profile',
@@ -58,6 +59,7 @@ export enum ClientDetailSection {
     ClientTicketsComponent,
     ClientFeedComponent,
     ClientReferralsComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './client-details.component.html',
   styles: [
@@ -106,15 +108,19 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   phoneFetched = false;
 
   navigationSections = [
-    { key: ClientDetailSection.Profile, label: 'Profile' },
-    { key: ClientDetailSection.Payments, label: 'Payments' },
-    { key: ClientDetailSection.TradingActivity, label: 'Trading Activity' },
-    { key: ClientDetailSection.Tickets, label: 'Tickets' },
-    { key: ClientDetailSection.Accounts, label: 'Accounts' },
-    { key: ClientDetailSection.Callbacks, label: 'Callbacks' },
-    { key: ClientDetailSection.Files, label: 'Files' },
+    { key: ClientDetailSection.Profile, label: 'Profile', permission: 17 },
+    { key: ClientDetailSection.Payments, label: 'Payments', permission: 18 },
+    {
+      key: ClientDetailSection.TradingActivity,
+      label: 'Trading Activity',
+      permission: 19,
+    },
+    { key: ClientDetailSection.Tickets, label: 'Tickets', permission: 20 },
+    { key: ClientDetailSection.Accounts, label: 'Accounts', permission: 21 },
+    { key: ClientDetailSection.Callbacks, label: 'Callbacks', permission: 22 },
+    { key: ClientDetailSection.Files, label: 'Files', permission: 23 },
     // { key: ClientDetailSection.CallHistory, label: 'Call History' },
-    { key: ClientDetailSection.Notes, label: 'Notes' },
+    { key: ClientDetailSection.Notes, label: 'Notes', permission: 25 },
     // { key: ClientDetailSection.Feed, label: 'Feed' },
     // { key: ClientDetailSection.Referrals, label: 'Referrals' },
   ];

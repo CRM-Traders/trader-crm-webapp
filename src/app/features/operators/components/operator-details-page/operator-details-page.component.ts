@@ -14,7 +14,6 @@ import { OperatorsService } from '../../services/operators.service';
 import { UsersService } from '../../../client-details/services/user.service';
 import {
   Operator,
-  OperatorUpdateRequest,
   BranchType,
   BranchTypeLabels,
   BranchTypeColors,
@@ -22,17 +21,15 @@ import {
   UserTypeLabels,
   UserTypeColors,
   OperatorRole,
-  UserProfileUpdateRequest,
   UserOrganizationAssignRequest,
   OperatorDepartmentRoleAssignRequest,
-  OperatorBranch,
-  OperatorDepartment,
   OperatorPersonalInfoUpdateRequest,
 } from '../../models/operators.model';
 import {
   PasswordChangeComponent,
   PasswordChangeData,
 } from '../../../../shared/components/password-change/password-change.component';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 export enum OperatorDetailSection {
   Profile = 'profile',
@@ -45,7 +42,7 @@ export enum OperatorDetailSection {
 @Component({
   selector: 'app-operator-details-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   template: `
     <div class="general-container w-full mx-auto bg-white dark:bg-gray-900">
       <!-- Header Section -->
@@ -86,7 +83,10 @@ export enum OperatorDetailSection {
                   <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                     {{ operator.userFullName }}
                   </h1>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                  <p
+                    class="text-sm text-gray-500 dark:text-gray-400"
+                    *hasPermission="111"
+                  >
                     Operator ID: {{ operator.id }}
                   </p>
                 </div>
@@ -104,6 +104,7 @@ export enum OperatorDetailSection {
             <!-- Action Buttons -->
             <div class="flex items-center space-x-3">
               <button
+                *hasPermission="99"
                 type="button"
                 (click)="changePassword()"
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -246,7 +247,10 @@ export enum OperatorDetailSection {
                 }"
                 (click)="setActiveSection(section.key)"
               >
-                <div class="flex items-center">
+                <div
+                  class="flex items-center"
+                  *hasPermission="section.permission"
+                >
                   <ng-container [ngSwitch]="section.key">
                     <!-- Profile Icon -->
                     <svg
@@ -309,7 +313,9 @@ export enum OperatorDetailSection {
                       ></path>
                     </svg>
                   </ng-container>
-                  {{ section.label }}
+                  <ng-container *hasPermission="section.permission">{{
+                    section.label
+                  }}</ng-container>
                 </div>
               </button>
             </div>
@@ -342,27 +348,29 @@ export enum OperatorDetailSection {
                   >
                     Personal Information
                   </h3>
-                  <button
-                    type="button"
-                    *ngIf="!isEditingProfile"
-                    (click)="startEditProfile()"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                  >
-                    <svg
-                      class="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <ng-container *hasPermission="102">
+                    <button
+                      type="button"
+                      *ngIf="!isEditingProfile"
+                      (click)="startEditProfile()"
+                      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                      ></path>
-                    </svg>
-                    Edit
-                  </button>
+                      <svg
+                        class="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        ></path>
+                      </svg>
+                      Edit
+                    </button>
+                  </ng-container>
                 </div>
 
                 <form [formGroup]="profileForm" class="space-y-4">
@@ -524,6 +532,7 @@ export enum OperatorDetailSection {
                     class="flex justify-end space-x-3 pt-4"
                   >
                     <button
+                      *hasPermission="102"
                       type="button"
                       (click)="cancelEditProfile()"
                       class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -531,6 +540,7 @@ export enum OperatorDetailSection {
                       Cancel
                     </button>
                     <button
+                      *hasPermission="102"
                       type="button"
                       (click)="saveProfileInfo()"
                       [disabled]="profileForm.invalid || isSavingProfile"
@@ -544,6 +554,7 @@ export enum OperatorDetailSection {
 
               <!-- System Information -->
               <div
+                *hasPermission="103"
                 class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
               >
                 <h3
@@ -554,7 +565,7 @@ export enum OperatorDetailSection {
 
                 <div class="space-y-4">
                   <div class="grid grid-cols-1 gap-4">
-                    <div>
+                    <div *hasPermission="111">
                       <label
                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                       >
@@ -678,6 +689,7 @@ export enum OperatorDetailSection {
 
             <!-- Add Department Form -->
             <div
+              *hasPermission="106"
               class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
             >
               <h3
@@ -762,6 +774,7 @@ export enum OperatorDetailSection {
 
             <!-- Departments List -->
             <div
+              *hasPermission="105"
               class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
             >
               <div
@@ -788,6 +801,7 @@ export enum OperatorDetailSection {
                   </div>
                   <button
                     type="button"
+                    *hasPermission="107"
                     (click)="removeDepartment(dept.operatorDepartmentRoleId)"
                     class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                     title="Remove Department"
@@ -832,6 +846,7 @@ export enum OperatorDetailSection {
 
             <!-- Add Branch Form -->
             <div
+              *hasPermission="109"
               class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
             >
               <h3
@@ -922,6 +937,7 @@ export enum OperatorDetailSection {
 
             <!-- Branches List -->
             <div
+              *hasPermission="108"
               class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
             >
               <div
@@ -952,6 +968,7 @@ export enum OperatorDetailSection {
                     </p>
                   </div>
                   <button
+                    *hasPermission="110"
                     type="button"
                     (click)="removeBranch(branch.id)"
                     class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
@@ -1038,9 +1055,13 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   UserTypeColors = UserTypeColors;
 
   navigationSections = [
-    { key: OperatorDetailSection.Profile, label: 'Profile' },
-    { key: OperatorDetailSection.Departments, label: 'Departments' },
-    { key: OperatorDetailSection.Branches, label: 'Branches' },
+    { key: OperatorDetailSection.Profile, label: 'Profile', permission: 104 },
+    {
+      key: OperatorDetailSection.Departments,
+      label: 'Departments',
+      permission: 105,
+    },
+    { key: OperatorDetailSection.Branches, label: 'Branches', permission: 108 },
   ];
 
   constructor() {

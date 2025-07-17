@@ -55,6 +55,7 @@ import { DesksService } from '../desks/services/desks.service';
 import { OfficeRulesService } from '../officies/services/office-rules.service';
 import { AssignOperatorModalComponent } from './components/assign-operator-modal/assign-operator-modal.component';
 import { OperatorDetailsModalComponent } from '../operators/components/operator-details-modal/operator-details-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 interface InlineCommentState {
   clientId: string;
@@ -67,7 +68,13 @@ interface InlineCommentState {
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './clients.component.html',
   styleUrls: ['./clients.component.scss'],
 })
@@ -660,6 +667,7 @@ export class ClientsComponent implements OnInit {
       action: (clients: Client[]) => this.assignClientsToOperators(clients),
       visible: false,
       disabled: false,
+      permission: 2,
     },
   ];
 
@@ -669,6 +677,7 @@ export class ClientsComponent implements OnInit {
       label: 'View Details',
       icon: 'view',
       action: (item: Client) => this.openClientDetailsModal(item),
+      permission: 7,
     },
     // {
     //   id: 'edit',
@@ -681,6 +690,7 @@ export class ClientsComponent implements OnInit {
       label: 'Change Password',
       icon: 'password',
       action: (item: Client) => this.openPasswordChangeModal(item),
+      permission: 260,
     },
     {
       id: 'comments',
@@ -688,6 +698,7 @@ export class ClientsComponent implements OnInit {
       icon: 'documents',
       type: 'secondary',
       action: (item: Client) => this.openClientCommentsModal(item),
+      permission: 16,
     },
   ];
 

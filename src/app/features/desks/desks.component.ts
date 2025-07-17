@@ -21,11 +21,18 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { DeskCreationModalComponent } from './components/desk-creation-modal/desk-creation-modal.component';
 import { DeskDetailsModalComponent } from './components/desk-details-modal/desk-details-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-desks',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './desks.component.html',
   styleUrls: ['./desks.component.scss'],
 })
@@ -120,12 +127,14 @@ export class DesksComponent implements OnInit, OnDestroy {
       label: 'View Details',
       icon: 'view',
       action: (item: Desk) => this.openDetailsModal(item),
+      permission: 74,
     },
     {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
       action: (item: Desk) => this.confirmDelete(item),
+      permission: 75,
     },
   ];
 

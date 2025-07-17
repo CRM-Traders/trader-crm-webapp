@@ -12,6 +12,7 @@
         </div>
         <div class="mt-4 sm:mt-0">
           <button
+            *hasPermission="84"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             (click)="createRule()"
           >
@@ -38,11 +39,10 @@
     <!-- Main Content Area -->
     <div class="relative">
       <!-- Grid Container -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
+            *hasPermission="85"
             gridId="sales-rules-grid"
             [endpoint]="'identity/api/salerules'"
             [columns]="gridColumns"
@@ -95,10 +95,6 @@
           </app-grid>
         </div>
       </div>
-
-
     </div>
   </div>
-
-
 </div>

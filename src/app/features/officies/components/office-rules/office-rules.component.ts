@@ -35,11 +35,18 @@ import {
 } from '../../../../shared/models/grid/grid-column.model';
 import { AddManagerModalComponent } from '../add-manager-modal/add-manager-modal.component';
 import { CreateRuleModalComponent } from '../create-rule-modal/create-rule-modal.component';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-office-rules',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './office-rules.component.html',
   styleUrls: ['./office-rules.component.scss'],
 })
@@ -168,12 +175,14 @@ export class OfficeRulesComponent implements OnInit, OnDestroy {
       label: 'Edit',
       icon: 'edit',
       action: (item: OfficeRule) => this.editRule(item),
+      permission: 61,
     },
     {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
       action: (item: OfficeRule) => this.confirmDeleteRule(item),
+      permission: 62,
     },
   ];
 
