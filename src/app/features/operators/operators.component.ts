@@ -372,7 +372,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   }
 
   navigateToPermissions(operator: Operator): void {
-    this.router.navigate(['/operators', operator.userId, 'permissions']);
+    window.open(`/operators/${operator.userId}/permissions`, '_blank');
   }
 
   openPasswordChangeModal(operator: Operator): void {
