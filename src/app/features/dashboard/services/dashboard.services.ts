@@ -14,4 +14,8 @@ export class DashboardService {
   getDashboardData(): Observable<DashboardData> {
     return this.httpService.get<DashboardData>(this.apiPath);
   }
+
+  getOfficeDashboardStats(): Observable<any> {
+    return this.httpService.get<any>('identity/api/offices/get-office-dashboard-stat');
+  }
 }
