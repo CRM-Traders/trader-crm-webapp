@@ -56,15 +56,18 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getOfficeDashboardStats().subscribe({
       next: (data: OfficeDashboardStats) => {
         this.officeDashboardStats = data;
-        // Set monthlyDepositIncome and todayIncome from depositStats
+        // Set leadsTraffic and productivityStats from depositStats
         if (data && Array.isArray(data.depositStats)) {
-          const thisMonth = data.depositStats.find((ds: DepositStat) => ds.depositTypeEnum === DepositType.ThisMonth);
-          const today = data.depositStats.find((ds: DepositStat) => ds.depositTypeEnum === DepositType.Today);
-          this.monthlyDepositIncome = thisMonth ? thisMonth.amount : 0;
-          this.todayIncome = today ? today.amount : 0;
           this.leadsTraffic = data.depositStats;
           this.productivityStats = data.depositStats;
         }
+        
+        // Calculate monthly deposit income from transactions
+        this.monthlyDepositIncome = this.calculateMonthlyDepositIncome(data.transactions || []);
+        
+        // Calculate today's income from transactions
+        this.todayIncome = this.calculateTodayIncome(data.transactions || []);
+        
         // Deposit attempts: transactionType = Deposit
         this.depositAttempts = (data.transactions || []).filter((t: Transaction) => t.transactionType === TransactionType.Deposit);
         // Failed deposits: transactionType = Deposit, transactionStatus = Failed
@@ -240,6 +243,114 @@ export class DashboardComponent implements OnInit {
       default:
         return 'Unknown';
     }
+  }
+
+  // Calculate today's income from transactions
+  calculateTodayIncome(transactions: Transaction[]): number {
+    if (!transactions || transactions.length === 0) {
+      return 0;
+    }
+
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+
+    return transactions
+      .filter(transaction => {
+        const transactionDate = new Date(transaction.transactionDate);
+        return transactionDate >= todayStart && transactionDate <= todayEnd;
+      })
+      .reduce((total, transaction) => total + transaction.amount, 0);
+  }
+
+  // Calculate monthly deposit income from transactions
+  calculateMonthlyDepositIncome(transactions: Transaction[]): number {
+    if (!transactions || transactions.length === 0) {
+      return 0;
+    }
+
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    return transactions
+      .filter(transaction => {
+        const transactionDate = new Date(transaction.transactionDate);
+        return transactionDate >= monthStart && transactionDate <= monthEnd;
+      })
+      .reduce((total, transaction) => total + transaction.amount, 0);
+  }
+
+  // Calculate total deposits value
+  getTotalDepositsValue(): number {
+    if (!this.deposits || this.deposits.length === 0) {
+      return 0;
+    }
+    return this.deposits.reduce((total, deposit) => total + deposit.amount, 0);
+  }
+
+  // Calculate total tickets value
+  getTotalTicketsValue(): number {
+    if (!this.recentTickets || this.recentTickets.length === 0) {
+      return 0;
+    }
+    return this.recentTickets.reduce((total, ticket) => total + ticket.amount, 0);
+  }
+
+  // Calculate average ticket value
+  getAverageTicketValue(): number {
+    if (!this.recentTickets || this.recentTickets.length === 0) {
+      return 0;
+    }
+    const total = this.getTotalTicketsValue();
+    return total / this.recentTickets.length;
+  }
+
+  // Get ticket status breakdown
+  getTicketStatusBreakdown(): Array<{status: string, count: number}> {
+    if (!this.recentTickets || this.recentTickets.length === 0) {
+      return [];
+    }
+
+    const statusCounts: { [key: string]: number } = {};
+    
+    this.recentTickets.forEach(ticket => {
+      const status = this.getTicketStatusDisplay(ticket.ticketStatus);
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      status,
+      count
+    }));
+  }
+
+  // Calculate average deposit value
+  getAverageDepositValue(): number {
+    if (!this.deposits || this.deposits.length === 0) {
+      return 0;
+    }
+    const total = this.getTotalDepositsValue();
+    return total / this.deposits.length;
+  }
+
+  // Get deposit status breakdown
+  getDepositStatusBreakdown(): Array<{status: string, count: number}> {
+    if (!this.deposits || this.deposits.length === 0) {
+      return [];
+    }
+
+    const statusCounts: { [key: string]: number } = {};
+    
+    this.deposits.forEach(deposit => {
+      const status = this.getPaymentStatusDisplay(deposit.transactionStatus);
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    });
+
+    return Object.entries(statusCounts).map(([status, count]) => ({
+      status,
+      count
+    }));
   }
 
   // Helper methods to return background color classes for enums
