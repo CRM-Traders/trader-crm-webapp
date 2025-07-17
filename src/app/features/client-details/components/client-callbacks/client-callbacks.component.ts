@@ -8,11 +8,12 @@ import { Client } from '../../../clients/models/clients.model';
 import { Callback } from './models/callback.model';
 import { CallbacksService } from './services/callbacks.service';
 import { CallbackCreationModalComponent } from './components/callback-creation-modal/callback-creation-modal.component';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-callbacks',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   template: `
     <div class="max-w-7xl mx-auto">
       <div class="flex items-center justify-between mb-6">
@@ -26,6 +27,7 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
         </div>
         <div class="">
           <button
+            *hasPermission="33"
             type="button"
             (click)="openCallbackModal()"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -48,7 +50,10 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
         </div>
       </div>
       <!-- Callback Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div
+        class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+        *hasPermission="32"
+      >
         <div
           class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-6"
         >
@@ -163,6 +168,7 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
 
       <!-- Callbacks Grid -->
       <div
+        *hasPermission="22"
         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
       >
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -275,7 +281,10 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
                         {{ callback.clientFirstName }}
                         {{ callback.clientLastName }}
                       </div>
-                      <div class="text-sm text-gray-500 dark:text-gray-400">
+                      <div
+                        class="text-sm text-gray-500 dark:text-gray-400"
+                        *hasPermission="9"
+                      >
                         {{ callback.clientEmail }}
                       </div>
                     </div>
@@ -319,28 +328,31 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
                   class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
                 >
                   <div class="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      *ngIf="!callback.isOpenedReminder"
-                      (click)="openReminder(callback)"
-                      class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                      title="Open Reminder"
-                    >
-                      <svg
-                        class="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <ng-container *hasPermission="34">
+                      <button
+                        type="button"
+                        *ngIf="!callback.isOpenedReminder"
+                        (click)="openReminder(callback)"
+                        class="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+                        title="Open Reminder"
                       >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M15 17h5l-5 5v-5z"
-                        ></path>
-                      </svg>
-                    </button>
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 17h5l-5 5v-5z"
+                          ></path>
+                        </svg>
+                      </button>
+                    </ng-container>
                     <button
+                      *hasPermission="35"
                       type="button"
                       (click)="completeCallback(callback)"
                       class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
@@ -361,6 +373,7 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
                       </svg>
                     </button>
                     <button
+                      *hasPermission="36"
                       type="button"
                       (click)="editCallback(callback)"
                       class="text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-300"
@@ -381,6 +394,7 @@ import { CallbackCreationModalComponent } from './components/callback-creation-m
                       </svg>
                     </button>
                     <button
+                      *hasPermission="37"
                       type="button"
                       (click)="showDeleteConfirmation(callback)"
                       class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"

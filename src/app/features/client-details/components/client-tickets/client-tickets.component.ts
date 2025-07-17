@@ -18,11 +18,17 @@ import {
   FinancialTicketSummary,
   TicketStatus,
 } from './models/ticket.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-tickets',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    HasPermissionDirective,
+  ],
   templateUrl: './client-tickets.component.html',
   styles: [
     `

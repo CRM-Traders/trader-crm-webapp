@@ -6,8 +6,15 @@ import { FormsModule } from '@angular/forms';
 import { catchError, finalize, of } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { Client } from '../../../clients/models/clients.model';
-import { FilesService, StoredFileDto, FileType, FileStatus, UploadFileResponse } from './services/files.service';
+import {
+  FilesService,
+  StoredFileDto,
+  FileType,
+  FileStatus,
+  UploadFileResponse,
+} from './services/files.service';
 import { AddFileModalComponent } from './components/add-file-modal.component';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 interface ClientFile {
   id: string;
@@ -28,7 +35,7 @@ interface ClientFile {
   uploadedBy?: string;
   uploadDate?: Date;
   kycNote?: string;
-  isKycDocument?: boolean;  
+  isKycDocument?: boolean;
   displayStatus?: 'temporary' | 'permanent' | 'processing' | 'deleted';
   fileCategory?: string;
 }
@@ -36,7 +43,12 @@ interface ClientFile {
 @Component({
   selector: 'app-client-files',
   standalone: true,
-  imports: [CommonModule, FormsModule, AddFileModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AddFileModalComponent,
+    HasPermissionDirective,
+  ],
   template: `
     <div class="max-w-7xl mx-auto">
       <div class="mb-6">
@@ -49,7 +61,10 @@ interface ClientFile {
       </div>
 
       <!-- File Summary Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div
+        class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+        *hasPermission="29"
+      >
         <div
           class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-6"
         >
@@ -193,6 +208,7 @@ interface ClientFile {
 
       <!-- Upload File Section -->
       <div
+        *hasPermission="30"
         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8"
       >
         <div class="flex items-center justify-between">
@@ -229,6 +245,7 @@ interface ClientFile {
 
       <!-- Files Grid -->
       <div
+        *hasPermission="23"
         class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
       >
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -337,7 +354,11 @@ interface ClientFile {
               No files found
             </h3>
             <p class="mb-4">
-              {{ searchTerm || categoryFilter ? 'No files match your filters.' : 'This client has no uploaded files yet.' }}
+              {{
+                searchTerm || categoryFilter
+                  ? 'No files match your filters.'
+                  : 'This client has no uploaded files yet.'
+              }}
             </p>
             <button
               *ngIf="!searchTerm && !categoryFilter"
@@ -443,9 +464,14 @@ interface ClientFile {
                       {{ file.fileCategory | titlecase }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
-                      {{ (file.uploadDate || file.creationTime) | date : 'short' }}
+                      {{
+                        file.uploadDate || file.creationTime | date : 'short'
+                      }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400" *ngIf="file.uploadedBy">
+                    <p
+                      class="text-xs text-gray-500 dark:text-gray-400"
+                      *ngIf="file.uploadedBy"
+                    >
                       by {{ file.uploadedBy }}
                     </p>
                   </div>
@@ -467,6 +493,7 @@ interface ClientFile {
               <!-- Actions -->
               <div class="flex items-center space-x-2">
                 <button
+                  *hasPermission="31"
                   type="button"
                   (click)="showDeleteConfirmation(file)"
                   class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
@@ -510,7 +537,9 @@ interface ClientFile {
       aria-modal="true"
     >
       <!-- Background overlay -->
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <div
+        class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+      >
         <div
           class="fixed inset-0 bg-gray-500/10 transition-opacity"
           aria-hidden="true"
@@ -518,14 +547,20 @@ interface ClientFile {
         ></div>
 
         <!-- This element is to trick the browser into centering the modal contents. -->
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <span
+          class="hidden sm:inline-block sm:align-middle sm:h-screen"
+          aria-hidden="true"
+          >&#8203;</span
+        >
 
         <!-- Modal panel -->
         <div
           class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
         >
           <div class="sm:flex sm:items-start">
-            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
+            <div
+              class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10"
+            >
               <svg
                 class="h-6 w-6 text-red-600 dark:text-red-400"
                 xmlns="http://www.w3.org/2000/svg"
@@ -543,14 +578,19 @@ interface ClientFile {
               </svg>
             </div>
             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+              <h3
+                class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                id="modal-title"
+              >
                 Delete File
               </h3>
               <div class="mt-2">
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                  Are you sure you want to delete 
-                  <span class="font-medium text-gray-900 dark:text-white">{{ fileToDelete?.fileName }}</span>?
-                  This action cannot be undone.
+                  Are you sure you want to delete
+                  <span class="font-medium text-gray-900 dark:text-white">{{
+                    fileToDelete?.fileName
+                  }}</span
+                  >? This action cannot be undone.
                 </p>
                 <div class="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div class="flex items-center space-x-3">
@@ -567,7 +607,12 @@ interface ClientFile {
                           getFileIcon(fileToDelete?.fileName || '') === 'other'
                       }"
                     >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -577,7 +622,9 @@ interface ClientFile {
                       </svg>
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p
+                        class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                      >
                         {{ fileToDelete?.fileName }}
                       </p>
                       <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -673,18 +720,21 @@ export class ClientFilesComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.filesService.getFilesByUserId(this.client.id)
+    this.filesService
+      .getFilesByUserId(this.client.id)
       .pipe(
-        catchError(error => {
+        catchError((error) => {
           this.alertService.error('Failed to load files');
           // Fallback to demo data in case of error
           return of([]);
         }),
-        finalize(() => this.isLoading = false)
+        finalize(() => (this.isLoading = false))
       )
-      .subscribe(files => {
+      .subscribe((files) => {
         if (files.length > 0) {
-          this.files = files.map(file => this.mapStoredFileDtoToClientFile(file));
+          this.files = files.map((file) =>
+            this.mapStoredFileDtoToClientFile(file)
+          );
         }
       });
   }
@@ -707,19 +757,22 @@ export class ClientFilesComponent implements OnInit {
       description: dto.description,
       // Map additional UI fields
       uploadDate: new Date(dto.creationTime),
-      isKycDocument: dto.kycProcessId !== null && dto.kycProcessId !== undefined,
+      isKycDocument:
+        dto.kycProcessId !== null && dto.kycProcessId !== undefined,
       displayStatus: this.mapFileStatusToDisplayStatus(dto.status),
       fileCategory: this.getFileCategoryFromType(dto.fileType),
       uploadedBy: 'System', // Could be enhanced to include actual user info
     };
-    
+
     return mappedFile;
   }
 
   /**
    * Map FileStatus enum to display status
    */
-  private mapFileStatusToDisplayStatus(status: FileStatus): 'temporary' | 'permanent' | 'processing' | 'deleted' {
+  private mapFileStatusToDisplayStatus(
+    status: FileStatus
+  ): 'temporary' | 'permanent' | 'processing' | 'deleted' {
     switch (status) {
       case FileStatus.Temporary: // 1
         return 'temporary';
@@ -781,7 +834,10 @@ export class ClientFilesComponent implements OnInit {
       return FileType.Document;
     } else if (file.type.includes('document') || file.type.includes('word')) {
       return FileType.Document;
-    } else if (file.type.includes('presentation') || file.type.includes('powerpoint')) {
+    } else if (
+      file.type.includes('presentation') ||
+      file.type.includes('powerpoint')
+    ) {
       return FileType.Presentation;
     } else if (file.type.includes('zip') || file.type.includes('archive')) {
       return FileType.Archive;
@@ -811,13 +867,11 @@ export class ClientFilesComponent implements OnInit {
       );
     }
 
-    return filtered.sort(
-      (a, b) => {
-        const aDate = a.uploadDate || new Date(a.creationTime);
-        const bDate = b.uploadDate || new Date(b.creationTime);
-        return bDate.getTime() - aDate.getTime();
-      }
-    );
+    return filtered.sort((a, b) => {
+      const aDate = a.uploadDate || new Date(a.creationTime);
+      const bDate = b.uploadDate || new Date(b.creationTime);
+      return bDate.getTime() - aDate.getTime();
+    });
   }
 
   getTotalFileSize(): number {
@@ -835,16 +889,18 @@ export class ClientFilesComponent implements OnInit {
   }
 
   getPendingFilesCount(): number {
-    return this.files.filter((file) => file.displayStatus === 'processing').length;
+    return this.files.filter((file) => file.displayStatus === 'processing')
+      .length;
   }
 
   getImageFilesCount(): number {
-    return this.files.filter((file) => 
-      file.fileType === FileType.Image || 
-      file.fileType === FileType.IdFront || 
-      file.fileType === FileType.IdBack || 
-      file.fileType === FileType.PassportMain || 
-      file.fileType === FileType.FacePhoto
+    return this.files.filter(
+      (file) =>
+        file.fileType === FileType.Image ||
+        file.fileType === FileType.IdFront ||
+        file.fileType === FileType.IdBack ||
+        file.fileType === FileType.PassportMain ||
+        file.fileType === FileType.FacePhoto
     ).length;
   }
 
@@ -923,10 +979,11 @@ export class ClientFilesComponent implements OnInit {
 
     this.isDeleting = true;
     const fileName = this.fileToDelete.fileName;
-    
-    this.filesService.deleteFile(this.fileToDelete.id)
+
+    this.filesService
+      .deleteFile(this.fileToDelete.id)
       .pipe(
-        catchError(error => {
+        catchError((error) => {
           this.alertService.error('Failed to delete file');
           return of(null);
         }),
@@ -946,7 +1003,7 @@ export class ClientFilesComponent implements OnInit {
    * Delete a file (deprecated - replaced with modal)
    */
   deleteFile(fileId: string): void {
-    const file = this.files.find(f => f.id === fileId);
+    const file = this.files.find((f) => f.id === fileId);
     if (file) {
       this.showDeleteConfirmation(file);
     }
@@ -956,14 +1013,15 @@ export class ClientFilesComponent implements OnInit {
    * Download a file
    */
   downloadFile(file: ClientFile): void {
-    this.filesService.downloadFile(file.id)
+    this.filesService
+      .downloadFile(file.id)
       .pipe(
-        catchError(error => {
+        catchError((error) => {
           this.alertService.error('Failed to download file');
           return of(new Blob());
         })
       )
-      .subscribe(blob => {
+      .subscribe((blob) => {
         if (blob.size > 0) {
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement('a');
@@ -990,14 +1048,15 @@ export class ClientFilesComponent implements OnInit {
    * Approve KYC document
    */
   approveKycDocument(file: ClientFile): void {
-    this.filesService.makeFilePermanent(file.id)
+    this.filesService
+      .makeFilePermanent(file.id)
       .pipe(
-        catchError(error => {
+        catchError((error) => {
           this.alertService.error('Failed to approve document');
           return of(null);
         })
       )
-      .subscribe(response => {
+      .subscribe((response) => {
         if (response?.success) {
           file.displayStatus = 'permanent';
           file.status = FileStatus.Permanent;
@@ -1015,7 +1074,8 @@ export class ClientFilesComponent implements OnInit {
       return fileUrl;
     }
     // Handle relative URLs - assuming they're relative to the current domain
-    return `${window.location.origin}${fileUrl.startsWith('/') ? '' : '/'}${fileUrl}`;
+    return `${window.location.origin}${
+      fileUrl.startsWith('/') ? '' : '/'
+    }${fileUrl}`;
   }
-
 }

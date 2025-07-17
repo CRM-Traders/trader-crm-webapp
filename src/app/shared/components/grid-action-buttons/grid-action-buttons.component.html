@@ -1,5 +1,6 @@
 <div class="flex items-center space-x-1">
   <ng-container *ngFor="let action of primaryActions">
+    <ng-container *hasPermission="action.permission"></ng-container>
     <button
       *ngIf="isActionVisible(action)"
       [disabled]="isActionDisabled(action)"
@@ -41,7 +42,7 @@
     <button
       (click)="toggleDropdown($event)"
       class="dropdown-button inline-flex items-center relative justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-300/30 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-      [ngClass]="{ 'active': isDropdownOpen }"
+      [ngClass]="{ active: isDropdownOpen }"
       [attr.aria-expanded]="isDropdownOpen"
       [attr.aria-haspopup]="true"
       aria-label="More actions"
@@ -83,41 +84,45 @@
       aria-orientation="vertical"
       aria-labelledby="dropdown-button"
     >
-      <ng-container *ngFor="let action of secondaryActions; trackBy: trackByAction">
+      <ng-container
+        *ngFor="let action of secondaryActions; trackBy: trackByAction"
+      >
         <hr
           *ngIf="action.separator"
           class="border-gray-200 dark:border-gray-600 my-1"
           role="separator"
         />
-        <button
-          *ngIf="!action.separator && isActionVisible(action)"
-          [disabled]="isActionDisabled(action)"
-          (click)="executeAction(action, $event)"
-          class="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-200/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150"
-          [ngClass]="{
-            'text-gray-700 dark:text-gray-200':
-              !isActionDisabled(action) && action.type !== 'danger',
-            'text-red-600 dark:text-red-400':
-              !isActionDisabled(action) && action.type === 'danger',
-            'text-green-600 dark:text-green-400':
-              !isActionDisabled(action) && action.type === 'success',
-            'text-blue-600 dark:text-blue-400':
-              !isActionDisabled(action) && action.type === 'primary',
-            'text-yellow-600 dark:text-yellow-400':
-              !isActionDisabled(action) && action.type === 'warning'
-          }"
-          role="menuitem"
-          [attr.aria-label]="action.label"
-        >
-          <img
-            *ngIf="action.icon"
-            [src]="getIconSvg(action.icon)"
-            class="w-4 h-4 mr-2"
-            [alt]=""
-            aria-hidden="true"
-          />
-          <span>{{ action.label }}</span>
-        </button>
+        <ng-container *hasPermission="action.permission">
+          <button
+            *ngIf="!action.separator && isActionVisible(action)"
+            [disabled]="isActionDisabled(action)"
+            (click)="executeAction(action, $event)"
+            class="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-200/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150"
+            [ngClass]="{
+              'text-gray-700 dark:text-gray-200':
+                !isActionDisabled(action) && action.type !== 'danger',
+              'text-red-600 dark:text-red-400':
+                !isActionDisabled(action) && action.type === 'danger',
+              'text-green-600 dark:text-green-400':
+                !isActionDisabled(action) && action.type === 'success',
+              'text-blue-600 dark:text-blue-400':
+                !isActionDisabled(action) && action.type === 'primary',
+              'text-yellow-600 dark:text-yellow-400':
+                !isActionDisabled(action) && action.type === 'warning'
+            }"
+            role="menuitem"
+            [attr.aria-label]="action.label"
+          >
+            <img
+              *ngIf="action.icon"
+              [src]="getIconSvg(action.icon)"
+              class="w-4 h-4 mr-2"
+              [alt]=""
+              aria-hidden="true"
+            />
+            <span>{{ action.label }}</span>
+          </button>
+        </ng-container>
       </ng-container>
     </div>
   </div>

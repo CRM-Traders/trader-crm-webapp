@@ -4,10 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { AlertService } from '../../core/services/alert.service';
 import { catchError, finalize, of } from 'rxjs';
 import { HttpService } from '../../core/services/http.service';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-sources',
-  imports: [CommonModule],
+  imports: [CommonModule, HasPermissionDirective],
   templateUrl: './sources.component.html',
   styleUrl: './sources.component.scss',
   standalone: true,

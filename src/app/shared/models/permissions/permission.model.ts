@@ -10,6 +10,7 @@ export interface Permission {
   name: string;
   description: string | null;
   actionType: ActionType;
+  isGranted: boolean;
 }
 
 export interface PermissionSection {

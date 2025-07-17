@@ -19,11 +19,18 @@ import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-affiliates',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './affiliates.component.html',
   styleUrls: ['./affiliates.component.scss'],
 })
@@ -112,6 +119,7 @@ export class AffiliatesComponent implements OnInit {
       label: 'View Details',
       icon: 'view',
       action: (item: Affiliate) => this.openDetailsModal(item),
+      permission: 117,
     },
     {
       id: 'delete',
@@ -119,6 +127,7 @@ export class AffiliatesComponent implements OnInit {
       icon: 'delete',
       disabled: (item: Affiliate) => item.clientsCount > 0,
       action: (item: Affiliate) => this.confirmDelete(item),
+      permission: 118,
     },
     {
       id: 'integration',
@@ -126,6 +135,7 @@ export class AffiliatesComponent implements OnInit {
       icon: 'documents',
       type: 'primary',
       action: (item) => this.downloadIntegrationDoc(item.id),
+      permission: 119,
     },
   ];
 

@@ -20,11 +20,18 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { TeamCreationModalComponent } from './components/team-creation-modal/team-creation-modal.component';
 import { TeamDetailsModalComponent } from './components/team-details-modal/team-details-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-teams',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './teams.component.html',
   styleUrls: ['./teams.component.scss'],
 })
@@ -109,12 +116,14 @@ export class TeamsComponent implements OnInit, OnDestroy {
       label: 'View Details',
       icon: 'view',
       action: (item: Team) => this.openDetailsModal(item),
+      permission: 79,
     },
     {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
       action: (item: Team) => this.confirmDelete(item),
+      permission: 80,
     },
   ];
 

@@ -1,32 +1,50 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, ElementRef, HostListener, OnInit, OnDestroy } from '@angular/core';
-import { trigger, state, style, transition, animate } from '@angular/animations';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ElementRef,
+  HostListener,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
+import {
+  trigger,
+  state,
+  style,
+  transition,
+  animate,
+} from '@angular/animations';
 import { GridAction } from '../../models/grid/grid-column.model';
+import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-grid-action-buttons',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HasPermissionDirective],
   templateUrl: './grid-action-buttons.component.html',
   styleUrls: ['./grid-action-buttons.component.scss'],
   animations: [
     trigger('dropdownAnimation', [
-      state('void', style({
-        opacity: 0,
-        transform: 'translateY(-8px) scale(0.95)'
-      })),
-      state('*', style({
-        opacity: 1,
-        transform: 'translateY(0) scale(1)'
-      })),
-      transition('void => *', [
-        animate('200ms ease-out')
-      ]),
-      transition('* => void', [
-        animate('150ms ease-in')
-      ])
-    ])
-  ]
+      state(
+        'void',
+        style({
+          opacity: 0,
+          transform: 'translateY(-8px) scale(0.95)',
+        })
+      ),
+      state(
+        '*',
+        style({
+          opacity: 1,
+          transform: 'translateY(0) scale(1)',
+        })
+      ),
+      transition('void => *', [animate('200ms ease-out')]),
+      transition('* => void', [animate('150ms ease-in')]),
+    ]),
+  ],
 })
 export class GridActionButtonsComponent implements OnInit, OnDestroy {
   @Input() actions: GridAction[] = [];
@@ -66,7 +84,10 @@ export class GridActionButtonsComponent implements OnInit, OnDestroy {
   }
 
   handleGlobalClick(event: Event): void {
-    if (this.isDropdownOpen && !this.elementRef.nativeElement.contains(event.target as Node)) {
+    if (
+      this.isDropdownOpen &&
+      !this.elementRef.nativeElement.contains(event.target as Node)
+    ) {
       this.closeDropdown();
     }
   }
@@ -86,7 +107,7 @@ export class GridActionButtonsComponent implements OnInit, OnDestroy {
   toggleDropdown(event: Event): void {
     event.stopPropagation();
     this.isDropdownOpen = !this.isDropdownOpen;
-    
+
     if (this.isDropdownOpen) {
       this.calculateDropdownPosition();
     }
@@ -141,25 +162,27 @@ export class GridActionButtonsComponent implements OnInit, OnDestroy {
   private calculateDropdownPosition(): void {
     // Use setTimeout to ensure DOM is updated
     setTimeout(() => {
-      const buttonElement = this.elementRef.nativeElement.querySelector('.dropdown-button');
-      const dropdownElement = this.elementRef.nativeElement.querySelector('.dropdown-menu');
-      
+      const buttonElement =
+        this.elementRef.nativeElement.querySelector('.dropdown-button');
+      const dropdownElement =
+        this.elementRef.nativeElement.querySelector('.dropdown-menu');
+
       if (!buttonElement || !dropdownElement) return;
 
       const buttonRect = buttonElement.getBoundingClientRect();
       const dropdownHeight = dropdownElement.offsetHeight;
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
-      
+
       // Check available space
       const spaceBelow = viewportHeight - buttonRect.bottom;
       const spaceAbove = buttonRect.top;
       const spaceRight = viewportWidth - buttonRect.right;
       const spaceLeft = buttonRect.left;
-      
+
       // Minimum space needed for dropdown
       const minSpace = dropdownHeight + 16; // 16px buffer
-      
+
       // For bottom rows, always position above
       if (this.isBottomRow) {
         this.dropdownPosition = 'top';
@@ -171,9 +194,10 @@ export class GridActionButtonsComponent implements OnInit, OnDestroy {
           this.dropdownPosition = 'bottom';
         }
       }
-      
+
       // Adjust horizontal position if needed (for edge cases)
-      if (spaceRight < 200) { // dropdown width is 192px (w-48)
+      if (spaceRight < 200) {
+        // dropdown width is 192px (w-48)
         dropdownElement.style.right = '0';
         dropdownElement.style.left = 'auto';
       }

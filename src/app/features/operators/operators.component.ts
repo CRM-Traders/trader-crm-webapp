@@ -1,5 +1,3 @@
-// src/app/features/operators/operators.component.ts
-
 import {
   Component,
   OnInit,
@@ -36,11 +34,18 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { Router } from '@angular/router';
 import { OperatorRegistrationModalComponent } from './components/operator-registration-modal/operator-registration-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-operators',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './operators.component.html',
   styleUrls: ['./operators.component.scss'],
 })
@@ -153,18 +158,21 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       label: 'View Details',
       icon: 'view',
       action: (item: Operator) => this.openOperatorDetailsModal(item),
+      permission: 104,
     },
     {
       id: 'password',
       label: 'Change Password',
       icon: 'password',
       action: (item: Operator) => this.openPasswordChangeModal(item),
+      permission: 99,
     },
     {
       id: 'permissions',
       label: 'Permissions',
       icon: 'permission',
       action: (item: Operator) => this.navigateToPermissions(item),
+      permission: 100,
     },
   ];
 
@@ -364,7 +372,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   }
 
   navigateToPermissions(operator: Operator): void {
-    this.router.navigate(['/operators', operator.userId, 'permissions']);
+    window.open(`/operators/${operator.userId}/permissions`, '_blank');
   }
 
   openPasswordChangeModal(operator: Operator): void {

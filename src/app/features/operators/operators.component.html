@@ -3,7 +3,7 @@
 <!-- Online Status Cell Template -->
 <ng-template #onlineStatusCell let-operator>
   <div class="flex items-center justify-center">
-    <div 
+    <div
       class="w-3 h-3 rounded-full"
       [ngClass]="operator.isOnline ? 'bg-green-500' : 'bg-red-500'"
       [title]="operator.isOnline ? 'Online' : 'Offline'"
@@ -25,6 +25,7 @@
         <div class="mt-4 sm:mt-0 flex gap-3">
           <!-- Create Operator Button -->
           <button
+            *hasPermission="96"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             (click)="openRegistrationModal()"
           >
@@ -49,7 +50,10 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"
+      *hasPermission="97"
+    >
       <!-- Total Operators Card -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
         <div class="flex items-center">
@@ -162,11 +166,10 @@
     <!-- Main Content Area -->
     <div class="relative">
       <!-- Grid Container -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
+            *hasPermission="98"
             gridId="operators-grid"
             [endpoint]="'identity/api/operators/grid'"
             [columns]="gridColumns"

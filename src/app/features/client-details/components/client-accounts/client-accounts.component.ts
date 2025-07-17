@@ -21,6 +21,7 @@ import {
 import { PortfolioComponent } from './modals/portfolio/portfolio.component';
 import { WalletModalComponent } from './modals/wallet-modal/wallet-modal.component';
 import { AddWalletModalComponent } from './modals/add-wallet-modal/add-wallet-modal.component';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-accounts',
@@ -32,6 +33,7 @@ import { AddWalletModalComponent } from './modals/add-wallet-modal/add-wallet-mo
     PortfolioComponent,
     WalletModalComponent,
     AddWalletModalComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './client-accounts.component.html',
   styleUrls: ['./client-accounts.component.scss'],

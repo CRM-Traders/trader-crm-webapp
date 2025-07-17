@@ -24,11 +24,18 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { OfficeCreationModalComponent } from './components/office-creation-modal/office-creation-modal.component';
 import { OfficeDetailsModalComponent } from './components/office-details-modal/office-details-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-offices',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './officies.component.html',
   styleUrls: ['./officies.component.scss'],
 })
@@ -107,18 +114,21 @@ export class OfficesComponent implements OnInit, OnDestroy {
       label: 'Office Rules',
       icon: 'rules',
       action: (item: Office) => this.navigateToOfficeRules(item),
+      permission: 57,
     },
     {
       id: 'view',
       label: 'View Details',
       icon: 'view',
       action: (item: Office) => this.openDetailsModal(item),
+      permission: 58,
     },
     {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
       action: (item: Office) => this.confirmDelete(item),
+      permission: 59,
     },
   ];
 

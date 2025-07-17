@@ -16,11 +16,12 @@ import { AlertService } from '../../../../core/services/alert.service';
 import { Client } from '../../../clients/models/clients.model';
 import { TradingActivityService } from './services/trading-activity.service';
 import { TradingOrder } from './models/trading-activity.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-trading-activity',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   templateUrl: './client-trading-activity.component.html',
   styles: [
     `

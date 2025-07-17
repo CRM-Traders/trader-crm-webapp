@@ -47,10 +47,17 @@ import { LanguageService } from '../../core/services/language.service';
 import { OperatorsService } from '../operators/services/operators.service';
 import { OfficeRulesService } from '../officies/services/office-rules.service';
 import { AssignOperatorModalComponent } from '../clients/components/assign-operator-modal/assign-operator-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-leads',
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    GridComponent,
+    HasPermissionDirective,
+  ],
   templateUrl: './leads.component.html',
   styleUrl: './leads.component.scss',
 })
@@ -337,6 +344,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       action: (leads: Lead[]) => this.assignClientsToOperators(leads),
       visible: false,
       disabled: false,
+      permission: 94,
     },
     {
       id: 'bulk-activate',
@@ -346,6 +354,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       action: (items: Lead[]) => this.convertLeadsToClients(items),
       visible: false,
       disabled: false,
+      permission: 95,
     },
   ];
 
@@ -355,6 +364,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
       label: 'View Details',
       icon: 'view',
       action: (item: Lead) => this.openDetailsModal(item),
+      permission: 93,
     },
     // {
     //   id: 'password',

@@ -10,6 +10,7 @@
     </div>
     <div class="flex justify-between items-center gap-2 mb-6">
       <button
+        *hasPermission="46"
         type="button"
         (click)="openDepositModal()"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -30,6 +31,7 @@
         Deposit
       </button>
       <button
+        *hasPermission="47"
         type="button"
         (click)="openWithdrawModal()"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
@@ -53,7 +55,10 @@
   </div>
 
   <!-- Financial Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+    *hasPermission="48"
+  >
     <div
       class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-6"
     >
@@ -187,8 +192,11 @@
     </div>
   </div>
 
-  <!-- Additional Wallet Summary Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <!-- Additional Wallet     Summary Cards -->
+  <div
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+    *hasPermission="48"
+  >
     <div
       class="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 rounded-lg p-6"
     >
@@ -324,6 +332,7 @@
 
   <!-- Wallet Transactions Tab -->
   <div
+    *hasPermission="18"
     class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
   >
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -406,104 +415,119 @@
     </div>
 
     <!-- Transactions Table -->
-    <div *ngIf="!loadingWalletTransactions && walletTransactions.length > 0" class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-900/20">
-          <tr>
-            <th
-            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-          >
-            Account
-          </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-            >
-              Type
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-            >
-              Currency
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-            >
-              Amount
-            </th>
-
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-            >
-              Description
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-            >
-              Date
-            </th>
-          </tr>
-        </thead>
-        <tbody
-          class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-        >
-          <tr
-            *ngFor="let transaction of filteredTransactions"
-            class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-          >
-          <td
-          class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
-        >
-          {{ transaction.accountNumber }}
-        </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                [ngClass]="{
-                  'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
-                    transaction.transactionType === 'Deposit',
-                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
-                    transaction.transactionType === 'Withdrawal'
-                }"
+    <ng-container *hasPermission="18">
+      <div
+        *ngIf="!loadingWalletTransactions && walletTransactions.length > 0"
+        class="overflow-x-auto"
+      >
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-900/20">
+            <tr>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
               >
-                {{ transaction.transactionType | titlecase }}
-              </span>
-            </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
-            >
-              {{ transaction.currency }}
-            </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white"
-            >
-              {{ (transaction.amount < 0 ? -transaction.amount : transaction.amount) | number:'1.2-8' }}
-            </td>
+                Account
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Type
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Currency
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Amount
+              </th>
 
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Description
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Date
+              </th>
+            </tr>
+          </thead>
+          <tbody
+            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+          >
+            <tr
+              *ngFor="let transaction of filteredTransactions"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
-              {{ transaction.description }}
-            </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
-            >
-              {{ transaction.createdAt | date : "medium" }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+              >
+                {{ transaction.accountNumber }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
+                      transaction.transactionType === 'Deposit',
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
+                      transaction.transactionType === 'Withdrawal'
+                  }"
+                >
+                  {{ transaction.transactionType | titlecase }}
+                </span>
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+              >
+                {{ transaction.currency }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white"
+              >
+                {{
+                  (transaction.amount < 0
+                    ? -transaction.amount
+                    : transaction.amount
+                  ) | number : "1.2-8"
+                }}
+              </td>
+
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+              >
+                {{ transaction.description }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+              >
+                {{ transaction.createdAt | date : "medium" }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
 
     <!-- Pagination Controls -->
-    <div *ngIf="!loadingWalletTransactions && walletTransactions.length > 0" class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+    <div
+      *ngIf="!loadingWalletTransactions && walletTransactions.length > 0"
+      class="px-6 py-4 border-t border-gray-200 dark:border-gray-700"
+    >
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-4">
           <!-- Page Size Selector -->
           <div class="flex items-center space-x-2">
-            <label class="text-sm text-gray-700 dark:text-gray-300">Show:</label>
+            <label class="text-sm text-gray-700 dark:text-gray-300"
+              >Show:</label
+            >
             <select
               [value]="pageSize"
-              (change)="onPageSizeChange(+($any($event.target).value))"
+              (change)="onPageSizeChange(+$any($event.target).value)"
               class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="10">10</option>
@@ -511,12 +535,16 @@
               <option value="50">50</option>
               <option value="100">100</option>
             </select>
-            <span class="text-sm text-gray-700 dark:text-gray-300">per page</span>
+            <span class="text-sm text-gray-700 dark:text-gray-300"
+              >per page</span
+            >
           </div>
 
           <!-- Results Info -->
           <div class="text-sm text-gray-700 dark:text-gray-300">
-            Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, totalItems) }} of {{ totalItems }} results
+            Showing {{ (currentPage - 1) * pageSize + 1 }} to
+            {{ Math.min(currentPage * pageSize, totalItems) }} of
+            {{ totalItems }} results
           </div>
         </div>
 
@@ -538,9 +566,11 @@
               *ngFor="let page of getPageNumbers()"
               type="button"
               (click)="onPageChange(page)"
-              [class]="page === currentPage 
-                ? 'px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
-                : 'px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-blue-500'"
+              [class]="
+                page === currentPage
+                  ? 'px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  : 'px-3 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              "
             >
               {{ page }}
             </button>
@@ -560,23 +590,48 @@
     </div>
 
     <!-- Empty State when no data -->
-    <div *ngIf="!loadingWalletTransactions && walletTransactions.length === 0" class="flex justify-center items-center py-12">
+    <div
+      *ngIf="!loadingWalletTransactions && walletTransactions.length === 0"
+      class="flex justify-center items-center py-12"
+    >
       <div class="text-center">
-        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          class="mx-auto h-16 w-16 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
-        <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No Transaction History</h3>
+        <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+          No Transaction History
+        </h3>
         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
           This client hasn't made any transactions yet.
         </p>
         <div class="mt-4">
-                      <button
-              type="button"
-              (click)="refreshTransactions()"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          <button
+            type="button"
+            (click)="refreshTransactions()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              ></path>
             </svg>
             Refresh
           </button>
@@ -584,7 +639,6 @@
       </div>
     </div>
   </div>
-
 </div>
 
 <!-- Wallet Transaction Modals -->
