@@ -52,7 +52,7 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent
           ),
-        canActivate: [authGuard, roleGuard(151)],
+        canActivate: [authGuard, roleGuard(120)],
       },
       {
         path: 'settings',
@@ -68,7 +68,7 @@ export const routes: Routes = [
           import('./features/calendar-page/calendar-page.component').then(
             (m) => m.CalendarPageComponent
           ),
-        canActivate: [authGuard, roleGuard(161)],
+        canActivate: [authGuard, roleGuard(131)],
       },
       {
         path: 'clients',
@@ -76,7 +76,7 @@ export const routes: Routes = [
           import('./features/clients/clients.component').then(
             (m) => m.ClientsComponent
           ),
-        canActivate: [authGuard, roleGuard(158)],
+        canActivate: [authGuard, roleGuard(127)],
       },
       {
         path: 'clients/:id',
@@ -84,7 +84,7 @@ export const routes: Routes = [
           import('./features/client-details/client-details.component').then(
             (m) => m.ClientDetailsComponent
           ),
-        canActivate: [authGuard, roleGuard(158)],
+        canActivate: [authGuard, roleGuard(127)],
       },
       {
         path: 'affiliates',
@@ -92,7 +92,7 @@ export const routes: Routes = [
           import('./features/affiliates/affiliates.component').then(
             (m) => m.AffiliatesComponent
           ),
-        canActivate: [authGuard, roleGuard(188)],
+        canActivate: [authGuard, roleGuard(128)],
       },
       {
         path: 'leads',
@@ -100,7 +100,7 @@ export const routes: Routes = [
           import('./features/leads/leads.component').then(
             (m) => m.LeadsComponent
           ),
-        canActivate: [authGuard, roleGuard(159)],
+        canActivate: [authGuard, roleGuard(129)],
       },
       {
         path: 'operators',
@@ -108,7 +108,7 @@ export const routes: Routes = [
           import('./features/operators/operators.component').then(
             (m) => m.OperatorsComponent
           ),
-        canActivate: [authGuard, roleGuard(160)],
+        canActivate: [authGuard, roleGuard(130)],
       },
       {
         path: 'operators/:id/profile',
@@ -116,7 +116,7 @@ export const routes: Routes = [
           import(
             './features/operators/components/operator-details-page/operator-details-page.component'
           ).then((m) => m.OperatorDetailsPageComponent),
-        canActivate: [authGuard, roleGuard(160)],
+        canActivate: [authGuard, roleGuard(130)],
       },
       {
         path: 'operators/:id/permissions',
@@ -132,7 +132,7 @@ export const routes: Routes = [
           import('./features/documents/documents.component').then(
             (m) => m.DocumentsComponent
           ),
-        canActivate: [authGuard, roleGuard(163)],
+        canActivate: [authGuard, roleGuard(132)],
       },
       {
         path: 'documents/:id',
@@ -140,7 +140,7 @@ export const routes: Routes = [
           import(
             './features/documents/components/kyc-details/kyc-details.component'
           ).then((m) => m.KycDetailsComponent),
-        canActivate: [authGuard, roleGuard(163)],
+        canActivate: [authGuard, roleGuard(132)],
       },
       {
         path: 'brands',
@@ -148,7 +148,7 @@ export const routes: Routes = [
           import('./features/brands/brands.component').then(
             (m) => m.BrandsComponent
           ),
-        canActivate: [authGuard, roleGuard(154)],
+        canActivate: [authGuard, roleGuard(123)],
       },
       {
         path: 'offices',
@@ -156,7 +156,7 @@ export const routes: Routes = [
           import('./features/officies/officies.component').then(
             (m) => m.OfficesComponent
           ),
-        canActivate: [authGuard, roleGuard(153)],
+        canActivate: [authGuard, roleGuard(122)],
       },
       {
         path: 'offices/:id/rules',
@@ -164,7 +164,7 @@ export const routes: Routes = [
           import(
             './features/officies/components/office-rules/office-rules.component'
           ).then((m) => m.OfficeRulesComponent),
-        canActivate: [authGuard, roleGuard(153)],
+        canActivate: [authGuard, roleGuard(122)],
       },
       {
         path: 'desks',
@@ -172,7 +172,7 @@ export const routes: Routes = [
           import('./features/desks/desks.component').then(
             (m) => m.DesksComponent
           ),
-        canActivate: [authGuard, roleGuard(155)],
+        canActivate: [authGuard, roleGuard(124)],
       },
       {
         path: 'salerules',
@@ -180,7 +180,7 @@ export const routes: Routes = [
           import('./features/sales-rules/sales-rules.component').then(
             (m) => m.SalesRulesComponent
           ),
-        canActivate: [authGuard, roleGuard(157)],
+        canActivate: [authGuard, roleGuard(126)],
       },
       {
         path: 'teams',
@@ -188,7 +188,7 @@ export const routes: Routes = [
           import('./features/teams/teams.component').then(
             (m) => m.TeamsComponent
           ),
-        canActivate: [authGuard, roleGuard(156)],
+        canActivate: [authGuard, roleGuard(125)],
       },
       {
         path: 'hierarchy',
@@ -196,7 +196,7 @@ export const routes: Routes = [
           import('./features/hierarchy/hierarchy.component').then(
             (m) => m.HierarchyComponent
           ),
-        canActivate: [authGuard, roleGuard(152)],
+        canActivate: [authGuard, roleGuard(121)],
       },
       {
         path: 'sources',
@@ -204,7 +204,7 @@ export const routes: Routes = [
           import('./features/sources/sources.component').then(
             (m) => m.SourcesComponent
           ),
-        canActivate: [authGuard, roleGuard(162)],
+        canActivate: [authGuard, roleGuard(133)],
       },
     ],
   },
