@@ -315,8 +315,6 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   }
 
   onTransactionSuccess(): void {
-    this.alertService.success('Transaction completed successfully!');
-
     this.loadWalletTransactions();
     this.loadWalletSummary();
   }
