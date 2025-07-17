@@ -14,6 +14,7 @@
         <div class="mt-4 sm:mt-0 flex gap-3">
           <!-- Register Client Button -->
           <button
+            *hasPermission="51"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             (click)="openRegistrationModal()"
           >
@@ -36,6 +37,7 @@
 
           <!-- Download Template Button -->
           <button
+            *hasPermission="49"
             class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             (click)="downloadTemplate()"
           >
@@ -58,6 +60,7 @@
 
           <!-- Import Button -->
           <button
+            *hasPermission="50"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             [disabled]="importLoading"
             (click)="fileInput.click()"
@@ -90,7 +93,10 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 mb-8"
+      *hasPermission="48"
+    >
       <!-- Total Clients Card -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
         <div class="flex items-center">
@@ -152,6 +158,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
+            *hasPermission="52"
             gridId="clients-grid"
             [endpoint]="'identity/api/clients/grid'"
             [columns]="gridColumns"
@@ -232,6 +239,7 @@
             <!-- Auto Login Cell Template -->
             <ng-template #autoLoginCell let-value="value" let-row="row">
               <button
+                *hasPermission="1"
                 class="p-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
                 (click)="onAutoLogin(value)"
                 title="Auto Login"
@@ -254,7 +262,7 @@
 
             <!-- Latest Comment Cell Template -->
             <ng-template #latestCommentCell let-value="value" let-row="row">
-                             <div class="max-w-32">
+              <div class="max-w-32" *hasPermission="16">
                 <div *ngIf="value; else noComment" class="text-xs">
                   <div class="flex items-start justify-between mb-1">
                     <div class="flex items-center space-x-1">
@@ -262,8 +270,8 @@
                         value.createdBy
                       }}</span>
                     </div>
-                  </div>  
-                  <div 
+                  </div>
+                  <div
                     class="relative group"
                     (mouseenter)="showTooltip($event, value.note)"
                     (mouseleave)="hideTooltip()"
@@ -285,6 +293,7 @@
             <ng-template #salesStatusCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">
                 <select
+                  *hasPermission="53"
                   name="salesStatus"
                   [ngModel]="value.saleStatusEnum"
                   [disabled]="updatingSalesStatus === (value.id || row.id)"
@@ -301,6 +310,7 @@
                 </select>
                 <div class="flex flex-col">
                   <button
+                    *hasPermission="16"
                     class="comment-icon-btn p-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 mb-1"
                     (click)="
                       openInlineComment(value?.id || row?.id, 'view', $event)
@@ -628,8 +638,9 @@
     >
       {{ tooltipState?.text }}
       <!-- Tooltip arrow -->
-      <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+      <div
+        class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"
+      ></div>
     </div>
-
   </div>
 </div>

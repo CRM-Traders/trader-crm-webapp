@@ -15,11 +15,17 @@ import { AlertService } from '../../core/services/alert.service';
 import { HierarchyNode, HierarchySearchResult } from './models/hierarchy.model';
 import { HierarchyService } from './services/hierarchy.service';
 import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-node.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-hierarchy',
   standalone: true,
-  imports: [CommonModule, FormsModule, HierarchyNodeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    HierarchyNodeComponent,
+    HasPermissionDirective,
+  ],
   template: `
     <div
       class="p-6 bg-white general-container dark:bg-gray-900 transition-colors"
@@ -42,7 +48,7 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
 
       <!-- Search and Stats -->
 
-      <div class="mb-8">
+      <div class="mb-8" *hasPermission="81">
         <!-- Statistics -->
         <div
           *ngIf="hierarchyStats()"
@@ -77,6 +83,7 @@ import { HierarchyNodeComponent } from './components/hierarchy-node/hierarchy-no
 
       <!-- Hierarchy Tree -->
       <div
+        *hasPermission="82"
         class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
       >
         <!-- Search Bar -->

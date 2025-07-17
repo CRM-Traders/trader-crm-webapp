@@ -1,5 +1,3 @@
-// src/app/features/sales-rules/sales-rules.component.ts
-
 import {
   Component,
   inject,
@@ -31,11 +29,12 @@ import {
 } from './models/sales-rules.model';
 import { SalesRuleFormModalComponent } from './components/sales-rule-form-modal/sales-rule-form-modal.component';
 import { SalesRuleDetailsModalComponent } from './components/sales-rule-details-modal/sales-rule-details-modal.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-sales-rules',
   standalone: true,
-  imports: [CommonModule, GridComponent],
+  imports: [CommonModule, GridComponent, HasPermissionDirective],
   templateUrl: './sales-rules.component.html',
   styleUrls: ['./sales-rules.component.scss'],
 })
@@ -173,6 +172,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       label: 'View',
       icon: 'view',
       action: (item: SalesRule) => this.viewRule(item),
+      permission: 86,
     },
   ];
 

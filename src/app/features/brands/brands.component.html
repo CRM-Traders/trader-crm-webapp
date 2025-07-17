@@ -14,6 +14,7 @@
         <div class="mt-4 sm:mt-0 flex gap-3">
           <!-- Create Brand Button -->
           <button
+            *hasPermission="68"
             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             (click)="openCreateModal()"
           >
@@ -38,7 +39,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8" *hasPermission="66">
       <!-- Total Brands Card -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
         <div class="flex items-center">
@@ -97,11 +98,10 @@
     <!-- Main Content Area -->
     <div class="relative">
       <!-- Grid Container -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-xl"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
+            *hasPermission="67"
             [gridId]="gridId"
             [endpoint]="'identity/api/brands/grid'"
             [columns]="gridColumns"
@@ -166,6 +166,7 @@
       >
 
       <div
+        *hasPermission="70"
         class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
       >
         <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -202,7 +203,10 @@
             </div>
           </div>
         </div>
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <div
+          class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
+          *hasPermission="70"
+        >
           <button
             type="button"
             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"

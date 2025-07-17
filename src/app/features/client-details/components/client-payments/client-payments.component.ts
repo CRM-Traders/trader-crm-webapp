@@ -16,6 +16,7 @@ import { TradingAccount } from '../client-accounts/models/trading-account.model'
 import { TradingOrder, TradingService } from './services/trading-order.service';
 import { WalletService } from './services/wallet.service';
 import { WalletTransaction, ClientWalletsSummary } from './models/wallet.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-payments',
@@ -25,6 +26,7 @@ import { WalletTransaction, ClientWalletsSummary } from './models/wallet.model';
     ReactiveFormsModule,
     FormsModule,
     WalletTransactionModalComponent,
+    HasPermissionDirective,
   ],
   templateUrl: './client-payments.component.html',
   styles: [

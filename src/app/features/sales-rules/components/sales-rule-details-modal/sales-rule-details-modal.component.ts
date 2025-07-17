@@ -26,6 +26,7 @@ import {
   OperatorDropdownRequest,
   OperatorDropdownResponse,
 } from '../../models/sales-rules.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 interface OperatorSelection {
   id: string;
@@ -38,7 +39,12 @@ interface OperatorSelection {
 @Component({
   selector: 'app-sales-rule-details-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    HasPermissionDirective,
+  ],
   template: `
     <div class="w-full max-w-4xl mx-auto">
       <!-- Header -->
@@ -475,6 +481,7 @@ interface OperatorSelection {
       >
         <div class="flex gap-2">
           <button
+            *hasPermission="87"
             type="button"
             class="px-4 py-2 text-sm font-medium text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-red-500"
             (click)="confirmDelete()"
@@ -516,6 +523,7 @@ interface OperatorSelection {
           </button>
 
           <button
+            *hasPermission="86"
             type="button"
             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             (click)="saveChanges()"

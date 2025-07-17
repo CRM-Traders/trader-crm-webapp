@@ -25,7 +25,7 @@ export interface GridAction<T = any> {
   type?: 'primary' | 'secondary' | 'danger' | 'success' | 'warning';
   disabled?: boolean | ((item: T) => boolean);
   visible?: boolean | ((item: T) => boolean);
-  permission?: string;
+  permission: number;
   separator?: boolean; // For context menu separators
   action: (item: T, action: GridAction<T>) => void;
 }

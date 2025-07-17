@@ -10,201 +10,380 @@
 
   <!-- Loading State -->
   <div *ngIf="loading" class="flex justify-center items-center py-12">
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    <span class="ml-2 text-gray-600 dark:text-gray-400">Loading accounts...</span>
+    <div
+      class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+    ></div>
+    <span class="ml-2 text-gray-600 dark:text-gray-400"
+      >Loading accounts...</span
+    >
   </div>
 
   <!-- Account Summary Cards -->
-  <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-6">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-blue-200 dark:bg-blue-700">
-          <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-          </svg>
-        </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-blue-800 dark:text-blue-200">Total Accounts</p>
-          <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">{{ accounts.length }}</p>
-          <p class="text-xs text-blue-700 dark:text-blue-300">{{ getActiveAccountsCount() }} active</p>
+  <ng-container *hasPermission="38">
+    <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div
+        class="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-6"
+      >
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-blue-200 dark:bg-blue-700">
+            <svg
+              class="w-6 h-6 text-blue-600 dark:text-blue-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              ></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Total Accounts
+            </p>
+            <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">
+              {{ accounts.length }}
+            </p>
+            <p class="text-xs text-blue-700 dark:text-blue-300">
+              {{ getActiveAccountsCount() }} active
+            </p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-6">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-green-200 dark:bg-green-700">
-          <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-green-800 dark:text-green-200">Total Balance</p>
-          <p class="text-2xl font-bold text-green-900 dark:text-green-100">{{ formatBalance(getTotalBalance()) }}</p>
-          <p class="text-xs text-green-700 dark:text-green-300">Initial deposits</p>
+      <div
+        class="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg p-6"
+      >
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-green-200 dark:bg-green-700">
+            <svg
+              class="w-6 h-6 text-green-600 dark:text-green-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-green-800 dark:text-green-200">
+              Total Balance
+            </p>
+            <p class="text-2xl font-bold text-green-900 dark:text-green-100">
+              {{ formatBalance(getTotalBalance()) }}
+            </p>
+            <p class="text-xs text-green-700 dark:text-green-300">
+              Initial deposits
+            </p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-6">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-purple-200 dark:bg-purple-700">
-          <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-purple-800 dark:text-purple-200">Active</p>
-          <p class="text-2xl font-bold text-purple-900 dark:text-purple-100">{{ getVerifiedAccountsCount() }}</p>
-          <p class="text-xs text-purple-700 dark:text-purple-300">Active accounts</p>
+      <div
+        class="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-lg p-6"
+      >
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-purple-200 dark:bg-purple-700">
+            <svg
+              class="w-6 h-6 text-purple-600 dark:text-purple-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-purple-800 dark:text-purple-200">
+              Active
+            </p>
+            <p class="text-2xl font-bold text-purple-900 dark:text-purple-100">
+              {{ getVerifiedAccountsCount() }}
+            </p>
+            <p class="text-xs text-purple-700 dark:text-purple-300">
+              Active accounts
+            </p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-lg p-6">
-      <div class="flex items-center">
-        <div class="p-3 rounded-full bg-orange-200 dark:bg-orange-700">
-          <svg class="w-6 h-6 text-orange-600 dark:text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-          </svg>
-        </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-orange-800 dark:text-orange-200">Avg Leverage</p>
-          <p class="text-2xl font-bold text-orange-900 dark:text-orange-100">{{ getAverageMaxLeverage().toFixed(0) }}x</p>
-          <p class="text-xs text-orange-700 dark:text-orange-300">Maximum leverage</p>
+      <div
+        class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-lg p-6"
+      >
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-orange-200 dark:bg-orange-700">
+            <svg
+              class="w-6 h-6 text-orange-600 dark:text-orange-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              ></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-orange-800 dark:text-orange-200">
+              Avg Leverage
+            </p>
+            <p class="text-2xl font-bold text-orange-900 dark:text-orange-100">
+              {{ getAverageMaxLeverage().toFixed(0) }}x
+            </p>
+            <p class="text-xs text-orange-700 dark:text-orange-300">
+              Maximum leverage
+            </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </ng-container>
 
   <!-- Accounts Grid -->
-  <div *ngIf="!loading" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <!-- Header section -->
-    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Trading Accounts</h3>
-        <div class="flex items-center space-x-3">
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
+  <ng-container *hasPermission="21">
+    <div
+      *ngIf="!loading"
+      class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+    >
+      <!-- Header section -->
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Trading Accounts
+          </h3>
+          <div class="flex items-center space-x-3">
+            <div class="relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <svg
+                  class="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+              </div>
+              <input
+                type="text"
+                [(ngModel)]="searchTerm"
+                class="block w-full !pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder="Search accounts..."
+              />
             </div>
-            <input
-              type="text"
-              [(ngModel)]="searchTerm"
-              class="block w-full !pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Search accounts..."
-            />
+            <!-- Add Account Button -->
+            <button
+              *hasPermission="39"
+              type="button"
+              (click)="toggleCreateModal()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                ></path>
+              </svg>
+              Add Account
+            </button>
+            <!-- Refresh Button -->
+            <button
+              type="button"
+              (click)="refreshAccounts()"
+              [disabled]="loading"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                ></path>
+              </svg>
+              Refresh
+            </button>
           </div>
-          <!-- Add Account Button -->
-          <button
-            type="button"
-            (click)="toggleCreateModal()"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            Add Account
-          </button>
-          <!-- Refresh Button -->
-          <button
-            type="button"
-            (click)="refreshAccounts()"
-            [disabled]="loading"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            Refresh
-          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Table with Right-Click Support -->
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/30">
-        <thead class="bg-gray-50 dark:bg-gray-900/20">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Account</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Initial Balance</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Max Leverage</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Trading Features</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-            <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Verified</th> -->
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30">
-          <!-- Table rows with context menu support -->
-          <tr *ngFor="let account of filteredAccounts"
+      <!-- Table with Right-Click Support -->
+      <div class="overflow-x-auto">
+        <table
+          class="min-w-full divide-y divide-gray-200 dark:divide-gray-700/30"
+        >
+          <thead class="bg-gray-50 dark:bg-gray-900/20">
+            <tr>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Account
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Type
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Status
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Initial Balance
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Max Leverage
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Trading Features
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Created
+              </th>
+              <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Verified</th> -->
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody
+            class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30"
+          >
+            <!-- Table rows with context menu support -->
+            <tr
+              *ngFor="let account of filteredAccounts"
               class="hover:bg-gray-50 dark:hover:bg-gray-700/5 cursor-pointer transition-colors"
               (dblclick)="openPortfolioModal(account)"
-              (contextmenu)="showContextMenu($event, account)">
+              (contextmenu)="showContextMenu($event, account)"
+            >
+              <!-- Account -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div
+                    class="text-sm font-medium text-blue-600 dark:text-blue-400"
+                  >
+                    {{ account.accountNumber }}
+                  </div>
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ account.displayName }}
+                </div>
+              </td>
 
-            <!-- Account -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center">
-                <div class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ account.accountNumber }}</div>
-              </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400">{{ account.displayName }}</div>
-            </td>
-
-            <!-- Type -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
->
-                {{ account.accountType }}
-              </span>
-            </td>
-
-            <!-- Status -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                [ngClass]="{
-                  'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200': getAccountStatusInfo(account.status).color === 'success',
-                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200': getAccountStatusInfo(account.status).color === 'warning',
-                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200': getAccountStatusInfo(account.status).color === 'error',
-                  'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200': getAccountStatusInfo(account.status).color === 'neutral'
-                }">
-                {{ getAccountStatusInfo(account.status).label }}
-              </span>
-            </td>
-
-            <!-- Initial Balance -->
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
-              {{ formatBalance(account.initialBalance) }}
-            </td>
-
-            <!-- Max Leverage -->
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-              {{ account.maxLeverage }}x
-            </td>
-
-            <!-- Trading Features -->
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex flex-col space-y-1">
-                <span *ngIf="account.enableSpotTrading" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                  Spot Trading
+              <!-- Type -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                >
+                  {{ account.accountType }}
                 </span>
-                <span *ngIf="account.enableFuturesTrading" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                  Futures Trading
+              </td>
+
+              <!-- Status -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
+                      getAccountStatusInfo(account.status).color === 'success',
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200':
+                      getAccountStatusInfo(account.status).color === 'warning',
+                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200':
+                      getAccountStatusInfo(account.status).color === 'error',
+                    'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200':
+                      getAccountStatusInfo(account.status).color === 'neutral'
+                  }"
+                >
+                  {{ getAccountStatusInfo(account.status).label }}
                 </span>
-              </div>
-            </td>
+              </td>
 
-            <!-- Created -->
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              {{ formatDate(account.createdAt) }}
-            </td>
+              <!-- Initial Balance -->
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white"
+              >
+                {{ formatBalance(account.initialBalance) }}
+              </td>
 
-            <!-- Verified -->
-            <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+              <!-- Max Leverage -->
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white"
+              >
+                {{ account.maxLeverage }}x
+              </td>
+
+              <!-- Trading Features -->
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-col space-y-1">
+                  <span
+                    *ngIf="account.enableSpotTrading"
+                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  >
+                    Spot Trading
+                  </span>
+                  <span
+                    *ngIf="account.enableFuturesTrading"
+                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                  >
+                    Futures Trading
+                  </span>
+                </div>
+              </td>
+
+              <!-- Created -->
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+              >
+                {{ formatDate(account.createdAt) }}
+              </td>
+
+              <!-- Verified -->
+              <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
               <span *ngIf="account.verifiedAt; else notVerified" class="text-green-600 dark:text-green-400">
                 {{ formatDate(account.verifiedAt) }}
               </span>
@@ -213,92 +392,165 @@
               </ng-template>
             </td> -->
 
-            <!-- Actions -->
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" (click)="$event.stopPropagation()" (dblclick)="$event.stopPropagation()">
-              <div class="flex items-center space-x-1">
-                <!-- View Portfolio Button -->
-                <button
-                  type="button"
-                  (click)="openPortfolioModal(account)"
-                  class="inline-flex items-center p-1 text-sm font-medium rounded text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
-                  title="View Portfolio"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                  </svg>
-                </button>
+              <!-- Actions -->
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+                (click)="$event.stopPropagation()"
+                (dblclick)="$event.stopPropagation()"
+              >
+                <div class="flex items-center space-x-1">
+                  <!-- View Portfolio Button -->
+                  <button
+                    *hasPermission="40"
+                    type="button"
+                    (click)="openPortfolioModal(account)"
+                    class="inline-flex items-center p-1 text-sm font-medium rounded text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors"
+                    title="View Portfolio"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      ></path>
+                    </svg>
+                  </button>
 
-                <!-- Manage Wallets Button -->
-                <button
-                  type="button"
-                  (click)="openWalletModal(account)"
-                  class="inline-flex items-center p-1 text-sm font-medium rounded text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 transition-colors"
-                  title="Manage Wallets"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                  </svg>
-                </button>
+                  <!-- Manage Wallets Button -->
+                  <button
+                    *hasPermission="41"
+                    type="button"
+                    (click)="openWalletModal(account)"
+                    class="inline-flex items-center p-1 text-sm font-medium rounded text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 transition-colors"
+                    title="Manage Wallets"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      ></path>
+                    </svg>
+                  </button>
 
-                <!-- Add Wallet Button -->
-                <button
-                  type="button"
-                  (click)="openAddWalletModal(account)"
-                  class="inline-flex items-center p-1 text-sm font-medium rounded text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors"
-                  title="Add New Wallet"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                </button>
-              </div>
-            </td>
-          </tr>
+                  <!-- Add Wallet Button -->
+                  <button
+                    *hasPermission="42"
+                    type="button"
+                    (click)="openAddWalletModal(account)"
+                    class="inline-flex items-center p-1 text-sm font-medium rounded text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transition-colors"
+                    title="Add New Wallet"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
 
-          <!-- Empty State -->
-          <tr *ngIf="filteredAccounts.length === 0 && !loading">
-            <td colspan="9" class="px-6 py-12 text-center">
-              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No trading accounts</h3>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Get started by creating a new trading account for this client.
-              </p>
-              <div class="mt-6">
-                <button
-                  type="button"
-                  (click)="toggleCreateModal()"
-                  class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            <!-- Empty State -->
+            <tr *ngIf="filteredAccounts.length === 0 && !loading">
+              <td colspan="9" class="px-6 py-12 text-center">
+                <svg
+                  class="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  Create Account
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  ></path>
+                </svg>
+                <h3
+                  class="mt-2 text-sm font-medium text-gray-900 dark:text-white"
+                >
+                  No trading accounts
+                </h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Get started by creating a new trading account for this client.
+                </p>
+                <div class="mt-6">
+                  <button
+                    type="button"
+                    (click)="toggleCreateModal()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      ></path>
+                    </svg>
+                    Create Account
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+  </ng-container>
 </div>
 
 <!-- Context Menu -->
-<div *ngIf="showContextMenuFlag" 
-     class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 min-w-[180px]"
-     [style.left.px]="contextMenuPosition.x"
-     [style.top.px]="contextMenuPosition.y"
-     (click)="$event.stopPropagation()">
-  
+<div
+  *ngIf="showContextMenuFlag"
+  class="fixed bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50 min-w-[180px]"
+  [style.left.px]="contextMenuPosition.x"
+  [style.top.px]="contextMenuPosition.y"
+  (click)="$event.stopPropagation()"
+>
   <button
     type="button"
     (click)="contextMenuAction('portfolio')"
     class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
   >
-    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+    <svg
+      class="w-4 h-4 text-blue-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+      ></path>
     </svg>
     <span>View Portfolio</span>
   </button>
@@ -308,8 +560,18 @@
     (click)="contextMenuAction('wallets')"
     class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
   >
-    <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+    <svg
+      class="w-4 h-4 text-purple-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+      ></path>
     </svg>
     <span>Manage Wallets</span>
   </button>
@@ -321,34 +583,63 @@
     (click)="contextMenuAction('addWallet')"
     class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3 transition-colors"
   >
-    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+    <svg
+      class="w-4 h-4 text-green-500"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+      ></path>
     </svg>
     <span>Add New Wallet</span>
   </button>
 </div>
 
-
-
 <!-- Create Account Modal -->
-<div *ngIf="showCreateModal" class="modal-backdrop fixed inset-0 bg-black/10 backdrop-blur-xs z-50 flex items-center justify-center" (click)="toggleCreateModal()">
-  <div class="modal-content bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4" (click)="$event.stopPropagation()">
+<div
+  *ngIf="showCreateModal"
+  class="modal-backdrop fixed inset-0 bg-black/10 backdrop-blur-xs z-50 flex items-center justify-center"
+  (click)="toggleCreateModal()"
+>
+  <div
+    class="modal-content bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4"
+    (click)="$event.stopPropagation()"
+  >
     <div class="flex items-center justify-between mb-6">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Create New Trading Account</h3>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+        Create New Trading Account
+      </h3>
       <button
         type="button"
         (click)="toggleCreateModal()"
         class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
       >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
         </svg>
       </button>
     </div>
 
     <form [formGroup]="accountForm" (ngSubmit)="submitAccount()">
       <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           Account Name <span class="text-red-500">*</span>
         </label>
         <input
@@ -357,7 +648,13 @@
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
           placeholder="Enter a name for this trading account"
         />
-        <div *ngIf="accountForm.get('displayName')?.invalid && accountForm.get('displayName')?.touched" class="mt-1 text-sm text-red-600 dark:text-red-400">
+        <div
+          *ngIf="
+            accountForm.get('displayName')?.invalid &&
+            accountForm.get('displayName')?.touched
+          "
+          class="mt-1 text-sm text-red-600 dark:text-red-400"
+        >
           Account name is required and must be at least 3 characters long.
         </div>
       </div>
@@ -376,9 +673,24 @@
           class="px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           <span *ngIf="loading" class="inline-flex items-center">
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <svg
+              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Creating...
           </span>
@@ -393,7 +705,8 @@
 <app-portfolio
   [isVisible]="showPortfolioModal"
   [tradingAccountId]="selectedAccountId"
-  (onClose)="closePortfolioModal()">
+  (onClose)="closePortfolioModal()"
+>
 </app-portfolio>
 
 <!-- Wallet Management Modal -->
@@ -401,7 +714,8 @@
   [isVisible]="showWalletModal"
   [tradingAccountId]="selectedWalletAccountId"
   [accountNumber]="selectedAccountNumber"
-  (onClose)="closeWalletModal()">
+  (onClose)="closeWalletModal()"
+>
 </app-wallet-modal>
 
 <!-- Add Wallet Modal -->
@@ -409,5 +723,6 @@
   [isVisible]="showAddWalletModal"
   [tradingAccountId]="selectedAddWalletAccountId"
   (onClose)="closeAddWalletModal()"
-  (onWalletCreated)="onWalletCreated()">
+  (onWalletCreated)="onWalletCreated()"
+>
 </app-add-wallet-modal>
