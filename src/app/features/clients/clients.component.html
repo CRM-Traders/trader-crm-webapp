@@ -155,7 +155,7 @@
     <!-- Main Content Area -->
     <div class="relative">
       <!-- Grid Container -->
-      <div class="bg-white dark:bg-gray-800 rounded-xl" *hasPermission="52">
+      <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
             gridId="clients-grid"
@@ -233,7 +233,7 @@
               </span>
             </ng-template>
 
-            <ng-container *hasPermission="1">
+            <ng-container>
               <!-- Auto Login Cell Template -->
               <ng-template #autoLoginCell let-value="value" let-row="row">
                 <button
@@ -260,7 +260,7 @@
 
             <!-- Latest Comment Cell Template -->
             <ng-template #latestCommentCell let-value="value" let-row="row">
-              <div class="max-w-32" *hasPermission="16">
+              <div class="max-w-32">
                 <div *ngIf="value; else noComment" class="text-xs">
                   <div class="flex items-start justify-between mb-1">
                     <div class="flex items-center space-x-1">
@@ -291,7 +291,6 @@
             <ng-template #salesStatusCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">
                 <select
-                  *hasPermission="53"
                   name="salesStatus"
                   [ngModel]="value.saleStatusEnum"
                   [disabled]="updatingSalesStatus === (value.id || row.id)"
@@ -308,7 +307,6 @@
                 </select>
                 <div class="flex flex-col">
                   <button
-                    *hasPermission="16"
                     class="comment-icon-btn p-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 mb-1"
                     (click)="
                       openInlineComment(value?.id || row?.id, 'view', $event)

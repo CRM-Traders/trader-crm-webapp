@@ -39,7 +39,7 @@ export class LoginComponent {
 
   isLoading = false;
   errorMessage = '';
-  returnUrl = '/dashboard';
+  returnUrl = '';
   sessionExpired = false;
 
   // 2FA related properties
