@@ -57,7 +57,13 @@
       <div class="flex items-center space-x-2">
         <!-- <app-notifications></app-notifications> -->
         <app-mini-calendar [showCurrentDate]="false"></app-mini-calendar>
-
+        <button
+          (click)="swapOfficies()"
+          class="p-2 rounded-full hover:bg-gray-200"
+          title="Switch Office"
+        >
+          <img src="/icons/swap.svg" />
+        </button>
         <div class="mx-2">
           <app-theme-toggle></app-theme-toggle>
         </div>

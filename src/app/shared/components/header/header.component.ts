@@ -25,6 +25,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private navService = inject(NavigationService);
   private localizationService = inject(LocalizationService);
+  private router = inject(Router);
 
   // Reference signal directly in the template
   userRole = this.authService.userRole;
@@ -84,5 +85,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   private padZero(num: number): string {
     return num < 10 ? `0${num}` : `${num}`;
+  }
+
+  swapOfficies() {
+    this.router.navigate(['/auth/brand-selection']);
   }
 }

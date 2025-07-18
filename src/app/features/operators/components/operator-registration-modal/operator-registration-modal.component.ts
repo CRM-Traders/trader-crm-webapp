@@ -44,6 +44,35 @@ interface RoleDropdownItem {
       <!-- Modal Body -->
       <div class="px-6 py-6">
         <form [formGroup]="registrationForm" class="space-y-4">
+          <div>
+            <label
+              for="username"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Username <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="username"
+              formControlName="username"
+              placeholder="Username"
+              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+              [class.border-red-500]="
+                registrationForm.get('username')?.invalid &&
+                registrationForm.get('username')?.touched
+              "
+            />
+            <p
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+              *ngIf="
+                registrationForm.get('username')?.invalid &&
+                registrationForm.get('username')?.touched
+              "
+            >
+              Username is required
+            </p>
+          </div>
+
           <!-- First Name and Last Name Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -950,6 +979,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
   constructor() {
     this.registrationForm = this.fb.group({
+      username: ['', Validators.required],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -1150,6 +1180,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     const formValue = this.registrationForm.value;
 
     const operatorData: OperatorCreateRequest = {
+      username: formValue.username,
       firstName: formValue.firstName,
       lastName: formValue.lastName,
       email: formValue.email,

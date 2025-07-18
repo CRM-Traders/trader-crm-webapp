@@ -37,6 +37,7 @@ export interface OperatorDepartment {
 }
 
 export interface OperatorCreateRequest {
+  username: string;
   firstName: string;
   lastName: string;
   email: string;

@@ -50,8 +50,6 @@ import { CountryService } from '../../core/services/country.service';
 import { LanguageService } from '../../core/services/language.service';
 import { OperatorsService } from '../operators/services/operators.service';
 import { OfficesService } from '../officies/services/offices.service';
-import { TeamsService } from '../teams/services/teams.service';
-import { DesksService } from '../desks/services/desks.service';
 import { OfficeRulesService } from '../officies/services/office-rules.service';
 import { AssignOperatorModalComponent } from './components/assign-operator-modal/assign-operator-modal.component';
 import { OperatorDetailsModalComponent } from '../operators/components/operator-details-modal/operator-details-modal.component';
