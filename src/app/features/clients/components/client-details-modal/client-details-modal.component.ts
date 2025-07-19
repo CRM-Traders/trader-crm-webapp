@@ -263,7 +263,7 @@ export class ClientDetailsModalComponent implements OnInit, OnDestroy {
       lastName: ['', Validators.required],
       telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       country: [''],
-      language: [''],
+      language: ['en'], // Set English as default
     });
 
     this.commentForm = this.fb.group({

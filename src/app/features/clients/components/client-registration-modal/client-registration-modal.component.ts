@@ -756,7 +756,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       affiliateId: [null], // Changed from required to optional, default to null
       telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       country: [''],
-      language: [''],
+      language: ['en'], // Set English as default
       dateOfBirth: [''],
       source: [''],
     });
@@ -766,6 +766,14 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.loadCountries();
     this.loadLanguages();
     this.loadAffiliates();
+    
+    // Set default language to English
+    setTimeout(() => {
+      const englishLanguage = this.languages.find(lang => lang.key === 'en');
+      if (englishLanguage) {
+        this.selectedLanguage = englishLanguage;
+      }
+    }, 0);
   }
 
   ngOnDestroy(): void {

@@ -663,7 +663,7 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
       email: ['', [Validators.required, Validators.email]],
       telephone: [''],
       country: [''],
-      language: [''],
+      language: ['en'], // Set English as default
       dateOfBirth: [''],
     });
   }

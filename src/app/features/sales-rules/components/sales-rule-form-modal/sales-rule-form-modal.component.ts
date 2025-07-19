@@ -584,7 +584,7 @@ export class SalesRuleFormModalComponent implements OnInit, OnDestroy {
       priority: ['', [Validators.required]],
       type: ['', [Validators.required]],
       country: [''],
-      language: [''],
+      language: ['en'], // Set English as default
       sources: [''],
     });
   }

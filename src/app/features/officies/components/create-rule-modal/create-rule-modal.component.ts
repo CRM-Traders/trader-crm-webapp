@@ -115,6 +115,9 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
 
     if (this.isEditing && this.rule) {
       this.populateFormForEdit();
+    } else {
+      // Set English as default language for new rules
+      this.setDefaultLanguage();
     }
   }
 
@@ -179,6 +182,15 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
         this.availableOperators = operators;
         this.filteredOperators = operators;
       });
+  }
+
+  private setDefaultLanguage(): void {
+    // Set English as default language
+    const englishLanguage = this.availableLanguages.find(lang => lang.key === 'en');
+    if (englishLanguage) {
+      this.selectedLanguages = [englishLanguage];
+      this.updateLanguagesFormValue();
+    }
   }
 
   private populateFormForEdit(): void {

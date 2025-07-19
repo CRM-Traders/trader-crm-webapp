@@ -468,7 +468,7 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
       brandId: ['', [Validators.required]],
       brandSearch: [''],
       type: [0],
-      language: [''],
+      language: ['en'], // Set English as default
       isActive: [true],
     });
   }
@@ -478,6 +478,12 @@ export class DeskCreationModalComponent implements OnInit, OnDestroy {
     this.loadInitialOffices();
     this.loadAvailableLanguages();
     this.filteredLanguages = this.availableLanguages;
+    
+    // Set default language to English
+    const englishLanguage = this.availableLanguages.find(lang => lang.key === 'en');
+    if (englishLanguage) {
+      this.deskForm.patchValue({ language: englishLanguage.key });
+    }
   }
 
   ngOnDestroy(): void {
