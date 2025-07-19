@@ -180,7 +180,7 @@ import {
                     <div class="max-h-48 overflow-y-auto">
                       <div
                         *ngFor="let country of filteredCountries"
-                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                         (click)="selectCountry(country)"
                       >
                         {{ country.name }}
@@ -278,7 +278,7 @@ import {
                     >
                       <div
                         *ngFor="let office of availableOffices"
-                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                         (click)="selectOffice(office)"
                       >
                         <div>{{ office.value }}</div>
