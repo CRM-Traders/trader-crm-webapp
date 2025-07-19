@@ -1,5 +1,3 @@
-// src/app/features/clients/components/client-registration-modal/client-registration-modal.component.ts
-
 import {
   Component,
   inject,
@@ -612,7 +610,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
           </div>
 
           <!-- Date of Birth and Source Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
               <label
                 for="dateOfBirth"
@@ -628,7 +626,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
               />
             </div>
 
-            <div>
+            <!-- <div>
               <label
                 for="source"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -642,7 +640,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Web, Referral, etc."
               />
-            </div>
+            </div> -->
           </div>
         </form>
       </div>
@@ -758,7 +756,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       country: [''],
       language: ['en'], // Set English as default
       dateOfBirth: [''],
-      source: [''],
+      //source: [''],
     });
   }
 
@@ -766,10 +764,10 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.loadCountries();
     this.loadLanguages();
     this.loadAffiliates();
-    
+
     // Set default language to English
     setTimeout(() => {
-      const englishLanguage = this.languages.find(lang => lang.key === 'en');
+      const englishLanguage = this.languages.find((lang) => lang.key === 'en');
       if (englishLanguage) {
         this.selectedLanguage = englishLanguage;
       }
@@ -1023,7 +1021,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       dateOfBirth: formValue.dateOfBirth
         ? new Date(formValue.dateOfBirth).toISOString()
         : null,
-      source: formValue.source || null,
+      //source: formValue.source || null,
     };
 
     this.clientsService.createClientForAdmin(clientData).subscribe({

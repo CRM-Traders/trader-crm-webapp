@@ -64,7 +64,7 @@ export interface ClientCreateRequest {
   country?: string | null;
   language?: string | null;
   dateOfBirth?: string | null;
-  source?: string | null;
+  //source?: string | null;
 }
 
 export interface ClientCreateForAffiliateRequest {
