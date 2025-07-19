@@ -553,6 +553,14 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
     this.initForm();
     this.loadCountries();
     this.loadLanguages();
+    
+    // Set default language to English
+    setTimeout(() => {
+      const englishLanguage = this.availableLanguages.find(lang => lang.key === 'en');
+      if (englishLanguage) {
+        this.selectedLanguage = englishLanguage;
+      }
+    }, 0);
   }
 
   ngOnDestroy(): void {
@@ -571,7 +579,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
         [Validators.required, Validators.pattern(/^\+?[1-9]\d{1,14}$/)],
       ],
       country: ['', [Validators.required]],
-      language: ['', [Validators.required]],
+      language: ['en', [Validators.required]],
       dateOfBirth: ['', [Validators.required]],
       source: [''],
     });

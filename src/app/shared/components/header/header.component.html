@@ -59,10 +59,19 @@
         <app-mini-calendar [showCurrentDate]="false"></app-mini-calendar>
         <button
           (click)="swapOfficies()"
-          class="p-2 rounded-full hover:bg-gray-200"
+          class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
           title="Switch Office"
         >
-          <img src="/icons/swap.svg" />
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            height="24px" 
+            viewBox="0 -960 960 960" 
+            width="24px" 
+            class="text-gray-600 dark:text-gray-300"
+            fill="currentColor"
+          >
+            <path d="M280-120 80-320l200-200 57 56-104 104h607v80H233l104 104-57 56Zm400-320-57-56 104-104H120v-80h607L623-784l57-56 200 200-200 200Z"/>
+          </svg>
         </button>
         <div class="mx-2">
           <app-theme-toggle></app-theme-toggle>

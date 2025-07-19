@@ -474,4 +474,28 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       }
     );
   }
+
+  copyPhoneNumber(): void {
+    if (!this.client.telephone) {
+      this.alertService.error('No phone number available to copy');
+      return;
+    }
+
+    navigator.clipboard.writeText(this.client.telephone).then(() => {
+      this.alertService.success('Phone number copied to clipboard');
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = this.client.telephone || '';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        this.alertService.success('Phone number copied to clipboard');
+      } catch (err) {
+        this.alertService.error('Failed to copy phone number');
+      }
+      document.body.removeChild(textArea);
+    });
+  }
 }

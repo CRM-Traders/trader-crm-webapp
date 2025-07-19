@@ -607,7 +607,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
       brandId: ['', [Validators.required]],
       officeSearch: [''],
       type: [0],
-      language: [''],
+      language: ['en'], // Set English as default
       isActive: [true],
     });
   }
@@ -625,6 +625,12 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
         language: this.desk.language || '',
         isActive: this.desk.isActive,
       });
+    } else {
+      // Set default language to English for new desks
+      const englishLanguage = this.availableLanguages.find(lang => lang.key === 'en');
+      if (englishLanguage) {
+        this.editForm.patchValue({ language: englishLanguage.key });
+      }
     }
   }
 
