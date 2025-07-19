@@ -82,6 +82,12 @@ export class NavigationService {
       permission: 130,
     },
     {
+      label: 'Permission Templates',
+      icon: 'permission',
+      route: '/permission-templates',
+      permission: -1, // Special value to bypass permission check
+    },
+    {
       label: 'Calendar',
       icon: 'calendar',
       route: '/calendar',

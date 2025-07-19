@@ -153,7 +153,7 @@ import {
               >
                 <div
                   *ngFor="let brand of availableOffices"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                   (click)="selectOffice(brand)"
                 >
                   <div class="flex justify-between items-center">
@@ -264,14 +264,14 @@ import {
               <!-- Languages List -->
               <div class="max-h-48 overflow-y-auto">
                 <div
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                   (click)="selectLanguage(null)"
                 >
                   No specific language
                 </div>
                 <div
                   *ngFor="let lang of filteredLanguages"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                   (click)="selectLanguage(lang)"
                 >
                   {{ lang.value }}
@@ -333,7 +333,7 @@ import {
               <div class="max-h-48 overflow-y-auto">
                 <div
                   *ngFor="let type of deskTypes"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                   (click)="selectDeskType(type)"
                 >
                   {{ type.label }}

@@ -865,21 +865,6 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
   userTypeOptions = [
     {
-      group: 'Administrators',
-      options: [
-        {
-          id: UserType.CompanyAdmin,
-          value: 'Company Admin',
-          group: 'Administrators',
-        },
-        {
-          id: UserType.BrandAdmin,
-          value: 'Brand Admin',
-          group: 'Administrators',
-        },
-      ],
-    },
-    {
       group: 'Heads of Department',
       options: [
         {
@@ -900,6 +885,34 @@ export class OperatorRegistrationModalComponent implements OnInit {
         { id: UserType.PspHOD, value: 'PSP HOD', group: 'Heads of Department' },
       ],
     },
+    {
+      group: 'Agents',
+      options: [
+        { id: UserType.SalesAgent, value: 'Sales Agent', group: 'Agents' },
+        {
+          id: UserType.RetentionAgent,
+          value: 'Retention Agent',
+          group: 'Agents',
+        },
+        { id: UserType.SupportAgent, value: 'Support Agent', group: 'Agents' },
+      ],
+    },
+    {
+      group: 'Administrators',
+      options: [
+        {
+          id: UserType.CompanyAdmin,
+          value: 'Company Admin',
+          group: 'Administrators',
+        },
+        {
+          id: UserType.BrandAdmin,
+          value: 'Brand Admin',
+          group: 'Administrators',
+        },
+      ],
+    },
+
     {
       group: 'Managers',
       options: [
@@ -953,18 +966,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
         },
       ],
     },
-    {
-      group: 'Agents',
-      options: [
-        { id: UserType.SalesAgent, value: 'Sales Agent', group: 'Agents' },
-        {
-          id: UserType.RetentionAgent,
-          value: 'Retention Agent',
-          group: 'Agents',
-        },
-        { id: UserType.SupportAgent, value: 'Support Agent', group: 'Agents' },
-      ],
-    },
+
     {
       group: 'Other',
       options: [
@@ -1148,21 +1150,17 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
     switch (branchType) {
       case BranchType.Brand:
-        return `${branch.value}${
-          branch.brandName ? ` - ${branch.brandName}` : ''
-        }${branch.country ? ` (${branch.country})` : ''}`;
+        return `${branch.value}${branch.brandName ? ` - ${branch.brandName}` : ''
+          }${branch.country ? ` (${branch.country})` : ''}`;
       case BranchType.Office:
-        return `${branch.value}${
-          branch.officeName ? ` - ${branch.officeName}` : ''
-        }${branch.language ? ` - ${branch.language}` : ''}`;
+        return `${branch.value}${branch.officeName ? ` - ${branch.officeName}` : ''
+          }${branch.language ? ` - ${branch.language}` : ''}`;
       case BranchType.Desk:
-        return `${branch.value}${
-          branch.deskName ? ` - ${branch.deskName}` : ''
-        }`;
+        return `${branch.value}${branch.deskName ? ` - ${branch.deskName}` : ''
+          }`;
       case BranchType.Team:
-        return `${branch.value}${
-          branch.deskName ? ` - ${branch.deskName}` : ''
-        }`;
+        return `${branch.value}${branch.deskName ? ` - ${branch.deskName}` : ''
+          }`;
       default:
         return branch.value;
     }
