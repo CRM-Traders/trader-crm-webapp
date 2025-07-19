@@ -100,6 +100,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   readonly filteredEvents = computed(() => {
     const view = this._view();
     const displayDate = this._displayDate();
+    const selectedDate = this._selectedDate();
     const events = this.displayEvents();
 
     switch (view) {
@@ -108,7 +109,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
       case 'week':
         return this.getEventsForWeek(events, displayDate);
       case 'list':
-        return this.getUpcomingEvents(events);
+        // If a date is selected, show events for that day, otherwise show upcoming events
+        if (selectedDate) {
+          return this.getEventsForDay(events, selectedDate);
+        } else {
+          return this.getUpcomingEvents(events);
+        }
       default:
         return events;
     }
@@ -118,6 +124,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.initializeComponent();
     this.subscribeToThemeChanges();
     this.loadInitialData();
+    this.setupKeyboardShortcuts();
   }
 
   ngOnDestroy(): void {
@@ -129,6 +136,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
     this.generateCalendarDays();
     this.generateWeekDays();
     this.generateHours();
+    // Set today as the default selected date
+    this._selectedDate.set(new Date());
   }
 
   private subscribeToThemeChanges(): void {
@@ -141,6 +150,32 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   private loadInitialData(): void {
     this.loadEventsForCurrentView();
+  }
+
+  private setupKeyboardShortcuts(): void {
+    document.addEventListener('keydown', (event) => {
+      // Only handle shortcuts when the calendar is focused or when no specific element is focused
+      if (event.target === document.body || (event.target as HTMLElement).closest('.calendar-container')) {
+        switch (event.key) {
+          case 'ArrowLeft':
+            if (this._view() === 'list' && this._selectedDate()) {
+              event.preventDefault();
+              this.goToPreviousDay();
+            }
+            break;
+          case 'ArrowRight':
+            if (this._view() === 'list' && this._selectedDate()) {
+              event.preventDefault();
+              this.goToNextDay();
+            }
+            break;
+          case 'Home':
+            event.preventDefault();
+            this.goToToday();
+            break;
+        }
+      }
+    });
   }
 
   private loadEventsForCurrentView(): void {
@@ -244,6 +279,13 @@ export class CalendarComponent implements OnInit, OnDestroy {
     return events
       .filter((event) => event.start >= now)
       .sort((a, b) => a.start.getTime() - b.start.getTime());
+  }
+
+  private getEventsForDay(
+    events: CalendarEventDisplay[],
+    date: Date
+  ): CalendarEventDisplay[] {
+    return events.filter((event) => this.isSameDay(event.start, date));
   }
 
   private getWeekStart(date: Date): Date {
@@ -668,13 +710,38 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const today = new Date();
     this._displayDate.set(today);
     this._currentDate.set(today);
+    this._selectedDate.set(today);
     this.generateCalendarDays();
     this.generateWeekDays();
     this.loadEventsForCurrentView();
   }
 
+  goToPreviousDay(): void {
+    const currentSelectedDate = this._selectedDate();
+    if (currentSelectedDate) {
+      const previousDay = new Date(currentSelectedDate);
+      previousDay.setDate(previousDay.getDate() - 1);
+      this._selectedDate.set(previousDay);
+      this.loadEventsForCurrentView();
+    }
+  }
+
+  goToNextDay(): void {
+    const currentSelectedDate = this._selectedDate();
+    if (currentSelectedDate) {
+      const nextDay = new Date(currentSelectedDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      this._selectedDate.set(nextDay);
+      this.loadEventsForCurrentView();
+    }
+  }
+
   selectDate(day: CalendarDay): void {
     this._selectedDate.set(day.date);
+  }
+
+  clearSelectedDate(): void {
+    this._selectedDate.set(null);
   }
 
   changeView(view: 'month' | 'week' | 'day' | 'list'): void {
