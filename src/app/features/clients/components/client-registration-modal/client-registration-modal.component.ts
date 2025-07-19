@@ -851,14 +851,22 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
     this.clientsService.getAffiliatesDropdown(searchParams).subscribe({
       next: (response: AffiliateSearchResponse) => {
+        let newAffiliates = response.items;
+        
         if (reset) {
-          this.availableAffiliates = response.items;
+          this.availableAffiliates = newAffiliates;
         } else {
           this.availableAffiliates = [
             ...this.availableAffiliates,
-            ...response.items,
+            ...newAffiliates,
           ];
         }
+        
+        // Sort affiliates alphabetically by userFullName
+        this.availableAffiliates.sort((a: AffiliateDropdownItem, b: AffiliateDropdownItem) => 
+          a.userFullName.localeCompare(b.userFullName)
+        );
+        
         this.hasMoreAffiliates = response.hasNextPage;
         this.affiliateLoading = false;
       },

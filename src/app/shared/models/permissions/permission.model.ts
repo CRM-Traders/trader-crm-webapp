@@ -17,3 +17,12 @@ export interface PermissionSection {
   section: string;
   permissions: Permission[];
 }
+
+export interface OperatorPermissionsResponse {
+  operatorId: string;
+  operatorUserId: string;
+  username: string;
+  firstname: string;
+  lastname: string;
+  permissions: PermissionSection[];
+}

@@ -1574,8 +1574,13 @@ export class ClientsComponent implements OnInit {
       )
       .toPromise()
       .then(
-        (response: any) =>
-          response || []
+        (response: any) => {
+          const operators = response || [];
+          // Sort operators alphabetically by their display value
+          return operators.sort((a: OperatorDropdownItem, b: OperatorDropdownItem) => 
+            a.value.localeCompare(b.value)
+          );
+        }
       );
   }
 

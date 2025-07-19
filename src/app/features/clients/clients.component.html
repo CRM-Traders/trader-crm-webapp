@@ -472,12 +472,6 @@
                     <!-- Operators List -->
                     <div class="max-h-48 overflow-y-auto">
                       <div
-                        class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
-                        (click)="selectOperator(value.id || row.id, { id: '', value: 'No operator', email: '' }, value || row)"
-                      >
-                        No operator
-                      </div>
-                      <div
                         *ngFor="let operator of filteredOperators.get(value.id || row.id) || []"
                         class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
                         (click)="selectOperator(value.id || row.id, operator, value || row)"
