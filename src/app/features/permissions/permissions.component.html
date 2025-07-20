@@ -1,9 +1,16 @@
 <div class="general-container bg-white p-6">
   <!-- Modal Header -->
   <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
-      Permissions Management
-    </h2>
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
+        Permissions Management
+      </h2>
+      <div *ngIf="operatorInfo" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <span class="font-medium capitalize">{{ getOperatorFullName() }}</span>
+        <span class="mx-2">•</span>
+        <span>{{ operatorInfo.username }}</span>
+      </div>
+    </div>
   </div>
 
   <!-- Loading State -->
