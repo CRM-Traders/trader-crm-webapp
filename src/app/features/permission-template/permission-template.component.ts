@@ -253,7 +253,11 @@ export class PermissionTemplateComponent implements OnInit {
     
     this.departmentService.getDepartmentDropdown(requestBody).subscribe({
       next: (response) => {
-        this.departments = response.items || [];
+        this.departments = (response.items || []).sort((a, b) => {
+          if (a.value.toLowerCase() === 'sales') return -1;
+          if (b.value.toLowerCase() === 'sales') return 1;
+          return a.value.localeCompare(b.value);
+        });
         this.loadingDepartments = false;
       },
       error: (error) => {
