@@ -1,16 +1,23 @@
 import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PermissionTableService } from '../../shared/services/permission-table/permission-table.service';
+import { PermissionTableService, CreateDefaultPermissionsRequest } from '../../shared/services/permission-table/permission-table.service';
 import { DepartmentsService } from '../departments/services/departments.service';
 import { OperatorsService } from '../operators/services/operators.service';
+import { OfficesService } from '../officies/services/offices.service';
+import { AlertService } from '../../core/services/alert.service';
 import {
   ActionType,
   Permission,
   PermissionSection,
+  DefaultPermissionSection,
 } from '../../shared/models/permissions/permission.model';
 import { Department, DepartmentDropdownItem } from '../departments/models/department.model';
 import { OperatorRole } from '../operators/models/operators.model';
+import { 
+  OfficeDropdownItem, 
+  OfficesListRequest 
+} from '../officies/models/office.model';
 
 @Component({
   selector: 'app-permission-template',
@@ -23,18 +30,23 @@ export class PermissionTemplateComponent implements OnInit {
   private permissionService = inject(PermissionTableService);
   private departmentService = inject(DepartmentsService);
   private operatorsService = inject(OperatorsService);
+  private officesService = inject(OfficesService);
+  private alertService = inject(AlertService);
 
   // Data properties
+  offices: OfficeDropdownItem[] = [];
   departments: DepartmentDropdownItem[] = [];
   roles: OperatorRole[] = [];
   permissionSections: PermissionSection[] = [];
   
   // Selection properties
+  selectedOfficeId: string = '';
   selectedDepartmentId: string = '';
   selectedRoleId: string = '';
   
   // UI state properties
   loading = false;
+  loadingOffices = false;
   loadingDepartments = false;
   loadingRoles = false;
   loadingPermissions = false;
@@ -42,11 +54,21 @@ export class PermissionTemplateComponent implements OnInit {
   updatingPermissions = new Set<string>();
   expandedSections = new Set<string>();
   
-  // Dropdown state properties
+  // Office dropdown state properties
+  officeDropdownOpen = false;
+  officeSearchTerm = '';
+  selectedOffice: OfficeDropdownItem | null = null;
+  currentOfficePage = 0;
+  officePageSize = 20;
+  hasMoreOffices = false;
+  focusedOfficeIndex = -1;
+  
+  // Department dropdown state properties
   departmentDropdownOpen = false;
   departmentSearchTerm = '';
   selectedDepartment: any = null;
   
+  // Role dropdown state properties
   roleDropdownOpen = false;
   roleSearchTerm = '';
   selectedRole: any = null;
@@ -62,8 +84,161 @@ export class PermissionTemplateComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    this.loadDepartments();
-    this.loadRoles();
+    this.loadOffices();
+  }
+
+  // Office dropdown methods
+  loadOffices(reset: boolean = false): void {
+    if (this.loadingOffices) return;
+
+    if (reset) {
+      this.currentOfficePage = 0;
+      this.offices = [];
+    }
+
+    this.loadingOffices = true;
+
+    const request: OfficesListRequest = {
+      pageIndex: this.currentOfficePage,
+      pageSize: this.officePageSize,
+      globalFilter: this.officeSearchTerm || null,
+    };
+
+    this.officesService.getOfficeDropdown(request).subscribe({
+      next: (response) => {
+        if (reset) {
+          this.offices = response.items;
+        } else {
+          this.offices = [...this.offices, ...response.items];
+        }
+        this.hasMoreOffices = response.hasNextPage;
+        this.loadingOffices = false;
+      },
+      error: (error) => {
+        this.loadingOffices = false;
+        console.error('Error loading offices:', error);
+        this.offices = [];
+      },
+    });
+  }
+
+  toggleOfficeDropdown(): void {
+    if (this.officeDropdownOpen) {
+      this.officeDropdownOpen = false;
+      return;
+    }
+    // Close other dropdowns and open office dropdown
+    this.departmentDropdownOpen = false;
+    this.roleDropdownOpen = false;
+    this.officeDropdownOpen = true;
+    this.focusedOfficeIndex = 0;
+    if (this.offices.length === 0) {
+      this.loadOffices();
+    }
+  }
+
+  onOfficeSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.officeSearchTerm = target.value;
+    this.currentOfficePage = 0;
+    this.loadOffices(true);
+  }
+
+  onOfficeDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 5 &&
+      this.hasMoreOffices &&
+      !this.loadingOffices
+    ) {
+      this.currentOfficePage++;
+      this.loadOffices();
+    }
+  }
+
+  selectOffice(office: OfficeDropdownItem): void {
+    this.selectedOffice = office;
+    this.selectedOfficeId = office.id;
+    this.officeDropdownOpen = false;
+    this.onOfficeChange();
+  }
+
+  getSelectedOfficeName(): string {
+    if (this.selectedOffice) {
+      return this.selectedOffice.value;
+    }
+    return 'Select Office';
+  }
+
+  isOfficeFocused(index: number): boolean {
+    return this.focusedOfficeIndex === index;
+  }
+
+  setFocusedOfficeIndex(index: number): void {
+    this.focusedOfficeIndex = index;
+  }
+
+  onOfficeKeydown(event: KeyboardEvent, office: OfficeDropdownItem, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectOffice(office);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextOffice();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousOffice();
+        break;
+      case 'Escape':
+        this.officeDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextOffice(): void {
+    if (this.focusedOfficeIndex < this.offices.length - 1) {
+      this.focusedOfficeIndex++;
+    }
+  }
+
+  private focusPreviousOffice(): void {
+    if (this.focusedOfficeIndex > 0) {
+      this.focusedOfficeIndex--;
+    }
+  }
+
+  onOfficeButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.officeDropdownOpen) {
+          this.toggleOfficeDropdown();
+        }
+        break;
+    }
+  }
+
+  onOfficeChange(): void {
+    // Clear department and role selection when office changes
+    this.selectedDepartmentId = '';
+    this.selectedRoleId = '';
+    this.selectedDepartment = null;
+    this.selectedRole = null;
+    this.departments = [];
+    this.roles = [];
+    
+    // Load departments for the selected office
+    if (this.selectedOfficeId) {
+      this.loadDepartments();
+    }
   }
 
   private loadDepartments(): void {
@@ -107,7 +282,7 @@ export class PermissionTemplateComponent implements OnInit {
   }
 
   onRoleChange(): void {
-    if (this.selectedDepartmentId && this.selectedRoleId) {
+    if (this.selectedOfficeId && this.selectedDepartmentId && this.selectedRoleId) {
       this.loadPermissions();
     }
   }
@@ -130,27 +305,29 @@ export class PermissionTemplateComponent implements OnInit {
   private loadPermissions(): void {
     this.loadingPermissions = true;
     
-    // For now, we'll use mock data since we don't have a getAllPermissions method
-    // In the future, this would load existing template permissions for the selected department/role
-    this.permissionSections = [
-      {
-        section: 'Dashboard',
-        permissions: [
-          { id: '1', name: 'View Dashboard', description: 'Can view dashboard', actionType: ActionType.View, isGranted: false },
-          { id: '2', name: 'Edit Dashboard', description: 'Can edit dashboard', actionType: ActionType.Edit, isGranted: false }
-        ]
+    // Use the new API endpoint to get default permissions for the selected office/department/role
+    this.permissionService.getDefaultPermissions(this.selectedOfficeId, this.selectedRoleId).subscribe({
+      next: (response: DefaultPermissionSection[]) => {
+        // Convert DefaultPermissionSection to PermissionSection
+        this.permissionSections = response.map(section => ({
+          section: section.section,
+          permissions: section.permissions.map(permission => ({
+            id: permission.id,
+            name: permission.name,
+            description: permission.description,
+            actionType: permission.actionType,
+            isGranted: permission.isDefault // Map isDefault to isGranted
+          }))
+        }));
+        this.loadingPermissions = false;
       },
-      {
-        section: 'Clients',
-        permissions: [
-          { id: '3', name: 'View Clients', description: 'Can view clients', actionType: ActionType.View, isGranted: false },
-          { id: '4', name: 'Create Clients', description: 'Can create clients', actionType: ActionType.Create, isGranted: false },
-          { id: '5', name: 'Edit Clients', description: 'Can edit clients', actionType: ActionType.Edit, isGranted: false },
-          { id: '6', name: 'Delete Clients', description: 'Can delete clients', actionType: ActionType.Delete, isGranted: false }
-        ]
+      error: (error) => {
+        console.error('Error loading default permissions:', error);
+        this.permissionSections = [];
+        this.loadingPermissions = false;
+        this.alertService.error('Failed to load default permissions');
       }
-    ];
-    this.loadingPermissions = false;
+    });
   }
 
   togglePermission(permissionId: string): void {
@@ -161,8 +338,7 @@ export class PermissionTemplateComponent implements OnInit {
     const isCurrentlyGranted = this.isPermissionSelected(permissionId);
     this.updatingPermissions.add(permissionId);
 
-    // For now, just update local state
-    // In the future, this would save to the template
+    // Update local state immediately for better UX
     for (const section of this.permissionSections) {
       const permission = section.permissions.find(p => p.id === permissionId);
       if (permission) {
@@ -171,7 +347,48 @@ export class PermissionTemplateComponent implements OnInit {
       }
     }
 
-    this.updatingPermissions.delete(permissionId);
+    // Get all granted permission IDs
+    const grantedPermissionIds = this.getAllGrantedPermissionIds();
+
+    // Create the request payload
+    const request: CreateDefaultPermissionsRequest = {
+      officeId: this.selectedOfficeId || null,
+      operatorRoleId: this.selectedRoleId,
+      permissionIds: grantedPermissionIds
+    };
+
+    // Save to backend
+    this.permissionService.createDefaultPermissions(request).subscribe({
+      next: () => {
+        this.updatingPermissions.delete(permissionId);
+        this.alertService.success('Permission updated successfully');
+      },
+      error: (error) => {
+        console.error('Error updating permission:', error);
+        // Revert the local change on error
+        for (const section of this.permissionSections) {
+          const permission = section.permissions.find(p => p.id === permissionId);
+          if (permission) {
+            permission.isGranted = isCurrentlyGranted;
+            break;
+          }
+        }
+        this.updatingPermissions.delete(permissionId);
+        this.alertService.error('Failed to update permission');
+      }
+    });
+  }
+
+  private getAllGrantedPermissionIds(): string[] {
+    const grantedIds: string[] = [];
+    for (const section of this.permissionSections) {
+      for (const permission of section.permissions) {
+        if (permission.isGranted) {
+          grantedIds.push(permission.id);
+        }
+      }
+    }
+    return grantedIds;
   }
 
   isPermissionSelected(permissionId: string): boolean {
@@ -241,8 +458,34 @@ export class PermissionTemplateComponent implements OnInit {
     const allGranted = this.areAllPermissionsGrantedByActionType(section, actionType);
     const enable = !allGranted;
 
+    // Update local state immediately
     permissionsOfType.forEach(permission => {
       permission.isGranted = enable;
+    });
+
+    // Get all granted permission IDs
+    const grantedPermissionIds = this.getAllGrantedPermissionIds();
+
+    // Create the request payload
+    const request: CreateDefaultPermissionsRequest = {
+      officeId: this.selectedOfficeId || null,
+      operatorRoleId: this.selectedRoleId,
+      permissionIds: grantedPermissionIds
+    };
+
+    // Save to backend
+    this.permissionService.createDefaultPermissions(request).subscribe({
+      next: () => {
+        this.alertService.success('Permissions updated successfully');
+      },
+      error: (error) => {
+        console.error('Error updating permissions:', error);
+        // Revert the local changes on error
+        permissionsOfType.forEach(permission => {
+          permission.isGranted = !enable;
+        });
+        this.alertService.error('Failed to update permissions');
+      }
     });
   }
 
@@ -258,8 +501,6 @@ export class PermissionTemplateComponent implements OnInit {
     return sectionData.permissions.some(p => this.updatingPermissions.has(p.id));
   }
 
-
-
   getSelectedDepartmentName(): string {
     const department = this.departments.find(d => d.id === this.selectedDepartmentId);
     return department?.value || 'Select Department';
@@ -268,6 +509,9 @@ export class PermissionTemplateComponent implements OnInit {
   getSelectedRoleName(): string {
     if (this.selectedRole) {
       return this.selectedRole.value;
+    }
+    if (!this.selectedOfficeId) {
+      return 'Select Office First';
     }
     if (!this.selectedDepartmentId) {
       return 'Select Department First';
@@ -280,8 +524,14 @@ export class PermissionTemplateComponent implements OnInit {
 
   // Department dropdown methods
   toggleDepartmentDropdown(): void {
+    if (this.departmentDropdownOpen) {
+      this.departmentDropdownOpen = false;
+      return;
+    }
+    // Close other dropdowns and open department dropdown
+    this.officeDropdownOpen = false;
     this.roleDropdownOpen = false;
-    this.departmentDropdownOpen = !this.departmentDropdownOpen;
+    this.departmentDropdownOpen = true;
     
     if (this.departmentDropdownOpen) {
       this.departmentSearchTerm = '';
@@ -312,8 +562,14 @@ export class PermissionTemplateComponent implements OnInit {
 
   // Role dropdown methods
   toggleRoleDropdown(): void {
+    if (this.roleDropdownOpen) {
+      this.roleDropdownOpen = false;
+      return;
+    }
+    // Close other dropdowns and open role dropdown
+    this.officeDropdownOpen = false;
     this.departmentDropdownOpen = false;
-    this.roleDropdownOpen = !this.roleDropdownOpen;
+    this.roleDropdownOpen = true;
     
     if (this.roleDropdownOpen) {
       this.roleSearchTerm = '';
@@ -351,7 +607,11 @@ export class PermissionTemplateComponent implements OnInit {
   }
 
   private closeAllDropdowns(): void {
+    this.officeDropdownOpen = false;
     this.departmentDropdownOpen = false;
     this.roleDropdownOpen = false;
+    
+    // Reset focus indices
+    this.focusedOfficeIndex = -1;
   }
 } 
