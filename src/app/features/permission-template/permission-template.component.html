@@ -8,7 +8,115 @@
 
   <!-- Selection Controls -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 p-6 mb-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Office Selection -->
+      <div>
+        <label for="office" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Office <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <!-- Custom Dropdown Button -->
+          <button
+            type="button"
+            class="w-full px-3 py-2 border h-10.25 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-left flex justify-between items-center"
+            [disabled]="loadingOffices"
+            (click)="toggleOfficeDropdown()"
+            (keydown)="onOfficeButtonKeydown($event)"
+          >
+            <span class="truncate">{{ getSelectedOfficeName() }}</span>
+            <svg
+              class="w-4 h-4 ml-2 transition-transform"
+              [class.rotate-180]="officeDropdownOpen"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div
+            *ngIf="officeDropdownOpen"
+            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+          >
+            <!-- Search Input -->
+            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+              <input
+                #officeSearchInput
+                type="text"
+                placeholder="Search offices..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                (input)="onOfficeSearch($event)"
+                [value]="officeSearchTerm"
+              />
+            </div>
+
+            <!-- Offices List -->
+            <div
+              class="max-h-48 overflow-y-auto"
+              (scroll)="onOfficeDropdownScroll($event)"
+            >
+              <div
+                *ngFor="let office of offices; let i = index"
+                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                [class.bg-blue-100]="isOfficeFocused(i)"
+                [class.dark:bg-blue-400]="isOfficeFocused(i)"
+                [tabindex]="0"
+                (click)="selectOffice(office)"
+                (keydown)="onOfficeKeydown($event, office, i)"
+                (mouseenter)="setFocusedOfficeIndex(i)"
+              >
+                <div>{{ office.value }}</div>
+              </div>
+
+              <!-- Loading indicator -->
+              <div
+                *ngIf="loadingOffices"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                <svg
+                  class="animate-spin h-4 w-4 mx-auto"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+
+              <!-- No results -->
+              <div
+                *ngIf="!loadingOffices && offices.length === 0"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                <span *ngIf="officeSearchTerm">No offices match your search</span>
+                <span *ngIf="!officeSearchTerm">No offices found</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="loadingOffices" class="mt-2 text-sm text-gray-500">
+          Loading offices...
+        </div>
+      </div>
+
       <!-- Department Selection -->
       <div>
         <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -19,7 +127,7 @@
           <button
             type="button"
             class="w-full px-3 py-2 border h-10.25 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-left flex justify-between items-center"
-            [disabled]="loadingDepartments"
+            [disabled]="loadingDepartments || !selectedOfficeId"
             (click)="toggleDepartmentDropdown()"
           >
             <span class="truncate">{{ getSelectedDepartmentName() }}</span>
@@ -105,6 +213,9 @@
         </div>
         <div *ngIf="loadingDepartments" class="mt-2 text-sm text-gray-500">
           Loading departments...
+        </div>
+        <div *ngIf="!selectedOfficeId" class="mt-2 text-sm text-gray-500">
+          Please select an office first
         </div>
       </div>
 
@@ -209,23 +320,27 @@
           </svg>
           Loading roles...
         </div>
-        <div *ngIf="!selectedDepartmentId" class="mt-2 text-sm text-gray-500">
+        <div *ngIf="!selectedOfficeId" class="mt-2 text-sm text-gray-500">
+          Please select an office first
+        </div>
+        <div *ngIf="selectedOfficeId && !selectedDepartmentId" class="mt-2 text-sm text-gray-500">
           Please select a department first
         </div>
-        <div *ngIf="selectedDepartmentId && !loadingRoles && roles.length === 0" class="mt-2 text-sm text-gray-500">
+        <div *ngIf="selectedOfficeId && selectedDepartmentId && !loadingRoles && roles.length === 0" class="mt-2 text-sm text-gray-500">
           No roles found for this department
         </div>
       </div>
     </div>
 
     <!-- Template Info -->
-    <div *ngIf="selectedDepartmentId && selectedRoleId" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/5 rounded-lg">
+    <div *ngIf="selectedOfficeId && selectedDepartmentId && selectedRoleId" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/5 rounded-lg">
       <div class="flex items-center">
         <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
                  <span class="text-sm text-blue-700 dark:text-blue-500">
            Setting default permissions for 
+           <strong>{{ getSelectedOfficeName() }}</strong> - 
            <strong>{{ getSelectedDepartmentName() }}</strong> - 
            <strong>{{ getSelectedRoleName() }}</strong>
          </span>
@@ -247,7 +362,7 @@
   </div>
 
   <!-- Permissions Table -->
-  <div *ngIf="!loadingPermissions && selectedDepartmentId && selectedRoleId"
+  <div *ngIf="!loadingPermissions && selectedOfficeId && selectedDepartmentId && selectedRoleId"
     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden m-6">
     <div class="overflow-x-auto">
       <table class="w-full table-fixed">
@@ -501,16 +616,16 @@
   </div>
 
   <!-- Empty State -->
-  <div *ngIf="!loadingPermissions && (!selectedDepartmentId || !selectedRoleId)" 
+  <div *ngIf="!loadingPermissions && (!selectedOfficeId || !selectedDepartmentId || !selectedRoleId)" 
     class="flex flex-col items-center justify-center py-16 text-center">
     <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
       <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
       </svg>
     </div>
-    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Select Department and Role</h3>
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Select Office, Department and Role</h3>
     <p class="text-gray-500 dark:text-gray-400 max-w-md">
-      Choose a department and role above to start configuring default permissions for that combination.
+      Choose an office, department and role above to start configuring default permissions for that combination.
     </p>
   </div>
 </div> 
