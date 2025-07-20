@@ -1,7 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpService } from '../../../core/services/http.service';
-import { PermissionSection, OperatorPermissionsResponse } from '../../models/permissions/permission.model';
+import { PermissionSection, OperatorPermissionsResponse, DefaultPermissionSection } from '../../models/permissions/permission.model';
 import { map } from 'rxjs';
+
+export interface CreateDefaultPermissionsRequest {
+  officeId: string | null;
+  operatorRoleId: string;
+  permissionIds: string[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -21,6 +27,16 @@ export class PermissionTableService {
     return this._http.get<OperatorPermissionsResponse>(
       `identity/api/permissions/all?userId=${userId}`
     );
+  }
+
+  getDefaultPermissions(officeId: string, operatorRoleId: string) {
+    return this._http.get<DefaultPermissionSection[]>(
+      `identity/api/permissions/get-default-permissions?officeId=${officeId}&operatorRoleId=${operatorRoleId}`
+    );
+  }
+
+  createDefaultPermissions(request: CreateDefaultPermissionsRequest) {
+    return this._http.post(`identity/api/permissions/create-default-permissions`, request);
   }
 
   addUserPermission(data: any) {

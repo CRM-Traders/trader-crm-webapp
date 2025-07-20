@@ -13,9 +13,22 @@ export interface Permission {
   isGranted: boolean;
 }
 
+export interface DefaultPermission {
+  id: string;
+  name: string;
+  description: string | null;
+  actionType: ActionType;
+  isDefault: boolean;
+}
+
 export interface PermissionSection {
   section: string;
   permissions: Permission[];
+}
+
+export interface DefaultPermissionSection {
+  section: string;
+  permissions: DefaultPermission[];
 }
 
 export interface OperatorPermissionsResponse {
