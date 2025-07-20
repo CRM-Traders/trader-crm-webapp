@@ -144,6 +144,10 @@ export class ClientsComponent implements OnInit {
   filteredOperators: Map<string, OperatorDropdownItem[]> = new Map();
   filteredSalesStatuses: Map<string, { value: number; label: string }[]> = new Map();
 
+  // Keyboard navigation properties
+  focusedOperatorIndices: Map<string, number> = new Map();
+  focusedSalesStatusIndices: Map<string, number> = new Map();
+
   ClientStatus = ClientStatus;
   ClientStatusLabels = ClientStatusLabels;
   ClientStatusColors = ClientStatusColors;
@@ -1728,6 +1732,7 @@ export class ClientsComponent implements OnInit {
       // Initialize search term and filtered results for this client
       this.operatorSearchTerms.set(clientId, '');
       this.filteredOperators.set(clientId, [...this.operators]);
+      this.focusedOperatorIndices.set(clientId, 0); // Start with first item focused
     }
   }
 
@@ -1861,6 +1866,7 @@ export class ClientsComponent implements OnInit {
       // Initialize search term and filtered results for this client
       this.salesStatusSearchTerms.set(clientId, '');
       this.filteredSalesStatuses.set(clientId, [...this.salesStatusOptions]);
+      this.focusedSalesStatusIndices.set(clientId, 0); // Start with first item focused
     }
   }
 
@@ -1999,6 +2005,131 @@ export class ClientsComponent implements OnInit {
       !target.closest('.comment-icon-btn')
     ) {
       this.closeInlineComment();
+    }
+
+    // Reset focus indices when closing dropdowns
+    if (!operatorDropdowns) {
+      this.focusedOperatorIndices.clear();
+    }
+    if (!salesStatusDropdowns) {
+      this.focusedSalesStatusIndices.clear();
+    }
+  }
+
+  // Keyboard navigation methods for Sales Status dropdown
+  isSalesStatusFocused(clientId: string, index: number): boolean {
+    return this.focusedSalesStatusIndices.get(clientId) === index;
+  }
+
+  setFocusedSalesStatusIndex(clientId: string, index: number): void {
+    this.focusedSalesStatusIndices.set(clientId, index);
+  }
+
+  onSalesStatusKeydown(clientId: string, event: KeyboardEvent, status: { value: number; label: string }, index: number, clientData: any): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectSalesStatus(clientId, status, clientData);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextSalesStatus(clientId);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousSalesStatus(clientId);
+        break;
+      case 'Escape':
+        this.salesStatusDropdownStates.set(clientId, false);
+        break;
+    }
+  }
+
+  private focusNextSalesStatus(clientId: string): void {
+    const currentIndex = this.focusedSalesStatusIndices.get(clientId) || -1;
+    const statuses = this.filteredSalesStatuses.get(clientId) || [];
+    if (currentIndex < statuses.length - 1) {
+      this.focusedSalesStatusIndices.set(clientId, currentIndex + 1);
+    }
+  }
+
+  private focusPreviousSalesStatus(clientId: string): void {
+    const currentIndex = this.focusedSalesStatusIndices.get(clientId) || -1;
+    if (currentIndex > 0) {
+      this.focusedSalesStatusIndices.set(clientId, currentIndex - 1);
+    }
+  }
+
+  // Keyboard navigation methods for Operator dropdown
+  isOperatorFocused(clientId: string, index: number): boolean {
+    return this.focusedOperatorIndices.get(clientId) === index;
+  }
+
+  setFocusedOperatorIndex(clientId: string, index: number): void {
+    this.focusedOperatorIndices.set(clientId, index);
+  }
+
+  onOperatorKeydown(clientId: string, event: KeyboardEvent, operator: OperatorDropdownItem, index: number, clientData: any): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectOperator(clientId, operator, clientData);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextOperator(clientId);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousOperator(clientId);
+        break;
+      case 'Escape':
+        this.operatorDropdownStates.set(clientId, false);
+        break;
+    }
+  }
+
+  private focusNextOperator(clientId: string): void {
+    const currentIndex = this.focusedOperatorIndices.get(clientId) || -1;
+    const operators = this.filteredOperators.get(clientId) || [];
+    if (currentIndex < operators.length - 1) {
+      this.focusedOperatorIndices.set(clientId, currentIndex + 1);
+    }
+  }
+
+  private focusPreviousOperator(clientId: string): void {
+    const currentIndex = this.focusedOperatorIndices.get(clientId) || -1;
+    if (currentIndex > 0) {
+      this.focusedOperatorIndices.set(clientId, currentIndex - 1);
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onSalesStatusButtonKeydown(clientId: string, event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.salesStatusDropdownStates.get(clientId)) {
+          this.toggleSalesStatusDropdown(clientId, event as any);
+        }
+        break;
+    }
+  }
+
+  onOperatorButtonKeydown(clientId: string, event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.operatorDropdownStates.get(clientId)) {
+          this.toggleOperatorDropdown(clientId, event as any);
+        }
+        break;
     }
   }
 }

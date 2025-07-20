@@ -8,6 +8,7 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -104,7 +105,7 @@ interface BrandDropdownResponse {
           </div>
 
           <!-- Brand Selection -->
-          <div class="relative">
+          <div class="relative" data-dropdown="brand">
             <label
               for="brandId"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -121,6 +122,7 @@ interface BrandDropdownResponse {
                 teamForm.get('brandId')?.touched
               "
               (click)="toggleBrandDropdown()"
+              (keydown)="onBrandButtonKeydown($event)"
             >
               <span class="truncate">{{ getSelectedBrandName() }}</span>
               <svg
@@ -162,9 +164,14 @@ interface BrandDropdownResponse {
                 (scroll)="onBrandDropdownScroll($event)"
               >
                 <div
-                  *ngFor="let brand of availableBrands"
+                  *ngFor="let brand of availableBrands; let i = index"
                   class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  [class.bg-blue-100]="isBrandFocused(i)"
+                  [class.dark:bg-blue-400]="isBrandFocused(i)"
+                  [tabindex]="0"
                   (click)="selectBrand(brand)"
+                  (keydown)="onBrandKeydown($event, brand, i)"
+                  (mouseenter)="setFocusedBrandIndex(i)"
                 >
                   <div class="flex flex-col">
                     <span class="font-medium">{{ brand.value }}</span>
@@ -228,7 +235,7 @@ interface BrandDropdownResponse {
           </div>
 
           <!-- Desk Selection -->
-          <div class="relative">
+          <div class="relative" data-dropdown="desk">
             <label
               for="deskId"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -247,6 +254,7 @@ interface BrandDropdownResponse {
               [class.opacity-50]="!teamForm.get('brandId')?.value"
               [disabled]="!teamForm.get('brandId')?.value"
               (click)="toggleDeskDropdown()"
+              (keydown)="onDeskButtonKeydown($event)"
             >
               <span class="truncate">{{ getSelectedDeskName() }}</span>
               <svg
@@ -296,9 +304,14 @@ interface BrandDropdownResponse {
                 (scroll)="onDeskDropdownScroll($event)"
               >
                 <div
-                  *ngFor="let desk of availableDesks"
+                  *ngFor="let desk of availableDesks; let i = index"
                   class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                  [class.bg-blue-100]="isDeskFocused(i)"
+                  [class.dark:bg-blue-400]="isDeskFocused(i)"
+                  [tabindex]="0"
                   (click)="selectDesk(desk)"
+                  (keydown)="onDeskKeydown($event, desk, i)"
+                  (mouseenter)="setFocusedDeskIndex(i)"
                 >
                   <div class="flex flex-col">
                     <span class="font-medium">{{ desk.value }}</span>
@@ -460,6 +473,10 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
   deskLoading = false;
   deskHasNextPage = false;
   deskDropdownOpen = false;
+
+  // Keyboard navigation properties
+  focusedBrandIndex = -1;
+  focusedDeskIndex = -1;
 
   constructor() {
     this.teamForm = this.fb.group({
@@ -669,6 +686,9 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
       this.deskDropdownOpen = false;
     }
     this.brandDropdownOpen = !this.brandDropdownOpen;
+    if (this.brandDropdownOpen) {
+      this.focusedBrandIndex = 0; // Start with first item focused
+    }
   }
 
   selectBrand(brand: BrandDropdownItem): void {
@@ -716,6 +736,9 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
         this.brandDropdownOpen = false;
       }
       this.deskDropdownOpen = !this.deskDropdownOpen;
+      if (this.deskDropdownOpen) {
+        this.focusedDeskIndex = 0; // Start with first item focused
+      }
     }
   }
 
@@ -781,5 +804,136 @@ export class TeamCreationModalComponent implements OnInit, OnDestroy {
 
   onCancel(): void {
     this.modalRef.dismiss();
+  }
+
+  // Keyboard navigation methods for Brand dropdown
+  isBrandFocused(index: number): boolean {
+    return this.focusedBrandIndex === index;
+  }
+
+  setFocusedBrandIndex(index: number): void {
+    this.focusedBrandIndex = index;
+  }
+
+  onBrandKeydown(event: KeyboardEvent, brand: BrandDropdownItem, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectBrand(brand);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextBrand();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousBrand();
+        break;
+      case 'Escape':
+        this.brandDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextBrand(): void {
+    if (this.focusedBrandIndex < this.availableBrands.length - 1) {
+      this.focusedBrandIndex++;
+    }
+  }
+
+  private focusPreviousBrand(): void {
+    if (this.focusedBrandIndex > 0) {
+      this.focusedBrandIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Desk dropdown
+  isDeskFocused(index: number): boolean {
+    return this.focusedDeskIndex === index;
+  }
+
+  setFocusedDeskIndex(index: number): void {
+    this.focusedDeskIndex = index;
+  }
+
+  onDeskKeydown(event: KeyboardEvent, desk: DeskDropdownItem, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectDesk(desk);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextDesk();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousDesk();
+        break;
+      case 'Escape':
+        this.deskDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextDesk(): void {
+    if (this.focusedDeskIndex < this.availableDesks.length - 1) {
+      this.focusedDeskIndex++;
+    }
+  }
+
+  private focusPreviousDesk(): void {
+    if (this.focusedDeskIndex > 0) {
+      this.focusedDeskIndex--;
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onBrandButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.brandDropdownOpen) {
+          this.toggleBrandDropdown();
+        }
+        break;
+    }
+  }
+
+  onDeskButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.deskDropdownOpen && this.teamForm.get('brandId')?.value) {
+          this.toggleDeskDropdown();
+        }
+        break;
+    }
+  }
+
+  // Close dropdown when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    // Check if click is inside dropdown containers
+    const brandDropdown = target.closest('[data-dropdown="brand"]');
+    const deskDropdown = target.closest('[data-dropdown="desk"]');
+
+    // Close dropdowns if click is outside
+    if (!brandDropdown) {
+      this.brandDropdownOpen = false;
+      this.focusedBrandIndex = -1;
+    }
+    if (!deskDropdown) {
+      this.deskDropdownOpen = false;
+      this.focusedDeskIndex = -1;
+    }
   }
 }

@@ -118,6 +118,7 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                       editForm.get('brandId')?.touched
                     "
                     (click)="toggleOfficeDropdown()"
+                    (keydown)="onBrandButtonKeydown($event)"
                   >
                     <span class="truncate">{{ getSelectedOfficeName() }}</span>
                     <svg
@@ -161,9 +162,14 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                       (scroll)="onOfficeDropdownScroll($event)"
                     >
                       <div
-                        *ngFor="let brand of availableOffices"
+                        *ngFor="let brand of availableOffices; let i = index"
                         class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        [class.bg-blue-100]="isBrandFocused(i)"
+                        [class.dark:bg-blue-400]="isBrandFocused(i)"
+                        [tabindex]="0"
                         (click)="selectOffice(brand)"
+                        (keydown)="onBrandKeydown($event, brand, i)"
+                        (mouseenter)="setFocusedBrandIndex(i)"
                       >
                         <div class="flex justify-between items-center">
                           <span>{{ brand.value }}</span>
@@ -255,6 +261,7 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                     type="button"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
                     (click)="toggleLanguageDropdown()"
+                    (keydown)="onLanguageButtonKeydown($event)"
                   >
                     <span class="truncate">{{
                       getSelectedLanguageName()
@@ -298,14 +305,24 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                     <div class="max-h-48 overflow-y-auto">
                       <div
                         class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        [class.bg-blue-100]="isLanguageFocused(-1)"
+                        [class.dark:bg-blue-400]="isLanguageFocused(-1)"
+                        [tabindex]="0"
                         (click)="selectLanguage(null)"
+                        (keydown)="onLanguageKeydown($event, null, -1)"
+                        (mouseenter)="setFocusedLanguageIndex(-1)"
                       >
                         No specific language
                       </div>
                       <div
-                        *ngFor="let lang of filteredLanguages"
+                        *ngFor="let lang of filteredLanguages; let i = index"
                         class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        [class.bg-blue-100]="isLanguageFocused(i)"
+                        [class.dark:bg-blue-400]="isLanguageFocused(i)"
+                        [tabindex]="0"
                         (click)="selectLanguage(lang)"
+                        (keydown)="onLanguageKeydown($event, lang, i)"
+                        (mouseenter)="setFocusedLanguageIndex(i)"
                       >
                         {{ lang.value }}
                       </div>
@@ -350,6 +367,7 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                     type="button"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
                     (click)="toggleDeskTypeDropdown()"
+                    (keydown)="onDeskTypeButtonKeydown($event)"
                   >
                     <span class="truncate">{{
                       getSelectedDeskTypeName()
@@ -378,9 +396,14 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                     <!-- Desk Types List -->
                     <div class="max-h-48 overflow-y-auto">
                       <div
-                        *ngFor="let type of deskTypes"
+                        *ngFor="let type of deskTypes; let i = index"
                         class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        [class.bg-blue-100]="isDeskTypeFocused(i)"
+                        [class.dark:bg-blue-400]="isDeskTypeFocused(i)"
+                        [tabindex]="0"
                         (click)="selectDeskType(type)"
+                        (keydown)="onDeskTypeKeydown($event, type, i)"
+                        (mouseenter)="setFocusedDeskTypeIndex(i)"
                       >
                         {{ type.label }}
                       </div>
@@ -589,6 +612,11 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   // Desk type dropdown state
   deskTypeDropdownOpen = false;
 
+  // Keyboard navigation properties
+  focusedBrandIndex = -1;
+  focusedLanguageIndex = -1;
+  focusedDeskTypeIndex = -1;
+
   deskTypes = [
     { value: 0, label: 'Sales' },
     { value: 1, label: 'Retention' },
@@ -742,6 +770,9 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
 
     // Toggle brand dropdown
     this.officeDropdownOpen = !this.officeDropdownOpen;
+    if (this.officeDropdownOpen) {
+      this.focusedBrandIndex = 0; // Start with first item focused
+    }
   }
 
   // Close dropdown when clicking outside
@@ -757,12 +788,15 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
     // Close dropdowns if click is outside
     if (!brandDropdown) {
       this.officeDropdownOpen = false;
+      this.focusedBrandIndex = -1;
     }
     if (!languageDropdown) {
       this.languageDropdownOpen = false;
+      this.focusedLanguageIndex = -1;
     }
     if (!deskTypeDropdown) {
       this.deskTypeDropdownOpen = false;
+      this.focusedDeskTypeIndex = -1;
     }
   }
 
@@ -778,6 +812,9 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
 
     // Toggle language dropdown
     this.languageDropdownOpen = !this.languageDropdownOpen;
+    if (this.languageDropdownOpen) {
+      this.focusedLanguageIndex = -1; // Start with "No specific language" focused
+    }
   }
 
   onLanguageSearch(event: Event): void {
@@ -823,6 +860,9 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
 
     // Toggle desk type dropdown
     this.deskTypeDropdownOpen = !this.deskTypeDropdownOpen;
+    if (this.deskTypeDropdownOpen) {
+      this.focusedDeskTypeIndex = 0; // Start with first item focused
+    }
   }
 
   selectDeskType(type: any): void {
@@ -944,5 +984,172 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
 
   onClose(): void {
     this.modalRef.close(this.isEditing ? true : false);
+  }
+
+  // Keyboard navigation methods for Brand dropdown
+  isBrandFocused(index: number): boolean {
+    return this.focusedBrandIndex === index;
+  }
+
+  setFocusedBrandIndex(index: number): void {
+    this.focusedBrandIndex = index;
+  }
+
+  onBrandKeydown(event: KeyboardEvent, brand: BrandDropdownItem, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectOffice(brand);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextBrand();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousBrand();
+        break;
+      case 'Escape':
+        this.officeDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextBrand(): void {
+    if (this.focusedBrandIndex < this.availableOffices.length - 1) {
+      this.focusedBrandIndex++;
+    }
+  }
+
+  private focusPreviousBrand(): void {
+    if (this.focusedBrandIndex > 0) {
+      this.focusedBrandIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Language dropdown
+  isLanguageFocused(index: number): boolean {
+    return this.focusedLanguageIndex === index;
+  }
+
+  setFocusedLanguageIndex(index: number): void {
+    this.focusedLanguageIndex = index;
+  }
+
+  onLanguageKeydown(event: KeyboardEvent, lang: any, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectLanguage(lang);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextLanguage();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousLanguage();
+        break;
+      case 'Escape':
+        this.languageDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextLanguage(): void {
+    const totalItems = this.filteredLanguages.length + 1; // +1 for "No specific language"
+    if (this.focusedLanguageIndex < totalItems - 1) {
+      this.focusedLanguageIndex++;
+    }
+  }
+
+  private focusPreviousLanguage(): void {
+    if (this.focusedLanguageIndex > -1) {
+      this.focusedLanguageIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Desk Type dropdown
+  isDeskTypeFocused(index: number): boolean {
+    return this.focusedDeskTypeIndex === index;
+  }
+
+  setFocusedDeskTypeIndex(index: number): void {
+    this.focusedDeskTypeIndex = index;
+  }
+
+  onDeskTypeKeydown(event: KeyboardEvent, type: any, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectDeskType(type);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextDeskType();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousDeskType();
+        break;
+      case 'Escape':
+        this.deskTypeDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextDeskType(): void {
+    if (this.focusedDeskTypeIndex < this.deskTypes.length - 1) {
+      this.focusedDeskTypeIndex++;
+    }
+  }
+
+  private focusPreviousDeskType(): void {
+    if (this.focusedDeskTypeIndex > 0) {
+      this.focusedDeskTypeIndex--;
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onBrandButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.officeDropdownOpen) {
+          this.toggleOfficeDropdown();
+        }
+        break;
+    }
+  }
+
+  onLanguageButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.languageDropdownOpen) {
+          this.toggleLanguageDropdown();
+        }
+        break;
+    }
+  }
+
+  onDeskTypeButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.deskTypeDropdownOpen) {
+          this.toggleDeskTypeDropdown();
+        }
+        break;
+    }
   }
 }
