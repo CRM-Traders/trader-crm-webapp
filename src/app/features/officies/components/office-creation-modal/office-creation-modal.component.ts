@@ -36,11 +36,12 @@ import {
   BrandDropdownRequest,
 } from '../../../brands/models/brand.model';
 import { Country } from '../../../../core/models/country.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-office-creation-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   template: `
     <div class="w-full modal-content">
       <!-- Modal Header -->
@@ -96,7 +97,7 @@ import { Country } from '../../../../core/models/country.model';
           </div>
 
           <!-- Source -->
-          <div>
+          <div *hasPermission="134">
             <label
               for="source"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"

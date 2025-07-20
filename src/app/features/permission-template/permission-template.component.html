@@ -1,20 +1,240 @@
 <div class="general-container bg-white p-6">
-  <!-- Modal Header -->
+  <!-- Header -->
   <div class="flex items-center justify-between mb-6">
-    <div>
-      <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
-        Permissions Management
-      </h2>
-      <div *ngIf="operatorInfo" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-        <span class="font-medium capitalize">{{ getOperatorFullName() }}</span>
-        <span class="mx-2">•</span>
-        <span>{{ operatorInfo.username }}</span>
+    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
+      Permission Templates
+    </h2>
+  </div>
+
+  <!-- Selection Controls -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Department Selection -->
+      <div>
+        <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Department
+        </label>
+        <div class="relative">
+          <!-- Custom Dropdown Button -->
+          <button
+            type="button"
+            class="w-full px-3 py-2 border h-10.25 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-left flex justify-between items-center"
+            [disabled]="loadingDepartments"
+            (click)="toggleDepartmentDropdown()"
+          >
+            <span class="truncate">{{ getSelectedDepartmentName() }}</span>
+            <svg
+              class="w-4 h-4 ml-2 transition-transform"
+              [class.rotate-180]="departmentDropdownOpen"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div
+            *ngIf="departmentDropdownOpen"
+            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+          >
+            <!-- Search Input -->
+            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+              <input
+                #departmentSearchInput
+                type="text"
+                placeholder="Search departments..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                (input)="onDepartmentSearch($event)"
+                [value]="departmentSearchTerm"
+              />
+            </div>
+
+            <!-- Departments List -->
+            <div class="max-h-48 overflow-y-auto">
+              <div
+                *ngFor="let dept of getFilteredDepartments()"
+                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                (click)="selectDepartment(dept)"
+              >
+                <div>{{ dept.value }}</div>
+              </div>
+
+              <!-- Loading indicator -->
+              <div
+                *ngIf="loadingDepartments"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                <svg
+                  class="animate-spin h-4 w-4 mx-auto"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+
+              <!-- No results -->
+              <div
+                *ngIf="!loadingDepartments && getFilteredDepartments().length === 0"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                <span *ngIf="departmentSearchTerm">No departments match your search</span>
+                <span *ngIf="!departmentSearchTerm">No departments found</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="loadingDepartments" class="mt-2 text-sm text-gray-500">
+          Loading departments...
+        </div>
+      </div>
+
+      <!-- Role Selection -->
+      <div>
+        <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Role
+        </label>
+        <div class="relative">
+          <!-- Custom Dropdown Button -->
+          <button
+            type="button"
+            class="w-full px-3 py-2 border h-10.25 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 text-left flex justify-between items-center"
+            [disabled]="loadingRoles || !selectedDepartmentId"
+            (click)="toggleRoleDropdown()"
+          >
+            <span class="truncate">{{ getSelectedRoleName() }}</span>
+            <svg
+              class="w-4 h-4 ml-2 transition-transform"
+              [class.rotate-180]="roleDropdownOpen"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div
+            *ngIf="roleDropdownOpen"
+            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+          >
+            <!-- Search Input -->
+            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+              <input
+                #roleSearchInput
+                type="text"
+                placeholder="Search roles..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                (input)="onRoleSearch($event)"
+                [value]="roleSearchTerm"
+              />
+            </div>
+
+            <!-- Roles List -->
+            <div class="max-h-48 overflow-y-auto">
+              <div
+                *ngFor="let role of getFilteredRoles()"
+                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                (click)="selectRole(role)"
+              >
+                <div>{{ role.value }}</div>
+              </div>
+
+              <!-- Loading indicator -->
+              <div
+                *ngIf="loadingRoles"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                <svg
+                  class="animate-spin h-4 w-4 mx-auto"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+
+              <!-- No results -->
+              <div
+                *ngIf="!loadingRoles && getFilteredRoles().length === 0"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                <span *ngIf="roleSearchTerm">No roles match your search</span>
+                <span *ngIf="!roleSearchTerm">No roles found</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="loadingRoles" class="mt-2 text-sm text-gray-500 flex items-center">
+          <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Loading roles...
+        </div>
+        <div *ngIf="!selectedDepartmentId" class="mt-2 text-sm text-gray-500">
+          Please select a department first
+        </div>
+        <div *ngIf="selectedDepartmentId && !loadingRoles && roles.length === 0" class="mt-2 text-sm text-gray-500">
+          No roles found for this department
+        </div>
+      </div>
+    </div>
+
+    <!-- Template Info -->
+    <div *ngIf="selectedDepartmentId && selectedRoleId" class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/5 rounded-lg">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+                 <span class="text-sm text-blue-700 dark:text-blue-500">
+           Setting default permissions for 
+           <strong>{{ getSelectedDepartmentName() }}</strong> - 
+           <strong>{{ getSelectedRoleName() }}</strong>
+         </span>
       </div>
     </div>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="flex flex-col items-center justify-center py-16">
+  <div *ngIf="loadingPermissions" class="flex flex-col items-center justify-center py-16">
     <div class="relative">
       <div class="w-12 h-12 rounded-full border-4 border-gray-200 dark:border-gray-700"></div>
       <div
@@ -27,8 +247,8 @@
   </div>
 
   <!-- Permissions Table -->
-  <div *ngIf="!loading"
-    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden">
+  <div *ngIf="!loadingPermissions && selectedDepartmentId && selectedRoleId"
+    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden m-6">
     <div class="overflow-x-auto">
       <table class="w-full table-fixed">
         <thead>
@@ -36,7 +256,7 @@
             <th class="w-50 px-6 py-4 text-left">
               <div class="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24"
-                  stro4e="currentColor">
+                  stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -280,24 +500,17 @@
     </div>
   </div>
 
-  <!-- Footer Actions -->
-  <div class="mt-6 flex items-center justify-between">
-    <div class="text-sm text-gray-600 dark:text-gray-300">
-      <span *ngIf="getGrantedPermissionsCount() === 0">No permissions granted</span>
-      <span *ngIf="getGrantedPermissionsCount() === 1">1 permission granted</span>
-      <span *ngIf="getGrantedPermissionsCount() > 1">{{ getGrantedPermissionsCount() }} permissions granted</span>
+  <!-- Empty State -->
+  <div *ngIf="!loadingPermissions && (!selectedDepartmentId || !selectedRoleId)" 
+    class="flex flex-col items-center justify-center py-16 text-center">
+    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
     </div>
-    <div class="flex items-center gap-3">
-      <button (click)="resetPermissions()"
-        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200">
-        Reset
-      </button>
-      <!-- <button
-        (click)="savePermissions()"
-        class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm hover:shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-      >
-        Save Changes
-      </button> -->
-    </div>
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Select Department and Role</h3>
+    <p class="text-gray-500 dark:text-gray-400 max-w-md">
+      Choose a department and role above to start configuring default permissions for that combination.
+    </p>
   </div>
-</div>
+</div> 

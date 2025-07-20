@@ -283,6 +283,7 @@ interface RoleDropdownItem {
                     registrationForm.get('userType')?.touched
                   "
                   (click)="toggleUserTypeDropdown()"
+                  (keydown)="onUserTypeButtonKeydown($event)"
                 >
                   <span class="truncate">{{ getSelectedUserTypeName() }}</span>
                   <svg
@@ -335,9 +336,14 @@ interface RoleDropdownItem {
 
                       <!-- Group Options -->
                       <div
-                        *ngFor="let option of group.options"
-                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        *ngFor="let option of group.options; let i = index"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        [class.bg-blue-100]="isUserTypeFocused(getUserTypeGlobalIndex(group, i))"
+                        [class.dark:bg-blue-400]="isUserTypeFocused(getUserTypeGlobalIndex(group, i))"
+                        [tabindex]="0"
                         (click)="selectUserType(option)"
+                        (keydown)="onUserTypeKeydown($event, option, getUserTypeGlobalIndex(group, i))"
+                        (mouseenter)="setFocusedUserTypeIndex(getUserTypeGlobalIndex(group, i))"
                       >
                         <div>{{ option.value }}</div>
                       </div>
@@ -389,6 +395,7 @@ interface RoleDropdownItem {
                     registrationForm.get('departmentId')?.touched
                   "
                   (click)="toggleDepartmentDropdown()"
+                  (keydown)="onDepartmentButtonKeydown($event)"
                 >
                   <span class="truncate">{{
                     getSelectedDepartmentName()
@@ -434,9 +441,14 @@ interface RoleDropdownItem {
                     (scroll)="onDepartmentDropdownScroll($event)"
                   >
                     <div
-                      *ngFor="let department of getFilteredDepartments()"
-                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      *ngFor="let department of getFilteredDepartments(); let i = index"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      [class.bg-blue-100]="isDepartmentFocused(i)"
+                      [class.dark:bg-blue-400]="isDepartmentFocused(i)"
+                      [tabindex]="0"
                       (click)="selectDepartment(department)"
+                      (keydown)="onDepartmentKeydown($event, department, i)"
+                      (mouseenter)="setFocusedDepartmentIndex(i)"
                     >
                       <div>{{ department.value }}</div>
                     </div>
@@ -514,6 +526,7 @@ interface RoleDropdownItem {
                   "
                   [disabled]="!availableRoles.length"
                   (click)="toggleRoleDropdown()"
+                  (keydown)="onRoleButtonKeydown($event)"
                 >
                   <span class="truncate">{{ getSelectedRoleName() }}</span>
                   <svg
@@ -554,9 +567,14 @@ interface RoleDropdownItem {
                   <!-- Roles List -->
                   <div class="max-h-48 overflow-y-auto">
                     <div
-                      *ngFor="let role of getFilteredRoles()"
-                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      *ngFor="let role of getFilteredRoles(); let i = index"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      [class.bg-blue-100]="isRoleFocused(i)"
+                      [class.dark:bg-blue-400]="isRoleFocused(i)"
+                      [tabindex]="0"
                       (click)="selectRole(role)"
+                      (keydown)="onRoleKeydown($event, role, i)"
+                      (mouseenter)="setFocusedRoleIndex(i)"
                     >
                       <div>{{ role.value }}</div>
                     </div>
@@ -665,6 +683,7 @@ interface RoleDropdownItem {
                     !registrationForm.get('branchType')?.value || branchLoading
                   "
                   (click)="toggleBranchDropdown()"
+                  (keydown)="onBranchButtonKeydown($event)"
                 >
                   <span class="truncate">{{ getSelectedBranchName() }}</span>
                   <svg
@@ -708,9 +727,14 @@ interface RoleDropdownItem {
                     (scroll)="onBranchDropdownScroll($event)"
                   >
                     <div
-                      *ngFor="let branch of availableBranches"
-                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      *ngFor="let branch of availableBranches; let i = index"
+                      class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      [class.bg-blue-100]="isBranchFocused(i)"
+                      [class.dark:bg-blue-400]="isBranchFocused(i)"
+                      [tabindex]="0"
                       (click)="selectBranch(branch)"
+                      (keydown)="onBranchKeydown($event, branch, i)"
+                      (mouseenter)="setFocusedBranchIndex(i)"
                     >
                       <div>{{ getBranchDisplayText(branch) }}</div>
                     </div>
@@ -779,7 +803,7 @@ interface RoleDropdownItem {
       >
         <button
           type="button"
-          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-400/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           (click)="onCancel()"
         >
           Cancel
@@ -860,25 +884,16 @@ export class OperatorRegistrationModalComponent implements OnInit {
   userTypeSearchTerm = '';
   selectedUserType: { id: number; value: string; group: string } | null = null;
 
+  // Keyboard navigation properties
+  focusedUserTypeIndex = -1;
+  focusedDepartmentIndex = -1;
+  focusedRoleIndex = -1;
+  focusedBranchIndex = -1;
+
   BranchType = BranchType;
   UserType = UserType;
 
   userTypeOptions = [
-    {
-      group: 'Administrators',
-      options: [
-        {
-          id: UserType.CompanyAdmin,
-          value: 'Company Admin',
-          group: 'Administrators',
-        },
-        {
-          id: UserType.BrandAdmin,
-          value: 'Brand Admin',
-          group: 'Administrators',
-        },
-      ],
-    },
     {
       group: 'Heads of Department',
       options: [
@@ -900,6 +915,34 @@ export class OperatorRegistrationModalComponent implements OnInit {
         { id: UserType.PspHOD, value: 'PSP HOD', group: 'Heads of Department' },
       ],
     },
+    {
+      group: 'Agents',
+      options: [
+        { id: UserType.SalesAgent, value: 'Sales Agent', group: 'Agents' },
+        {
+          id: UserType.RetentionAgent,
+          value: 'Retention Agent',
+          group: 'Agents',
+        },
+        { id: UserType.SupportAgent, value: 'Support Agent', group: 'Agents' },
+      ],
+    },
+    {
+      group: 'Administrators',
+      options: [
+        {
+          id: UserType.CompanyAdmin,
+          value: 'Company Admin',
+          group: 'Administrators',
+        },
+        {
+          id: UserType.BrandAdmin,
+          value: 'Brand Admin',
+          group: 'Administrators',
+        },
+      ],
+    },
+
     {
       group: 'Managers',
       options: [
@@ -953,18 +996,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
         },
       ],
     },
-    {
-      group: 'Agents',
-      options: [
-        { id: UserType.SalesAgent, value: 'Sales Agent', group: 'Agents' },
-        {
-          id: UserType.RetentionAgent,
-          value: 'Retention Agent',
-          group: 'Agents',
-        },
-        { id: UserType.SupportAgent, value: 'Support Agent', group: 'Agents' },
-      ],
-    },
+
     {
       group: 'Other',
       options: [
@@ -1148,21 +1180,17 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
     switch (branchType) {
       case BranchType.Brand:
-        return `${branch.value}${
-          branch.brandName ? ` - ${branch.brandName}` : ''
-        }${branch.country ? ` (${branch.country})` : ''}`;
+        return `${branch.value}${branch.brandName ? ` - ${branch.brandName}` : ''
+          }${branch.country ? ` (${branch.country})` : ''}`;
       case BranchType.Office:
-        return `${branch.value}${
-          branch.officeName ? ` - ${branch.officeName}` : ''
-        }${branch.language ? ` - ${branch.language}` : ''}`;
+        return `${branch.value}${branch.officeName ? ` - ${branch.officeName}` : ''
+          }${branch.language ? ` - ${branch.language}` : ''}`;
       case BranchType.Desk:
-        return `${branch.value}${
-          branch.deskName ? ` - ${branch.deskName}` : ''
-        }`;
+        return `${branch.value}${branch.deskName ? ` - ${branch.deskName}` : ''
+          }`;
       case BranchType.Team:
-        return `${branch.value}${
-          branch.deskName ? ` - ${branch.deskName}` : ''
-        }`;
+        return `${branch.value}${branch.deskName ? ` - ${branch.deskName}` : ''
+          }`;
       default:
         return branch.value;
     }
@@ -1238,6 +1266,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
         // Reset search when opening dropdown
         this.departmentSearchTerm = '';
       }
+      this.focusedDepartmentIndex = 0; // Start with first item focused
     }
   }
 
@@ -1330,6 +1359,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     if (this.roleDropdownOpen) {
       // Reset search when opening dropdown
       this.roleSearchTerm = '';
+      this.focusedRoleIndex = 0; // Start with first item focused
     }
   }
 
@@ -1386,6 +1416,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
           this.branchSearchTerm = '';
         }
       }
+      this.focusedBranchIndex = 0; // Start with first item focused
     }
   }
 
@@ -1456,6 +1487,12 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.roleDropdownOpen = false;
     this.branchDropdownOpen = false;
     this.userTypeDropdownOpen = false;
+    
+    // Reset focus indices
+    this.focusedDepartmentIndex = -1;
+    this.focusedRoleIndex = -1;
+    this.focusedBranchIndex = -1;
+    this.focusedUserTypeIndex = -1;
   }
 
   // User Type dropdown methods
@@ -1471,6 +1508,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     if (this.userTypeDropdownOpen) {
       // Reset search when opening dropdown
       this.userTypeSearchTerm = '';
+      this.focusedUserTypeIndex = 0; // Start with first item focused
     }
   }
 
@@ -1508,5 +1546,259 @@ export class OperatorRegistrationModalComponent implements OnInit {
         ),
       }))
       .filter((group) => group.options.length > 0);
+  }
+
+  // Keyboard navigation methods for User Type dropdown
+  isUserTypeFocused(index: number): boolean {
+    return this.focusedUserTypeIndex === index;
+  }
+
+  setFocusedUserTypeIndex(index: number): void {
+    this.focusedUserTypeIndex = index;
+  }
+
+  onUserTypeKeydown(event: KeyboardEvent, option: any, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectUserType(option);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextUserType();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousUserType();
+        break;
+      case 'Escape':
+        this.userTypeDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextUserType(): void {
+    const allOptions = this.getAllUserTypeOptions();
+    if (this.focusedUserTypeIndex < allOptions.length - 1) {
+      this.focusedUserTypeIndex++;
+      this.scrollToFocusedUserType();
+    }
+  }
+
+  private focusPreviousUserType(): void {
+    if (this.focusedUserTypeIndex > 0) {
+      this.focusedUserTypeIndex--;
+      this.scrollToFocusedUserType();
+    }
+  }
+
+  private scrollToFocusedUserType(): void {
+    // This will be implemented if needed for better UX
+    // For now, the browser's default focus behavior should handle scrolling
+  }
+
+  private getAllUserTypeOptions(): any[] {
+    return this.getFilteredUserTypeGroups().flatMap(group => group.options);
+  }
+
+  getUserTypeGlobalIndex(group: any, localIndex: number): number {
+    const groups = this.getFilteredUserTypeGroups();
+    let globalIndex = 0;
+    
+    for (const g of groups) {
+      if (g === group) {
+        return globalIndex + localIndex;
+      }
+      globalIndex += g.options.length;
+    }
+    
+    return globalIndex;
+  }
+
+  getUserTypeOptionByGlobalIndex(globalIndex: number): any {
+    const allOptions = this.getAllUserTypeOptions();
+    return allOptions[globalIndex];
+  }
+
+  // Keyboard navigation methods for Department dropdown
+  isDepartmentFocused(index: number): boolean {
+    return this.focusedDepartmentIndex === index;
+  }
+
+  setFocusedDepartmentIndex(index: number): void {
+    this.focusedDepartmentIndex = index;
+  }
+
+  onDepartmentKeydown(event: KeyboardEvent, department: any, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectDepartment(department);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextDepartment();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousDepartment();
+        break;
+      case 'Escape':
+        this.departmentDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextDepartment(): void {
+    const departments = this.getFilteredDepartments();
+    if (this.focusedDepartmentIndex < departments.length - 1) {
+      this.focusedDepartmentIndex++;
+    }
+  }
+
+  private focusPreviousDepartment(): void {
+    if (this.focusedDepartmentIndex > 0) {
+      this.focusedDepartmentIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Role dropdown
+  isRoleFocused(index: number): boolean {
+    return this.focusedRoleIndex === index;
+  }
+
+  setFocusedRoleIndex(index: number): void {
+    this.focusedRoleIndex = index;
+  }
+
+  onRoleKeydown(event: KeyboardEvent, role: any, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectRole(role);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextRole();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousRole();
+        break;
+      case 'Escape':
+        this.roleDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextRole(): void {
+    const roles = this.getFilteredRoles();
+    if (this.focusedRoleIndex < roles.length - 1) {
+      this.focusedRoleIndex++;
+    }
+  }
+
+  private focusPreviousRole(): void {
+    if (this.focusedRoleIndex > 0) {
+      this.focusedRoleIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Branch dropdown
+  isBranchFocused(index: number): boolean {
+    return this.focusedBranchIndex === index;
+  }
+
+  setFocusedBranchIndex(index: number): void {
+    this.focusedBranchIndex = index;
+  }
+
+  onBranchKeydown(event: KeyboardEvent, branch: any, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectBranch(branch);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextBranch();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousBranch();
+        break;
+      case 'Escape':
+        this.branchDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextBranch(): void {
+    if (this.focusedBranchIndex < this.availableBranches.length - 1) {
+      this.focusedBranchIndex++;
+    }
+  }
+
+  private focusPreviousBranch(): void {
+    if (this.focusedBranchIndex > 0) {
+      this.focusedBranchIndex--;
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onUserTypeButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.userTypeDropdownOpen) {
+          this.toggleUserTypeDropdown();
+        }
+        break;
+    }
+  }
+
+  onDepartmentButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.departmentDropdownOpen) {
+          this.toggleDepartmentDropdown();
+        }
+        break;
+    }
+  }
+
+  onRoleButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.roleDropdownOpen) {
+          this.toggleRoleDropdown();
+        }
+        break;
+    }
+  }
+
+  onBranchButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.branchDropdownOpen) {
+          this.toggleBranchDropdown();
+        }
+        break;
+    }
   }
 }

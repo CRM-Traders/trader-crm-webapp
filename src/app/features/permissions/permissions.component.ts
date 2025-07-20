@@ -5,6 +5,7 @@ import {
   ActionType,
   Permission,
   PermissionSection,
+  OperatorPermissionsResponse,
 } from '../../shared/models/permissions/permission.model';
 import { forkJoin, finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
@@ -22,6 +23,13 @@ export class PermissionsComponent implements OnInit {
   private _service = inject(PermissionTableService);
 
   operatorId!: string;
+  operatorInfo: {
+    operatorId: string;
+    operatorUserId: string;
+    username: string;
+    firstname: string;
+    lastname: string;
+  } | null = null;
 
   permissionSections: PermissionSection[] = [];
 
@@ -54,11 +62,18 @@ export class PermissionsComponent implements OnInit {
   private loadPermissions(): void {
     this.loading = true;
 
-    this._service.allPermissions(this.operatorId)
+    this._service.allPermissionsWithOperatorInfo(this.operatorId)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (result) => {
-          this.permissionSections = result;
+          this.permissionSections = result.permissions;
+          this.operatorInfo = {
+            operatorId: result.operatorId,
+            operatorUserId: result.operatorUserId,
+            username: result.username,
+            firstname: result.firstname,
+            lastname: result.lastname,
+          };
         },
         error: (error) => {
           console.error('Error loading permissions:', error);
@@ -289,5 +304,10 @@ export class PermissionsComponent implements OnInit {
     return this.permissionSections.some(section =>
       section.permissions.some(p => p.actionType === actionType && p.isGranted)
     );
+  }
+
+  getOperatorFullName(): string {
+    if (!this.operatorInfo) return '';
+    return `${this.operatorInfo.firstname} ${this.operatorInfo.lastname}`;
   }
 }

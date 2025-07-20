@@ -139,6 +139,7 @@ import {
                       editForm.get('country')?.touched
                     "
                     (click)="toggleCountryDropdown()"
+                    (keydown)="onCountryButtonKeydown($event)"
                   >
                     <span class="truncate">{{ getSelectedCountryName() }}</span>
                     <svg
@@ -179,9 +180,14 @@ import {
                     <!-- Countries List -->
                     <div class="max-h-48 overflow-y-auto">
                       <div
-                        *ngFor="let country of filteredCountries"
-                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        *ngFor="let country of filteredCountries; let i = index"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        [class.bg-blue-100]="isCountryFocused(i)"
+                        [class.dark:bg-blue-400]="isCountryFocused(i)"
+                        [tabindex]="0"
                         (click)="selectCountry(country)"
+                        (keydown)="onCountryKeydown($event, country, i)"
+                        (mouseenter)="setFocusedCountryIndex(i)"
                       >
                         {{ country.name }}
                       </div>
@@ -234,6 +240,7 @@ import {
                       editForm.get('officeId')?.touched
                     "
                     (click)="toggleOfficeDropdown()"
+                    (keydown)="onOfficeButtonKeydown($event)"
                   >
                     <span class="truncate">{{ getSelectedOfficeName() }}</span>
                     <svg
@@ -277,9 +284,14 @@ import {
                       (scroll)="onOfficeDropdownScroll($event)"
                     >
                       <div
-                        *ngFor="let office of availableOffices"
-                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        *ngFor="let office of availableOffices; let i = index"
+                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                        [class.bg-blue-100]="isOfficeFocused(i)"
+                        [class.dark:bg-blue-400]="isOfficeFocused(i)"
+                        [tabindex]="0"
                         (click)="selectOffice(office)"
+                        (keydown)="onOfficeKeydown($event, office, i)"
+                        (mouseenter)="setFocusedOfficeIndex(i)"
                       >
                         <div>{{ office.value }}</div>
                       </div>
@@ -526,6 +538,10 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
   officePageSize = 20;
   hasMoreOffices = false;
 
+  // Keyboard navigation properties
+  focusedCountryIndex = -1;
+  focusedOfficeIndex = -1;
+
   // Country dropdown properties
   countryDropdownOpen = false;
   countrySearchTerm = '';
@@ -651,8 +667,11 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     // Toggle office dropdown
     this.officeDropdownOpen = !this.officeDropdownOpen;
 
-    if (this.officeDropdownOpen && this.availableOffices.length === 0) {
-      this.loadOffices();
+    if (this.officeDropdownOpen) {
+      this.focusedOfficeIndex = 0; // Start with first item focused
+      if (this.availableOffices.length === 0) {
+        this.loadOffices();
+      }
     }
   }
 
@@ -760,6 +779,9 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
 
     // Toggle country dropdown
     this.countryDropdownOpen = !this.countryDropdownOpen;
+    if (this.countryDropdownOpen) {
+      this.focusedCountryIndex = 0; // Start with first item focused
+    }
   }
 
   onCountrySearch(event: Event): void {
@@ -814,10 +836,125 @@ export class BrandDetailsModalComponent implements OnInit, OnDestroy {
     if (!officeDropdown && !countryDropdown) {
       this.officeDropdownOpen = false;
       this.countryDropdownOpen = false;
+      
+      // Reset focus indices
+      this.focusedCountryIndex = -1;
+      this.focusedOfficeIndex = -1;
     }
   }
 
   onClose(): void {
     this.modalRef.close(this.isEditing ? true : false);
+  }
+
+  // Keyboard navigation methods for Country dropdown
+  isCountryFocused(index: number): boolean {
+    return this.focusedCountryIndex === index;
+  }
+
+  setFocusedCountryIndex(index: number): void {
+    this.focusedCountryIndex = index;
+  }
+
+  onCountryKeydown(event: KeyboardEvent, country: Country, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectCountry(country);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextCountry();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousCountry();
+        break;
+      case 'Escape':
+        this.countryDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextCountry(): void {
+    if (this.focusedCountryIndex < this.filteredCountries.length - 1) {
+      this.focusedCountryIndex++;
+    }
+  }
+
+  private focusPreviousCountry(): void {
+    if (this.focusedCountryIndex > 0) {
+      this.focusedCountryIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Office dropdown
+  isOfficeFocused(index: number): boolean {
+    return this.focusedOfficeIndex === index;
+  }
+
+  setFocusedOfficeIndex(index: number): void {
+    this.focusedOfficeIndex = index;
+  }
+
+  onOfficeKeydown(event: KeyboardEvent, office: OfficeDropdownItem, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectOffice(office);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextOffice();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousOffice();
+        break;
+      case 'Escape':
+        this.officeDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextOffice(): void {
+    if (this.focusedOfficeIndex < this.availableOffices.length - 1) {
+      this.focusedOfficeIndex++;
+    }
+  }
+
+  private focusPreviousOffice(): void {
+    if (this.focusedOfficeIndex > 0) {
+      this.focusedOfficeIndex--;
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onCountryButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.countryDropdownOpen) {
+          this.toggleCountryDropdown();
+        }
+        break;
+    }
+  }
+
+  onOfficeButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.officeDropdownOpen) {
+          this.toggleOfficeDropdown();
+        }
+        break;
+    }
   }
 }

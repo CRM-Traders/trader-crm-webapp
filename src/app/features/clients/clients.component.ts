@@ -8,6 +8,7 @@ import {
   inject,
   ElementRef,
   ChangeDetectorRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -54,6 +55,7 @@ import { OfficeRulesService } from '../officies/services/office-rules.service';
 import { AssignOperatorModalComponent } from './components/assign-operator-modal/assign-operator-modal.component';
 import { OperatorDetailsModalComponent } from '../operators/components/operator-details-modal/operator-details-modal.component';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { OperatorDropdownItem } from '../officies/models/office-rules.model';
 
 interface InlineCommentState {
   clientId: string;
@@ -106,8 +108,11 @@ export class ClientsComponent implements OnInit {
   latestCommentCellTemplate!: TemplateRef<any>;
   @ViewChild('clientOperatorCell', { static: true })
   clientOperatorCellTemplate!: TemplateRef<any>;
+  @ViewChild('assignOperatorCell', { static: true })
+  assignOperatorCellTemplate!: TemplateRef<any>;
 
   updatingSalesStatus: string | null = null;
+  updatingOperatorAssignment: string | null = null;
 
   activeInlineCommentClientId: string | null = null;
   inlineCommentForm: FormGroup;
@@ -124,11 +129,24 @@ export class ClientsComponent implements OnInit {
   clientCommentsCache: Map<string, ClientComment[]> = new Map();
 
   salesStatusOptions: { value: number; label: string }[] = [];
+  operators: OperatorDropdownItem[] = [];
   importLoading = false;
   showDeleteModal = false;
   clientToDelete: Client | null = null;
   totalCount = 0;
   activeCount = 0;
+
+  // Searchable dropdown states
+  operatorDropdownStates: Map<string, boolean> = new Map();
+  salesStatusDropdownStates: Map<string, boolean> = new Map();
+  operatorSearchTerms: Map<string, string> = new Map();
+  salesStatusSearchTerms: Map<string, string> = new Map();
+  filteredOperators: Map<string, OperatorDropdownItem[]> = new Map();
+  filteredSalesStatuses: Map<string, { value: number; label: string }[]> = new Map();
+
+  // Keyboard navigation properties
+  focusedOperatorIndices: Map<string, number> = new Map();
+  focusedSalesStatusIndices: Map<string, number> = new Map();
 
   ClientStatus = ClientStatus;
   ClientStatusLabels = ClientStatusLabels;
@@ -286,13 +304,21 @@ export class ClientsComponent implements OnInit {
       filterOptions: [], // Will be populated in ngOnInit
       hidden: true,
     },
+    // {
+    //   field: 'clientOperator',
+    //   header: 'Assigned Operator',
+    //   sortable: false,
+    //   filterable: false,
+    //   cellTemplate: null, // Will be set in ngOnInit
+    //   selector: (row: Client) => row.clientOperator || null,
+    // },
     {
-      field: 'clientOperator',
-      header: 'Assigned Operator',
+      field: 'assignOperator',
+      header: 'Assign Operator',
       sortable: false,
       filterable: false,
       cellTemplate: null, // Will be set in ngOnInit
-      selector: (row: Client) => row.clientOperator || null,
+      selector: (row: Client) => row,
     },
     {
       field: 'affiliateName',
@@ -723,19 +749,7 @@ export class ClientsComponent implements OnInit {
     document.removeEventListener('click', this.onDocumentClick.bind(this));
   }
 
-  private onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    const inlineCommentBox = document.querySelector('.inline-comment-box');
 
-    if (
-      this.inlineCommentState &&
-      inlineCommentBox &&
-      !inlineCommentBox.contains(target) &&
-      !target.closest('.comment-icon-btn')
-    ) {
-      this.closeInlineComment();
-    }
-  }
 
   /**
    * Normalizes the sales status value to ensure it's a number
@@ -795,11 +809,18 @@ export class ClientsComponent implements OnInit {
       latestCommentColumn.cellTemplate = this.latestCommentCellTemplate;
     }
 
-    const clientOperatorColumn = this.gridColumns.find(
-      (col) => col.field === 'clientOperator'
+    // const clientOperatorColumn = this.gridColumns.find(
+    //   (col) => col.field === 'clientOperator'
+    // );
+    // if (clientOperatorColumn) {
+    //   clientOperatorColumn.cellTemplate = this.clientOperatorCellTemplate;
+    // }
+
+    const assignOperatorColumn = this.gridColumns.find(
+      (col) => col.field === 'assignOperator'
     );
-    if (clientOperatorColumn) {
-      clientOperatorColumn.cellTemplate = this.clientOperatorCellTemplate;
+    if (assignOperatorColumn) {
+      assignOperatorColumn.cellTemplate = this.assignOperatorCellTemplate;
     }
   }
 
@@ -1289,6 +1310,20 @@ export class ClientsComponent implements OnInit {
         catchError((error) => {
           selectElement.value = currentSalesStatus.toString();
           this.alertService.error('Failed to update sales status');
+          
+          // Revert the client data changes on error
+          if (clientData) {
+            if (clientData.saleStatusEnum !== undefined) {
+              clientData.saleStatusEnum = currentSalesStatus;
+            }
+            if (clientData.salesStatus !== undefined) {
+              clientData.salesStatus = currentSalesStatus;
+            }
+          }
+          
+          // Trigger change detection to update the UI
+          this.cdr.detectChanges();
+          
           return of(null);
         }),
         finalize(() => {
@@ -1319,9 +1354,77 @@ export class ClientsComponent implements OnInit {
             }`
           );
 
-          this.refreshGrid();
+          // Don't refresh the grid since we've already updated the data
+          // this.refreshGrid();
           this.loadClientStatistics();
           this.refreshClientComments(clientId);
+        }
+      });
+  }
+
+  onOperatorAssignmentChange(event: Event, clientData: Client | any): void {
+    const selectElement = event.target as HTMLSelectElement;
+    const newOperatorId = selectElement.value;
+
+    const clientId = clientData?.id || clientData?.row?.id;
+    const currentOperatorId = clientData?.clientOperator?.operatorId || clientData?.row?.clientOperator?.operatorId;
+
+    if (!clientId) {
+      this.alertService.error(
+        'Unable to update operator assignment: Client data not found'
+      );
+      return;
+    }
+
+    if (newOperatorId === currentOperatorId || newOperatorId === '') {
+      return;
+    }
+
+    this.updatingOperatorAssignment = clientId;
+
+    const request = {
+      operatorId: newOperatorId,
+      clientType: 1, // Client type
+      entityIds: [clientId],
+      isActive: true,
+    };
+
+    this.clientsService
+      .assignClientsToOperator(request)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          selectElement.value = currentOperatorId || '';
+          this.alertService.error('Failed to update operator assignment');
+          
+          // Revert the client data changes on error
+          if (clientData) {
+            if (currentOperatorId) {
+              if (!clientData.clientOperator) {
+                clientData.clientOperator = {};
+              }
+              clientData.clientOperator.operatorId = currentOperatorId;
+            } else {
+              clientData.clientOperator = null;
+            }
+          }
+          
+          return of(null);
+        }),
+        finalize(() => {
+          this.updatingOperatorAssignment = null;
+        })
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          if (result.successCount > 0) {
+            this.alertService.success('Operator assigned successfully');
+            // Don't refresh the grid since we've already updated the data
+            // this.refreshGrid();
+            this.loadClientStatistics();
+          } else if (result.failureCount > 0) {
+            this.alertService.error(`Failed to assign operator: ${result.errors.join(', ')}`);
+          }
         }
       });
   }
@@ -1384,6 +1487,9 @@ export class ClientsComponent implements OnInit {
           this.updateColumnFilterOptions('retentionOperatorId', operators);
           this.updateColumnFilterOptions('salesOperatorId', operators);
           this.updateColumnFilterOptions('timezone', timezones);
+
+          // Store operators for the assign operator dropdown
+          this.operators = operators;
 
           this.loadAffiliatesDropdown();
         }
@@ -1464,7 +1570,7 @@ export class ClientsComponent implements OnInit {
   }
 
   private loadOperatorsDropdown() {
-    return this.officeRulesService
+    return this.clientsService
       .getAvailableOperators(0, 1000, '')
       .pipe(
         catchError(() => of([])),
@@ -1472,11 +1578,13 @@ export class ClientsComponent implements OnInit {
       )
       .toPromise()
       .then(
-        (response: any) =>
-          response?.map((operator: any) => ({
-            value: operator.id,
-            label: operator.value,
-          })) || []
+        (response: any) => {
+          const operators = response || [];
+          // Sort operators alphabetically by their display value
+          return operators.sort((a: OperatorDropdownItem, b: OperatorDropdownItem) => 
+            a.value.localeCompare(b.value)
+          );
+        }
       );
   }
 
@@ -1602,5 +1710,426 @@ export class ClientsComponent implements OnInit {
 
   hideTooltip(): void {
     this.tooltipState = null;
+  }
+
+  // Searchable dropdown methods for operators
+  toggleOperatorDropdown(clientId: string, event: Event): void {
+    event.stopPropagation();
+    const currentState = this.operatorDropdownStates.get(clientId) || false;
+    this.operatorDropdownStates.set(clientId, !currentState);
+    
+    // Close other operator dropdowns
+    this.operatorDropdownStates.forEach((state, id) => {
+      if (id !== clientId) {
+        this.operatorDropdownStates.set(id, false);
+      }
+    });
+
+    // Close all sales status dropdowns
+    this.salesStatusDropdownStates.clear();
+
+    if (!currentState) {
+      // Initialize search term and filtered results for this client
+      this.operatorSearchTerms.set(clientId, '');
+      this.filteredOperators.set(clientId, [...this.operators]);
+      this.focusedOperatorIndices.set(clientId, 0); // Start with first item focused
+    }
+  }
+
+  onOperatorSearch(clientId: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const searchTerm = target.value.toLowerCase();
+    this.operatorSearchTerms.set(clientId, searchTerm);
+
+    const filtered = this.operators.filter(operator =>
+      operator.value.toLowerCase().includes(searchTerm)
+    );
+    this.filteredOperators.set(clientId, filtered);
+  }
+
+  selectOperator(clientId: string, operator: OperatorDropdownItem, clientData: any): void {
+    const newOperatorId = operator.id || '';
+    const currentOperatorId = clientData?.clientOperator?.operatorId;
+
+    if (!clientId) {
+      this.alertService.error('Unable to update operator assignment: Client data not found');
+      return;
+    }
+
+    if (newOperatorId === currentOperatorId) {
+      return;
+    }
+
+    // Update the client data immediately for instant UI feedback
+    if (clientData) {
+      if (operator.id) {
+        // Assign operator
+        if (!clientData.clientOperator) {
+          clientData.clientOperator = {};
+        }
+        clientData.clientOperator.operatorId = operator.id;
+        
+        // Find the operator details to set name
+        const selectedOperator = this.operators.find(op => op.id === operator.id);
+        if (selectedOperator) {
+          const nameParts = selectedOperator.value.split(' ');
+          clientData.clientOperator.firstName = nameParts[0] || '';
+          clientData.clientOperator.lastName = nameParts.slice(1).join(' ') || '';
+        }
+      } else {
+        // Remove operator assignment
+        clientData.clientOperator = null;
+      }
+    }
+
+    this.updatingOperatorAssignment = clientId;
+
+    const request = {
+      operatorId: newOperatorId,
+      clientType: 1, // Client type
+      entityIds: [clientId],
+      isActive: true,
+    };
+
+    this.clientsService
+      .assignClientsToOperator(request)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to update operator assignment');
+          
+          // Revert the client data changes on error
+          if (clientData) {
+            if (currentOperatorId) {
+              if (!clientData.clientOperator) {
+                clientData.clientOperator = {};
+              }
+              clientData.clientOperator.operatorId = currentOperatorId;
+            } else {
+              clientData.clientOperator = null;
+            }
+          }
+          
+          return of(null);
+        }),
+        finalize(() => {
+          this.updatingOperatorAssignment = null;
+        })
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          if (result.successCount > 0) {
+            this.alertService.success('Operator assigned successfully');
+            this.loadClientStatistics();
+          } else if (result.failureCount > 0) {
+            this.alertService.error(`Failed to assign operator: ${result.errors.join(', ')}`);
+          }
+        }
+      });
+
+    // Close dropdown and clear search
+    this.operatorDropdownStates.set(clientId, false);
+    this.operatorSearchTerms.set(clientId, '');
+    
+    // Trigger change detection to update the UI immediately
+    this.cdr.detectChanges();
+  }
+
+  getSelectedOperatorName(clientId: string, clientData: any): string {
+    if (!clientData) return 'Select operator...';
+
+    // The grid passes the entire client object as 'value'
+    const operatorId = clientData.clientOperator?.operatorId;
+    if (!operatorId) return 'Select operator...';
+
+    const operator = this.operators.find(op => op.id === operatorId);
+    return operator ? operator.value : 'Select operator...';
+  }
+
+  // Searchable dropdown methods for sales status
+  toggleSalesStatusDropdown(clientId: string, event: Event): void {
+    event.stopPropagation();
+    const currentState = this.salesStatusDropdownStates.get(clientId) || false;
+    this.salesStatusDropdownStates.set(clientId, !currentState);
+    
+    // Close other sales status dropdowns
+    this.salesStatusDropdownStates.forEach((state, id) => {
+      if (id !== clientId) {
+        this.salesStatusDropdownStates.set(id, false);
+      }
+    });
+
+    // Close all operator dropdowns
+    this.operatorDropdownStates.clear();
+
+    if (!currentState) {
+      // Initialize search term and filtered results for this client
+      this.salesStatusSearchTerms.set(clientId, '');
+      this.filteredSalesStatuses.set(clientId, [...this.salesStatusOptions]);
+      this.focusedSalesStatusIndices.set(clientId, 0); // Start with first item focused
+    }
+  }
+
+  onSalesStatusSearch(clientId: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const searchTerm = target.value.toLowerCase();
+    this.salesStatusSearchTerms.set(clientId, searchTerm);
+
+    const filtered = this.salesStatusOptions.filter(option =>
+      option.label.toLowerCase().includes(searchTerm)
+    );
+    this.filteredSalesStatuses.set(clientId, filtered);
+  }
+
+  selectSalesStatus(clientId: string, status: { value: number; label: string }, clientData: any): void {
+    const newSalesStatus = status.value;
+    const currentSalesStatus = this.normalizeSalesStatus(
+      clientData?.saleStatusEnum || clientData?.salesStatus
+    );
+
+    if (!clientId) {
+      this.alertService.error('Unable to update sales status: Client data not found');
+      return;
+    }
+
+    if (newSalesStatus === currentSalesStatus) {
+      return;
+    }
+
+    // Update the client data immediately for instant UI feedback
+    if (clientData) {
+      // Update both possible field names
+      if (clientData.saleStatusEnum !== undefined) {
+        clientData.saleStatusEnum = status.value;
+      }
+      if (clientData.salesStatus !== undefined) {
+        clientData.salesStatus = status.value;
+      }
+    }
+
+    this.updatingSalesStatus = clientId;
+
+    this.clientsService
+      .updateClientStatus(clientId, newSalesStatus)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to update sales status');
+          
+          // Revert the client data changes on error
+          if (clientData) {
+            if (clientData.saleStatusEnum !== undefined) {
+              clientData.saleStatusEnum = currentSalesStatus;
+            }
+            if (clientData.salesStatus !== undefined) {
+              clientData.salesStatus = currentSalesStatus;
+            }
+          }
+          
+          return of(null);
+        }),
+        finalize(() => {
+          this.updatingSalesStatus = null;
+        })
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          this.alertService.success(
+            `Sales status updated to ${
+              KycStatusLabels[newSalesStatus as KycStatus]
+            }`
+          );
+
+          this.loadClientStatistics();
+          this.refreshClientComments(clientId);
+        }
+      });
+
+    // Close dropdown and clear search
+    this.salesStatusDropdownStates.set(clientId, false);
+    this.salesStatusSearchTerms.set(clientId, '');
+    
+    // Trigger change detection to update the UI immediately
+    this.cdr.detectChanges();
+  }
+
+  getSelectedSalesStatusName(clientId: string, clientData: any): string {
+    if (!clientData) return 'Select status...';
+
+    // The grid passes the entire client object as 'value'
+    // Check both possible field names for sales status
+    let salesStatus = null;
+    
+    // First check if clientData is the actual client object
+    if (clientData.saleStatusEnum !== undefined) {
+      salesStatus = clientData.saleStatusEnum;
+    } else if (clientData.salesStatus !== undefined) {
+      salesStatus = clientData.salesStatus;
+    }
+    
+    // If no sales status is set, return "Select status..."
+    if (salesStatus === null || salesStatus === undefined) {
+      return 'Select status...';
+    }
+
+    const currentStatus = this.normalizeSalesStatus(salesStatus);
+    const statusOption = this.salesStatusOptions.find(option => option.value === currentStatus);
+    return statusOption ? statusOption.label : 'Select status...';
+  }
+
+
+
+  // Close dropdowns when clicking outside
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    // Check if click is inside dropdown containers
+    const operatorDropdowns = target.closest('[data-dropdown="operator"]');
+    const salesStatusDropdowns = target.closest('[data-dropdown="salesStatus"]');
+
+    // Close dropdowns if click is outside
+    if (!operatorDropdowns) {
+      this.operatorDropdownStates.clear();
+    }
+    if (!salesStatusDropdowns) {
+      this.salesStatusDropdownStates.clear();
+    }
+
+    // Existing inline comment logic
+    const inlineCommentBox = document.querySelector('.inline-comment-box');
+    if (
+      this.inlineCommentState &&
+      inlineCommentBox &&
+      !inlineCommentBox.contains(target) &&
+      !target.closest('.comment-icon-btn')
+    ) {
+      this.closeInlineComment();
+    }
+
+    // Reset focus indices when closing dropdowns
+    if (!operatorDropdowns) {
+      this.focusedOperatorIndices.clear();
+    }
+    if (!salesStatusDropdowns) {
+      this.focusedSalesStatusIndices.clear();
+    }
+  }
+
+  // Keyboard navigation methods for Sales Status dropdown
+  isSalesStatusFocused(clientId: string, index: number): boolean {
+    return this.focusedSalesStatusIndices.get(clientId) === index;
+  }
+
+  setFocusedSalesStatusIndex(clientId: string, index: number): void {
+    this.focusedSalesStatusIndices.set(clientId, index);
+  }
+
+  onSalesStatusKeydown(clientId: string, event: KeyboardEvent, status: { value: number; label: string }, index: number, clientData: any): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectSalesStatus(clientId, status, clientData);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextSalesStatus(clientId);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousSalesStatus(clientId);
+        break;
+      case 'Escape':
+        this.salesStatusDropdownStates.set(clientId, false);
+        break;
+    }
+  }
+
+  private focusNextSalesStatus(clientId: string): void {
+    const currentIndex = this.focusedSalesStatusIndices.get(clientId) || -1;
+    const statuses = this.filteredSalesStatuses.get(clientId) || [];
+    if (currentIndex < statuses.length - 1) {
+      this.focusedSalesStatusIndices.set(clientId, currentIndex + 1);
+    }
+  }
+
+  private focusPreviousSalesStatus(clientId: string): void {
+    const currentIndex = this.focusedSalesStatusIndices.get(clientId) || -1;
+    if (currentIndex > 0) {
+      this.focusedSalesStatusIndices.set(clientId, currentIndex - 1);
+    }
+  }
+
+  // Keyboard navigation methods for Operator dropdown
+  isOperatorFocused(clientId: string, index: number): boolean {
+    return this.focusedOperatorIndices.get(clientId) === index;
+  }
+
+  setFocusedOperatorIndex(clientId: string, index: number): void {
+    this.focusedOperatorIndices.set(clientId, index);
+  }
+
+  onOperatorKeydown(clientId: string, event: KeyboardEvent, operator: OperatorDropdownItem, index: number, clientData: any): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectOperator(clientId, operator, clientData);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextOperator(clientId);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousOperator(clientId);
+        break;
+      case 'Escape':
+        this.operatorDropdownStates.set(clientId, false);
+        break;
+    }
+  }
+
+  private focusNextOperator(clientId: string): void {
+    const currentIndex = this.focusedOperatorIndices.get(clientId) || -1;
+    const operators = this.filteredOperators.get(clientId) || [];
+    if (currentIndex < operators.length - 1) {
+      this.focusedOperatorIndices.set(clientId, currentIndex + 1);
+    }
+  }
+
+  private focusPreviousOperator(clientId: string): void {
+    const currentIndex = this.focusedOperatorIndices.get(clientId) || -1;
+    if (currentIndex > 0) {
+      this.focusedOperatorIndices.set(clientId, currentIndex - 1);
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onSalesStatusButtonKeydown(clientId: string, event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.salesStatusDropdownStates.get(clientId)) {
+          this.toggleSalesStatusDropdown(clientId, event as any);
+        }
+        break;
+    }
+  }
+
+  onOperatorButtonKeydown(clientId: string, event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.operatorDropdownStates.get(clientId)) {
+          this.toggleOperatorDropdown(clientId, event as any);
+        }
+        break;
+    }
   }
 }

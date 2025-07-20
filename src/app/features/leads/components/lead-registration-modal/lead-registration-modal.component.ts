@@ -219,6 +219,7 @@ import { LeadsService } from '../../services/leads.service';
                   registrationForm.get('language')?.touched
                 "
                 (click)="toggleLanguageDropdown()"
+                (keydown)="onLanguageButtonKeydown($event)"
               >
                 <span class="truncate">{{ getSelectedLanguageName() }}</span>
                 <svg
@@ -257,9 +258,14 @@ import { LeadsService } from '../../services/leads.service';
                 <!-- Languages List -->
                 <div class="max-h-48 overflow-y-auto">
                   <div
-                    *ngFor="let language of filteredLanguages"
+                    *ngFor="let language of filteredLanguages; let i = index"
                     class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                    [class.bg-blue-100]="isLanguageFocused(i)"
+                    [class.dark:bg-blue-400]="isLanguageFocused(i)"
+                    [tabindex]="0"
                     (click)="selectLanguage(language)"
+                    (keydown)="onLanguageKeydown($event, language, i)"
+                    (mouseenter)="setFocusedLanguageIndex(i)"
                   >
                     {{ language.value }}
                   </div>
@@ -307,6 +313,7 @@ import { LeadsService } from '../../services/leads.service';
                   registrationForm.get('country')?.touched
                 "
                 (click)="toggleCountryDropdown()"
+                (keydown)="onCountryButtonKeydown($event)"
               >
                 <span class="truncate">{{ getSelectedCountryName() }}</span>
                 <svg
@@ -345,9 +352,14 @@ import { LeadsService } from '../../services/leads.service';
                 <!-- Countries List -->
                 <div class="max-h-48 overflow-y-auto">
                   <div
-                    *ngFor="let country of filteredCountries"
+                    *ngFor="let country of filteredCountries; let i = index"
                     class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                    [class.bg-blue-100]="isCountryFocused(i)"
+                    [class.dark:bg-blue-400]="isCountryFocused(i)"
+                    [tabindex]="0"
                     (click)="selectCountry(country)"
+                    (keydown)="onCountryKeydown($event, country, i)"
+                    (mouseenter)="setFocusedCountryIndex(i)"
                   >
                     {{ country.name }}
                   </div>
@@ -549,10 +561,22 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
   filteredLanguages: Array<{ key: string; value: string }> = [];
   selectedLanguage: { key: string; value: string } | null = null;
 
+  // Keyboard navigation properties
+  focusedCountryIndex = -1;
+  focusedLanguageIndex = -1;
+
   ngOnInit(): void {
     this.initForm();
     this.loadCountries();
     this.loadLanguages();
+    
+    // Set default language to English
+    setTimeout(() => {
+      const englishLanguage = this.availableLanguages.find(lang => lang.key === 'en');
+      if (englishLanguage) {
+        this.selectedLanguage = englishLanguage;
+      }
+    }, 0);
   }
 
   ngOnDestroy(): void {
@@ -571,7 +595,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
         [Validators.required, Validators.pattern(/^\+?[1-9]\d{1,14}$/)],
       ],
       country: ['', [Validators.required]],
-      language: ['', [Validators.required]],
+      language: ['en', [Validators.required]],
       dateOfBirth: ['', [Validators.required]],
       source: [''],
     });
@@ -605,6 +629,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
     }
     this.languageDropdownOpen = false;
     this.countryDropdownOpen = true;
+    this.focusedCountryIndex = 0; // Start with first item focused
   }
 
   onCountrySearch(event: Event): void {
@@ -641,6 +666,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
     }
     this.countryDropdownOpen = false;
     this.languageDropdownOpen = true;
+    this.focusedLanguageIndex = 0; // Start with first item focused
   }
 
   onLanguageSearch(event: Event): void {
@@ -753,5 +779,118 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
   private closeAllDropdowns(): void {
     this.countryDropdownOpen = false;
     this.languageDropdownOpen = false;
+    this.focusedCountryIndex = -1;
+    this.focusedLanguageIndex = -1;
+  }
+
+  // Keyboard navigation methods for Country dropdown
+  isCountryFocused(index: number): boolean {
+    return this.focusedCountryIndex === index;
+  }
+
+  setFocusedCountryIndex(index: number): void {
+    this.focusedCountryIndex = index;
+  }
+
+  onCountryKeydown(event: KeyboardEvent, country: Country, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectCountry(country);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextCountry();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousCountry();
+        break;
+      case 'Escape':
+        this.countryDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextCountry(): void {
+    if (this.focusedCountryIndex < this.filteredCountries.length - 1) {
+      this.focusedCountryIndex++;
+    }
+  }
+
+  private focusPreviousCountry(): void {
+    if (this.focusedCountryIndex > 0) {
+      this.focusedCountryIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Language dropdown
+  isLanguageFocused(index: number): boolean {
+    return this.focusedLanguageIndex === index;
+  }
+
+  setFocusedLanguageIndex(index: number): void {
+    this.focusedLanguageIndex = index;
+  }
+
+  onLanguageKeydown(event: KeyboardEvent, language: { key: string; value: string }, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectLanguage(language);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextLanguage();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousLanguage();
+        break;
+      case 'Escape':
+        this.languageDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextLanguage(): void {
+    if (this.focusedLanguageIndex < this.filteredLanguages.length - 1) {
+      this.focusedLanguageIndex++;
+    }
+  }
+
+  private focusPreviousLanguage(): void {
+    if (this.focusedLanguageIndex > 0) {
+      this.focusedLanguageIndex--;
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onCountryButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.countryDropdownOpen) {
+          this.toggleCountryDropdown();
+        }
+        break;
+    }
+  }
+
+  onLanguageButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.languageDropdownOpen) {
+          this.toggleLanguageDropdown();
+        }
+        break;
+    }
   }
 }

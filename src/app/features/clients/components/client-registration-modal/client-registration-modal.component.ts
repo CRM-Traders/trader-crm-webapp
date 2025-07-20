@@ -1,5 +1,3 @@
-// src/app/features/clients/components/client-registration-modal/client-registration-modal.component.ts
-
 import {
   Component,
   inject,
@@ -337,6 +335,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   type="button"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   (click)="toggleCountryDropdown()"
+                  (keydown)="onCountryButtonKeydown($event)"
                 >
                   <span class="truncate">{{ getSelectedCountryName() }}</span>
                   <svg
@@ -377,9 +376,14 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   <!-- Countries List -->
                   <div class="max-h-48 overflow-y-auto">
                     <div
-                      *ngFor="let country of filteredCountries"
+                      *ngFor="let country of filteredCountries; let i = index"
                       class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      [class.bg-blue-100]="isCountryFocused(i)"
+                      [class.dark:bg-blue-400]="isCountryFocused(i)"
+                      [tabindex]="0"
                       (click)="selectCountry(country)"
+                      (keydown)="onCountryKeydown($event, country, i)"
+                      (mouseenter)="setFocusedCountryIndex(i)"
                     >
                       {{ country.name }}
                     </div>
@@ -409,6 +413,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   type="button"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   (click)="toggleLanguageDropdown()"
+                  (keydown)="onLanguageButtonKeydown($event)"
                 >
                   <span class="truncate">{{ getSelectedLanguageName() }}</span>
                   <svg
@@ -449,9 +454,14 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   <!-- Languages List -->
                   <div class="max-h-48 overflow-y-auto">
                     <div
-                      *ngFor="let language of filteredLanguages"
+                      *ngFor="let language of filteredLanguages; let i = index"
                       class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      [class.bg-blue-100]="isLanguageFocused(i)"
+                      [class.dark:bg-blue-400]="isLanguageFocused(i)"
+                      [tabindex]="0"
                       (click)="selectLanguage(language)"
+                      (keydown)="onLanguageKeydown($event, language, i)"
+                      (mouseenter)="setFocusedLanguageIndex(i)"
                     >
                       {{ language.value }}
                     </div>
@@ -484,6 +494,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                   type="button"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-left flex justify-between items-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   (click)="toggleAffiliateDropdown()"
+                  (keydown)="onAffiliateButtonKeydown($event)"
                 >
                   <span class="truncate">{{ getSelectedAffiliateName() }}</span>
                   <svg
@@ -527,9 +538,14 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                     (scroll)="onAffiliateDropdownScroll($event)"
                   >
                     <div
-                      *ngFor="let affiliate of availableAffiliates"
+                      *ngFor="let affiliate of availableAffiliates; let i = index"
                       class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                      [class.bg-blue-100]="isAffiliateFocused(i)"
+                      [class.dark:bg-blue-400]="isAffiliateFocused(i)"
+                      [tabindex]="0"
                       (click)="selectAffiliate(affiliate)"
+                      (keydown)="onAffiliateKeydown($event, affiliate, i)"
+                      (mouseenter)="setFocusedAffiliateIndex(i)"
                     >
                       <div>{{ affiliate.userFullName }}</div>
                     </div>
@@ -612,7 +628,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
           </div>
 
           <!-- Date of Birth and Source Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
             <div>
               <label
                 for="dateOfBirth"
@@ -628,7 +644,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
               />
             </div>
 
-            <div>
+            <!-- <div>
               <label
                 for="source"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -642,7 +658,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 placeholder="Web, Referral, etc."
               />
-            </div>
+            </div> -->
           </div>
         </form>
       </div>
@@ -746,6 +762,11 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   affiliatePageSize = 20;
   hasMoreAffiliates = false;
 
+  // Keyboard navigation properties
+  focusedCountryIndex = -1;
+  focusedLanguageIndex = -1;
+  focusedAffiliateIndex = -1;
+
   constructor() {
     this.registrationForm = this.fb.group({
       firstName: ['', Validators.required],
@@ -756,9 +777,9 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       affiliateId: [null], // Changed from required to optional, default to null
       telephone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       country: [''],
-      language: [''],
+      language: ['en'], // Set English as default
       dateOfBirth: [''],
-      source: [''],
+      //source: [''],
     });
   }
 
@@ -766,6 +787,14 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.loadCountries();
     this.loadLanguages();
     this.loadAffiliates();
+
+    // Set default language to English
+    setTimeout(() => {
+      const englishLanguage = this.languages.find((lang) => lang.key === 'en');
+      if (englishLanguage) {
+        this.selectedLanguage = englishLanguage;
+      }
+    }, 0);
   }
 
   ngOnDestroy(): void {
@@ -845,14 +874,22 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
     this.clientsService.getAffiliatesDropdown(searchParams).subscribe({
       next: (response: AffiliateSearchResponse) => {
+        let newAffiliates = response.items;
+        
         if (reset) {
-          this.availableAffiliates = response.items;
+          this.availableAffiliates = newAffiliates;
         } else {
           this.availableAffiliates = [
             ...this.availableAffiliates,
-            ...response.items,
+            ...newAffiliates,
           ];
         }
+        
+        // Sort affiliates alphabetically by userFullName
+        this.availableAffiliates.sort((a: AffiliateDropdownItem, b: AffiliateDropdownItem) => 
+          a.userFullName.localeCompare(b.userFullName)
+        );
+        
         this.hasMoreAffiliates = response.hasNextPage;
         this.affiliateLoading = false;
       },
@@ -874,6 +911,9 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     }
 
     this.countryDropdownOpen = !this.countryDropdownOpen;
+    if (this.countryDropdownOpen) {
+      this.focusedCountryIndex = 0; // Start with first item focused
+    }
   }
 
   onCountrySearch(event: Event): void {
@@ -911,6 +951,9 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     }
 
     this.languageDropdownOpen = !this.languageDropdownOpen;
+    if (this.languageDropdownOpen) {
+      this.focusedLanguageIndex = 0; // Start with first item focused
+    }
   }
 
   onLanguageSearch(event: Event): void {
@@ -951,8 +994,11 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
     this.affiliateDropdownOpen = !this.affiliateDropdownOpen;
 
-    if (this.affiliateDropdownOpen && this.availableAffiliates.length === 0) {
-      this.loadAffiliates();
+    if (this.affiliateDropdownOpen) {
+      this.focusedAffiliateIndex = 0; // Start with first item focused
+      if (this.availableAffiliates.length === 0) {
+        this.loadAffiliates();
+      }
     }
   }
 
@@ -1015,7 +1061,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       dateOfBirth: formValue.dateOfBirth
         ? new Date(formValue.dateOfBirth).toISOString()
         : null,
-      source: formValue.source || null,
+      //source: formValue.source || null,
     };
 
     this.clientsService.createClientForAdmin(clientData).subscribe({
@@ -1096,6 +1142,9 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       this.countryDropdownOpen = false;
       this.languageDropdownOpen = false;
       this.affiliateDropdownOpen = false;
+      this.focusedCountryIndex = -1;
+      this.focusedLanguageIndex = -1;
+      this.focusedAffiliateIndex = -1;
     }
   }
 
@@ -1107,5 +1156,171 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   getLanguageNameByKey(languageKey: string): string {
     const language = this.languages.find((l) => l.key === languageKey);
     return language ? language.value : languageKey;
+  }
+
+  // Keyboard navigation methods for Country dropdown
+  isCountryFocused(index: number): boolean {
+    return this.focusedCountryIndex === index;
+  }
+
+  setFocusedCountryIndex(index: number): void {
+    this.focusedCountryIndex = index;
+  }
+
+  onCountryKeydown(event: KeyboardEvent, country: Country, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectCountry(country);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextCountry();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousCountry();
+        break;
+      case 'Escape':
+        this.countryDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextCountry(): void {
+    if (this.focusedCountryIndex < this.filteredCountries.length - 1) {
+      this.focusedCountryIndex++;
+    }
+  }
+
+  private focusPreviousCountry(): void {
+    if (this.focusedCountryIndex > 0) {
+      this.focusedCountryIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Language dropdown
+  isLanguageFocused(index: number): boolean {
+    return this.focusedLanguageIndex === index;
+  }
+
+  setFocusedLanguageIndex(index: number): void {
+    this.focusedLanguageIndex = index;
+  }
+
+  onLanguageKeydown(event: KeyboardEvent, language: { key: string; value: string }, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectLanguage(language);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextLanguage();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousLanguage();
+        break;
+      case 'Escape':
+        this.languageDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextLanguage(): void {
+    if (this.focusedLanguageIndex < this.filteredLanguages.length - 1) {
+      this.focusedLanguageIndex++;
+    }
+  }
+
+  private focusPreviousLanguage(): void {
+    if (this.focusedLanguageIndex > 0) {
+      this.focusedLanguageIndex--;
+    }
+  }
+
+  // Keyboard navigation methods for Affiliate dropdown
+  isAffiliateFocused(index: number): boolean {
+    return this.focusedAffiliateIndex === index;
+  }
+
+  setFocusedAffiliateIndex(index: number): void {
+    this.focusedAffiliateIndex = index;
+  }
+
+  onAffiliateKeydown(event: KeyboardEvent, affiliate: AffiliateDropdownItem, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        this.selectAffiliate(affiliate);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextAffiliate();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousAffiliate();
+        break;
+      case 'Escape':
+        this.affiliateDropdownOpen = false;
+        break;
+    }
+  }
+
+  private focusNextAffiliate(): void {
+    if (this.focusedAffiliateIndex < this.availableAffiliates.length - 1) {
+      this.focusedAffiliateIndex++;
+    }
+  }
+
+  private focusPreviousAffiliate(): void {
+    if (this.focusedAffiliateIndex > 0) {
+      this.focusedAffiliateIndex--;
+    }
+  }
+
+  // Button keydown handlers for opening dropdowns
+  onCountryButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.countryDropdownOpen) {
+          this.toggleCountryDropdown();
+        }
+        break;
+    }
+  }
+
+  onLanguageButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.languageDropdownOpen) {
+          this.toggleLanguageDropdown();
+        }
+        break;
+    }
+  }
+
+  onAffiliateButtonKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'Enter':
+      case ' ':
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!this.affiliateDropdownOpen) {
+          this.toggleAffiliateDropdown();
+        }
+        break;
+    }
   }
 }

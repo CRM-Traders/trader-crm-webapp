@@ -290,21 +290,71 @@
             <!-- Sales Status Cell Template -->
             <ng-template #salesStatusCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">
-                <select
-                  name="salesStatus"
-                  [ngModel]="value.saleStatusEnum"
-                  [disabled]="updatingSalesStatus === (value.id || row.id)"
-                  (change)="onSalesStatusChange($event, value || row)"
-                  class="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option
-                    *ngFor="let option of salesStatusOptions"
-                    [value]="option.value"
-                    [selected]="option.value === value.saleStatusEnum"
+                <div class="relative" data-dropdown="salesStatus">
+                  <button
+                    type="button"
+                    [disabled]="updatingSalesStatus === (value.id || row.id)"
+                    (click)="toggleSalesStatusDropdown(value.id || row.id, $event)"
+                    (keydown)="onSalesStatusButtonKeydown(value.id || row.id, $event)"
+                    class="text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[120px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {{ option.label }}
-                  </option>
-                </select>
+                    <span class="truncate">{{ getSelectedSalesStatusName(value.id || row.id, value || row) }}</span>
+                    <svg
+                      class="w-4 h-4 ml-2 transition-transform"
+                      [class.rotate-180]="salesStatusDropdownStates.get(value.id || row.id)"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      ></path>
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Panel -->
+                  <div
+                    *ngIf="salesStatusDropdownStates.get(value.id || row.id)"
+                    class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[200px]"
+                  >
+                    <!-- Search Input -->
+                    <div class="p-3 border-b border-gray-200">
+                      <input
+                        type="text"
+                        placeholder="Search status..."
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        (input)="onSalesStatusSearch(value.id || row.id, $event)"
+                        [value]="salesStatusSearchTerms.get(value.id || row.id) || ''"
+                      />
+                    </div>
+
+                    <!-- Status List -->
+                    <div class="max-h-48 overflow-y-auto">
+                      <div
+                        *ngFor="let status of filteredSalesStatuses.get(value.id || row.id) || []; let i = index"
+                        class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
+                        [class.bg-blue-100]="isSalesStatusFocused(value.id || row.id, i)"
+                        [tabindex]="0"
+                        (click)="selectSalesStatus(value.id || row.id, status, value || row)"
+                        (keydown)="onSalesStatusKeydown(value.id || row.id, $event, status, i, value || row)"
+                        (mouseenter)="setFocusedSalesStatusIndex(value.id || row.id, i)"
+                      >
+                        {{ status.label }}
+                      </div>
+
+                      <!-- No results -->
+                      <div
+                        *ngIf="(filteredSalesStatuses.get(value.id || row.id) || []).length === 0"
+                        class="px-3 py-2 text-center text-sm text-gray-500"
+                      >
+                        No status found
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div class="flex flex-col">
                   <button
                     class="comment-icon-btn p-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 mb-1"
@@ -353,7 +403,7 @@
             </ng-template>
 
             <!-- Client Operator Cell Template -->
-            <ng-template #clientOperatorCell let-value="value" let-row="row">
+            <!-- <ng-template #clientOperatorCell let-value="value" let-row="row">
               <div *ngIf="value && value.operatorId; else noOperator">
                 <button
                   class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:text-blue-700 transition-colors"
@@ -379,6 +429,105 @@
               <ng-template #noOperator>
                 <span class="text-gray-400 text-sm">No operator assigned</span>
               </ng-template>
+            </ng-template> -->
+
+            <!-- Assign Operator Cell Template -->
+            <ng-template #assignOperatorCell let-value="value" let-row="row">
+              <div class="flex items-center gap-2">
+                <div class="relative" data-dropdown="operator">
+                  <button
+                    type="button"
+                    [disabled]="updatingOperatorAssignment === (value.id || row.id)"
+                    (click)="toggleOperatorDropdown(value.id || row.id, $event)"
+                    (keydown)="onOperatorButtonKeydown(value.id || row.id, $event)"
+                    class="text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[140px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span class="truncate">{{ getSelectedOperatorName(value.id || row.id, value || row) }}</span>
+                    <svg
+                      class="w-4 h-4 ml-2 transition-transform"
+                      [class.rotate-180]="operatorDropdownStates.get(value.id || row.id)"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      ></path>
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Panel -->
+                  <div
+                    *ngIf="operatorDropdownStates.get(value.id || row.id)"
+                    class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[250px]"
+                  >
+                    <!-- Search Input -->
+                    <div class="p-3 border-b border-gray-200">
+                      <input
+                        type="text"
+                        placeholder="Search operators..."
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        (input)="onOperatorSearch(value.id || row.id, $event)"
+                        [value]="operatorSearchTerms.get(value.id || row.id) || ''"
+                      />
+                    </div>
+
+                    <!-- Operators List -->
+                    <div class="max-h-48 overflow-y-auto">
+                      <div
+                        *ngFor="let operator of filteredOperators.get(value.id || row.id) || []; let i = index"
+                        class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
+                        [class.bg-blue-100]="isOperatorFocused(value.id || row.id, i)"
+                        [tabindex]="0"
+                        (click)="selectOperator(value.id || row.id, operator, value || row)"
+                        (keydown)="onOperatorKeydown(value.id || row.id, $event, operator, i, value || row)"
+                        (mouseenter)="setFocusedOperatorIndex(value.id || row.id, i)"
+                      >
+                        {{ operator.value }}
+                      </div>
+
+                      <!-- No results -->
+                      <div
+                        *ngIf="(filteredOperators.get(value.id || row.id) || []).length === 0"
+                        class="px-3 py-2 text-center text-sm text-gray-500"
+                      >
+                        No operators found
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex flex-col">
+                  <button
+                    *ngIf="value.clientOperator?.operatorId"
+                    class="p-1 text-xs bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                    (click)="openOperatorDetailsModal(value.clientOperator)"
+                    title="View operator details"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </ng-template>
           </app-grid>
         </div>

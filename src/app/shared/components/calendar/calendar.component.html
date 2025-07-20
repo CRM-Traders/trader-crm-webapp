@@ -50,7 +50,7 @@
 
 <!-- Main Calendar Container -->
 <div
-  class="bg-white h-[100vh] dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700"
+  class="calendar-container bg-white h-[100vh] dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700"
 >
   <!-- Calendar Header -->
   <div
@@ -233,6 +233,10 @@
             class="h-7 w-7 flex items-center justify-center rounded-full text-sm"
             [class.bg-blue-600]="day.isToday"
             [class.text-white]="day.isToday"
+            [class.bg-blue-500]="selectedDate() && isSameDay(day.date, selectedDate()!) && !day.isToday"
+            [class.text-white]="selectedDate() && isSameDay(day.date, selectedDate()!) && !day.isToday"
+            [class.ring-2]="selectedDate() && isSameDay(day.date, selectedDate()!)"
+            [class.ring-blue-300]="selectedDate() && isSameDay(day.date, selectedDate()!)"
           >
             {{ day.day }}
           </div>
@@ -302,13 +306,18 @@
         class="p-2 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-100 hover:text-blue-600 dark:hover:text-blue-400 relative"
         [class.bg-blue-50]="isToday(dateItem) && !isDarkMode()"
         [class.bg-blue-100]="isToday(dateItem) && isDarkMode()"
+        [class.bg-blue-200]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && !isDarkMode()"
+        [class.bg-blue-300]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && isDarkMode()"
         [class.font-bold]="isToday(dateItem)"
+        (click)="selectDate({date: dateItem, day: dateItem.getDate(), isCurrentMonth: true, isToday: isToday(dateItem), hasEvents: false, events: []})"
         (dblclick)="openCreateEventModal(dateItem)"
       >
         <div
           class="text-sm font-medium"
           [class.text-blue-600]="isToday(dateItem) && !isDarkMode()"
           [class.text-blue-400]="isToday(dateItem) && isDarkMode()"
+          [class.text-blue-700]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && !isDarkMode()"
+          [class.text-blue-300]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && isDarkMode()"
         >
           {{ weekDays[i] }}
         </div>
@@ -316,6 +325,8 @@
           class="text-lg mt-1"
           [class.text-blue-600]="isToday(dateItem) && !isDarkMode()"
           [class.text-blue-400]="isToday(dateItem) && isDarkMode()"
+          [class.text-blue-700]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && !isDarkMode()"
+          [class.text-blue-300]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && isDarkMode()"
         >
           {{ dateItem.getDate() }}
         </div>
@@ -361,6 +372,90 @@
 
   <!-- List View -->
   <div *ngIf="view() === 'list'" class="list-view">
+    <!-- List View Header with Selected Date Info -->
+    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <!-- Day Navigation Buttons -->
+          <div class="flex items-center space-x-2">
+            <button
+              *ngIf="selectedDate()"
+              (click)="goToPreviousDay()"
+              class="p-1 rounded-md text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Previous Day"
+              [disabled]="loading()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <button
+              *ngIf="selectedDate()"
+              (click)="goToNextDay()"
+              class="p-1 rounded-md text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Next Day"
+              [disabled]="loading()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <div
+              *ngIf="selectedDate()"
+              class="w-3 h-3 bg-blue-500 rounded-full"
+            ></div>
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <ng-container *ngIf="selectedDate(); else upcomingEvents">
+                Events for {{ formatListEventDate(selectedDate()!) }}
+              </ng-container>
+              <ng-template #upcomingEvents>
+                Upcoming Events
+              </ng-template>
+            </h3>
+          </div>
+          <button
+            *ngIf="selectedDate()"
+            (click)="clearSelectedDate()"
+            class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Show all upcoming
+          </button>
+        </div>
+        <button
+          (click)="openCreateEventModal(selectedDate() || undefined)"
+          class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded"
+        >
+          Add Event
+        </button>
+      </div>
+    </div>
+
     <div
       *ngIf="allEvents.length === 0"
       class="p-6 text-center text-gray-500 dark:text-gray-400"
@@ -379,14 +474,19 @@
         />
       </svg>
       <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-        No events
+        <ng-container *ngIf="selectedDate(); else noEvents">
+          No events for {{ formatListEventDate(selectedDate()!) }}
+        </ng-container>
+        <ng-template #noEvents>
+          No upcoming events
+        </ng-template>
       </h3>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
         Get started by creating a new event.
       </p>
       <div class="mt-6">
         <button
-          (click)="openCreateEventModal()"
+          (click)="openCreateEventModal(selectedDate() || undefined)"
           class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <svg
@@ -411,15 +511,10 @@
       *ngIf="allEvents.length > 0"
       class="divide-y divide-gray-200 dark:divide-gray-700"
     >
-      <ng-container *ngFor="let group of groupEventsByDay(allEvents)">
-        <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
-          <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {{ formatListEventDate(getDateFromString(group.date)) }}
-          </h3>
-        </div>
-
+      <!-- Show events for selected day without grouping -->
+      <ng-container *ngIf="selectedDate(); else groupedEvents">
         <div
-          *ngFor="let event of group.events"
+          *ngFor="let event of allEvents"
           class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
           (click)="openEventDetails(event)"
         >
@@ -510,6 +605,111 @@
           </div>
         </div>
       </ng-container>
+
+
+
+      <!-- Show grouped events for upcoming events -->
+      <ng-template #groupedEvents>
+        <ng-container *ngFor="let group of groupEventsByDay(allEvents)">
+          <div class="px-4 py-2 bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {{ formatListEventDate(getDateFromString(group.date)) }}
+            </h3>
+          </div>
+
+          <div
+            *ngFor="let event of group.events"
+            class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            (click)="openEventDetails(event)"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex items-start flex-1">
+                <div class="w-24 flex-shrink-0">
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">
+                    {{ event.allDay ? "All Day" : formatTimeString(event.start) }}
+                  </div>
+                </div>
+
+                <div class="flex-1 min-w-0 ml-3">
+                  <div class="flex items-center">
+                    <div
+                      class="h-2 w-2 rounded-full mr-2"
+                      [class]="getDotColor(event.color)"
+                    ></div>
+                    <h4
+                      class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                    >
+                      {{ event.title }}
+                    </h4>
+                  </div>
+
+                  <div
+                    *ngIf="event.location"
+                    class="mt-1 text-xs text-gray-500 dark:text-gray-400 flex items-center"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-3 w-3 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    {{ event.location }}
+                  </div>
+
+                  <div
+                    *ngIf="event.description"
+                    class="mt-1 text-xs text-gray-600 dark:text-gray-300 line-clamp-2"
+                  >
+                    {{ event.description }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="ml-4 flex items-center space-x-2">
+                <div
+                  *ngIf="!event.allDay"
+                  class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
+                >
+                  {{ formatTimeString(event.end) }}
+                </div>
+                <button
+                  (click)="openEditEventModal(event); $event.stopPropagation()"
+                  class="text-gray-400 hover:text-blue-600 p-1 rounded"
+                  title="Edit event"
+                >
+                  <svg
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </ng-template>
     </div>
   </div>
 </div>

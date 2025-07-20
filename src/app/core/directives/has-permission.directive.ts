@@ -15,7 +15,8 @@ export class HasPermissionDirective {
   ) {}
 
   @Input() set hasPermission(permissionIndex: number) {
-    if (this.authService.hasPermission(permissionIndex)) {
+    // Special case: -1 means always show (no permission required)
+    if (permissionIndex === -1 || this.authService.hasPermission(permissionIndex)) {
       if (!this.hasView) {
         this.vcr.createEmbeddedView(this.templateRef);
         this.hasView = true;
