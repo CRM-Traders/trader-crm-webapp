@@ -1289,12 +1289,18 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
     this.operatorsService.getDepartmentsDropdown(requestBody).subscribe({
       next: (response) => {
+        const sortedDepartments = response.items.sort((a: any, b: any) => {
+          if (a.value.toLowerCase() === 'sales') return -1;
+          if (b.value.toLowerCase() === 'sales') return 1;
+          return a.value.localeCompare(b.value);
+        });
+
         if (reset) {
-          this.availableDepartments = response.items;
+          this.availableDepartments = sortedDepartments;
         } else {
           this.availableDepartments = [
             ...this.availableDepartments,
-            ...response.items,
+            ...sortedDepartments,
           ];
         }
         this.hasMoreDepartments = response.hasNextPage;
