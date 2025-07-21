@@ -24,6 +24,7 @@ import {
   UserOrganizationAssignRequest,
   OperatorDepartmentRoleAssignRequest,
   OperatorPersonalInfoUpdateRequest,
+  OperatorDepartmentRoleRemoveRequest,
 } from '../../models/operators.model';
 import {
   PasswordChangeComponent,
@@ -806,7 +807,7 @@ export enum OperatorDetailSection {
               </div>
               <div class="divide-y divide-gray-200 dark:divide-gray-700">
                 <div
-                  *ngFor="let dept of operator.departments"
+                  *ngFor="let dept of operator.departments; let i = index"
                   class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                 >
                   <div>
@@ -814,32 +815,35 @@ export enum OperatorDetailSection {
                       class="text-sm font-medium text-gray-900 dark:text-white"
                     >
                       {{ dept.departmentName }}
+                      <span *ngIf="i === 0" class="text-xs text-blue-600 dark:text-blue-400 ml-2">(Default)</span>
                     </p>
                     <p class="text-sm text-gray-500 dark:text-gray-400">
                       Role: {{ dept.roleName }}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    *hasPermission="107"
-                    (click)="removeDepartment(dept.operatorDepartmentRoleId)"
-                    class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                    title="Remove Department"
-                  >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <ng-container *hasPermission="107">
+                    <button
+                      *ngIf="i > 0"
+                      type="button"
+                      (click)="removeDepartment(dept.operatorDepartmentRoleId)"
+                      class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                      title="Remove Department"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      ></path>
-                    </svg>
-                  </button>
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        ></path>
+                      </svg>
+                    </button>
+                  </ng-container>
                 </div>
                 <div
                   *ngIf="
@@ -1357,7 +1361,15 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   removeDepartment(operatorDepartmentRoleId: string): void {
-    this.alertService.info('Remove department functionality coming soon');
+    this.operatorsService.removeOperatorDepartmentRole(operatorDepartmentRoleId).subscribe({
+      next: () => {
+        this.alertService.success('Department removed successfully');
+        this.loadOperatorDetails();
+      },
+      error: (error) => {
+        this.alertService.error('Failed to remove department');
+      },
+    });
   }
 
   onBranchTypeChange(): void {

@@ -137,7 +137,7 @@ export class DocumentsComponent implements OnInit {
     }
 
     this.httpService
-      .get<KycProcessResponse>('identity/api/kyc/processes', params)
+      .get<KycProcessResponse>('identity/api/kyc/get-clients-kyc', params)
       .subscribe({
         next: (response) => {
           this._processes.set(response.items);

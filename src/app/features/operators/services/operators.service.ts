@@ -282,12 +282,9 @@ export class OperatorsService {
     );
   }
 
-  removeOperatorDepartmentRole(
-    request: OperatorDepartmentRoleRemoveRequest
-  ): Observable<void> {
-    return this.httpService.deleteWithBody<void>(
-      'identity/api/operatordepartmentroles/remove',
-      request
+  removeOperatorDepartmentRole(operatorDepartmentRoleId: string): Observable<void> {
+    return this.httpService.delete<void>(
+      `identity/api/operatordepartmentroles/remove/${operatorDepartmentRoleId}`
     );
   }
 }
