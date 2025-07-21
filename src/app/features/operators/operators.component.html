@@ -169,7 +169,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
-            *hasPermission="98"
+            [permission]="98"
             gridId="operators-grid"
             [endpoint]="'identity/api/operators/grid'"
             [columns]="gridColumns"

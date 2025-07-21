@@ -88,12 +88,12 @@
       <ng-container
         *ngFor="let action of secondaryActions; trackBy: trackByAction"
       >
-        <hr
-          *ngIf="action.separator"
-          class="border-gray-200 dark:border-gray-600 my-1"
-          role="separator"
-        />
         <ng-container *hasPermission="action.permission">
+          <hr
+            *ngIf="action.separator"
+            class="border-gray-200 dark:border-gray-600 my-1"
+            role="separator"
+          />
           <button
             *ngIf="!action.separator && isActionVisible(action)"
             [disabled]="isActionDisabled(action)"
