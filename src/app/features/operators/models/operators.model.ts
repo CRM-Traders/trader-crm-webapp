@@ -206,8 +206,7 @@ export interface OperatorDepartmentRoleAssignRequest {
 }
 
 export interface OperatorDepartmentRoleRemoveRequest {
-  operatorId: string;
-  operatorRoleId: string;
+  operatorDepartmentRoleId: string;
 }
 
 export const BranchTypeLabels: Record<BranchType, string> = {

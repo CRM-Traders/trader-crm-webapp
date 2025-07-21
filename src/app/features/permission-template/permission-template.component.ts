@@ -277,6 +277,7 @@ export class PermissionTemplateComponent implements OnInit {
   onDepartmentChange(): void {
     // Clear role selection when department changes
     this.selectedRoleId = '';
+    this.selectedRole = null;
     this.roles = [];
     
     // Load roles for the selected department
