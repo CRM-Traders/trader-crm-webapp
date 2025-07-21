@@ -13,11 +13,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GridService } from '../../services/grid/grid.service';
 import { GridColumn } from '../../models/grid/grid-column.model';
+import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-grid-column-selector',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   templateUrl: './grid-column-selector.component.html',
   styleUrls: ['./grid-column-selector.component.scss'],
 })
@@ -46,7 +47,7 @@ export class GridColumnSelectorComponent implements OnInit, OnChanges {
   private initializeColumnSelection(): void {
     // Get the current state from the grid service
     const currentState = this.gridService.getCurrentState(this.gridId);
-    
+
     if (currentState.visibleColumns.length > 0) {
       // Use the saved state if it exists
       this.selectedColumns = currentState.visibleColumns;
@@ -55,7 +56,7 @@ export class GridColumnSelectorComponent implements OnInit, OnChanges {
       this.selectedColumns = this.columns
         .filter((col) => !col.hidden)
         .map((col) => col.field);
-      
+
       // Save the default state
       this.gridService.setVisibleColumns(this.gridId, this.selectedColumns);
     }

@@ -8,6 +8,7 @@ import {
   HostListener,
   OnInit,
   OnDestroy,
+  inject,
 } from '@angular/core';
 import {
   trigger,
@@ -18,6 +19,7 @@ import {
 } from '@angular/animations';
 import { GridAction } from '../../models/grid/grid-column.model';
 import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-grid-action-buttons',
@@ -60,7 +62,6 @@ export class GridActionButtonsComponent implements OnInit, OnDestroy {
   constructor(private elementRef: ElementRef) {}
 
   ngOnInit(): void {
-    // Add global click listener for closing dropdown
     document.addEventListener('click', this.handleGlobalClick.bind(this));
   }
 

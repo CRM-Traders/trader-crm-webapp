@@ -142,7 +142,8 @@ export class ClientsComponent implements OnInit {
   operatorSearchTerms: Map<string, string> = new Map();
   salesStatusSearchTerms: Map<string, string> = new Map();
   filteredOperators: Map<string, OperatorDropdownItem[]> = new Map();
-  filteredSalesStatuses: Map<string, { value: number; label: string }[]> = new Map();
+  filteredSalesStatuses: Map<string, { value: number; label: string }[]> =
+    new Map();
 
   // Keyboard navigation properties
   focusedOperatorIndices: Map<string, number> = new Map();
@@ -170,6 +171,7 @@ export class ClientsComponent implements OnInit {
       filterable: true,
       filterType: 'text',
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
+      permission: 17, //
     },
     {
       field: 'lastName',
@@ -177,6 +179,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'text',
+      permission: 17, //
     },
     {
       field: 'email',
@@ -184,6 +187,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'text',
+      permission: 9,
     },
     {
       field: 'telephone',
@@ -192,6 +196,7 @@ export class ClientsComponent implements OnInit {
       filterable: true,
       filterType: 'text',
       selector: (row: Client) => row.telephone || '-',
+      permission: 8,
     },
     {
       field: 'userId',
@@ -201,14 +206,6 @@ export class ClientsComponent implements OnInit {
       filterType: 'text',
       hidden: true,
     },
-    // {
-    //   field: 'mtId',
-    //   header: 'MT ID',
-    //   sortable: true,
-    //   filterable: true,
-    //   filterType: 'text',
-    //   hidden: true,
-    // },
     {
       field: 'affiliateId',
       header: 'Affiliate ID',
@@ -216,15 +213,8 @@ export class ClientsComponent implements OnInit {
       filterable: true,
       filterType: 'text',
       hidden: true,
+      permission: 12,
     },
-    // {
-    //   field: 'referrerId',
-    //   header: 'Referrer ID',
-    //   sortable: true,
-    //   filterable: true,
-    //   filterType: 'text',
-    //   hidden: true,
-    // },
     {
       field: 'source',
       header: 'Source',
@@ -233,9 +223,8 @@ export class ClientsComponent implements OnInit {
       filterType: 'text',
       selector: (row: Client) => row.source || '-',
       hidden: true,
+      permission: 14,
     },
-
-    // Dropdown Filters
     {
       field: 'activityStatus',
       header: 'Activity',
@@ -254,7 +243,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       selector: (row: Client) => row.language || '-',
       hidden: true,
     },
@@ -264,9 +253,10 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       selector: (row: Client) => row.country || '-',
       hidden: true,
+      permission: 10,
     },
     {
       field: 'officeId',
@@ -274,7 +264,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       hidden: true,
     },
     {
@@ -283,7 +273,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       hidden: true,
     },
     {
@@ -292,7 +282,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       hidden: true,
     },
     {
@@ -301,23 +291,15 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       hidden: true,
     },
-    // {
-    //   field: 'clientOperator',
-    //   header: 'Assigned Operator',
-    //   sortable: false,
-    //   filterable: false,
-    //   cellTemplate: null, // Will be set in ngOnInit
-    //   selector: (row: Client) => row.clientOperator || null,
-    // },
     {
       field: 'assignOperator',
       header: 'Assign Operator',
       sortable: false,
       filterable: false,
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
       selector: (row: Client) => row,
     },
     {
@@ -326,43 +308,11 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       selector: (row: Client) => row.affiliateName || '-',
       hidden: true,
+      permission: 11,
     },
-    // {
-    //   field: 'affiliateReferral',
-    //   header: 'Affiliate Referral',
-    //   sortable: true,
-    //   filterable: true,
-    //   filterType: 'select',
-    //   filterOptions: [], // Will be populated in ngOnInit
-    //   hidden: true,
-    // },
-    // {
-    //   field: 'affiliateFtd',
-    //   header: 'Affiliate FTD',
-    //   sortable: true,
-    //   filterable: true,
-    //   filterType: 'select',
-    //   filterOptions: [
-    //     { value: true, label: 'Yes' },
-    //     { value: false, label: 'No' },
-    //   ],
-    //   hidden: true,
-    // },
-    // {
-    //   field: 'isReferral',
-    //   header: 'Referral',
-    //   sortable: true,
-    //   filterable: true,
-    //   filterType: 'select',
-    //   filterOptions: [
-    //     { value: true, label: 'Yes' },
-    //     { value: false, label: 'No' },
-    //   ],
-    //   hidden: true,
-    // },
     {
       field: 'status',
       header: 'Profile Status',
@@ -375,7 +325,7 @@ export class ClientsComponent implements OnInit {
           label: label,
         })
       ),
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
       selector: (row: Client) =>
         ClientStatusLabels[row.status as ClientStatus] || '-',
     },
@@ -390,6 +340,7 @@ export class ClientsComponent implements OnInit {
         label: label,
       })),
       hidden: true,
+      permission: 13,
     },
     {
       field: 'assignStatus',
@@ -425,8 +376,9 @@ export class ClientsComponent implements OnInit {
         value: Number(value),
         label: label,
       })),
-      cellTemplate: this.salesStatusCellTemplate, // Will be set in ngOnInit
-      selector: (row: Client) => row, // Return the entire row object
+      cellTemplate: this.salesStatusCellTemplate,
+      selector: (row: Client) => row,
+      permission: 13,
     },
     {
       field: 'latestComment',
@@ -434,7 +386,7 @@ export class ClientsComponent implements OnInit {
       sortable: false,
       filterable: false,
       width: '200px',
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
       selector: (row: Client) => this.getLatestComment(row),
     },
     {
@@ -490,7 +442,7 @@ export class ClientsComponent implements OnInit {
         { value: true, label: 'Yes' },
         { value: false, label: 'No' },
       ],
-      cellTemplate: null, // Will be set in ngOnInit
+      cellTemplate: null,
     },
     {
       field: 'neverCalled',
@@ -510,7 +462,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       hidden: true,
     },
     {
@@ -519,7 +471,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'select',
-      filterOptions: [], // Will be populated in ngOnInit
+      filterOptions: [],
       hidden: true,
     },
     {
@@ -544,6 +496,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'number',
       type: 'currency',
       selector: (row: Client) => row.balance || '0',
+      permission: 6,
     },
     {
       field: 'depositsCount',
@@ -565,6 +518,7 @@ export class ClientsComponent implements OnInit {
       type: 'date',
       format: 'short',
       hidden: true,
+      permission: 14,
     },
     {
       field: 'affiliateFtdDate',
@@ -649,6 +603,7 @@ export class ClientsComponent implements OnInit {
       format: 'short',
       selector: (row: Client) => row.dateOfBirth || '-',
       hidden: true,
+      permission: 7,
     },
     {
       field: 'lastCallDate',
@@ -679,6 +634,7 @@ export class ClientsComponent implements OnInit {
       width: '20px',
       cellTemplate: null, // Will be set in ngOnInit
       selector: (row: Client) => row,
+      permission: 1,
     },
   ];
 
@@ -708,7 +664,7 @@ export class ClientsComponent implements OnInit {
       label: 'Change Password',
       icon: 'password',
       action: (item: Client) => this.openPasswordChangeModal(item),
-      permission: 260,
+      permission: 26,
     },
     {
       id: 'comments',
@@ -748,8 +704,6 @@ export class ClientsComponent implements OnInit {
     this.destroy$.complete();
     document.removeEventListener('click', this.onDocumentClick.bind(this));
   }
-
-
 
   /**
    * Normalizes the sales status value to ensure it's a number
@@ -1310,7 +1264,7 @@ export class ClientsComponent implements OnInit {
         catchError((error) => {
           selectElement.value = currentSalesStatus.toString();
           this.alertService.error('Failed to update sales status');
-          
+
           // Revert the client data changes on error
           if (clientData) {
             if (clientData.saleStatusEnum !== undefined) {
@@ -1320,10 +1274,10 @@ export class ClientsComponent implements OnInit {
               clientData.salesStatus = currentSalesStatus;
             }
           }
-          
+
           // Trigger change detection to update the UI
           this.cdr.detectChanges();
-          
+
           return of(null);
         }),
         finalize(() => {
@@ -1367,7 +1321,9 @@ export class ClientsComponent implements OnInit {
     const newOperatorId = selectElement.value;
 
     const clientId = clientData?.id || clientData?.row?.id;
-    const currentOperatorId = clientData?.clientOperator?.operatorId || clientData?.row?.clientOperator?.operatorId;
+    const currentOperatorId =
+      clientData?.clientOperator?.operatorId ||
+      clientData?.row?.clientOperator?.operatorId;
 
     if (!clientId) {
       this.alertService.error(
@@ -1396,7 +1352,7 @@ export class ClientsComponent implements OnInit {
         catchError((error) => {
           selectElement.value = currentOperatorId || '';
           this.alertService.error('Failed to update operator assignment');
-          
+
           // Revert the client data changes on error
           if (clientData) {
             if (currentOperatorId) {
@@ -1408,7 +1364,7 @@ export class ClientsComponent implements OnInit {
               clientData.clientOperator = null;
             }
           }
-          
+
           return of(null);
         }),
         finalize(() => {
@@ -1423,7 +1379,9 @@ export class ClientsComponent implements OnInit {
             // this.refreshGrid();
             this.loadClientStatistics();
           } else if (result.failureCount > 0) {
-            this.alertService.error(`Failed to assign operator: ${result.errors.join(', ')}`);
+            this.alertService.error(
+              `Failed to assign operator: ${result.errors.join(', ')}`
+            );
           }
         }
       });
@@ -1577,15 +1535,14 @@ export class ClientsComponent implements OnInit {
         takeUntil(this.destroy$)
       )
       .toPromise()
-      .then(
-        (response: any) => {
-          const operators = response || [];
-          // Sort operators alphabetically by their display value
-          return operators.sort((a: OperatorDropdownItem, b: OperatorDropdownItem) => 
+      .then((response: any) => {
+        const operators = response || [];
+        // Sort operators alphabetically by their display value
+        return operators.sort(
+          (a: OperatorDropdownItem, b: OperatorDropdownItem) =>
             a.value.localeCompare(b.value)
-          );
-        }
-      );
+        );
+      });
   }
 
   private loadAffiliatesDropdown(): void {
@@ -1717,7 +1674,7 @@ export class ClientsComponent implements OnInit {
     event.stopPropagation();
     const currentState = this.operatorDropdownStates.get(clientId) || false;
     this.operatorDropdownStates.set(clientId, !currentState);
-    
+
     // Close other operator dropdowns
     this.operatorDropdownStates.forEach((state, id) => {
       if (id !== clientId) {
@@ -1741,18 +1698,24 @@ export class ClientsComponent implements OnInit {
     const searchTerm = target.value.toLowerCase();
     this.operatorSearchTerms.set(clientId, searchTerm);
 
-    const filtered = this.operators.filter(operator =>
+    const filtered = this.operators.filter((operator) =>
       operator.value.toLowerCase().includes(searchTerm)
     );
     this.filteredOperators.set(clientId, filtered);
   }
 
-  selectOperator(clientId: string, operator: OperatorDropdownItem, clientData: any): void {
+  selectOperator(
+    clientId: string,
+    operator: OperatorDropdownItem,
+    clientData: any
+  ): void {
     const newOperatorId = operator.id || '';
     const currentOperatorId = clientData?.clientOperator?.operatorId;
 
     if (!clientId) {
-      this.alertService.error('Unable to update operator assignment: Client data not found');
+      this.alertService.error(
+        'Unable to update operator assignment: Client data not found'
+      );
       return;
     }
 
@@ -1768,13 +1731,16 @@ export class ClientsComponent implements OnInit {
           clientData.clientOperator = {};
         }
         clientData.clientOperator.operatorId = operator.id;
-        
+
         // Find the operator details to set name
-        const selectedOperator = this.operators.find(op => op.id === operator.id);
+        const selectedOperator = this.operators.find(
+          (op) => op.id === operator.id
+        );
         if (selectedOperator) {
           const nameParts = selectedOperator.value.split(' ');
           clientData.clientOperator.firstName = nameParts[0] || '';
-          clientData.clientOperator.lastName = nameParts.slice(1).join(' ') || '';
+          clientData.clientOperator.lastName =
+            nameParts.slice(1).join(' ') || '';
         }
       } else {
         // Remove operator assignment
@@ -1797,7 +1763,7 @@ export class ClientsComponent implements OnInit {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to update operator assignment');
-          
+
           // Revert the client data changes on error
           if (clientData) {
             if (currentOperatorId) {
@@ -1809,7 +1775,7 @@ export class ClientsComponent implements OnInit {
               clientData.clientOperator = null;
             }
           }
-          
+
           return of(null);
         }),
         finalize(() => {
@@ -1822,7 +1788,9 @@ export class ClientsComponent implements OnInit {
             this.alertService.success('Operator assigned successfully');
             this.loadClientStatistics();
           } else if (result.failureCount > 0) {
-            this.alertService.error(`Failed to assign operator: ${result.errors.join(', ')}`);
+            this.alertService.error(
+              `Failed to assign operator: ${result.errors.join(', ')}`
+            );
           }
         }
       });
@@ -1830,7 +1798,7 @@ export class ClientsComponent implements OnInit {
     // Close dropdown and clear search
     this.operatorDropdownStates.set(clientId, false);
     this.operatorSearchTerms.set(clientId, '');
-    
+
     // Trigger change detection to update the UI immediately
     this.cdr.detectChanges();
   }
@@ -1842,7 +1810,7 @@ export class ClientsComponent implements OnInit {
     const operatorId = clientData.clientOperator?.operatorId;
     if (!operatorId) return 'Select operator...';
 
-    const operator = this.operators.find(op => op.id === operatorId);
+    const operator = this.operators.find((op) => op.id === operatorId);
     return operator ? operator.value : 'Select operator...';
   }
 
@@ -1851,7 +1819,7 @@ export class ClientsComponent implements OnInit {
     event.stopPropagation();
     const currentState = this.salesStatusDropdownStates.get(clientId) || false;
     this.salesStatusDropdownStates.set(clientId, !currentState);
-    
+
     // Close other sales status dropdowns
     this.salesStatusDropdownStates.forEach((state, id) => {
       if (id !== clientId) {
@@ -1875,20 +1843,26 @@ export class ClientsComponent implements OnInit {
     const searchTerm = target.value.toLowerCase();
     this.salesStatusSearchTerms.set(clientId, searchTerm);
 
-    const filtered = this.salesStatusOptions.filter(option =>
+    const filtered = this.salesStatusOptions.filter((option) =>
       option.label.toLowerCase().includes(searchTerm)
     );
     this.filteredSalesStatuses.set(clientId, filtered);
   }
 
-  selectSalesStatus(clientId: string, status: { value: number; label: string }, clientData: any): void {
+  selectSalesStatus(
+    clientId: string,
+    status: { value: number; label: string },
+    clientData: any
+  ): void {
     const newSalesStatus = status.value;
     const currentSalesStatus = this.normalizeSalesStatus(
       clientData?.saleStatusEnum || clientData?.salesStatus
     );
 
     if (!clientId) {
-      this.alertService.error('Unable to update sales status: Client data not found');
+      this.alertService.error(
+        'Unable to update sales status: Client data not found'
+      );
       return;
     }
 
@@ -1915,7 +1889,7 @@ export class ClientsComponent implements OnInit {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.alertService.error('Failed to update sales status');
-          
+
           // Revert the client data changes on error
           if (clientData) {
             if (clientData.saleStatusEnum !== undefined) {
@@ -1925,7 +1899,7 @@ export class ClientsComponent implements OnInit {
               clientData.salesStatus = currentSalesStatus;
             }
           }
-          
+
           return of(null);
         }),
         finalize(() => {
@@ -1948,7 +1922,7 @@ export class ClientsComponent implements OnInit {
     // Close dropdown and clear search
     this.salesStatusDropdownStates.set(clientId, false);
     this.salesStatusSearchTerms.set(clientId, '');
-    
+
     // Trigger change detection to update the UI immediately
     this.cdr.detectChanges();
   }
@@ -1959,34 +1933,36 @@ export class ClientsComponent implements OnInit {
     // The grid passes the entire client object as 'value'
     // Check both possible field names for sales status
     let salesStatus = null;
-    
+
     // First check if clientData is the actual client object
     if (clientData.saleStatusEnum !== undefined) {
       salesStatus = clientData.saleStatusEnum;
     } else if (clientData.salesStatus !== undefined) {
       salesStatus = clientData.salesStatus;
     }
-    
+
     // If no sales status is set, return "Select status..."
     if (salesStatus === null || salesStatus === undefined) {
       return 'Select status...';
     }
 
     const currentStatus = this.normalizeSalesStatus(salesStatus);
-    const statusOption = this.salesStatusOptions.find(option => option.value === currentStatus);
+    const statusOption = this.salesStatusOptions.find(
+      (option) => option.value === currentStatus
+    );
     return statusOption ? statusOption.label : 'Select status...';
   }
-
-
 
   // Close dropdowns when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    
+
     // Check if click is inside dropdown containers
     const operatorDropdowns = target.closest('[data-dropdown="operator"]');
-    const salesStatusDropdowns = target.closest('[data-dropdown="salesStatus"]');
+    const salesStatusDropdowns = target.closest(
+      '[data-dropdown="salesStatus"]'
+    );
 
     // Close dropdowns if click is outside
     if (!operatorDropdowns) {
@@ -2025,7 +2001,13 @@ export class ClientsComponent implements OnInit {
     this.focusedSalesStatusIndices.set(clientId, index);
   }
 
-  onSalesStatusKeydown(clientId: string, event: KeyboardEvent, status: { value: number; label: string }, index: number, clientData: any): void {
+  onSalesStatusKeydown(
+    clientId: string,
+    event: KeyboardEvent,
+    status: { value: number; label: string },
+    index: number,
+    clientData: any
+  ): void {
     switch (event.key) {
       case 'Enter':
       case ' ':
@@ -2070,7 +2052,13 @@ export class ClientsComponent implements OnInit {
     this.focusedOperatorIndices.set(clientId, index);
   }
 
-  onOperatorKeydown(clientId: string, event: KeyboardEvent, operator: OperatorDropdownItem, index: number, clientData: any): void {
+  onOperatorKeydown(
+    clientId: string,
+    event: KeyboardEvent,
+    operator: OperatorDropdownItem,
+    index: number,
+    clientData: any
+  ): void {
     switch (event.key) {
       case 'Enter':
       case ' ':

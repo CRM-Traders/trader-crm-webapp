@@ -199,7 +199,7 @@
       <!-- Rules Grid -->
       <div class="overflow-x-auto">
         <app-grid
-          *hasPermission="57"
+          [permission]="57"
           [gridId]="gridId"
           [endpoint]="'identity/api/rules'"
           [columns]="gridColumns"

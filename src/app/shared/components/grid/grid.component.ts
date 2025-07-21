@@ -64,6 +64,7 @@ export class GridComponent implements OnInit, OnDestroy {
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
 
+  @Input() permission: number = -1;
   @Input() gridId: string = 'default-grid';
   @Input() data: any[] = [];
   @Input() columns: GridColumn[] = [];

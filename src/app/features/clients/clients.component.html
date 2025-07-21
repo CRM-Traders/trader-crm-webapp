@@ -158,6 +158,7 @@
       <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
           <app-grid
+            [permission]="52"
             gridId="clients-grid"
             [endpoint]="'identity/api/clients/grid'"
             [columns]="gridColumns"
@@ -294,14 +295,25 @@
                   <button
                     type="button"
                     [disabled]="updatingSalesStatus === (value.id || row.id)"
-                    (click)="toggleSalesStatusDropdown(value.id || row.id, $event)"
-                    (keydown)="onSalesStatusButtonKeydown(value.id || row.id, $event)"
+                    (click)="
+                      toggleSalesStatusDropdown(value.id || row.id, $event)
+                    "
+                    (keydown)="
+                      onSalesStatusButtonKeydown(value.id || row.id, $event)
+                    "
                     class="text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[120px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span class="truncate">{{ getSelectedSalesStatusName(value.id || row.id, value || row) }}</span>
+                    <span class="truncate">{{
+                      getSelectedSalesStatusName(
+                        value.id || row.id,
+                        value || row
+                      )
+                    }}</span>
                     <svg
                       class="w-4 h-4 ml-2 transition-transform"
-                      [class.rotate-180]="salesStatusDropdownStates.get(value.id || row.id)"
+                      [class.rotate-180]="
+                        salesStatusDropdownStates.get(value.id || row.id)
+                      "
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -326,28 +338,58 @@
                         type="text"
                         placeholder="Search status..."
                         class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        (input)="onSalesStatusSearch(value.id || row.id, $event)"
-                        [value]="salesStatusSearchTerms.get(value.id || row.id) || ''"
+                        (input)="
+                          onSalesStatusSearch(value.id || row.id, $event)
+                        "
+                        [value]="
+                          salesStatusSearchTerms.get(value.id || row.id) || ''
+                        "
                       />
                     </div>
 
                     <!-- Status List -->
                     <div class="max-h-48 overflow-y-auto">
                       <div
-                        *ngFor="let status of filteredSalesStatuses.get(value.id || row.id) || []; let i = index"
+                        *ngFor="
+                          let status of filteredSalesStatuses.get(
+                            value.id || row.id
+                          ) || [];
+                          let i = index
+                        "
                         class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
-                        [class.bg-blue-100]="isSalesStatusFocused(value.id || row.id, i)"
+                        [class.bg-blue-100]="
+                          isSalesStatusFocused(value.id || row.id, i)
+                        "
                         [tabindex]="0"
-                        (click)="selectSalesStatus(value.id || row.id, status, value || row)"
-                        (keydown)="onSalesStatusKeydown(value.id || row.id, $event, status, i, value || row)"
-                        (mouseenter)="setFocusedSalesStatusIndex(value.id || row.id, i)"
+                        (click)="
+                          selectSalesStatus(
+                            value.id || row.id,
+                            status,
+                            value || row
+                          )
+                        "
+                        (keydown)="
+                          onSalesStatusKeydown(
+                            value.id || row.id,
+                            $event,
+                            status,
+                            i,
+                            value || row
+                          )
+                        "
+                        (mouseenter)="
+                          setFocusedSalesStatusIndex(value.id || row.id, i)
+                        "
                       >
                         {{ status.label }}
                       </div>
 
                       <!-- No results -->
                       <div
-                        *ngIf="(filteredSalesStatuses.get(value.id || row.id) || []).length === 0"
+                        *ngIf="
+                          (filteredSalesStatuses.get(value.id || row.id) || [])
+                            .length === 0
+                        "
                         class="px-3 py-2 text-center text-sm text-gray-500"
                       >
                         No status found
@@ -437,15 +479,23 @@
                 <div class="relative" data-dropdown="operator">
                   <button
                     type="button"
-                    [disabled]="updatingOperatorAssignment === (value.id || row.id)"
+                    [disabled]="
+                      updatingOperatorAssignment === (value.id || row.id)
+                    "
                     (click)="toggleOperatorDropdown(value.id || row.id, $event)"
-                    (keydown)="onOperatorButtonKeydown(value.id || row.id, $event)"
+                    (keydown)="
+                      onOperatorButtonKeydown(value.id || row.id, $event)
+                    "
                     class="text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[140px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span class="truncate">{{ getSelectedOperatorName(value.id || row.id, value || row) }}</span>
+                    <span class="truncate">{{
+                      getSelectedOperatorName(value.id || row.id, value || row)
+                    }}</span>
                     <svg
                       class="w-4 h-4 ml-2 transition-transform"
-                      [class.rotate-180]="operatorDropdownStates.get(value.id || row.id)"
+                      [class.rotate-180]="
+                        operatorDropdownStates.get(value.id || row.id)
+                      "
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -471,27 +521,55 @@
                         placeholder="Search operators..."
                         class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         (input)="onOperatorSearch(value.id || row.id, $event)"
-                        [value]="operatorSearchTerms.get(value.id || row.id) || ''"
+                        [value]="
+                          operatorSearchTerms.get(value.id || row.id) || ''
+                        "
                       />
                     </div>
 
                     <!-- Operators List -->
                     <div class="max-h-48 overflow-y-auto">
                       <div
-                        *ngFor="let operator of filteredOperators.get(value.id || row.id) || []; let i = index"
+                        *ngFor="
+                          let operator of filteredOperators.get(
+                            value.id || row.id
+                          ) || [];
+                          let i = index
+                        "
                         class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-900"
-                        [class.bg-blue-100]="isOperatorFocused(value.id || row.id, i)"
+                        [class.bg-blue-100]="
+                          isOperatorFocused(value.id || row.id, i)
+                        "
                         [tabindex]="0"
-                        (click)="selectOperator(value.id || row.id, operator, value || row)"
-                        (keydown)="onOperatorKeydown(value.id || row.id, $event, operator, i, value || row)"
-                        (mouseenter)="setFocusedOperatorIndex(value.id || row.id, i)"
+                        (click)="
+                          selectOperator(
+                            value.id || row.id,
+                            operator,
+                            value || row
+                          )
+                        "
+                        (keydown)="
+                          onOperatorKeydown(
+                            value.id || row.id,
+                            $event,
+                            operator,
+                            i,
+                            value || row
+                          )
+                        "
+                        (mouseenter)="
+                          setFocusedOperatorIndex(value.id || row.id, i)
+                        "
                       >
                         {{ operator.value }}
                       </div>
 
                       <!-- No results -->
                       <div
-                        *ngIf="(filteredOperators.get(value.id || row.id) || []).length === 0"
+                        *ngIf="
+                          (filteredOperators.get(value.id || row.id) || [])
+                            .length === 0
+                        "
                         class="px-3 py-2 text-center text-sm text-gray-500"
                       >
                         No operators found

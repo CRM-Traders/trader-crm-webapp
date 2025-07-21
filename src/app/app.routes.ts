@@ -124,7 +124,7 @@ export const routes: Routes = [
           import('./features/permissions/permissions.component').then(
             (m) => m.PermissionsComponent
           ),
-        canActivate: [authGuard], //roleGuard(160)],
+        canActivate: [authGuard, roleGuard(100)],
       },
       {
         path: 'documents',
@@ -209,9 +209,9 @@ export const routes: Routes = [
       {
         path: 'permission-templates',
         loadComponent: () =>
-          import('./features/permission-template/permission-template.component').then(
-            (m) => m.PermissionTemplateComponent
-          ),
+          import(
+            './features/permission-template/permission-template.component'
+          ).then((m) => m.PermissionTemplateComponent),
         canActivate: [authGuard],
       },
     ],
