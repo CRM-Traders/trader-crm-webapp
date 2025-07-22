@@ -20,54 +20,52 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, interval } from 'rxjs';
 
-// TradingView type declarations
-declare global {
-  interface Window {
-    TradingView: typeof TradingView;
-  }
+// LightWeight Charts types
+interface IChartApi {
+  remove(): void;
+  addCandlestickSeries(options?: any): ICandlestickSeriesApi;
+  addLineSeries(options?: any): ILineSeriesApi;
+  addAreaSeries(options?: any): IAreaSeriesApi;
+  addBarSeries(options?: any): IBarSeriesApi;
+  timeScale(): ITimeScaleApi;
+  resize(width: number, height: number): void;
+  applyOptions(options: any): void;
 }
 
-declare namespace TradingView {
-  interface WidgetOptions {
-    container_id: string;
-    width?: string | number;
-    height?: string | number;
-    symbol?: string;
-    interval?: string;
-    timezone?: string;
-    theme?: 'light' | 'dark';
-    style?: string;
-    locale?: string;
-    toolbar_bg?: string;
-    enable_publishing?: boolean;
-    allow_symbol_change?: boolean;
-    hide_top_toolbar?: boolean;
-    hide_legend?: boolean;
-    save_image?: boolean;
-    studies?: string[];
-    show_popup_button?: boolean;
-    popup_width?: string;
-    popup_height?: string;
-    no_referral_id?: boolean;
-    overrides?: Record<string, any>;
-  }
+interface ICandlestickSeriesApi {
+  setData(data: any[]): void;
+  update(data: any): void;
+  applyOptions(options: any): void;
+}
 
-  interface ChartWidget {
-    remove(): void;
-    chart(): {
-      setResolution(resolution: string): void;
-      setChartType(type: number): void;
-      setSymbol(symbol: string, interval: string, callback: () => void): void;
-    };
-  }
+interface ILineSeriesApi {
+  setData(data: any[]): void;
+  update(data: any): void;
+  applyOptions(options: any): void;
+}
 
-  class widget implements ChartWidget {
-    constructor(options: WidgetOptions);
-    remove(): void;
-    chart(): {
-      setResolution(resolution: string): void;
-      setChartType(type: number): void;
-      setSymbol(symbol: string, interval: string, callback: () => void): void;
+interface IAreaSeriesApi {
+  setData(data: any[]): void;
+  update(data: any): void;
+  applyOptions(options: any): void;
+}
+
+interface IBarSeriesApi {
+  setData(data: any[]): void;
+  update(data: any): void;
+  applyOptions(options: any): void;
+}
+
+interface ITimeScaleApi {
+  fitContent(): void;
+  setVisibleRange(range: any): void;
+}
+
+// Global LightWeight Charts declaration
+declare global {
+  interface Window {
+    LightweightCharts: {
+      createChart: (container: HTMLElement, options?: any) => IChartApi;
     };
   }
 }
@@ -106,7 +104,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedClientId = signal('');
   selectedSymbol = signal('');
   selectedInterval = signal('1h');
-  selectedChartType = signal('1');
+  selectedChartType = signal('candlestick');
   chartTheme = signal<'light' | 'dark'>('dark');
   tradingPairSearch = signal('');
 
@@ -131,8 +129,12 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     }>
   >([]);
 
-  // Chart instance
-  private widget: any = null;
+  // Chart instance and data
+  private chart: IChartApi | null = null;
+  private candlestickSeries: ICandlestickSeriesApi | null = null;
+  private lineSeries: ILineSeriesApi | null = null;
+  private areaSeries: IAreaSeriesApi | null = null;
+  private barSeries: IBarSeriesApi | null = null;
   private chartData: ChartData[] = [];
 
   // Computed values
@@ -165,22 +167,19 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   chartTypes = [
-    { value: '1', label: 'Candlestick' },
-    { value: '0', label: 'Bar' },
-    { value: '2', label: 'Line' },
-    { value: '3', label: 'Area' },
-    { value: '8', label: 'Heikin Ashi' },
-    { value: '9', label: 'Hollow Candles' },
+    { value: 'candlestick', label: 'Candlestick' },
+    { value: 'bar', label: 'Bar' },
+    { value: 'line', label: 'Line' },
+    { value: 'area', label: 'Area' },
   ];
 
   ngOnInit(): void {
-    this.loadTradingViewScript();
+    this.loadLightWeightChartsScript();
     this.loadInitialData();
     this.startMarketStatusUpdates();
   }
 
   ngAfterViewInit(): void {
-    // Initialize chart after view is ready if we have the required data
     setTimeout(() => {
       if (this.selectedSymbol() && this.selectedClientId()) {
         this.initializeChart();
@@ -192,24 +191,25 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     this.destroy$.next();
     this.destroy$.complete();
 
-    if (this.widget) {
-      this.widget.remove();
+    if (this.chart) {
+      this.chart.remove();
     }
   }
 
-  private loadTradingViewScript(): void {
-    if (typeof window.TradingView !== 'undefined') {
+  private loadLightWeightChartsScript(): void {
+    if (typeof window.LightweightCharts !== 'undefined') {
       return;
     }
 
     const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/tv.js';
+    // script.src =
+    //   'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js';
     script.async = true;
     script.onload = () => {
-      console.log('TradingView script loaded successfully');
+      console.log('LightWeight Charts script loaded successfully');
     };
     script.onerror = () => {
-      this.error.set('Failed to load TradingView library');
+      this.error.set('Failed to load LightWeight Charts library');
     };
     document.head.appendChild(script);
   }
@@ -266,25 +266,36 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.selectedSymbol()) return;
 
     this.chartLoading.set(true);
+    console.log(
+      `Loading chart data for: ${this.selectedSymbol()} interval: ${this.selectedInterval()}`
+    );
 
     try {
-      const data = await this.service
-        .chartData(this.selectedSymbol(), this.selectedInterval(), 1000)
+      const response: any = await this.service
+        .chartData(this.selectedSymbol(), this.selectedInterval(), 500)
         .toPromise();
 
-      if (data && Array.isArray(data)) {
-        this.chartData = data.map((item: any) => ({
-          time: item.openTime,
+      console.log('Raw response received:', response);
+
+      // Handle the response structure - data is wrapped in a 'data' property
+      let dataArray: ChartData[] = response.data;
+
+      console.log(`Raw chart data received: ${dataArray.length} items`);
+
+      this.chartData = dataArray.map((item: any) => {
+        // The 'time' field is already a Unix timestamp, use it directly
+        return {
+          time: item.time, // No conversion needed if already Unix timestamp
           open: parseFloat(item.open),
           high: parseFloat(item.high),
           low: parseFloat(item.low),
           close: parseFloat(item.close),
           volume: parseFloat(item.volume),
-        }));
+        };
+      });
 
-        this.lastPriceUpdate.set(new Date());
-        this.initializeChart();
-      }
+      this.lastPriceUpdate.set(new Date());
+      this.updateChartData();
     } catch (err) {
       console.error('Error loading chart data:', err);
       this.error.set('Failed to load chart data for ' + this.selectedSymbol());
@@ -294,89 +305,184 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private initializeChart(): void {
-    if (typeof window.TradingView === 'undefined' || !this.chartContainer) {
+    if (
+      typeof window.LightweightCharts === 'undefined' ||
+      !this.chartContainer
+    ) {
       console.warn(
-        'TradingView library not loaded or chart container not available'
+        'LightWeight Charts library not loaded or chart container not available'
       );
       return;
     }
 
-    // Remove existing widget
-    if (this.widget) {
-      this.widget.remove();
+    // Remove existing chart
+    if (this.chart) {
+      this.chart.remove();
     }
 
-    // For custom data integration, you'll need to use TradingView's Charting Library (paid)
-    // or implement a custom chart solution. The free widget only works with TradingView's data.
-
-    // Try to map your symbol to TradingView's available symbols
-    const tvSymbol = this.mapToTradingViewSymbol(this.selectedSymbol());
-
-    // Create new widget with enhanced configuration
-    this.widget = new window.TradingView.widget({
-      container_id: this.chartContainer.nativeElement.id,
-      width: '100%',
+    // Create chart options
+    const chartOptions = {
+      width: this.chartContainer.nativeElement.clientWidth,
       height: this.isFullscreen() ? window.innerHeight * 0.8 : 600,
-      symbol: tvSymbol,
-      interval: this.mapToTradingViewInterval(this.selectedInterval()),
-      timezone: 'Etc/UTC',
-      theme: this.chartTheme(),
-      style: this.selectedChartType(),
-      locale: 'en',
-      toolbar_bg: this.chartTheme() === 'dark' ? '#1f2937' : '#f8fafc',
-      enable_publishing: false,
-      allow_symbol_change: false,
-      hide_top_toolbar: false,
-      hide_legend: false,
-      save_image: false,
-      studies: [
-        'MASimple@tv-basicstudies',
-        'RSI@tv-basicstudies',
-        'MACD@tv-basicstudies',
-      ],
-      show_popup_button: true,
-      popup_width: '1200',
-      popup_height: '800',
-      no_referral_id: true,
-      overrides: {
-        'paneProperties.background':
-          this.chartTheme() === 'dark' ? '#1f2937' : '#ffffff',
-        'paneProperties.vertGridProperties.color':
-          this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
-        'paneProperties.horzGridProperties.color':
-          this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
+      layout: {
+        backgroundColor: this.chartTheme() === 'dark' ? '#1f2937' : '#ffffff',
+        textColor: this.chartTheme() === 'dark' ? '#e5e7eb' : '#374151',
+        fontSize: 12,
+        fontFamily: 'Inter, system-ui, sans-serif',
       },
-    });
-  }
-
-  private mapToTradingViewSymbol(symbol: string): string {
-    // Map your custom symbols to TradingView symbols
-    const symbolMap: { [key: string]: string } = {
-      BTCUSDT: 'BINANCE:BTCUSDT',
-      ETHUSDT: 'BINANCE:ETHUSDT',
-      LTCBTC: 'BINANCE:LTCBTC',
-      ADAUSDT: 'BINANCE:ADAUSDT',
-      BNBUSDT: 'BINANCE:BNBUSDT',
-      // Add more mappings as needed
+      grid: {
+        vertLines: {
+          color: this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
+        },
+        horzLines: {
+          color: this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
+        },
+      },
+      crosshair: {
+        mode: 1, // Normal crosshair
+      },
+      rightPriceScale: {
+        borderColor: this.chartTheme() === 'dark' ? '#4b5563' : '#d1d5db',
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.1,
+        },
+      },
+      timeScale: {
+        borderColor: this.chartTheme() === 'dark' ? '#4b5563' : '#d1d5db',
+        timeVisible: true,
+        secondsVisible: false,
+      },
+      watermark: {
+        color: this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
+        visible: true,
+        text: this.selectedSymbol(),
+        fontSize: 24,
+        horzAlign: 'center',
+        vertAlign: 'center',
+      },
     };
 
-    return symbolMap[symbol] || `BINANCE:${symbol}`;
+    // Create new chart
+    this.chart = window.LightweightCharts.createChart(
+      this.chartContainer.nativeElement,
+      chartOptions
+    );
+
+    // Create series based on selected chart type
+    this.createSeries();
+
+    // Load data if available
+    if (this.chartData.length > 0) {
+      this.updateChartData();
+    }
+
+    // Handle resize
+    window.addEventListener('resize', this.handleChartResize.bind(this));
   }
 
-  private mapToTradingViewInterval(interval: string): string {
-    // Map your intervals to TradingView intervals
-    const intervalMap: { [key: string]: string } = {
-      '1m': '1',
-      '5m': '5',
-      '15m': '15',
-      '30m': '30',
-      '1h': '60',
-      '4h': '240',
-      '1d': '1D',
-      '1w': '1W',
+  private createSeries(): void {
+    if (!this.chart) return;
+
+    // Clear existing series
+    this.candlestickSeries = null;
+    this.lineSeries = null;
+    this.areaSeries = null;
+    this.barSeries = null;
+
+    const seriesOptions = {
+      upColor: '#22c55e',
+      downColor: '#ef4444',
+      borderDownColor: '#dc2626',
+      borderUpColor: '#16a34a',
+      wickDownColor: '#dc2626',
+      wickUpColor: '#16a34a',
     };
 
-    return intervalMap[interval] || interval;
+    const lineAreaOptions = {
+      color: '#3b82f6',
+      lineWidth: 2,
+    };
+
+    switch (this.selectedChartType()) {
+      case 'candlestick':
+        this.candlestickSeries = this.chart.addCandlestickSeries(seriesOptions);
+        break;
+      case 'bar':
+        this.barSeries = this.chart.addBarSeries(seriesOptions);
+        break;
+      case 'line':
+        this.lineSeries = this.chart.addLineSeries(lineAreaOptions);
+        break;
+      case 'area':
+        this.areaSeries = this.chart.addAreaSeries({
+          ...lineAreaOptions,
+          topColor: 'rgba(59, 130, 246, 0.4)',
+          bottomColor: 'rgba(59, 130, 246, 0.1)',
+        });
+        break;
+    }
+  }
+
+  private updateChartData(): void {
+    if (!this.chart || this.chartData.length === 0) return;
+
+    const activeSeries = this.getActiveSeries();
+    if (!activeSeries) return;
+
+    // Format data based on chart type
+    let formattedData;
+    if (
+      this.selectedChartType() === 'line' ||
+      this.selectedChartType() === 'area'
+    ) {
+      // For line and area charts, use close price
+      formattedData = this.chartData.map((item) => ({
+        time: item.time,
+        value: item.close,
+      }));
+    } else {
+      // For candlestick and bar charts, use OHLC data
+      formattedData = this.chartData.map((item) => ({
+        time: item.time,
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+      }));
+    }
+
+    // Set data and fit content
+    activeSeries.setData(formattedData);
+    this.chart.timeScale().fitContent();
+  }
+
+  private getActiveSeries():
+    | ICandlestickSeriesApi
+    | ILineSeriesApi
+    | IAreaSeriesApi
+    | IBarSeriesApi
+    | null {
+    switch (this.selectedChartType()) {
+      case 'candlestick':
+        return this.candlestickSeries;
+      case 'bar':
+        return this.barSeries;
+      case 'line':
+        return this.lineSeries;
+      case 'area':
+        return this.areaSeries;
+      default:
+        return null;
+    }
+  }
+
+  private handleChartResize(): void {
+    if (this.chart && this.chartContainer) {
+      const { clientWidth } = this.chartContainer.nativeElement;
+      const height = this.isFullscreen() ? window.innerHeight * 0.8 : 600;
+      this.chart.resize(clientWidth, height);
+    }
   }
 
   private startMarketStatusUpdates(): void {
@@ -422,13 +528,18 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.selectedClientId()) {
       this.loadChartData();
     }
+    // Update watermark
+    if (this.chart) {
+      this.chart.applyOptions({
+        watermark: {
+          text: this.selectedSymbol(),
+        },
+      });
+    }
   }
 
   onIntervalChange(): void {
     console.log('Interval changed:', this.selectedInterval());
-    if (this.widget) {
-      this.widget.chart().setResolution(this.selectedInterval());
-    }
     if (this.selectedSymbol() && this.selectedClientId()) {
       this.loadChartData();
     }
@@ -436,8 +547,9 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onChartTypeChange(): void {
     console.log('Chart type changed:', this.selectedChartType());
-    if (this.widget) {
-      this.widget.chart().setChartType(parseInt(this.selectedChartType()));
+    this.createSeries();
+    if (this.chartData.length > 0) {
+      this.updateChartData();
     }
   }
 
@@ -457,11 +569,9 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       document.exitFullscreen?.();
     }
 
-    // Reinitialize chart with new dimensions
+    // Resize chart with new dimensions
     setTimeout(() => {
-      if (this.selectedSymbol() && this.selectedClientId()) {
-        this.initializeChart();
-      }
+      this.handleChartResize();
     }, 100);
   }
 
