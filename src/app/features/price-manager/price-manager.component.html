@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+<div class="general-container bg-white min-h-screen p-6">
   <!-- Header Section -->
   <div class="mb-8">
     <div class="flex justify-between items-center mb-6">
@@ -129,15 +129,15 @@
         </div>
         <div
           *ngIf="selectedClient()"
-          class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md"
+          class="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-md"
         >
-          <div class="text-sm text-blue-800 dark:text-blue-200">
+          <div class="text-sm text-blue-800 dark:text-blue-500">
             <strong
               >{{ selectedClient()?.firstName }}
               {{ selectedClient()?.lastName }}</strong
             >
           </div>
-          <div class="text-xs text-blue-600 dark:text-blue-300">
+          <div class="text-xs text-blue-600 dark:text-blue-400">
             {{ selectedClient()?.email }}
           </div>
         </div>
