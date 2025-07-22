@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpService } from '../../../../../core/services/http.service';
+import { ModalService } from '../../../../../shared/services/modals/modal.service';
+import { FilePreviewComponent, PreviewFile } from '../../../../../shared/components/file-preview/file-preview.component';
 
 export interface StoredFileDto {
   id: string;
@@ -74,6 +76,7 @@ export enum FileStatus {
 })
 export class FilesService {
   private httpService = inject(HttpService);
+  private modalService = inject(ModalService);
   private readonly apiPath = 'storage/api/files';
 
   uploadFile(
@@ -148,5 +151,29 @@ export class FilesService {
 
   downloadFile(fileId: string): Observable<Blob> {
     return this.httpService.getFile(`api/files/${fileId}`);
+  }
+
+  openFilePreview(file: StoredFileDto): void {
+    const previewFile: PreviewFile = {
+      id: file.id,
+      fileName: file.fileName,
+      fileUrl: file.fileUrl,
+      fileSize: file.fileSize,
+      contentType: file.contentType,
+      createdAt: file.creationTime,
+      fileExtension: file.fileExtension,
+      isImage: file.fileType === FileType.Image || file.fileType === FileType.IdFront || file.fileType === FileType.IdBack || file.fileType === FileType.PassportMain || file.fileType === FileType.FacePhoto,
+      isPdf: file.contentType === 'application/pdf' || file.fileExtension === '.pdf'
+    };
+
+    this.modalService.open(FilePreviewComponent, {
+      size: 'xl',
+      closable: true,
+      backdrop: true,
+      keyboard: true,
+      centered: true,
+      scrollable: false,
+      animation: true
+    }, { file: previewFile });
   }
 }
