@@ -1,0 +1,336 @@
+// Enhanced Price Manager Component Styles
+.enhanced-price-manager {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+
+  &.dark {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+}
+
+// Chart container enhancements
+#tradingview-chart {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  iframe {
+    border-radius: 0.5rem;
+  }
+}
+
+// Custom scrollbar for activity log
+.activity-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+
+  .dark & {
+    &::-webkit-scrollbar-track {
+      background: #334155;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #475569;
+
+      &:hover {
+        background: #64748b;
+      }
+    }
+  }
+}
+
+// Enhanced button styles
+.btn-primary {
+  @apply inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.btn-danger {
+  @apply inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.btn-secondary {
+  @apply inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark & {
+    @apply border-gray-600 text-gray-300 bg-gray-700 hover:bg-gray-600;
+  }
+}
+
+// Card enhancements
+.card {
+  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-200;
+
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+
+  .dark & {
+    @apply bg-gray-800 border-gray-700;
+  }
+}
+
+// Status indicators
+.status-open {
+  @apply text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs font-medium;
+
+  .dark & {
+    @apply text-green-400 bg-green-900/20;
+  }
+}
+
+.status-closed {
+  @apply text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs font-medium;
+
+  .dark & {
+    @apply text-red-400 bg-red-900/20;
+  }
+}
+
+// Form enhancements
+.form-input {
+  @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200;
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .dark & {
+    @apply bg-gray-800 border-gray-600 text-gray-100;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+  }
+}
+
+.form-select {
+  @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200;
+
+  .dark & {
+    @apply bg-gray-800 border-gray-600 text-gray-100;
+  }
+}
+
+// Loading animations
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Activity log styles
+.activity-item {
+  @apply flex items-center justify-between p-3 rounded-md transition-all duration-200;
+
+  &:hover {
+    @apply bg-gray-100;
+
+    .dark & {
+      @apply bg-gray-600;
+    }
+  }
+}
+
+.activity-indicator {
+  @apply w-2 h-2 rounded-full;
+
+  &.success {
+    @apply bg-green-500;
+  }
+
+  &.warning {
+    @apply bg-yellow-500;
+  }
+
+  &.error {
+    @apply bg-red-500;
+  }
+}
+
+// Statistics cards
+.stat-card {
+  @apply text-center p-6 rounded-lg border transition-all duration-200;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-value {
+    @apply text-2xl font-bold mb-1;
+  }
+
+  .stat-label {
+    @apply text-sm text-gray-500;
+
+    .dark & {
+      @apply text-gray-400;
+    }
+  }
+
+  &.blue {
+    .stat-value {
+      @apply text-blue-600;
+
+      .dark & {
+        @apply text-blue-400;
+      }
+    }
+  }
+
+  &.green {
+    .stat-value {
+      @apply text-green-600;
+
+      .dark & {
+        @apply text-green-400;
+      }
+    }
+  }
+
+  &.purple {
+    .stat-value {
+      @apply text-purple-600;
+
+      .dark & {
+        @apply text-purple-400;
+      }
+    }
+  }
+
+  &.orange {
+    .stat-value {
+      @apply text-orange-600;
+
+      .dark & {
+        @apply text-orange-400;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .lg\\:grid-cols-4 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .md\\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #tradingview-chart {
+    height: 400px !important;
+  }
+}
+
+// Fullscreen mode
+.fullscreen-chart {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  background: white;
+
+  .dark & {
+    background: #1f2937;
+  }
+
+  #tradingview-chart {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+}
+
+// Error and success messages
+.alert {
+  @apply p-4 rounded-md border;
+
+  &.alert-error {
+    @apply bg-red-50 border-red-200 text-red-800;
+
+    .dark & {
+      @apply bg-red-900/20 border-red-800 text-red-200;
+    }
+  }
+
+  &.alert-success {
+    @apply bg-green-50 border-green-200 text-green-800;
+
+    .dark & {
+      @apply bg-green-900/20 border-green-800 text-green-200;
+    }
+  }
+
+  &.alert-warning {
+    @apply bg-yellow-50 border-yellow-200 text-yellow-800;
+
+    .dark & {
+      @apply bg-yellow-900/20 border-yellow-800 text-yellow-200;
+    }
+  }
+}
+
+// Tooltip styles
+.tooltip {
+  @apply invisible absolute z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300;
+
+  &.show {
+    @apply visible opacity-100;
+  }
+}

@@ -39,7 +39,7 @@ export class BrandSelectionComponent implements OnInit {
     this.errorMessage.set('');
 
     this.brandService
-      .getBrands()
+      .getBrandsSwitch()
       .pipe(
         catchError((error) => {
           this.errorMessage.set('Failed to load brands. Please try again.');

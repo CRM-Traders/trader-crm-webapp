@@ -1,0 +1,442 @@
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+  <!-- Header Section -->
+  <div class="mb-8">
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+          Advanced Price Manager
+        </h1>
+        <p class="text-gray-600 dark:text-gray-400">
+          Monitor market data and manage client-specific price feeds
+        </p>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <!-- Refresh Button -->
+        <button
+          (click)="refreshData()"
+          [disabled]="loading()"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            [class.animate-spin]="loading()"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          Refresh Data
+        </button>
+
+        <!-- Fullscreen Toggle -->
+        <button
+          (click)="toggleFullscreen()"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+            ></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="flex justify-center items-center py-12">
+      <div
+        class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+      ></div>
+      <span class="ml-3 text-gray-600 dark:text-gray-400"
+        >Loading market data...</span
+      >
+    </div>
+
+    <!-- Error State -->
+    <div
+      *ngIf="error() && !loading()"
+      class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6"
+    >
+      <div class="flex items-center">
+        <svg
+          class="w-5 h-5 text-red-500 mr-3"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <div>
+          <p class="text-red-800 dark:text-red-200 font-medium">
+            {{ error() }}
+          </p>
+          <button
+            (click)="refreshData()"
+            class="mt-2 text-sm text-red-600 hover:text-red-800 underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Panel -->
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Client Selection -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+    >
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        Client Selection
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Select Client
+          </label>
+          <select
+            [(ngModel)]="selectedClientId"
+            (ngModelChange)="onClientChange()"
+            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Select a client...</option>
+            <option *ngFor="let client of activeClients()" [value]="client.id">
+              {{ client.firstName }} {{ client.lastName }}
+            </option>
+          </select>
+        </div>
+        <div
+          *ngIf="selectedClient()"
+          class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md"
+        >
+          <div class="text-sm text-blue-800 dark:text-blue-200">
+            <strong
+              >{{ selectedClient()?.firstName }}
+              {{ selectedClient()?.lastName }}</strong
+            >
+          </div>
+          <div class="text-xs text-blue-600 dark:text-blue-300">
+            {{ selectedClient()?.email }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Symbol Selection -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+    >
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        Trading Pair
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Symbol
+          </label>
+          <div class="space-y-2">
+            <input
+              type="text"
+              [(ngModel)]="tradingPairSearch"
+              (ngModelChange)="onSearchChange()"
+              placeholder="Search trading pairs..."
+              class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+            <select
+              [(ngModel)]="selectedSymbol"
+              (ngModelChange)="onSymbolChange()"
+              class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select symbol...</option>
+              <option *ngFor="let pair of tradingPairs()" [value]="pair.symbol">
+                {{ pair.symbol }} ({{ pair.baseAsset }}/{{ pair.quoteAsset }})
+              </option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Interval
+          </label>
+          <select
+            [(ngModel)]="selectedInterval"
+            (ngModelChange)="onIntervalChange()"
+            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option *ngFor="let interval of intervals" [value]="interval.value">
+              {{ interval.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Controls -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+    >
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        Chart Settings
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Chart Type
+          </label>
+          <select
+            [(ngModel)]="selectedChartType"
+            (ngModelChange)="onChartTypeChange()"
+            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option *ngFor="let type of chartTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Theme
+          </label>
+          <select
+            [(ngModel)]="chartTheme"
+            (ngModelChange)="onThemeChange()"
+            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price Manipulation -->
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+    >
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        Price Control
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Target Price
+          </label>
+          <input
+            type="number"
+            [(ngModel)]="manipulationPrice"
+            step="0.00000001"
+            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter price..."
+          />
+        </div>
+        <label class="flex items-center">
+          <input
+            type="checkbox"
+            [(ngModel)]="forceManipulation"
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+            >Force override</span
+          >
+        </label>
+        <button
+          (click)="manipulatePrice()"
+          [disabled]="!canManipulatePrice() || manipulating()"
+          class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <svg
+            *ngIf="manipulating()"
+            class="w-4 h-4 mr-2 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          {{ manipulating() ? "Processing..." : "Apply Price" }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Chart Container -->
+  <div
+    *ngIf="selectedSymbol() && selectedClientId()"
+    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8"
+  >
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          {{ selectedSymbol() }} - {{ selectedClient()?.firstName }}
+          {{ selectedClient()?.lastName }}
+        </h3>
+        <div
+          class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400"
+        >
+          <span>Interval: {{ selectedInterval() }}</span>
+          <span>Type: {{ selectedChartType() | titlecase }}</span>
+          <span>Theme: {{ chartTheme() | titlecase }}</span>
+          <span *ngIf="lastPriceUpdate()"
+            >Last Update: {{ formatDate(lastPriceUpdate()!) }}</span
+          >
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-gray-500">Market Status:</span>
+        <span
+          [class]="
+            marketStatus() === 'open' ? 'text-green-600' : 'text-red-600'
+          "
+          class="text-sm font-medium"
+        >
+          {{ marketStatus() === "open" ? "OPEN" : "CLOSED" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- LightWeight Chart Container -->
+    <div class="relative">
+      <div
+        #chartContainer
+        id="lightweight-chart"
+        class="w-full rounded-lg border border-gray-200 dark:border-gray-700"
+        [style.height]="isFullscreen() ? '80vh' : '600px'"
+      ></div>
+
+      <!-- Chart Loading Overlay -->
+      <div
+        *ngIf="chartLoading()"
+        class="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-90 flex items-center justify-center rounded-lg"
+      >
+        <div class="text-center">
+          <div
+            class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"
+          ></div>
+          <span class="text-sm text-gray-600 dark:text-gray-400"
+            >Loading chart data...</span
+          >
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Market Statistics -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
+    >
+      <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+        {{ activeClients().length }}
+      </div>
+      <div class="text-sm text-gray-500 dark:text-gray-400">Active Clients</div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
+    >
+      <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+        {{ tradingPairs().length }}
+      </div>
+      <div class="text-sm text-gray-500 dark:text-gray-400">Trading Pairs</div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
+    >
+      <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
+        {{ selectedSymbol() || "-" }}
+      </div>
+      <div class="text-sm text-gray-500 dark:text-gray-400">
+        Selected Symbol
+      </div>
+    </div>
+
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
+    >
+      <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+        {{ manipulationCount() }}
+      </div>
+      <div class="text-sm text-gray-500 dark:text-gray-400">
+        Price Updates Today
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity Log -->
+  <div
+    *ngIf="recentActivity().length > 0"
+    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+  >
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+      Recent Price Manipulations
+    </h3>
+    <div class="space-y-3">
+      <div
+        *ngFor="let activity of recentActivity().slice(0, 5)"
+        class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md"
+      >
+        <div class="flex items-center space-x-3">
+          <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div>
+            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {{ activity.symbol }} price set to ${{
+                activity.price.toFixed(8)
+              }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              Client: {{ activity.clientName }} •
+              {{ formatDate(activity.timestamp) }}
+            </div>
+          </div>
+        </div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">
+          {{ activity.force ? "FORCED" : "NORMAL" }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

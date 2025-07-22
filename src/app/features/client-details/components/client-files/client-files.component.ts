@@ -523,7 +523,7 @@ interface ClientFile {
     <!-- Add File Modal -->
     <app-add-file-modal
       [isOpen]="showUploadModal"
-      [clientId]="client.id"
+      [clientId]="client.userId"
       (closeEvent)="closeUploadModal()"
       (uploadSuccess)="onFilesUploaded($event)"
     ></app-add-file-modal>
@@ -706,6 +706,7 @@ export class ClientFilesComponent implements OnInit {
   files: ClientFile[] = [];
 
   ngOnInit(): void {
+    console.log('ClientFilesComponent ngOnInit', this.client);
     if (this.client.id) {
       this.loadClientFiles();
     }
@@ -721,7 +722,7 @@ export class ClientFilesComponent implements OnInit {
 
     this.isLoading = true;
     this.filesService
-      .getFilesByUserId(this.client.id)
+      .getFilesByUserId(this.client.userId)
       .pipe(
         catchError((error) => {
           this.alertService.error('Failed to load files');
@@ -1034,14 +1035,28 @@ export class ClientFilesComponent implements OnInit {
   }
 
   /**
-   * Preview a file (open in new tab)
+   * Preview a file using the modal service
    */
   previewFile(file: ClientFile): void {
-    if (file.fileUrl) {
-      window.open(file.fileUrl, '_blank');
-    } else {
-      this.alertService.info('Preview not available for this file');
-    }
+    // Convert ClientFile to StoredFileDto for the modal service
+    const storedFileDto: StoredFileDto = {
+      id: file.id,
+      userId: file.userId,
+      fileName: file.fileName,
+      fileExtension: file.fileExtension,
+      contentType: file.contentType,
+      fileSize: file.fileSize,
+      fileType: file.fileType,
+      status: file.status,
+      bucketName: file.bucketName,
+      kycProcessId: file.kycProcessId,
+      creationTime: file.creationTime,
+      fileUrl: file.fileUrl,
+      reference: file.reference,
+      description: file.description
+    };
+
+    this.filesService.openFilePreview(storedFileDto);
   }
 
   /**
