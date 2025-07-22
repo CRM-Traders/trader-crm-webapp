@@ -8,76 +8,18 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  HostListener,
 } from '@angular/core';
 import {
-  ChartData,
   Client,
   PriceManagerService,
   TradingPair,
   ManipulatePriceRequest,
+  Order,
 } from './services/price-manager.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, interval } from 'rxjs';
-
-// LightWeight Charts types
-interface IChartApi {
-  remove(): void;
-  addCandlestickSeries(options?: any): ICandlestickSeriesApi;
-  addLineSeries(options?: any): ILineSeriesApi;
-  addAreaSeries(options?: any): IAreaSeriesApi;
-  addBarSeries(options?: any): IBarSeriesApi;
-  timeScale(): ITimeScaleApi;
-  resize(width: number, height: number): void;
-  applyOptions(options: any): void;
-}
-
-interface ICandlestickSeriesApi {
-  setData(data: any[]): void;
-  update(data: any): void;
-  applyOptions(options: any): void;
-}
-
-interface ILineSeriesApi {
-  setData(data: any[]): void;
-  update(data: any): void;
-  applyOptions(options: any): void;
-}
-
-interface IAreaSeriesApi {
-  setData(data: any[]): void;
-  update(data: any): void;
-  applyOptions(options: any): void;
-}
-
-interface IBarSeriesApi {
-  setData(data: any[]): void;
-  update(data: any): void;
-  applyOptions(options: any): void;
-}
-
-interface ITimeScaleApi {
-  fitContent(): void;
-  setVisibleRange(range: any): void;
-}
-
-// Global LightWeight Charts declaration
-declare global {
-  interface Window {
-    LightweightCharts: {
-      createChart: (container: HTMLElement, options?: any) => IChartApi;
-    };
-  }
-}
-
-interface MarketDataPoint {
-  symbol: string;
-  price: number;
-  change: number;
-  changePercent: number;
-  volume: number;
-  lastUpdate: Date;
-}
 
 @Component({
   selector: 'app-price-manager',
@@ -92,7 +34,6 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   private service = inject(PriceManagerService);
   private destroy$ = new Subject<void>();
 
-  // Core state signals
   activeClients = signal<Client[]>([]);
   tradingPairs = signal<TradingPair[]>([]);
   loading = signal(false);
@@ -100,25 +41,19 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   chartLoading = signal(false);
   manipulating = signal(false);
 
-  // Selection state
   selectedClientId = signal('');
   selectedSymbol = signal('');
   selectedInterval = signal('1h');
-  selectedChartType = signal('candlestick');
-  chartTheme = signal<'light' | 'dark'>('dark');
   tradingPairSearch = signal('');
 
-  // Manipulation state
   manipulationPrice = signal<number | null>(null);
   forceManipulation = signal(false);
   manipulationCount = signal(0);
 
-  // UI state
   isFullscreen = signal(false);
   lastPriceUpdate = signal<Date | null>(null);
   marketStatus = signal<'open' | 'closed'>('open');
 
-  // Activity tracking
   recentActivity = signal<
     Array<{
       symbol: string;
@@ -129,19 +64,17 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     }>
   >([]);
 
-  // Chart instance and data
-  private chart: IChartApi | null = null;
-  private candlestickSeries: ICandlestickSeriesApi | null = null;
-  private lineSeries: ILineSeriesApi | null = null;
-  private areaSeries: IAreaSeriesApi | null = null;
-  private barSeries: IBarSeriesApi | null = null;
-  private chartData: ChartData[] = [];
+  // Searchable dropdown properties
+  clientDropdownOpen = signal(false);
+  clientSearchTerm = signal('');
+  filteredClients = signal<Client[]>([]);
+  focusedClientIndex = signal(-1);
 
-  // Computed values
   selectedClient = computed(() => {
     const clientId = this.selectedClientId();
     return (
-      this.activeClients().find((client) => client.id === clientId) || null
+      this.activeClients().find((client: any) => client.userId === clientId) ||
+      null
     );
   });
 
@@ -153,6 +86,208 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       this.manipulationPrice()! > 0
     );
   });
+
+  openOrders = signal<Order[]>([]);
+  ordersLoading = signal(false);
+  updatingOrderIds = signal<Set<string>>(new Set());
+  orderPriceUpdates: { [orderId: string]: number } = {};
+
+  // ... existing methods ...
+
+  // Searchable dropdown methods
+  toggleClientDropdown(): void {
+    this.clientDropdownOpen.update(open => !open);
+    if (!this.clientDropdownOpen()) {
+      this.clientSearchTerm.set('');
+      this.filteredClients.set(this.activeClients());
+      this.focusedClientIndex.set(-1);
+    } else {
+      this.filteredClients.set(this.activeClients());
+    }
+  }
+
+  onClientSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const searchTerm = target.value.toLowerCase();
+    this.clientSearchTerm.set(searchTerm);
+    
+    const filtered = this.activeClients().filter(client =>
+      `${client.firstName} ${client.lastName}`.toLowerCase().includes(searchTerm) ||
+      client.email.toLowerCase().includes(searchTerm)
+    );
+    this.filteredClients.set(filtered);
+    this.focusedClientIndex.set(-1);
+  }
+
+  selectClient(client: Client): void {
+    this.selectedClientId.set(client.userId);
+    this.clientDropdownOpen.set(false);
+    this.clientSearchTerm.set('');
+    this.focusedClientIndex.set(-1);
+    this.onClientchange();
+  }
+
+  getSelectedClientName(): string {
+    const client = this.selectedClient();
+    return client ? `${client.firstName} ${client.lastName}` : 'Select a client...';
+  }
+
+  isClientFocused(index: number): boolean {
+    return this.focusedClientIndex() === index;
+  }
+
+  setFocusedClientIndex(index: number): void {
+    this.focusedClientIndex.set(index);
+  }
+
+  onClientKeydown(event: KeyboardEvent, client: Client, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+        event.preventDefault();
+        this.selectClient(client);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextClient();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousClient();
+        break;
+      case 'Escape':
+        event.preventDefault();
+        this.clientDropdownOpen.set(false);
+        this.focusedClientIndex.set(-1);
+        break;
+    }
+  }
+
+  private focusNextClient(): void {
+    const currentIndex = this.focusedClientIndex();
+    const maxIndex = this.filteredClients().length - 1;
+    this.focusedClientIndex.set(currentIndex < maxIndex ? currentIndex + 1 : 0);
+  }
+
+  private focusPreviousClient(): void {
+    const currentIndex = this.focusedClientIndex();
+    const maxIndex = this.filteredClients().length - 1;
+    this.focusedClientIndex.set(currentIndex > 0 ? currentIndex - 1 : maxIndex);
+  }
+
+  onClientButtonKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.toggleClientDropdown();
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.toggleClientDropdown();
+      setTimeout(() => {
+        this.focusedClientIndex.set(0);
+      }, 0);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.client-dropdown-container')) {
+      this.clientDropdownOpen.set(false);
+      this.focusedClientIndex.set(-1);
+    }
+  }
+
+  async onClientchange() {
+    if (this.selectedClient()) {
+      await this.loadOpenOrders();
+    }
+  }
+
+  private async loadOpenOrders(silent: boolean = false): Promise<void> {
+    if (!this.selectedClient()) {
+      this.openOrders.set([]);
+      return;
+    }
+
+    // Only show loading state if this is not a silent background refetch
+    if (!silent) {
+      this.ordersLoading.set(true);
+    }
+
+    try {
+      const response: any = await this.service
+        .getOpenOrders(this.selectedClient()!.userId, 0, 50)
+        .toPromise();
+
+      if (response?.items && Array.isArray(response.items)) {
+        this.openOrders.set(response.items);
+        // Initialize price update tracking
+        this.orderPriceUpdates = {};
+      } else {
+        this.openOrders.set([]);
+      }
+    } catch (err) {
+      console.error('Error loading open orders:', err);
+      // Only show error if this is not a silent background refetch
+      if (!silent) {
+        this.error.set('Failed to load open orders');
+      }
+      this.openOrders.set([]);
+    } finally {
+      // Only hide loading state if this is not a silent background refetch
+      if (!silent) {
+        this.ordersLoading.set(false);
+      }
+    }
+  }
+
+  async refreshOrders(): Promise<void> {
+    await this.loadOpenOrders();
+  }
+
+  async updateOrderPrice(orderId: string, newPrice: number): Promise<void> {
+    if (!newPrice || newPrice <= 0) {
+      return;
+    }
+
+    // Add to updating set
+    const currentUpdating = new Set(this.updatingOrderIds());
+    currentUpdating.add(orderId);
+    this.updatingOrderIds.set(currentUpdating);
+
+    try {
+      await this.loadOpenOrders();
+      delete this.orderPriceUpdates[orderId];
+      const order = this.openOrders().find((o) => o.id === orderId);
+      if (order) {
+        const activity = {
+          symbol: order.tradingPairSymbol,
+          price: newPrice,
+          clientName: `${this.selectedClient()?.firstName} ${
+            this.selectedClient()?.lastName
+          }`,
+          timestamp: new Date(),
+          force: false,
+        };
+        this.recentActivity.update((activities) => [activity, ...activities]);
+      }
+    } catch (err) {
+      console.error('Error updating order price:', err);
+      this.error.set('Failed to update order price. Please try again.');
+    } finally {
+      // Remove from updating set
+      const updatedUpdating = new Set(this.updatingOrderIds());
+      updatedUpdating.delete(orderId);
+      this.updatingOrderIds.set(updatedUpdating);
+    }
+  }
+
+  async quickPriceUpdate(orderId: string, newPrice: number): Promise<void> {
+    await this.updateOrderPrice(orderId, newPrice);
+  }
+
+  trackByOrderId(index: number, order: Order): string {
+    return order.id;
+  }
 
   // Configuration arrays
   intervals = [
@@ -174,44 +309,18 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   ngOnInit(): void {
-    this.loadLightWeightChartsScript();
     this.loadInitialData();
     this.startMarketStatusUpdates();
+    this.startOrderbookRefetch();
   }
 
   ngAfterViewInit(): void {
-    setTimeout(() => {
-      if (this.selectedSymbol() && this.selectedClientId()) {
-        this.initializeChart();
-      }
-    }, 100);
+    setTimeout(() => {}, 100);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-
-    if (this.chart) {
-      this.chart.remove();
-    }
-  }
-
-  private loadLightWeightChartsScript(): void {
-    if (typeof window.LightweightCharts !== 'undefined') {
-      return;
-    }
-
-    const script = document.createElement('script');
-    // script.src =
-    //   'https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('LightWeight Charts script loaded successfully');
-    };
-    script.onerror = () => {
-      this.error.set('Failed to load LightWeight Charts library');
-    };
-    document.head.appendChild(script);
   }
 
   private async loadInitialData(): Promise<void> {
@@ -235,6 +344,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       const response: any = await this.service.getActiveClients().toPromise();
       if (response?.clients && Array.isArray(response.clients)) {
         this.activeClients.set(response.clients);
+        // Initialize filtered clients for searchable dropdown
+        this.filteredClients.set(response.clients);
       } else {
         throw new Error('Invalid response format for active clients');
       }
@@ -262,229 +373,6 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private async loadChartData(): Promise<void> {
-    if (!this.selectedSymbol()) return;
-
-    this.chartLoading.set(true);
-    console.log(
-      `Loading chart data for: ${this.selectedSymbol()} interval: ${this.selectedInterval()}`
-    );
-
-    try {
-      const response: any = await this.service
-        .chartData(this.selectedSymbol(), this.selectedInterval(), 500)
-        .toPromise();
-
-      console.log('Raw response received:', response);
-
-      // Handle the response structure - data is wrapped in a 'data' property
-      let dataArray: ChartData[] = response.data;
-
-      console.log(`Raw chart data received: ${dataArray.length} items`);
-
-      this.chartData = dataArray.map((item: any) => {
-        // The 'time' field is already a Unix timestamp, use it directly
-        return {
-          time: item.time, // No conversion needed if already Unix timestamp
-          open: parseFloat(item.open),
-          high: parseFloat(item.high),
-          low: parseFloat(item.low),
-          close: parseFloat(item.close),
-          volume: parseFloat(item.volume),
-        };
-      });
-
-      this.lastPriceUpdate.set(new Date());
-      this.updateChartData();
-    } catch (err) {
-      console.error('Error loading chart data:', err);
-      this.error.set('Failed to load chart data for ' + this.selectedSymbol());
-    } finally {
-      this.chartLoading.set(false);
-    }
-  }
-
-  private initializeChart(): void {
-    if (
-      typeof window.LightweightCharts === 'undefined' ||
-      !this.chartContainer
-    ) {
-      console.warn(
-        'LightWeight Charts library not loaded or chart container not available'
-      );
-      return;
-    }
-
-    // Remove existing chart
-    if (this.chart) {
-      this.chart.remove();
-    }
-
-    // Create chart options
-    const chartOptions = {
-      width: this.chartContainer.nativeElement.clientWidth,
-      height: this.isFullscreen() ? window.innerHeight * 0.8 : 600,
-      layout: {
-        backgroundColor: this.chartTheme() === 'dark' ? '#1f2937' : '#ffffff',
-        textColor: this.chartTheme() === 'dark' ? '#e5e7eb' : '#374151',
-        fontSize: 12,
-        fontFamily: 'Inter, system-ui, sans-serif',
-      },
-      grid: {
-        vertLines: {
-          color: this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
-        },
-        horzLines: {
-          color: this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
-        },
-      },
-      crosshair: {
-        mode: 1, // Normal crosshair
-      },
-      rightPriceScale: {
-        borderColor: this.chartTheme() === 'dark' ? '#4b5563' : '#d1d5db',
-        scaleMargins: {
-          top: 0.1,
-          bottom: 0.1,
-        },
-      },
-      timeScale: {
-        borderColor: this.chartTheme() === 'dark' ? '#4b5563' : '#d1d5db',
-        timeVisible: true,
-        secondsVisible: false,
-      },
-      watermark: {
-        color: this.chartTheme() === 'dark' ? '#374151' : '#e5e7eb',
-        visible: true,
-        text: this.selectedSymbol(),
-        fontSize: 24,
-        horzAlign: 'center',
-        vertAlign: 'center',
-      },
-    };
-
-    // Create new chart
-    this.chart = window.LightweightCharts.createChart(
-      this.chartContainer.nativeElement,
-      chartOptions
-    );
-
-    // Create series based on selected chart type
-    this.createSeries();
-
-    // Load data if available
-    if (this.chartData.length > 0) {
-      this.updateChartData();
-    }
-
-    // Handle resize
-    window.addEventListener('resize', this.handleChartResize.bind(this));
-  }
-
-  private createSeries(): void {
-    if (!this.chart) return;
-
-    // Clear existing series
-    this.candlestickSeries = null;
-    this.lineSeries = null;
-    this.areaSeries = null;
-    this.barSeries = null;
-
-    const seriesOptions = {
-      upColor: '#22c55e',
-      downColor: '#ef4444',
-      borderDownColor: '#dc2626',
-      borderUpColor: '#16a34a',
-      wickDownColor: '#dc2626',
-      wickUpColor: '#16a34a',
-    };
-
-    const lineAreaOptions = {
-      color: '#3b82f6',
-      lineWidth: 2,
-    };
-
-    switch (this.selectedChartType()) {
-      case 'candlestick':
-        this.candlestickSeries = this.chart.addCandlestickSeries(seriesOptions);
-        break;
-      case 'bar':
-        this.barSeries = this.chart.addBarSeries(seriesOptions);
-        break;
-      case 'line':
-        this.lineSeries = this.chart.addLineSeries(lineAreaOptions);
-        break;
-      case 'area':
-        this.areaSeries = this.chart.addAreaSeries({
-          ...lineAreaOptions,
-          topColor: 'rgba(59, 130, 246, 0.4)',
-          bottomColor: 'rgba(59, 130, 246, 0.1)',
-        });
-        break;
-    }
-  }
-
-  private updateChartData(): void {
-    if (!this.chart || this.chartData.length === 0) return;
-
-    const activeSeries = this.getActiveSeries();
-    if (!activeSeries) return;
-
-    // Format data based on chart type
-    let formattedData;
-    if (
-      this.selectedChartType() === 'line' ||
-      this.selectedChartType() === 'area'
-    ) {
-      // For line and area charts, use close price
-      formattedData = this.chartData.map((item) => ({
-        time: item.time,
-        value: item.close,
-      }));
-    } else {
-      // For candlestick and bar charts, use OHLC data
-      formattedData = this.chartData.map((item) => ({
-        time: item.time,
-        open: item.open,
-        high: item.high,
-        low: item.low,
-        close: item.close,
-      }));
-    }
-
-    // Set data and fit content
-    activeSeries.setData(formattedData);
-    this.chart.timeScale().fitContent();
-  }
-
-  private getActiveSeries():
-    | ICandlestickSeriesApi
-    | ILineSeriesApi
-    | IAreaSeriesApi
-    | IBarSeriesApi
-    | null {
-    switch (this.selectedChartType()) {
-      case 'candlestick':
-        return this.candlestickSeries;
-      case 'bar':
-        return this.barSeries;
-      case 'line':
-        return this.lineSeries;
-      case 'area':
-        return this.areaSeries;
-      default:
-        return null;
-    }
-  }
-
-  private handleChartResize(): void {
-    if (this.chart && this.chartContainer) {
-      const { clientWidth } = this.chartContainer.nativeElement;
-      const height = this.isFullscreen() ? window.innerHeight * 0.8 : 600;
-      this.chart.resize(clientWidth, height);
-    }
-  }
-
   private startMarketStatusUpdates(): void {
     // Simulate market hours (simplified)
     interval(60000) // Check every minute
@@ -497,18 +385,20 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
-  async refreshData(): Promise<void> {
-    await this.loadInitialData();
-    if (this.selectedSymbol() && this.selectedClientId()) {
-      await this.loadChartData();
-    }
+  private startOrderbookRefetch(): void {
+    // Refetch orderbook data every 4 seconds when a client is selected
+    interval(4000) // 4 seconds
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        // Only refetch if a client is selected and we're not currently loading
+        if (this.selectedClient() && !this.ordersLoading()) {
+          this.loadOpenOrders(true); // Silent background refetch
+        }
+      });
   }
 
-  onClientChange(): void {
-    console.log('Selected client changed:', this.selectedClientId());
-    if (this.selectedSymbol()) {
-      this.loadChartData();
-    }
+  async refreshData(): Promise<void> {
+    await this.loadInitialData();
   }
 
   async onSearchChange(): Promise<void> {
@@ -523,43 +413,6 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  onSymbolChange(): void {
-    console.log('Selected symbol changed:', this.selectedSymbol());
-    if (this.selectedClientId()) {
-      this.loadChartData();
-    }
-    // Update watermark
-    if (this.chart) {
-      this.chart.applyOptions({
-        watermark: {
-          text: this.selectedSymbol(),
-        },
-      });
-    }
-  }
-
-  onIntervalChange(): void {
-    console.log('Interval changed:', this.selectedInterval());
-    if (this.selectedSymbol() && this.selectedClientId()) {
-      this.loadChartData();
-    }
-  }
-
-  onChartTypeChange(): void {
-    console.log('Chart type changed:', this.selectedChartType());
-    this.createSeries();
-    if (this.chartData.length > 0) {
-      this.updateChartData();
-    }
-  }
-
-  onThemeChange(): void {
-    console.log('Theme changed:', this.chartTheme());
-    if (this.selectedSymbol() && this.selectedClientId()) {
-      this.initializeChart();
-    }
-  }
-
   toggleFullscreen(): void {
     this.isFullscreen.update((v) => !v);
 
@@ -568,11 +421,6 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     } else {
       document.exitFullscreen?.();
     }
-
-    // Resize chart with new dimensions
-    setTimeout(() => {
-      this.handleChartResize();
-    }, 100);
   }
 
   async manipulatePrice(): Promise<void> {
@@ -583,17 +431,19 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     this.manipulating.set(true);
 
     try {
+      const pair = this.tradingPairs().find(
+        (x) => x.symbol === this.selectedSymbol()
+      );
+
       const request: ManipulatePriceRequest = {
         userId: this.selectedClientId(),
-        symbol: this.selectedSymbol(),
+        symbol: `${pair?.baseAsset}/${pair?.quoteAsset}`,
         price: this.manipulationPrice()!,
         force: this.forceManipulation(),
       };
 
       const response = await this.service.manipulatePrice(request).toPromise();
-      console.log('Price manipulation response:', response);
 
-      // Add to activity log
       const activity = {
         symbol: this.selectedSymbol(),
         price: this.manipulationPrice()!,
@@ -607,10 +457,6 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       this.recentActivity.update((activities) => [activity, ...activities]);
       this.manipulationCount.update((count) => count + 1);
 
-      // Reload chart data to reflect changes
-      await this.loadChartData();
-
-      // Reset form
       this.manipulationPrice.set(null);
       this.forceManipulation.set(false);
     } catch (err) {
@@ -621,13 +467,13 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: string): string {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-    }).format(date);
+    }).format(new Date(date));
   }
 }

@@ -26,6 +26,34 @@ export class PriceManagerService {
       `binance/api/Binance/trading-pairs?pageIndex=0&pageSize=20&search=${search}`
     );
   }
+
+  getOpenOrders(clientUserId: string, pageIndex = 0, pageSize = 50) {
+    return this.http.get(
+      `traiding/api/Trading/active-orders?clientUserId=${clientUserId}&pageSize=${pageSize}&pageIndex=${pageIndex}`
+    );
+  }
+
+  updateOrderPrice(orderId: string, newPrice: number) {
+    return this.http.put(`traiding/api/Orders/${orderId}/price`, { newPrice });
+  }
+}
+
+export interface Order {
+  id: string;
+  tradingPairSymbol: string;
+  orderType: string;
+  side: 'Buy' | 'Sell';
+  price: number;
+  quantity: number;
+  filledQuantity: number;
+  remainingQuantity: number;
+  status: 'Active' | 'Partial' | 'Filled' | 'Cancelled';
+  leverage: number;
+  currentPrice: number;
+  unrealizedPnL: number;
+  unrealizedPnLPercent: number;
+  requiredMargin: number;
+  createdAt: string;
 }
 
 export interface ManipulatePriceRequest {
@@ -37,6 +65,7 @@ export interface ManipulatePriceRequest {
 
 export interface Client {
   id: string;
+  userId: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -48,13 +77,4 @@ export interface TradingPair {
   status: string;
   baseAsset: string;
   quoteAsset: string;
-}
-
-export interface ChartData {
-  time: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
 }
