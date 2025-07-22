@@ -3,9 +3,8 @@
 import { Component, Input, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { HttpClient } from '@angular/common/http';
 import { AlertService } from '../../../core/services/alert.service';
-import { KycDocument } from '../../models/kyc/kyc.model';
+import { FilePreviewResult, FilePreviewService, PreviewType } from '../../services/file-preview.service';
 
 // Generic file interface that can work with different file types
 export interface PreviewFile {
@@ -26,7 +25,7 @@ export interface PreviewFile {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="file-preview-container">
+    <div class="file-preview-container bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl overflow-hidden">
       <div class="preview-header">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ file.fileName }}
@@ -242,7 +241,7 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
   @Input({ required: true }) file!: PreviewFile;
   @Input() onClose: () => void = () => {};
 
-  private readonly http = inject(HttpClient);
+  private readonly filePreviewService = inject(FilePreviewService);
   private readonly alertService = inject(AlertService);
   private readonly sanitizer = inject(DomSanitizer);
 
@@ -250,7 +249,7 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
   error: string | null = null;
   previewUrl: string | null = null;
   safeUrl: SafeResourceUrl | null = null;
-  previewType: 'image' | 'pdf' | 'video' | 'audio' | 'other' = 'other';
+  previewType: PreviewType = 'other';
 
   ngOnInit(): void {
     this.determinePreviewType();
@@ -259,112 +258,43 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.previewUrl) {
-      URL.revokeObjectURL(this.previewUrl);
+      this.filePreviewService.revokeObjectUrl(this.previewUrl);
     }
   }
 
   private determinePreviewType(): void {
-    const contentType = this.file.contentType?.toLowerCase() || '';
-    const fileName = this.file.fileName.toLowerCase();
-    const fileExtension = this.file.fileExtension?.toLowerCase() || '';
-
-    if (
-      contentType.startsWith('image/') ||
-      this.file.isImage ||
-      fileExtension.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)$/)
-    ) {
-      this.previewType = 'image';
-    } else if (
-      contentType === 'application/pdf' ||
-      this.file.isPdf ||
-      fileName.endsWith('.pdf') ||
-      fileExtension === '.pdf'
-    ) {
-      this.previewType = 'pdf';
-    } else if (
-      contentType.startsWith('video/') ||
-      fileExtension.match(/\.(mp4|avi|mov|wmv|flv|webm|mkv)$/)
-    ) {
-      this.previewType = 'video';
-    } else if (
-      contentType.startsWith('audio/') ||
-      fileExtension.match(/\.(mp3|wav|ogg|aac|flac|wma)$/)
-    ) {
-      this.previewType = 'audio';
-    } else {
-      this.previewType = 'other';
-    }
+    this.previewType = this.filePreviewService.determinePreviewType({
+      contentType: this.file.contentType,
+      fileName: this.file.fileName,
+      fileExtension: this.file.fileExtension,
+      isImage: this.file.isImage,
+      isPdf: this.file.isPdf
+    });
   }
 
   loadPreview(): void {
     this.loading = true;
     this.error = null;
 
-    // If file has a direct URL and it's an image, use it directly
-    if (this.file.fileUrl && this.previewType === 'image') {
-      this.previewUrl = this.file.fileUrl;
-      this.loading = false;
-      return;
-    }
-
-    // For other file types or if no direct URL, try to fetch the file
-    if (this.file.fileUrl) {
-      this.loadFromUrl();
-    } else {
+    if (!this.file.fileUrl) {
+      console.error('FilePreviewComponent: No file URL available');
       this.previewType = 'other';
       this.loading = false;
-    }
-  }
-
-  private loadFromUrl(): void {
-    if (!this.file.fileUrl) {
-      this.error = 'File URL not available';
-      this.loading = false;
       return;
     }
 
-    if (this.previewType === 'other') {
-      this.loading = false;
-      return;
-    }
-
-    // For images, we can use the URL directly
-    if (this.previewType === 'image') {
-      this.previewUrl = this.file.fileUrl;
-      this.loading = false;
-      return;
-    }
-
-    // For PDFs, create a safe URL for iframe
-    if (this.previewType === 'pdf') {
-      this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-        this.file.fileUrl
-      );
-      this.loading = false;
-      return;
-    }
-
-    // For videos and audio, try to fetch as blob for better control
-    this.http.get(this.file.fileUrl, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        this.previewUrl = URL.createObjectURL(blob);
-
-        if (this.previewType === 'pdf') {
-          this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-            this.previewUrl
-          );
-        }
-
+    this.filePreviewService.loadPreview(this.file.fileUrl, this.previewType).subscribe({
+      next: (result: FilePreviewResult) => {
+        this.previewUrl = result.previewUrl;
+        this.safeUrl = result.safeUrl;
+        this.previewType = result.previewType;
+        this.error = result.error || null;
         this.loading = false;
       },
-      error: (error) => {
-        if (this.previewType === 'pdf') {
-          this.safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-            this.file.fileUrl!
-          );
-        }
+      error: (error: any) => {
+        this.error = error.message || 'Failed to load preview';
         this.loading = false;
-      },
+      }
     });
   }
 
@@ -378,37 +308,35 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
 
   download(): void {
     if (this.file.fileUrl) {
-      const link = document.createElement('a');
-      link.href = this.file.fileUrl;
-      link.download = this.file.fileName;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      this.filePreviewService.downloadFile(this.file.fileUrl).subscribe({
+        next: (result) => {
+          if (result.success && result.blob) {
+            const url = URL.createObjectURL(result.blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = this.file.fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+          } else {
+            this.alertService.error(result.error || 'Download failed');
+          }
+        },
+        error: (error) => {
+          this.alertService.error('Download failed');
+        }
+      });
     } else {
       this.alertService.error('Download URL not available');
     }
   }
 
   formatFileSize(bytes: number): string {
-    if (bytes === 0) return '0 Bytes';
-
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return this.filePreviewService.formatFileSize(bytes);
   }
 
   formatDate(dateString: string | undefined): string {
-    if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
+    return this.filePreviewService.formatDate(dateString);
   }
 }
