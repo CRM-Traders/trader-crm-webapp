@@ -158,16 +158,25 @@
           >
             Symbol
           </label>
-          <select
-            [(ngModel)]="selectedSymbol"
-            (ngModelChange)="onSymbolChange()"
-            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select symbol...</option>
-            <option *ngFor="let pair of tradingPairs()" [value]="pair.symbol">
-              {{ pair.symbol }} ({{ pair.baseAsset }}/{{ pair.quoteAsset }})
-            </option>
-          </select>
+          <div class="space-y-2">
+            <input
+              type="text"
+              [(ngModel)]="tradingPairSearch"
+              (ngModelChange)="onSearchChange()"
+              placeholder="Search trading pairs..."
+              class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+            <select
+              [(ngModel)]="selectedSymbol"
+              (ngModelChange)="onSymbolChange()"
+              class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select symbol...</option>
+              <option *ngFor="let pair of tradingPairs()" [value]="pair.symbol">
+                {{ pair.symbol }} ({{ pair.baseAsset }}/{{ pair.quoteAsset }})
+              </option>
+            </select>
+          </div>
         </div>
         <div>
           <label
@@ -301,14 +310,14 @@
     <div class="flex justify-between items-center mb-6">
       <div>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          {{ selectedSymbol! }} - {{ selectedClient()?.firstName }}
+          {{ selectedSymbol() }} - {{ selectedClient()?.firstName }}
           {{ selectedClient()?.lastName }}
         </h3>
         <div
           class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400"
         >
-          <span>Interval: {{ selectedInterval! }}</span>
-          <span>Theme: {{ chartTheme! }}</span>
+          <span>Interval: {{ selectedInterval() }}</span>
+          <span>Theme: {{ chartTheme() }}</span>
           <span *ngIf="lastPriceUpdate()"
             >Last Update: {{ formatDate(lastPriceUpdate()!) }}</span
           >
@@ -377,7 +386,7 @@
       class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
     >
       <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-        {{ selectedSymbol || "-" }}
+        {{ selectedSymbol() || "-" }}
       </div>
       <div class="text-sm text-gray-500 dark:text-gray-400">
         Selected Symbol

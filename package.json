@@ -21,6 +21,7 @@
     "@angular/router": "^19.2.0",
     "@microsoft/signalr": "^8.0.7",
     "@tailwindcss/postcss": "^4.1.6",
+    "lightweight-charts": "^5.0.8",
     "ng-qrcode": "^19.0.1",
     "postcss": "^8.5.3",
     "rxjs": "~7.8.0",

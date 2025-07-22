@@ -20,19 +20,58 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, interval } from 'rxjs';
 
+// TradingView type declarations
 declare global {
   interface Window {
-    TradingView: {
-      widget: new (config: any) => any;
-      version: () => string;
+    TradingView: typeof TradingView;
+  }
+}
+
+declare namespace TradingView {
+  interface WidgetOptions {
+    container_id: string;
+    width?: string | number;
+    height?: string | number;
+    symbol?: string;
+    interval?: string;
+    timezone?: string;
+    theme?: 'light' | 'dark';
+    style?: string;
+    locale?: string;
+    toolbar_bg?: string;
+    enable_publishing?: boolean;
+    allow_symbol_change?: boolean;
+    hide_top_toolbar?: boolean;
+    hide_legend?: boolean;
+    save_image?: boolean;
+    studies?: string[];
+    show_popup_button?: boolean;
+    popup_width?: string;
+    popup_height?: string;
+    no_referral_id?: boolean;
+    overrides?: Record<string, any>;
+  }
+
+  interface ChartWidget {
+    remove(): void;
+    chart(): {
+      setResolution(resolution: string): void;
+      setChartType(type: number): void;
+      setSymbol(symbol: string, interval: string, callback: () => void): void;
     };
   }
 
-  var TradingView: {
-    widget: new (config: any) => any;
-    version: () => string;
-  };
+  class widget implements ChartWidget {
+    constructor(options: WidgetOptions);
+    remove(): void;
+    chart(): {
+      setResolution(resolution: string): void;
+      setChartType(type: number): void;
+      setSymbol(symbol: string, interval: string, callback: () => void): void;
+    };
+  }
 }
+
 interface MarketDataPoint {
   symbol: string;
   price: number;
@@ -69,6 +108,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedInterval = signal('1h');
   selectedChartType = signal('1');
   chartTheme = signal<'light' | 'dark'>('dark');
+  tradingPairSearch = signal('');
 
   // Manipulation state
   manipulationPrice = signal<number | null>(null);
@@ -158,7 +198,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private loadTradingViewScript(): void {
-    if (typeof TradingView !== 'undefined') {
+    if (typeof window.TradingView !== 'undefined') {
       return;
     }
 
@@ -206,9 +246,13 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private async loadTradingPairs(): Promise<void> {
     try {
-      const pairs = await this.service.tradingPairs('').toPromise();
+      const pairs: any = await this.service
+        .tradingPairs(this.tradingPairSearch() || null)
+        .toPromise();
       if (Array.isArray(pairs)) {
         this.tradingPairs.set(pairs);
+      } else if (pairs?.data && Array.isArray(pairs.data)) {
+        this.tradingPairs.set(pairs.data);
       } else {
         throw new Error('Invalid response format for trading pairs');
       }
@@ -250,7 +294,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private initializeChart(): void {
-    if (typeof TradingView === 'undefined' || !this.chartContainer) {
+    if (typeof window.TradingView === 'undefined' || !this.chartContainer) {
       console.warn(
         'TradingView library not loaded or chart container not available'
       );
@@ -262,13 +306,19 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       this.widget.remove();
     }
 
+    // For custom data integration, you'll need to use TradingView's Charting Library (paid)
+    // or implement a custom chart solution. The free widget only works with TradingView's data.
+
+    // Try to map your symbol to TradingView's available symbols
+    const tvSymbol = this.mapToTradingViewSymbol(this.selectedSymbol());
+
     // Create new widget with enhanced configuration
-    this.widget = new TradingView.widget({
+    this.widget = new window.TradingView.widget({
       container_id: this.chartContainer.nativeElement.id,
       width: '100%',
       height: this.isFullscreen() ? window.innerHeight * 0.8 : 600,
-      symbol: `BINANCE:${this.selectedSymbol()}`,
-      interval: this.selectedInterval(),
+      symbol: tvSymbol,
+      interval: this.mapToTradingViewInterval(this.selectedInterval()),
       timezone: 'Etc/UTC',
       theme: this.chartTheme(),
       style: this.selectedChartType(),
@@ -299,6 +349,36 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  private mapToTradingViewSymbol(symbol: string): string {
+    // Map your custom symbols to TradingView symbols
+    const symbolMap: { [key: string]: string } = {
+      BTCUSDT: 'BINANCE:BTCUSDT',
+      ETHUSDT: 'BINANCE:ETHUSDT',
+      LTCBTC: 'BINANCE:LTCBTC',
+      ADAUSDT: 'BINANCE:ADAUSDT',
+      BNBUSDT: 'BINANCE:BNBUSDT',
+      // Add more mappings as needed
+    };
+
+    return symbolMap[symbol] || `BINANCE:${symbol}`;
+  }
+
+  private mapToTradingViewInterval(interval: string): string {
+    // Map your intervals to TradingView intervals
+    const intervalMap: { [key: string]: string } = {
+      '1m': '1',
+      '5m': '5',
+      '15m': '15',
+      '30m': '30',
+      '1h': '60',
+      '4h': '240',
+      '1d': '1D',
+      '1w': '1W',
+    };
+
+    return intervalMap[interval] || interval;
+  }
+
   private startMarketStatusUpdates(): void {
     // Simulate market hours (simplified)
     interval(60000) // Check every minute
@@ -322,6 +402,18 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('Selected client changed:', this.selectedClientId());
     if (this.selectedSymbol()) {
       this.loadChartData();
+    }
+  }
+
+  async onSearchChange(): Promise<void> {
+    try {
+      this.loading.set(true);
+      await this.loadTradingPairs();
+    } catch (err) {
+      console.error('Error searching trading pairs:', err);
+      this.error.set('Failed to search trading pairs');
+    } finally {
+      this.loading.set(false);
     }
   }
 
