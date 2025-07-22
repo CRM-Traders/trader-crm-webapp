@@ -108,8 +108,6 @@ export class FilePreviewService {
 
     // For videos and audio, try to fetch as blob for better control
     if (previewType === 'video' || previewType === 'audio') {
-      console.log('FilePreviewService: Fetching video/audio as blob from:', fileUrl);
-      
       return this.httpClient.get(`${environment.gatewayDomain}${fileUrl}`, { responseType: 'blob' }).pipe(
         map((blob) => {
           const objectUrl = this.createObjectUrl(blob);

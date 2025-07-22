@@ -100,78 +100,89 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
-    >
-      <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-        {{ activeClients().length }}
-      </div>
-      <div class="text-sm text-gray-500 dark:text-gray-400">Active Clients</div>
-    </div>
-
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
-    >
-      <div class="text-2xl font-bold text-green-600 dark:text-green-400">
-        {{ tradingPairs().length }}
-      </div>
-      <div class="text-sm text-gray-500 dark:text-gray-400">Trading Pairs</div>
-    </div>
-
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
-    >
-      <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-        {{ selectedSymbol() || "-" }}
-      </div>
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        Selected Symbol
-      </div>
-    </div>
-
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center"
-    >
-      <div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
-        {{ manipulationCount() }}
-      </div>
-      <div class="text-sm text-gray-500 dark:text-gray-400">
-        Price Updates Today
-      </div>
-    </div>
-  </div>
-
   <!-- Control Panel -->
-  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+  <div class="grid grid-cols-1 gap-6 mb-8">
     <!-- Client Selection -->
     <div
       class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
     >
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-        Client Selection
-      </h3>
       <div class="space-y-4">
-        <div>
+        <div class="client-dropdown-container relative">
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             Select Client
           </label>
-          <select
-            [(ngModel)]="selectedClientId"
-            (ngModelChange)="onClientchange()"
-            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+
+          <!-- Custom Dropdown Button -->
+          <button
+            type="button"
+            class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+            (click)="toggleClientDropdown()"
+            (keydown)="onClientButtonKeydown($event)"
           >
-            <option value="">Select a client...</option>
-            <option
-              *ngFor="let client of activeClients()"
-              [value]="client.userId"
+            <span class="truncate">{{ getSelectedClientName() }}</span>
+            <svg
+              class="w-4 h-4 ml-2 transition-transform"
+              [class.rotate-180]="clientDropdownOpen()"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {{ client.firstName }} {{ client.lastName }}
-            </option>
-          </select>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div
+            *ngIf="clientDropdownOpen()"
+            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+          >
+            <!-- Search Input -->
+            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+              <input
+                #clientSearchInput
+                type="text"
+                placeholder="Search clients..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                (input)="onClientSearch($event)"
+                [value]="clientSearchTerm()"
+              />
+            </div>
+
+            <!-- Clients List -->
+            <div class="max-h-48 overflow-y-auto">
+              <div
+                *ngFor="let client of filteredClients(); let i = index"
+                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                [class.bg-blue-100]="isClientFocused(i)"
+                [class.dark:bg-blue-400]="isClientFocused(i)"
+                [tabindex]="0"
+                (click)="selectClient(client)"
+                (keydown)="onClientKeydown($event, client, i)"
+                (mouseenter)="setFocusedClientIndex(i)"
+              >
+                <div class="font-medium">{{ client.firstName }} {{ client.lastName }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">{{ client.email }}</div>
+              </div>
+
+              <!-- No results -->
+              <div
+                *ngIf="filteredClients().length === 0"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                No clients found
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- Selected Client Info -->
         <div
           *ngIf="selectedClient()"
           class="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-md"
@@ -188,125 +199,48 @@
         </div>
       </div>
     </div>
+</div>
 
-    <!-- Symbol Selection -->
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-    >
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-        Trading Pair
-      </h3>
-      <div class="space-y-4">
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Symbol
-          </label>
-          <div class="space-y-2">
-            <input
-              type="text"
-              [(ngModel)]="tradingPairSearch"
-              (ngModelChange)="onSearchChange()"
-              placeholder="Search trading pairs..."
-              class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-            <select
-              [(ngModel)]="selectedSymbol"
-              class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select symbol...</option>
-              <option *ngFor="let pair of tradingPairs()" [value]="pair.symbol">
-                {{ pair.symbol }} ({{ pair.baseAsset }}/{{ pair.quoteAsset }})
-              </option>
-            </select>
-          </div>
-        </div>
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Interval
-          </label>
-          <select
-            [(ngModel)]="selectedInterval"
-            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option *ngFor="let interval of intervals" [value]="interval.value">
-              {{ interval.label }}
-            </option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- Price Manipulation -->
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-    >
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-        Price Control
-      </h3>
-      <div class="space-y-4">
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Target Price
-          </label>
-          <input
-            type="number"
-            [(ngModel)]="manipulationPrice"
-            step="0.00000001"
-            class="block w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter price..."
-          />
-        </div>
-        <label class="flex items-center">
-          <input
-            type="checkbox"
-            [(ngModel)]="forceManipulation"
-            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-            >Force override</span
-          >
-        </label>
-        <button
-          (click)="manipulatePrice()"
-          [disabled]="!canManipulatePrice() || manipulating()"
-          class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+  <!-- --------------- ------------------------------------->
+  <!-- Empty State - No Client Selected -->
+  <div
+    *ngIf="!selectedClient()"
+    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 mb-8 text-center"
+  >
+    <div class="max-w-md mx-auto">
+      <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+        <svg
+          class="w-8 h-8 text-blue-600 dark:text-blue-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          <svg
-            *ngIf="manipulating()"
-            class="w-4 h-4 mr-2 animate-spin"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              class="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-            ></circle>
-            <path
-              class="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          {{ manipulating() ? "Processing..." : "Apply Price" }}
-        </button>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        Select a Client to View Orders
+      </h3>
+      <p class="text-gray-600 dark:text-gray-400 mb-6">
+        Choose a client from the dropdown above to view and manage their open trading orders.
+      </p>
+      <div class="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Orders will appear here once a client is selected</span>
       </div>
     </div>
   </div>
 
-  <!-- --------------- ------------------------------------->
   <!-- Orders Grid Section -->
   <div
-    *ngIf="selectedClient() && openOrders().length > 0"
+    *ngIf="selectedClient()"
     class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8"
   >
     <div class="flex justify-between items-center mb-6">
@@ -401,11 +335,12 @@
           </tr>
         </thead>
         <tbody
-          class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
+          class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30"
         >
+          <!-- Orders -->
           <tr
             *ngFor="let order of openOrders(); trackBy: trackByOrderId"
-            class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors"
           >
             <!-- Symbol -->
             <td class="px-6 py-4 whitespace-nowrap">
@@ -632,18 +567,37 @@
               </div>
             </td>
           </tr>
+          
+          <!-- Empty State Row -->
+          <tr *ngIf="openOrders().length === 0">
+            <td colspan="8" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center">
+                <div class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <svg
+                    class="w-6 h-6 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  No Orders Found
+                </h3>
+                <p class="text-gray-500 dark:text-gray-400">
+                  {{ selectedClient()?.firstName }} {{ selectedClient()?.lastName }} has no open orders at the moment.
+                </p>
+              </div>
+            </td>
+          </tr>
         </tbody>
       </table>
-    </div>
-
-    <!-- Empty State -->
-    <div
-      *ngIf="!ordersLoading() && openOrders().length === 0"
-      class="text-center py-8"
-    >
-      <div class="text-gray-500 dark:text-gray-400">
-        No open orders found for this client.
-      </div>
     </div>
   </div>
 

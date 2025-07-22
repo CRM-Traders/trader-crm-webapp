@@ -8,6 +8,7 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  HostListener,
 } from '@angular/core';
 import {
   Client,
@@ -63,6 +64,12 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     }>
   >([]);
 
+  // Searchable dropdown properties
+  clientDropdownOpen = signal(false);
+  clientSearchTerm = signal('');
+  filteredClients = signal<Client[]>([]);
+  focusedClientIndex = signal(-1);
+
   selectedClient = computed(() => {
     const clientId = this.selectedClientId();
     return (
@@ -87,19 +94,124 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ... existing methods ...
 
+  // Searchable dropdown methods
+  toggleClientDropdown(): void {
+    this.clientDropdownOpen.update(open => !open);
+    if (!this.clientDropdownOpen()) {
+      this.clientSearchTerm.set('');
+      this.filteredClients.set(this.activeClients());
+      this.focusedClientIndex.set(-1);
+    } else {
+      this.filteredClients.set(this.activeClients());
+    }
+  }
+
+  onClientSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const searchTerm = target.value.toLowerCase();
+    this.clientSearchTerm.set(searchTerm);
+    
+    const filtered = this.activeClients().filter(client =>
+      `${client.firstName} ${client.lastName}`.toLowerCase().includes(searchTerm) ||
+      client.email.toLowerCase().includes(searchTerm)
+    );
+    this.filteredClients.set(filtered);
+    this.focusedClientIndex.set(-1);
+  }
+
+  selectClient(client: Client): void {
+    this.selectedClientId.set(client.userId);
+    this.clientDropdownOpen.set(false);
+    this.clientSearchTerm.set('');
+    this.focusedClientIndex.set(-1);
+    this.onClientchange();
+  }
+
+  getSelectedClientName(): string {
+    const client = this.selectedClient();
+    return client ? `${client.firstName} ${client.lastName}` : 'Select a client...';
+  }
+
+  isClientFocused(index: number): boolean {
+    return this.focusedClientIndex() === index;
+  }
+
+  setFocusedClientIndex(index: number): void {
+    this.focusedClientIndex.set(index);
+  }
+
+  onClientKeydown(event: KeyboardEvent, client: Client, index: number): void {
+    switch (event.key) {
+      case 'Enter':
+        event.preventDefault();
+        this.selectClient(client);
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        this.focusNextClient();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.focusPreviousClient();
+        break;
+      case 'Escape':
+        event.preventDefault();
+        this.clientDropdownOpen.set(false);
+        this.focusedClientIndex.set(-1);
+        break;
+    }
+  }
+
+  private focusNextClient(): void {
+    const currentIndex = this.focusedClientIndex();
+    const maxIndex = this.filteredClients().length - 1;
+    this.focusedClientIndex.set(currentIndex < maxIndex ? currentIndex + 1 : 0);
+  }
+
+  private focusPreviousClient(): void {
+    const currentIndex = this.focusedClientIndex();
+    const maxIndex = this.filteredClients().length - 1;
+    this.focusedClientIndex.set(currentIndex > 0 ? currentIndex - 1 : maxIndex);
+  }
+
+  onClientButtonKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.toggleClientDropdown();
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      this.toggleClientDropdown();
+      setTimeout(() => {
+        this.focusedClientIndex.set(0);
+      }, 0);
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.client-dropdown-container')) {
+      this.clientDropdownOpen.set(false);
+      this.focusedClientIndex.set(-1);
+    }
+  }
+
   async onClientchange() {
     if (this.selectedClient()) {
       await this.loadOpenOrders();
     }
   }
 
-  private async loadOpenOrders(): Promise<void> {
+  private async loadOpenOrders(silent: boolean = false): Promise<void> {
     if (!this.selectedClient()) {
       this.openOrders.set([]);
       return;
     }
 
-    this.ordersLoading.set(true);
+    // Only show loading state if this is not a silent background refetch
+    if (!silent) {
+      this.ordersLoading.set(true);
+    }
 
     try {
       const response: any = await this.service
@@ -115,10 +227,16 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     } catch (err) {
       console.error('Error loading open orders:', err);
-      this.error.set('Failed to load open orders');
+      // Only show error if this is not a silent background refetch
+      if (!silent) {
+        this.error.set('Failed to load open orders');
+      }
       this.openOrders.set([]);
     } finally {
-      this.ordersLoading.set(false);
+      // Only hide loading state if this is not a silent background refetch
+      if (!silent) {
+        this.ordersLoading.set(false);
+      }
     }
   }
 
@@ -137,18 +255,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     this.updatingOrderIds.set(currentUpdating);
 
     try {
-      const response = await this.service
-        .updateOrderPrice(orderId, newPrice)
-        .toPromise();
-      console.log('Order price updated:', response);
-
-      // Refresh orders to get updated data
       await this.loadOpenOrders();
-
-      // Clear the input field
       delete this.orderPriceUpdates[orderId];
-
-      // Add to activity log
       const order = this.openOrders().find((o) => o.id === orderId);
       if (order) {
         const activity = {
@@ -203,6 +311,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.loadInitialData();
     this.startMarketStatusUpdates();
+    this.startOrderbookRefetch();
   }
 
   ngAfterViewInit(): void {
@@ -235,6 +344,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       const response: any = await this.service.getActiveClients().toPromise();
       if (response?.clients && Array.isArray(response.clients)) {
         this.activeClients.set(response.clients);
+        // Initialize filtered clients for searchable dropdown
+        this.filteredClients.set(response.clients);
       } else {
         throw new Error('Invalid response format for active clients');
       }
@@ -271,6 +382,18 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
         const hour = now.getUTCHours();
         // Simplified: consider market open 24/7 for crypto, 9-17 UTC for traditional markets
         this.marketStatus.set('open'); // For crypto markets
+      });
+  }
+
+  private startOrderbookRefetch(): void {
+    // Refetch orderbook data every 4 seconds when a client is selected
+    interval(4000) // 4 seconds
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        // Only refetch if a client is selected and we're not currently loading
+        if (this.selectedClient() && !this.ordersLoading()) {
+          this.loadOpenOrders(true); // Silent background refetch
+        }
       });
   }
 
@@ -320,9 +443,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       };
 
       const response = await this.service.manipulatePrice(request).toPromise();
-      console.log('Price manipulation response:', response);
 
-      // Add to activity log
       const activity = {
         symbol: this.selectedSymbol(),
         price: this.manipulationPrice()!,

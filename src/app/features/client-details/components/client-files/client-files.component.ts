@@ -706,7 +706,6 @@ export class ClientFilesComponent implements OnInit {
   files: ClientFile[] = [];
 
   ngOnInit(): void {
-    console.log('ClientFilesComponent ngOnInit', this.client);
     if (this.client.id) {
       this.loadClientFiles();
     }
