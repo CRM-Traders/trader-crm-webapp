@@ -38,6 +38,30 @@ export class BrandService {
       );
   }
 
+  getBrandsSwitch(
+    pageIndex: number = 0,
+    pageSize: number = 50
+  ): Observable<BrandDropdownResponse> {
+    const body = {
+      pageIndex,
+      pageSize,
+      sortField: null,
+      sortDirection: null,
+      visibleColumns: ['array', null],
+      globalFilter: null,
+      filters: null,
+    };
+
+    return this.http
+      .post<BrandDropdownResponse>('identity/api/offices/switch-office', body)
+      .pipe(
+        catchError((error) => {
+          this.alertService.error('Failed to load offices. Please try again.');
+          return throwError(() => new Error('Failed to load offices'));
+        })
+      );
+  }
+
   setBrandId(selectedOfficeId: string): Observable<SetBrandResponse> {
     const body = { selectedOfficeId };
 

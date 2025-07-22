@@ -17,11 +17,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MarketData, Position } from './models/chart.model';
 
-declare global {
-  interface Window {
-    TradingView: any;
-  }
-}
+// declare global {
+//   interface Window {
+//     TradingView: any;
+//   }
+// }
 
 @Component({
   selector: 'app-charts',

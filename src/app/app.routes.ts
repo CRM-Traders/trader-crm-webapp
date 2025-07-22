@@ -95,6 +95,14 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard(128)],
       },
       {
+        path: 'manager',
+        loadComponent: () =>
+          import('./features/price-manager/price-manager.component').then(
+            (m) => m.PriceManagerComponent
+          ),
+        canActivate: [authGuard, roleGuard(127)],
+      },
+      {
         path: 'leads',
         loadComponent: () =>
           import('./features/leads/leads.component').then(

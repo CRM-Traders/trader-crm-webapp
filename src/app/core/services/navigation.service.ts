@@ -52,10 +52,10 @@ export class NavigationService {
       permission: 125,
     },
     {
-      label: 'Sales Rules',
-      icon: 'salerule',
-      route: '/salerules',
-      permission: 126,
+      label: 'Operators',
+      icon: 'operator',
+      route: '/operators',
+      permission: 130,
     },
     {
       label: 'Clients',
@@ -64,22 +64,28 @@ export class NavigationService {
       permission: 127,
     },
     {
-      label: 'Affiliates',
-      icon: 'affiliates',
-      route: '/affiliates',
-      permission: 128,
-    },
-    {
       label: 'Leads',
       icon: 'leads',
       route: '/leads',
       permission: 129,
     },
     {
-      label: 'Operators',
-      icon: 'operator',
-      route: '/operators',
-      permission: 130,
+      label: 'Affiliates',
+      icon: 'affiliates',
+      route: '/affiliates',
+      permission: 128,
+    },
+    {
+      label: 'Trading Manager',
+      icon: 'traiding-live',
+      route: '/manager',
+      permission: 127,
+    },
+    {
+      label: 'Sales Rules',
+      icon: 'salerule',
+      route: '/salerules',
+      permission: 126,
     },
     {
       label: 'Permission Templates',
