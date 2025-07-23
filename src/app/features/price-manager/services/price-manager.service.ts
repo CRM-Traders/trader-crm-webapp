@@ -36,6 +36,10 @@ export class PriceManagerService {
   updateOrderPrice(orderId: string, newPrice: number) {
     return this.http.put(`traiding/api/Orders/${orderId}/price`, { newPrice });
   }
+
+  closeOrder(orderId: string) {
+    return this.http.post(`traiding/api/Trading/${orderId}/close`, null);
+  }
 }
 
 export interface Order {
