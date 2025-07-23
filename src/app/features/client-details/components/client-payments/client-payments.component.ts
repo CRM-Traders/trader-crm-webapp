@@ -245,12 +245,12 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     this.loadingWalletTransactions = true;
 
     const filters = {
-      pageNumber: this.currentPage,
+      pageNumber: this.currentPage - 1, // Convert to 0-based for API
       pageSize: this.pageSize,
       transactionType: this.transactionTypeFilter || undefined,
       currency: this.currencyFilter || undefined,
     };
-
+    
     this.walletService
       .getClientTransactionsByUserId(this.clientId, filters)
       .pipe(takeUntil(this.destroy$))
@@ -258,11 +258,13 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.walletTransactions = response.items;
           this.totalItems = response.totalCount;
-          this.currentPage = response.pageNumber + 1;
           this.pageSize = response.pageSize;
-          this.totalPages = response.totalPages;
-          this.hasNextPage = response.hasNextPage;
-          this.hasPreviousPage = response.hasPreviousPage;
+          this.totalPages = Math.ceil(this.totalItems / this.pageSize);
+          
+          // Calculate pagination state based on current page and total pages
+          this.hasNextPage = this.currentPage < this.totalPages;
+          this.hasPreviousPage = this.currentPage > 1;
+          
           this.loadingWalletTransactions = false;
         },
         error: (error) => {
@@ -341,11 +343,11 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   }
 
   getTotalPages(): number {
-    return this.totalPages;
+    return Math.ceil(this.totalItems / this.pageSize);
   }
 
   getPageNumbers(): number[] {
-    const totalPages = this.getTotalPages();
+    const totalPages = this.totalPages;
     const currentPage = this.currentPage;
     const pages: number[] = [];
 

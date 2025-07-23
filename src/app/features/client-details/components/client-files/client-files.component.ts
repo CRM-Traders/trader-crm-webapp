@@ -731,11 +731,9 @@ export class ClientFilesComponent implements OnInit {
         finalize(() => (this.isLoading = false))
       )
       .subscribe((files) => {
-        if (files.length > 0) {
-          this.files = files.map((file) =>
-            this.mapStoredFileDtoToClientFile(file)
-          );
-        }
+        this.files = files.map((file) =>
+          this.mapStoredFileDtoToClientFile(file)
+        );
       });
   }
 
@@ -997,16 +995,6 @@ export class ClientFilesComponent implements OnInit {
         this.alertService.success(`File "${fileName}" deleted successfully`);
         this.loadClientFiles(); // Reload files
       });
-  }
-
-  /**
-   * Delete a file (deprecated - replaced with modal)
-   */
-  deleteFile(fileId: string): void {
-    const file = this.files.find((f) => f.id === fileId);
-    if (file) {
-      this.showDeleteConfirmation(file);
-    }
   }
 
   /**

@@ -56,42 +56,82 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
                   </dd>
                 </div>
 
-                <!-- Full Name -->
+                <!-- First Name -->
                 <div>
                   <dt
                     class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
                   >
-                    Full Name
+                    First Name
                   </dt>
                   <dd>
                     <form [formGroup]="editForm">
                       <input
                         *ngIf="isEditing"
                         type="text"
-                        formControlName="name"
+                        formControlName="firstname"
                         class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         [class.border-red-300]="
-                          editForm.get('name')?.invalid &&
-                          editForm.get('name')?.touched
+                          editForm.get('firstname')?.invalid &&
+                          editForm.get('firstname')?.touched
                         "
-                        placeholder="Enter full name"
+                        placeholder="Enter first name"
                       />
                     </form>
                     <span
                       *ngIf="!isEditing"
                       class="text-base font-medium text-gray-900 dark:text-white"
                     >
-                      {{ affiliate.name || '-' }}
+                      {{ getFirstName(affiliate.name) || '-' }}
                     </span>
                     <p
                       *ngIf="
                         isEditing &&
-                        editForm.get('name')?.invalid &&
-                        editForm.get('name')?.touched
+                        editForm.get('firstname')?.invalid &&
+                        editForm.get('firstname')?.touched
                       "
                       class="mt-2 text-sm text-red-600 dark:text-red-400"
                     >
-                      Full name is required
+                      First name is required
+                    </p>
+                  </dd>
+                </div>
+
+                <!-- Last Name -->
+                <div>
+                  <dt
+                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1"
+                  >
+                    Last Name
+                  </dt>
+                  <dd>
+                    <form [formGroup]="editForm">
+                      <input
+                        *ngIf="isEditing"
+                        type="text"
+                        formControlName="lastname"
+                        class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        [class.border-red-300]="
+                          editForm.get('lastname')?.invalid &&
+                          editForm.get('lastname')?.touched
+                        "
+                        placeholder="Enter last name"
+                      />
+                    </form>
+                    <span
+                      *ngIf="!isEditing"
+                      class="text-base font-medium text-gray-900 dark:text-white"
+                    >
+                      {{ getLastName(affiliate.name) || '-' }}
+                    </span>
+                    <p
+                      *ngIf="
+                        isEditing &&
+                        editForm.get('lastname')?.invalid &&
+                        editForm.get('lastname')?.touched
+                      "
+                      class="mt-2 text-sm text-red-600 dark:text-red-400"
+                    >
+                      Last name is required
                     </p>
                   </dd>
                 </div>
@@ -486,7 +526,8 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.editForm = this.fb.group({
-      name: ['', [Validators.required]],
+      firstname: ['', [Validators.required]],
+      lastname: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       website: ['', [Validators.pattern(/^https?:\/\/.+/)]],
@@ -511,7 +552,8 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
           if (affiliate) {
             this.affiliate = affiliate;
             this.editForm.patchValue({
-              name: affiliate.name || '',
+              firstname: this.getFirstName(affiliate.name || ''),
+              lastname: this.getLastName(affiliate.name || ''),
               email: affiliate.email || '',
               phone: affiliate.phone || '',
               website: affiliate.website || '',
@@ -526,10 +568,22 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  getFirstName(fullName: string): string {
+    if (!fullName) return '';
+    return fullName.split(' ')[0] || '';
+  }
+
+  getLastName(fullName: string): string {
+    if (!fullName) return '';
+    const parts = fullName.split(' ');
+    return parts.length > 1 ? parts.slice(1).join(' ') : '';
+  }
+
   startEdit(): void {
     this.isEditing = true;
     this.editForm.patchValue({
-      name: this.affiliate?.name || '',
+      firstname: this.getFirstName(this.affiliate?.name || ''),
+      lastname: this.getLastName(this.affiliate?.name || ''),
       email: this.affiliate?.email || '',
       phone: this.affiliate?.phone || '',
       website: this.affiliate?.website || '',
@@ -539,7 +593,8 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
   cancelEdit(): void {
     this.isEditing = false;
     this.editForm.patchValue({
-      name: this.affiliate?.name || '',
+      firstname: this.getFirstName(this.affiliate?.name || ''),
+      lastname: this.getLastName(this.affiliate?.name || ''),
       email: this.affiliate?.email || '',
       phone: this.affiliate?.phone || '',
       website: this.affiliate?.website || '',
@@ -552,7 +607,8 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
 
     const updateRequest: AffiliateUpdateRequest = {
       id: this.affiliate.id,
-      name: this.editForm.value.name || null,
+      firstname: this.editForm.value.firstname || null,
+      lastname: this.editForm.value.lastname || null,
       email: this.editForm.value.email || null,
       phone: this.editForm.value.phone || null,
       website: this.editForm.value.website || null,
@@ -574,9 +630,10 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
         this.alertService.success('Affiliate updated successfully');
         this.isEditing = false;
         // Update the affiliate data with form values
+        const fullName = `${this.editForm.value.firstname || ''} ${this.editForm.value.lastname || ''}`.trim();
         this.affiliate = {
           ...this.affiliate,
-          name: this.editForm.value.name || '',
+          name: fullName,
           email: this.editForm.value.email || '',
           phone: this.editForm.value.phone || null,
           website: this.editForm.value.website || null,
