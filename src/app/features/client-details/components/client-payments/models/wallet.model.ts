@@ -29,7 +29,7 @@ export interface WalletTransaction {
   id: string;
   tradingAccountId: string;
   accountNumber: string;
-  transactionType: 'Deposit' | 'Withdrawal';
+  transactionType: 'Deposit' | 'Withdrawal' | 'MarginLock' | 'PositionClosed' | 'PositionClosedWithLoss' | 'Liquidation' | 'OrderPlaced';
   paymentType: string | null;
   paymentMethod: string | null;
   paymentStatus: string | null;
