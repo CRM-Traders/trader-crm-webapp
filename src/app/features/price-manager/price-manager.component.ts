@@ -292,6 +292,10 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     await this.updateOrderPrice(orderId, newPrice);
   }
 
+  cancaleOrder(orderId: string) {
+    this.service.closeOrder(orderId).subscribe((result) => {});
+  }
+
   trackByOrderId(index: number, order: Order): string {
     return order.id;
   }

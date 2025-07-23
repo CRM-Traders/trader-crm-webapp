@@ -167,8 +167,12 @@
                 (keydown)="onClientKeydown($event, client, i)"
                 (mouseenter)="setFocusedClientIndex(i)"
               >
-                <div class="font-medium">{{ client.firstName }} {{ client.lastName }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">{{ client.email }}</div>
+                <div class="font-medium">
+                  {{ client.firstName }} {{ client.lastName }}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">
+                  {{ client.email }}
+                </div>
               </div>
 
               <!-- No results -->
@@ -199,7 +203,7 @@
         </div>
       </div>
     </div>
-</div>
+  </div>
 
   <!-- --------------- ------------------------------------->
   <!-- Empty State - No Client Selected -->
@@ -208,7 +212,9 @@
     class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 mb-8 text-center"
   >
     <div class="max-w-md mx-auto">
-      <div class="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+      <div
+        class="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center"
+      >
         <svg
           class="w-8 h-8 text-blue-600 dark:text-blue-400"
           fill="none"
@@ -227,11 +233,24 @@
         Select a Client to View Orders
       </h3>
       <p class="text-gray-600 dark:text-gray-400 mb-6">
-        Choose a client from the dropdown above to view and manage their open trading orders.
+        Choose a client from the dropdown above to view and manage their open
+        trading orders.
       </p>
-      <div class="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <div
+        class="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-400"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <span>Orders will appear here once a client is selected</span>
       </div>
@@ -564,15 +583,37 @@
                     ></path>
                   </svg>
                 </button>
+                <button
+                  (click)="cancaleOrder(order.id)"
+                  [disabled]="updatingOrderIds().has(order.id)"
+                  class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
+                  title="Close Order"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                </button>
               </div>
             </td>
           </tr>
-          
+
           <!-- Empty State Row -->
           <tr *ngIf="openOrders().length === 0">
             <td colspan="8" class="px-6 py-12 text-center">
               <div class="flex flex-col items-center">
-                <div class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                <div
+                  class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
+                >
                   <svg
                     class="w-6 h-6 text-gray-400 dark:text-gray-500"
                     fill="none"
@@ -587,11 +628,15 @@
                     />
                   </svg>
                 </div>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                <h3
+                  class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
+                >
                   No Orders Found
                 </h3>
                 <p class="text-gray-500 dark:text-gray-400">
-                  {{ selectedClient()?.firstName }} {{ selectedClient()?.lastName }} has no open orders at the moment.
+                  {{ selectedClient()?.firstName }}
+                  {{ selectedClient()?.lastName }} has no open orders at the
+                  moment.
                 </p>
               </div>
             </td>
