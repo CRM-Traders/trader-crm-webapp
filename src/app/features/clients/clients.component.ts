@@ -859,9 +859,27 @@ export class ClientsComponent implements OnInit {
       }
     );
 
+    // Handle both result and dismissed promises
     modalRef.result.then(
-      (result) => {},
-      () => {}
+      (result) => {
+        this.refreshGrid();
+        this.loadClientStatistics();
+      },
+      () => {
+        this.refreshGrid();
+        this.loadClientStatistics();
+      }
+    );
+
+    modalRef.dismissed.then(
+      (reason) => {
+        this.refreshGrid();
+        this.loadClientStatistics();
+      },
+      () => {
+        this.refreshGrid();
+        this.loadClientStatistics();
+      }
     );
   }
 
