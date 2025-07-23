@@ -224,11 +224,21 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
         .toPromise();
 
       if (response?.items && Array.isArray(response.items)) {
+        // Preserve existing price updates when refreshing orders
+        const currentPriceUpdates = { ...this.orderPriceUpdates };
+        
         this.openOrders.set(response.items);
-        // Initialize price update tracking
+        
+        // Restore price updates for orders that still exist
         this.orderPriceUpdates = {};
+        response.items.forEach((order: Order) => {
+          if (currentPriceUpdates[order.id] !== undefined) {
+            this.orderPriceUpdates[order.id] = currentPriceUpdates[order.id];
+          }
+        });
       } else {
         this.openOrders.set([]);
+        this.orderPriceUpdates = {};
       }
     } catch (err) {
       console.error('Error loading open orders:', err);
@@ -408,8 +418,83 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
+  // New method: Refresh only data without affecting user inputs
   async refreshData(): Promise<void> {
-    await this.loadInitialData();
+    // Store current state
+    const currentClientId = this.selectedClientId();
+    const currentSymbol = this.selectedSymbol();
+    const currentInterval = this.selectedInterval();
+    const currentTradingPairSearch = this.tradingPairSearch();
+    const currentManipulationPrice = this.manipulationPrice();
+    const currentForceManipulation = this.forceManipulation();
+    const currentOrderPriceUpdates = { ...this.orderPriceUpdates };
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    try {
+      // Refresh only the data, not the entire component state
+      await Promise.all([
+        this.refreshActiveClients(),
+        this.refreshTradingPairs()
+      ]);
+
+      // Restore user inputs and selections
+      this.selectedClientId.set(currentClientId);
+      this.selectedSymbol.set(currentSymbol);
+      this.selectedInterval.set(currentInterval);
+      this.tradingPairSearch.set(currentTradingPairSearch);
+      this.manipulationPrice.set(currentManipulationPrice);
+      this.forceManipulation.set(currentForceManipulation);
+      this.orderPriceUpdates = currentOrderPriceUpdates;
+
+      // Refresh orders if a client is selected
+      if (currentClientId) {
+        await this.loadOpenOrders();
+      }
+    } catch (err) {
+      this.error.set(
+        'Failed to refresh data. Please check your connection and try again.'
+      );
+      console.error('Error refreshing data:', err);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  // Separate method to refresh active clients
+  private async refreshActiveClients(): Promise<void> {
+    try {
+      const response: any = await this.service.getActiveClients().toPromise();
+      if (response?.clients && Array.isArray(response.clients)) {
+        this.activeClients.set(response.clients);
+        this.filteredClients.set(response.clients);
+      } else {
+        throw new Error('Invalid response format for active clients');
+      }
+    } catch (err) {
+      console.error('Error refreshing active clients:', err);
+      throw err;
+    }
+  }
+
+  // Separate method to refresh trading pairs
+  private async refreshTradingPairs(): Promise<void> {
+    try {
+      const pairs: any = await this.service
+        .tradingPairs(this.tradingPairSearch() || null)
+        .toPromise();
+      if (Array.isArray(pairs)) {
+        this.tradingPairs.set(pairs);
+      } else if (pairs?.data && Array.isArray(pairs.data)) {
+        this.tradingPairs.set(pairs.data);
+      } else {
+        throw new Error('Invalid response format for trading pairs');
+      }
+    } catch (err) {
+      console.error('Error refreshing trading pairs:', err);
+      throw err;
+    }
   }
 
   async onSearchChange(): Promise<void> {
