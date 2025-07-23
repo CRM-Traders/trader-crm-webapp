@@ -30,7 +30,8 @@ export interface AffiliateCreateResponse {
 
 export interface AffiliateUpdateRequest {
   id: string;
-  name: string | null;
+  firstname: string | null;
+  lastname: string | null;
   email: string | null;
   phone: string | null;
   website: string | null;
