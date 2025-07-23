@@ -48,13 +48,23 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
       >
         <div class="flex items-center justify-between">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Desk Details - {{ desk.name }}
+            Desk Details - {{ desk?.name || 'Loading...' }}
           </h2>
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div *ngIf="loading && !desk" class="px-6 py-8 text-center">
+        <svg class="animate-spin h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Loading desk details...</p>
+      </div>
+
       <!-- Modal Body -->
       <div
+        *ngIf="desk"
         class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[100vh] overflow-y-auto"
       >
         <div class="space-y-6">
@@ -542,10 +552,10 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
                 <button
                   type="button"
                   class="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50"
-                  [disabled]="editForm.invalid || loading"
+                  [disabled]="editForm.invalid || saving"
                   (click)="saveDesk()"
                 >
-                  {{ loading ? 'Saving...' : 'Save Changes' }}
+                  {{ saving ? 'Saving...' : 'Save Changes' }}
                 </button>
               </div>
             </div>
@@ -579,7 +589,7 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
 })
 export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
-  @Input() desk!: Desk;
+  @Input() deskId!: string;
   @ViewChild('officeSearchInput', { static: false })
   officeSearchInput!: ElementRef;
 
@@ -592,6 +602,8 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   editForm: FormGroup;
   isEditing = false;
   loading = false;
+  saving = false;
+  desk: Desk | null = null;
   availableOffices: BrandDropdownItem[] = [];
   availableLanguages: any[] = [];
 
@@ -641,30 +653,55 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadDeskDetails();
     this.initializeSearchObservable();
     this.loadInitialOffices();
     this.loadAvailableLanguages();
     this.filteredLanguages = this.availableLanguages;
-    if (this.desk) {
-      this.editForm.patchValue({
-        name: this.desk.name,
-        brandId: this.desk.brandId,
-        type: this.desk.type,
-        language: this.desk.language || '',
-        isActive: this.desk.isActive,
-      });
-    } else {
-      // Set default language to English for new desks
-      const englishLanguage = this.availableLanguages.find(lang => lang.key === 'en');
-      if (englishLanguage) {
-        this.editForm.patchValue({ language: englishLanguage.key });
-      }
-    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private loadDeskDetails(): void {
+    if (!this.deskId) {
+      this.alertService.error('Desk ID is required');
+      this.modalRef.close();
+      return;
+    }
+
+    this.loading = true;
+    this.desksService
+      .getDeskById(this.deskId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to load desk details');
+          this.modalRef.close();
+          return of(null);
+        }),
+        finalize(() => (this.loading = false))
+      )
+      .subscribe((desk) => {
+        if (desk) {
+          this.desk = desk;
+          this.populateForm();
+        }
+      });
+  }
+
+  private populateForm(): void {
+    if (!this.desk) return;
+
+    this.editForm.patchValue({
+      name: this.desk.name,
+      brandId: this.desk.brandId,
+      type: this.desk.type,
+      language: this.desk.language || '',
+      isActive: this.desk.isActive,
+    });
   }
 
   private initializeSearchObservable(): void {
@@ -926,19 +963,11 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
 
   cancelEdit(): void {
     this.isEditing = false;
-    if (this.desk) {
-      this.editForm.patchValue({
-        name: this.desk.name,
-        brandId: this.desk.brandId,
-        type: this.desk.type,
-        language: this.desk.language || '',
-        isActive: this.desk.isActive,
-      });
-    }
+    this.populateForm();
   }
 
   saveDesk(): void {
-    if (this.editForm.invalid || !this.desk) return;
+    if (this.editForm.invalid || !this.desk || !this.deskId) return;
 
     const updateRequest: DeskUpdateRequest = {
       id: this.desk.id,
@@ -949,7 +978,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
       isActive: this.editForm.value.isActive,
     };
 
-    this.loading = true;
+    this.saving = true;
     this.desksService
       .updateDesk(updateRequest)
       .pipe(
@@ -958,22 +987,24 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
           this.alertService.error('Failed to update desk');
           return of(null);
         }),
-        finalize(() => (this.loading = false))
+        finalize(() => (this.saving = false))
       )
       .subscribe((result) => {
         this.alertService.success('Desk updated successfully');
         this.isEditing = false;
 
         // Update the desk object with new values
-        this.desk = {
-          ...this.desk,
-          name: this.editForm.value.name.trim(),
-          brandId: this.editForm.value.brandId,
-          type: this.editForm.value.type,
-          language: this.editForm.value.language || null,
-          isActive: this.editForm.value.isActive,
-          lastModifiedAt: new Date(),
-        };
+        if (this.desk) {
+          this.desk = {
+            ...this.desk,
+            name: this.editForm.value.name.trim(),
+            brandId: this.editForm.value.brandId,
+            type: this.editForm.value.type,
+            language: this.editForm.value.language || null,
+            isActive: this.editForm.value.isActive,
+            lastModifiedAt: new Date(),
+          };
+        }
 
         this.modalRef.close({
           updated: true,
@@ -983,7 +1014,15 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   }
 
   onClose(): void {
-    this.modalRef.close(this.isEditing ? true : false);
+    // Only return a result if there were actual changes
+    if (this.isEditing) {
+      this.modalRef.close({
+        updated: true,
+        desk: this.desk
+      });
+    } else {
+      this.modalRef.close();
+    }
   }
 
   // Keyboard navigation methods for Brand dropdown

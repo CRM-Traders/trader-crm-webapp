@@ -238,19 +238,19 @@ export class DesksComponent implements OnInit, OnDestroy {
         closable: true,
       },
       {
-        desk: desk,
+        deskId: desk.id,
       }
     );
 
     modalRef.result.then(
       (result) => {
-        if (result) {
+        if (result && result.updated) {
           this.refreshSpecificGrid();
           this.loadDeskStatistics();
         }
       },
       () => {
-        // Modal dismissed
+        // Modal dismissed without changes
       }
     );
   }
