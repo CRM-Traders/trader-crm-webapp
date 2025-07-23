@@ -96,7 +96,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Searchable dropdown methods
   toggleClientDropdown(): void {
-    this.clientDropdownOpen.update(open => !open);
+    this.clientDropdownOpen.update((open) => !open);
     if (!this.clientDropdownOpen()) {
       this.clientSearchTerm.set('');
       this.filteredClients.set(this.activeClients());
@@ -110,10 +110,13 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     const target = event.target as HTMLInputElement;
     const searchTerm = target.value.toLowerCase();
     this.clientSearchTerm.set(searchTerm);
-    
-    const filtered = this.activeClients().filter(client =>
-      `${client.firstName} ${client.lastName}`.toLowerCase().includes(searchTerm) ||
-      client.email.toLowerCase().includes(searchTerm)
+
+    const filtered = this.activeClients().filter(
+      (client) =>
+        `${client.firstName} ${client.lastName}`
+          .toLowerCase()
+          .includes(searchTerm) ||
+        client.email.toLowerCase().includes(searchTerm)
     );
     this.filteredClients.set(filtered);
     this.focusedClientIndex.set(-1);
@@ -129,7 +132,9 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   getSelectedClientName(): string {
     const client = this.selectedClient();
-    return client ? `${client.firstName} ${client.lastName}` : 'Select a client...';
+    return client
+      ? `${client.firstName} ${client.lastName}`
+      : 'Select a client...';
   }
 
   isClientFocused(index: number): boolean {
@@ -255,6 +260,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     this.updatingOrderIds.set(currentUpdating);
 
     try {
+      await this.service.updateOrderPrice(orderId, newPrice).toPromise();
+
       await this.loadOpenOrders();
       delete this.orderPriceUpdates[orderId];
       const order = this.openOrders().find((o) => o.id === orderId);
