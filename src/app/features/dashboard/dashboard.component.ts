@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { DashboardService } from './services/dashboard.services';
 import { DashboardData, OfficeDashboardStats, DepositStat, Transaction, UserTicket, PaymentType, PaymentStatus, TransactionType, DepositType, TicketType, TicketStatus } from './models/dashboard.models';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule],
+  imports: [CommonModule, HasPermissionDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
   standalone: true,

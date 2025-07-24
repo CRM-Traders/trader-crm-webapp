@@ -20,11 +20,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, interval } from 'rxjs';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-price-manager',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   templateUrl: './price-manager.component.html',
   styleUrls: ['./price-manager.component.scss'],
 })
@@ -32,6 +34,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('chartContainer', { static: false }) chartContainer!: ElementRef;
 
   private service = inject(PriceManagerService);
+  private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
 
   activeClients = signal<Client[]>([]);
@@ -84,6 +87,16 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
       this.selectedSymbol() &&
       this.manipulationPrice() !== null &&
       this.manipulationPrice()! > 0
+    );
+  });
+
+  // Check if user has any of the required permissions for Actions column
+  hasAnyActionPermission = computed(() => {
+    return (
+      this.authService.hasPermission(157) ||
+      this.authService.hasPermission(158) ||
+      this.authService.hasPermission(159) ||
+      this.authService.hasPermission(160)
     );
   });
 

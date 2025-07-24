@@ -364,7 +364,7 @@
   <!-- Permissions Table -->
   <div *ngIf="!loadingPermissions && selectedOfficeId && selectedDepartmentId && selectedRoleId"
     class="bg-white dark:bg-gray-800 rounded-xl shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden m-6">
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto" *hasPermission="165">
       <table class="w-full table-fixed">
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-300/30">

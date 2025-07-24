@@ -9,6 +9,7 @@ import { HttpService } from '../../core/services/http.service';
 import { AlertService } from '../../core/services/alert.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FilePreviewComponent, PreviewFile } from '../../shared/components/file-preview/file-preview.component';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 // Client and File Models
 export interface StoredFile {
@@ -70,7 +71,7 @@ export enum DocumentStatus {
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, FilePreviewComponent],
+  imports: [CommonModule, RouterModule, FormsModule, FilePreviewComponent, HasPermissionDirective],
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss'],
 })
@@ -141,16 +142,8 @@ export class DocumentsComponent implements OnInit, OnDestroy {
   loadClients(): void {
     this._loading.set(true);
 
-    let params = new HttpParams()
-      .set('pageNumber', this._currentPage().toString())
-      .set('pageSize', this._pageSize().toString());
-
-    if (this._statusFilter()) {
-      params = params.set('statuses', this._statusFilter()!.toString());
-    }
-
     this.httpService
-      .get<ClientsResponse>('identity/api/kyc/get-clients-kyc', params)
+      .get<ClientsResponse>('identity/api/kyc/get-clients-kyc')
       .subscribe({
         next: (response) => {
           this._allClients.set(response.items);
