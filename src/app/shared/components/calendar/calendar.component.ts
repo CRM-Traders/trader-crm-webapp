@@ -12,6 +12,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { ThemeService } from '../../../core/services/theme.service';
 import { RouterModule } from '@angular/router';
 import { CalendarService, CalendarEvent } from './services/calendar.service';
+import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 
 interface EventFormData {
   title: string;
@@ -28,7 +29,7 @@ interface EventFormData {
 @Component({
   selector: 'app-calendar',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, HasPermissionDirective],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.scss'],
 })

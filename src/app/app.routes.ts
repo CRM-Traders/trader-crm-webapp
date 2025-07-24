@@ -100,7 +100,7 @@ export const routes: Routes = [
           import('./features/price-manager/price-manager.component').then(
             (m) => m.PriceManagerComponent
           ),
-        canActivate: [authGuard, roleGuard(127)],
+        canActivate: [authGuard, roleGuard(136)],
       },
       {
         path: 'leads',
@@ -220,7 +220,7 @@ export const routes: Routes = [
           import(
             './features/permission-template/permission-template.component'
           ).then((m) => m.PermissionTemplateComponent),
-        canActivate: [authGuard],
+        canActivate: [authGuard, roleGuard(135)],
       },
     ],
   },

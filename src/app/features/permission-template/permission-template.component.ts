@@ -18,11 +18,12 @@ import {
   OfficeDropdownItem, 
   OfficesListRequest 
 } from '../officies/models/office.model';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-permission-template',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   templateUrl: './permission-template.component.html',
   styleUrl: './permission-template.component.scss',
 })

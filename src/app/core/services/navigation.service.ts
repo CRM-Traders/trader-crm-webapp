@@ -79,7 +79,7 @@ export class NavigationService {
       label: 'Trading Manager',
       icon: 'traiding-live',
       route: '/manager',
-      permission: 127,
+      permission: 136,
     },
     {
       label: 'Sales Rules',
@@ -91,7 +91,7 @@ export class NavigationService {
       label: 'Permission Templates',
       icon: 'permission',
       route: '/permission-templates',
-      permission: -1, // Special value to bypass permission check
+      permission: 135, // Special value to bypass permission check
     },
     {
       label: 'Calendar',
