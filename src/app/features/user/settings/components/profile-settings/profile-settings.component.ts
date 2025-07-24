@@ -15,6 +15,8 @@ import {
 } from '@angular/forms';
 import { AlertService } from '../../../../../core/services/alert.service';
 import { Settings } from '../../models/settings.model';
+import { SettingsService } from '../../services/settings.service';
+import { ProfileUpdateRequest } from '../../models/profile-update.model';
 
 @Component({
   selector: 'app-profile-settings',
@@ -28,6 +30,7 @@ export class ProfileSettingsComponent implements OnInit, OnChanges {
 
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
+  private settingsService = inject(SettingsService);
 
   profileForm!: FormGroup;
   isProfileSaving = false;
@@ -47,7 +50,7 @@ export class ProfileSettingsComponent implements OnInit, OnChanges {
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.pattern(/^\+?[0-9\s\-\(\)]+$/)]],
+      telephone: ['', [Validators.pattern(/^\+?[0-9\s\-\(\)]+$/)]],
     });
 
     if (this.settings) {
@@ -62,7 +65,7 @@ export class ProfileSettingsComponent implements OnInit, OnChanges {
       firstName: this.settings.firstName || '',
       lastName: this.settings.lastName || '',
       email: this.settings.email || '',
-      phone: this.settings.phoneNumber || '',
+      telephone: this.settings.phoneNumber || '',
     });
   }
 
@@ -74,10 +77,24 @@ export class ProfileSettingsComponent implements OnInit, OnChanges {
 
     this.isProfileSaving = true;
 
-    setTimeout(() => {
-      this.isProfileSaving = false;
-      this.alertService.success('Profile settings updated successfully.');
-    }, 1000);
+    const profileData: ProfileUpdateRequest = {
+      firstName: this.profileForm.get('firstName')?.value || null,
+      lastName: this.profileForm.get('lastName')?.value || null,
+      email: this.profileForm.get('email')?.value || null,
+      telephone: this.profileForm.get('telephone')?.value || null,
+    };
+
+    this.settingsService.updateProfile(profileData).subscribe({
+      next: () => {
+        this.isProfileSaving = false;
+        this.alertService.success('Profile settings updated successfully.');
+      },
+      error: (error) => {
+        this.isProfileSaving = false;
+        console.error('Error updating profile:', error);
+        this.alertService.error('Failed to update profile settings. Please try again.');
+      }
+    });
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

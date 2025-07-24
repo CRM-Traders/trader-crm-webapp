@@ -7,6 +7,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { AlertService } from '../../../../../core/services/alert.service';
+import { SettingsService } from '../../services/settings.service';
+import { catchError, finalize, of } from 'rxjs';
 
 @Component({
   selector: 'app-password-settings',
@@ -18,6 +20,7 @@ import { AlertService } from '../../../../../core/services/alert.service';
 export class PasswordSettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private alertService = inject(AlertService);
+  private settingsService = inject(SettingsService);
 
   passwordForm!: FormGroup;
   isPasswordSaving = false;
@@ -47,11 +50,32 @@ export class PasswordSettingsComponent implements OnInit {
 
     this.isPasswordSaving = true;
 
-    setTimeout(() => {
-      this.isPasswordSaving = false;
-      this.alertService.success('Password updated successfully.');
-      this.passwordForm.reset();
-    }, 1000);
+    const passwordData = {
+      oldPassword: this.passwordForm.get('currentPassword')?.value,
+      newPassword: this.passwordForm.get('newPassword')?.value,
+      confirmPassword: this.passwordForm.get('confirmPassword')?.value,
+    };
+
+    this.settingsService.changePassword(passwordData)
+      .pipe(
+        catchError((error) => {
+          this.alertService.error('Failed to update password. Please try again.');
+          return of(null);
+        }),
+        finalize(() => {
+          this.isPasswordSaving = false;
+        })
+      )
+      .subscribe({
+        next: () => {
+          // 204 No Content means success, so we show success message and clear form
+          this.alertService.success('Password updated successfully.');
+          this.passwordForm.reset();
+        },
+        error: () => {
+          // Error is already handled in catchError pipe
+        }
+      });
   }
 
   private passwordMatchValidator(
