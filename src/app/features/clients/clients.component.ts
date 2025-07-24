@@ -368,6 +368,7 @@ export class ClientsComponent implements OnInit {
         { value: 'sales', label: 'Sales' },
       ],
       hidden: true,
+      permission: 13,
     },
     {
       field: 'salesStatus',
@@ -381,7 +382,7 @@ export class ClientsComponent implements OnInit {
       })),
       cellTemplate: this.salesStatusCellTemplate,
       selector: (row: Client) => row,
-      permission: 13,
+      permission: 53,
     },
     {
       field: 'latestComment',
