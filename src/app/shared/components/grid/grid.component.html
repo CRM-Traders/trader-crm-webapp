@@ -256,7 +256,7 @@
       <thead class="bg-gray-50 dark:bg-gray-700">
         <tr>
           <!-- Checkbox Column (optional) -->
-          <th *ngIf="selectable" scope="col" class="px-6 py-3 w-10">
+          <th *ngIf="isSelectionEnabled" scope="col" class="px-6 py-3 w-10">
             <div class="flex items-center justify-center">
               <input
                 type="checkbox"
@@ -421,7 +421,7 @@
         <tr *ngIf="loading">
           <td
             [attr.colspan]="
-              (selectable ? 1 : 0) +
+              (isSelectionEnabled ? 1 : 0) +
               visibleColumns.length +
               (hasActionsColumn ? 1 : 0)
             "
@@ -464,7 +464,7 @@
         <tr *ngIf="!loading && pagedData.length === 0">
           <td
             [attr.colspan]="
-              (selectable ? 1 : 0) +
+              (isSelectionEnabled ? 1 : 0) +
               visibleColumns.length +
               (hasActionsColumn ? 1 : 0)
             "
@@ -508,7 +508,7 @@
             }"
           >
             <!-- Checkbox Column -->
-            <td *ngIf="selectable" class="px-6 py-4 whitespace-nowrap">
+            <td *ngIf="isSelectionEnabled" class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center justify-center">
                 <input
                   type="checkbox"
