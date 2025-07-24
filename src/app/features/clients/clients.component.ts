@@ -207,6 +207,7 @@ export class ClientsComponent implements OnInit {
       filterable: true,
       filterType: 'text',
       hidden: true,
+      permission: 5,
     },
     {
       field: 'affiliateId',
