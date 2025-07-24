@@ -39,6 +39,7 @@ import { GridActionButtonsComponent } from '../grid-action-buttons/grid-action-b
 import { ContextMenuComponent } from '../context-menu/context-menu.component';
 import { GridDataResponse } from '../../models/grid/grid-state.model';
 import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-grid',
@@ -59,12 +60,14 @@ import { HasPermissionDirective } from '../../../core/directives/has-permission.
 export class GridComponent implements OnInit, OnDestroy {
   private gridService = inject(GridService);
   private themeService = inject(ThemeService);
+  private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
   private globalFilterSubject = new Subject<string>();
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
 
   @Input() permission: number = -1;
+  @Input() selectionPermission: number = -1; // New input for selection permission
   @Input() gridId: string = 'default-grid';
   @Input() data: any[] = [];
   @Input() columns: GridColumn[] = [];
@@ -249,8 +252,12 @@ export class GridComponent implements OnInit, OnDestroy {
     return this.showActions && this.actions.length > 0;
   }
 
+  get isSelectionEnabled(): boolean {
+    return this.selectable && this.authService.hasPermission(this.selectionPermission);
+  }
+
   updateVisibleColumns(): void {
-    this.visibleColumns = this.columns.filter((col) => !col.hidden);
+    this.visibleColumns = this.columns.filter((col) => !col.hidden && (col.permission == null ||  this.authService.hasPermission(col.permission)));
   }
 
   fetchData(showLoading: boolean = true): void {

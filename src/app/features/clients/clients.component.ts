@@ -56,6 +56,7 @@ import { AssignOperatorModalComponent } from './components/assign-operator-modal
 import { OperatorDetailsModalComponent } from '../operators/components/operator-details-modal/operator-details-modal.component';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 import { OperatorDropdownItem } from '../officies/models/office-rules.model';
+import { AuthService } from '../../core/services/auth.service';
 
 interface InlineCommentState {
   clientId: string;
@@ -87,6 +88,7 @@ export class ClientsComponent implements OnInit {
   private operatorsService = inject(OperatorsService);
   private officesService = inject(OfficesService);
   private officeRulesService = inject(OfficeRulesService);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
   private router = inject(Router);
@@ -2137,5 +2139,9 @@ export class ClientsComponent implements OnInit {
         }
         break;
     }
+  }
+
+  hasPermission(permissionIndex: number): boolean {
+    return this.authService.hasPermission(permissionIndex);
   }
 }
