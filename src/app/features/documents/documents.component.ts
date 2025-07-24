@@ -1,16 +1,17 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Subject, debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
 
 import { HttpService } from '../../core/services/http.service';
 import { AlertService } from '../../core/services/alert.service';
 import { AuthService } from '../../core/services/auth.service';
 import { FilePreviewComponent, PreviewFile } from '../../shared/components/file-preview/file-preview.component';
 
-// Document Models
-export interface Document {
+// Client and File Models
+export interface StoredFile {
   id: string;
   userId: string;
   fileName: string;
@@ -27,8 +28,26 @@ export interface Document {
   description: string | null;
 }
 
-export interface DocumentsResponse {
-  items: Record<string, Document[]>;
+export interface Client {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  telephone: string;
+  country: string;
+  status: number;
+  isProblematic: boolean;
+  isBonusAbuser: boolean;
+  affiliateId: string;
+  affiliateName: string;
+  userFullName: string;
+  ftdTime: string | null;
+  registrationDate: string;
+  storedFiles: StoredFile[];
+}
+
+export interface ClientsResponse {
+  items: Client[];
   totalCount: number;
 }
 
@@ -55,12 +74,17 @@ export enum DocumentStatus {
   templateUrl: './documents.component.html',
   styleUrls: ['./documents.component.scss'],
 })
-export class DocumentsComponent implements OnInit {
+export class DocumentsComponent implements OnInit, OnDestroy {
   private readonly httpService = inject(HttpService);
   private readonly alertService = inject(AlertService);
 
+  // Search debouncing
+  private searchSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
+
   // Signals for reactive state
-  private readonly _documents = signal<Document[]>([]);
+  private readonly _clients = signal<Client[]>([]);
+  private readonly _allClients = signal<Client[]>([]);
   private readonly _loading = signal<boolean>(false);
   private readonly _totalCount = signal<number>(0);
   private readonly _currentPage = signal<number>(1);
@@ -69,7 +93,7 @@ export class DocumentsComponent implements OnInit {
   private readonly _searchQuery = signal<string>('');
 
   // Read-only computed properties
-  readonly documents = this._documents.asReadonly();
+  readonly clients = this._clients.asReadonly();
   readonly loading = this._loading.asReadonly();
   readonly totalCount = this._totalCount.asReadonly();
   readonly currentPage = this._currentPage.asReadonly();
@@ -95,10 +119,26 @@ export class DocumentsComponent implements OnInit {
   selectedFile: PreviewFile | null = null;
 
   ngOnInit(): void {
-    this.loadDocuments();
+    // Setup search debouncing
+    this.searchSubscription = this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(query => {
+        this._searchQuery.set(query);
+        this._currentPage.set(1);
+        this.filterAndPaginateClients();
+      });
+
+    this.loadClients();
   }
 
-  loadDocuments(): void {
+  ngOnDestroy(): void {
+    this.searchSubscription?.unsubscribe();
+  }
+
+  loadClients(): void {
     this._loading.set(true);
 
     let params = new HttpParams()
@@ -109,46 +149,67 @@ export class DocumentsComponent implements OnInit {
       params = params.set('statuses', this._statusFilter()!.toString());
     }
 
-    if (this._searchQuery()) {
-      params = params.set('searchQuery', this._searchQuery());
-    }
-
     this.httpService
-      .get<DocumentsResponse>('identity/api/kyc/get-clients-kyc', params)
+      .get<ClientsResponse>('identity/api/kyc/get-clients-kyc', params)
       .subscribe({
         next: (response) => {
-          // Flatten the documents from the nested structure
-          const allDocuments: Document[] = [];
-          Object.values(response.items).forEach(documents => {
-            allDocuments.push(...documents);
-          });
-          
-          this._documents.set(allDocuments);
+          this._allClients.set(response.items);
           this._totalCount.set(response.totalCount);
+          this.filterAndPaginateClients();
           this._loading.set(false);
         },
         error: (error) => {
-          this.alertService.error('Failed to load documents');
+          this.alertService.error('Failed to load clients');
           this._loading.set(false);
         },
       });
   }
 
+  filterAndPaginateClients(): void {
+    let filteredClients = this._allClients();
+
+    // Apply search filter
+    if (this._searchQuery()) {
+      const searchTerm = this._searchQuery().toLowerCase();
+      filteredClients = filteredClients.filter(client => 
+        client.userFullName.toLowerCase().includes(searchTerm) ||
+        client.email.toLowerCase().includes(searchTerm) ||
+        client.firstName.toLowerCase().includes(searchTerm) ||
+        client.lastName.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Apply status filter
+    if (this._statusFilter()) {
+      filteredClients = filteredClients.filter(client =>
+        client.storedFiles.some(file => file.status === this._statusFilter())
+      );
+    }
+
+    // Update total count for pagination
+    this._totalCount.set(filteredClients.length);
+
+    // Apply pagination
+    const startIndex = (this._currentPage() - 1) * this._pageSize();
+    const endIndex = startIndex + this._pageSize();
+    const paginatedClients = filteredClients.slice(startIndex, endIndex);
+
+    this._clients.set(paginatedClients);
+  }
+
   onStatusFilterChange(status: DocumentStatus | null): void {
     this._statusFilter.set(status);
     this._currentPage.set(1);
-    this.loadDocuments();
+    this.filterAndPaginateClients();
   }
 
   onSearchChange(query: string): void {
-    this._searchQuery.set(query);
-    this._currentPage.set(1);
-    this.loadDocuments();
+    this.searchSubject.next(query);
   }
 
   onPageChange(page: number): void {
     this._currentPage.set(page);
-    this.loadDocuments();
+    this.filterAndPaginateClients();
   }
 
   getStatusLabel(status: DocumentStatus): string {
@@ -216,7 +277,7 @@ export class DocumentsComponent implements OnInit {
   }
 
   refreshDocuments(): void {
-    this.loadDocuments();
+    this.loadClients();
   }
 
   calculatePages() {
@@ -227,17 +288,17 @@ export class DocumentsComponent implements OnInit {
     return Math.min(this.currentPage() * this.pageSize(), this.totalCount());
   }
 
-  showPreview(document: Document): void {
+  showPreview(file: StoredFile): void {
     this.selectedFile = {
-      id: document.id,
-      fileName: document.fileName,
-      fileUrl: document.fileUrl,
-      fileSize: document.fileSize,
-      contentType: document.contentType,
-      createdAt: document.creationTime,
-      fileExtension: document.fileExtension,
-      isImage: document.contentType?.startsWith('image/') || false,
-      isPdf: document.contentType === 'application/pdf' || false
+      id: file.id,
+      fileName: file.fileName,
+      fileUrl: file.fileUrl,
+      fileSize: file.fileSize,
+      contentType: file.contentType,
+      createdAt: file.creationTime,
+      fileExtension: file.fileExtension,
+      isImage: file.contentType?.startsWith('image/') || false,
+      isPdf: file.contentType === 'application/pdf' || false
     };
     this.showFilePreview = true;
   }

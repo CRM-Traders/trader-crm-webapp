@@ -32,7 +32,7 @@ export interface PreviewFile {
     <div
       class="file-preview-container bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl overflow-hidden"
     >
-      <div class="preview-header">
+      <div class="preview-header flex justify-between items-center">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ file.fileName }}
         </h3>
@@ -90,7 +90,7 @@ export interface PreviewFile {
           <img
             [src]="previewUrl!"
             [alt]="file.fileName"
-            class="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+            class="max-w-90 my-8 max-h-full object-contain rounded-lg shadow-lg"
             (error)="onImageError()"
           />
         </div>
@@ -106,7 +106,7 @@ export interface PreviewFile {
           <video
             [src]="previewUrl!"
             controls
-            class="max-w-full max-h-full rounded-lg shadow-lg"
+            class="max-w-90 my-8 max-h-full rounded-lg shadow-lg"
             (error)="onPreviewError()"
           ></video>
         </div>
@@ -226,6 +226,10 @@ export interface PreviewFile {
         min-height: 0;
       }
 
+      img{
+        max-width: 500px;
+      }
+
       .preview-footer {
         @apply px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700;
         flex-shrink: 0;
@@ -245,7 +249,7 @@ export interface PreviewFile {
 })
 export class FilePreviewComponent implements OnInit, OnDestroy {
   @Input({ required: true }) file!: PreviewFile;
-  @Input() onClose: () => void = () => {};
+  @Input() onClose!: () => void;
 
   private readonly filePreviewService = inject(FilePreviewService);
   private readonly alertService = inject(AlertService);
