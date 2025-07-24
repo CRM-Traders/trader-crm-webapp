@@ -159,6 +159,7 @@
         <div class="overflow-x-auto">
           <app-grid
             [permission]="52"
+            [selectionPermission]="2"
             gridId="clients-grid"
             [endpoint]="'identity/api/clients/grid'"
             [columns]="gridColumns"
@@ -236,7 +237,7 @@
 
             <ng-container>
               <!-- Auto Login Cell Template -->
-              <ng-template #autoLoginCell let-value="value" let-row="row">
+              <ng-template #autoLoginCell let-value="value" let-row="row" >
                 <button
                   class="p-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
                   (click)="onAutoLogin(value)"
@@ -294,7 +295,7 @@
                 <div class="relative" data-dropdown="salesStatus">
                   <button
                     type="button"
-                    [disabled]="updatingSalesStatus === (value.id || row.id)"
+                    [disabled]="updatingSalesStatus === (value.id || row.id) || !hasPermission(53)"
                     (click)="
                       toggleSalesStatusDropdown(value.id || row.id, $event)
                     "
@@ -310,6 +311,7 @@
                       )
                     }}</span>
                     <svg
+                      *ngIf="hasPermission(53)"
                       class="w-4 h-4 ml-2 transition-transform"
                       [class.rotate-180]="
                         salesStatusDropdownStates.get(value.id || row.id)
@@ -329,7 +331,7 @@
 
                   <!-- Dropdown Panel -->
                   <div
-                    *ngIf="salesStatusDropdownStates.get(value.id || row.id)"
+                    *ngIf="salesStatusDropdownStates.get(value.id || row.id) && hasPermission(53)"
                     class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[200px]"
                   >
                     <!-- Search Input -->
@@ -480,7 +482,7 @@
                   <button
                     type="button"
                     [disabled]="
-                      updatingOperatorAssignment === (value.id || row.id)
+                      updatingOperatorAssignment === (value.id || row.id) || !hasPermission(2)
                     "
                     (click)="toggleOperatorDropdown(value.id || row.id, $event)"
                     (keydown)="
@@ -492,6 +494,7 @@
                       getSelectedOperatorName(value.id || row.id, value || row)
                     }}</span>
                     <svg
+                      *ngIf="hasPermission(2)"
                       class="w-4 h-4 ml-2 transition-transform"
                       [class.rotate-180]="
                         operatorDropdownStates.get(value.id || row.id)
@@ -511,7 +514,7 @@
 
                   <!-- Dropdown Panel -->
                   <div
-                    *ngIf="operatorDropdownStates.get(value.id || row.id)"
+                    *ngIf="operatorDropdownStates.get(value.id || row.id) && hasPermission(2)"
                     class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[250px]"
                   >
                     <!-- Search Input -->
