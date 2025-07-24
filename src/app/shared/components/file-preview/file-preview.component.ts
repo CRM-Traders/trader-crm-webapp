@@ -9,6 +9,7 @@ import {
   FilePreviewService,
   PreviewType,
 } from '../../services/file-preview.service';
+import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 
 // Generic file interface that can work with different file types
 export interface PreviewFile {
@@ -27,7 +28,7 @@ export interface PreviewFile {
 @Component({
   selector: 'app-file-preview',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HasPermissionDirective],
   template: `
     <div
       class="file-preview-container bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl overflow-hidden"
@@ -38,6 +39,7 @@ export interface PreviewFile {
         </h3>
         <div class="flex gap-2">
           <button
+            *hasPermission="154"
             (click)="download()"
             class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
