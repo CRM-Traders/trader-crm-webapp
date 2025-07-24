@@ -4,7 +4,11 @@ import { Component, Input, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AlertService } from '../../../core/services/alert.service';
-import { FilePreviewResult, FilePreviewService, PreviewType } from '../../services/file-preview.service';
+import {
+  FilePreviewResult,
+  FilePreviewService,
+  PreviewType,
+} from '../../services/file-preview.service';
 
 // Generic file interface that can work with different file types
 export interface PreviewFile {
@@ -25,7 +29,9 @@ export interface PreviewFile {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="file-preview-container bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl overflow-hidden">
+    <div
+      class="file-preview-container bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl overflow-hidden"
+    >
       <div class="preview-header">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
           {{ file.fileName }}
@@ -268,7 +274,7 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
       fileName: this.file.fileName,
       fileExtension: this.file.fileExtension,
       isImage: this.file.isImage,
-      isPdf: this.file.isPdf
+      isPdf: this.file.isPdf,
     });
   }
 
@@ -283,19 +289,21 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.filePreviewService.loadPreview(this.file.fileUrl, this.previewType).subscribe({
-      next: (result: FilePreviewResult) => {
-        this.previewUrl = result.previewUrl;
-        this.safeUrl = result.safeUrl;
-        this.previewType = result.previewType;
-        this.error = result.error || null;
-        this.loading = false;
-      },
-      error: (error: any) => {
-        this.error = error.message || 'Failed to load preview';
-        this.loading = false;
-      }
-    });
+    this.filePreviewService
+      .loadPreview(`/Storage${this.file.fileUrl}`, this.previewType)
+      .subscribe({
+        next: (result: FilePreviewResult) => {
+          this.previewUrl = result.previewUrl;
+          this.safeUrl = result.safeUrl;
+          this.previewType = result.previewType;
+          this.error = result.error || null;
+          this.loading = false;
+        },
+        error: (error: any) => {
+          this.error = error.message || 'Failed to load preview';
+          this.loading = false;
+        },
+      });
   }
 
   onImageError(): void {
@@ -325,7 +333,7 @@ export class FilePreviewComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.alertService.error('Download failed');
-        }
+        },
       });
     } else {
       this.alertService.error('Download URL not available');
