@@ -249,7 +249,12 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   get hasActionsColumn(): boolean {
-    return this.showActions && this.actions.length > 0;
+    if (!this.showActions || this.actions.length === 0) {
+      return false;
+    }
+    
+    // Check if user has permission for at least one action
+    return this.actions.some(action => this.authService.hasPermission(action.permission));
   }
 
   get isSelectionEnabled(): boolean {
@@ -326,6 +331,12 @@ export class GridComponent implements OnInit, OnDestroy {
 
   onRowRightClick(row: any, event: MouseEvent): void {
     if (!this.enableContextMenu || this.actions.length === 0) {
+      return;
+    }
+
+    // Check if user has permission for at least one action
+    const hasAnyPermission = this.actions.some(action => this.authService.hasPermission(action.permission));
+    if (!hasAnyPermission) {
       return;
     }
 

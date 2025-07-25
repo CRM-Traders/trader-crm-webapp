@@ -219,7 +219,7 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
 
             <!-- Edit Actions -->
             <div class="mt-6 space-y-2">
-              <div class="text-end">
+              <div class="text-end" *hasPermission="58">
                 <button
                   *ngIf="!isEditing"
                   type="button"
