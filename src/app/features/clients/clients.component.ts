@@ -304,6 +304,7 @@ export class ClientsComponent implements OnInit {
       filterable: false,
       cellTemplate: null,
       selector: (row: Client) => row,
+      permission: 2,
     },
     {
       field: 'affiliateName',
@@ -561,6 +562,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'date',
+      selector: (row: Client) => row.lastComment?.createdAt || '-',
       type: 'date',
       format: 'short',
       hidden: true,
