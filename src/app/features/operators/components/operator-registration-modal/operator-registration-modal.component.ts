@@ -340,11 +340,8 @@ interface RoleDropdownItem {
                         class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                         [class.bg-blue-100]="isUserTypeFocused(getUserTypeGlobalIndex(group, i))"
                         [class.dark:bg-blue-400]="isUserTypeFocused(getUserTypeGlobalIndex(group, i))"
-                        [tabindex]="0"
                         (click)="selectUserType(option)"
-                        (keydown)="onUserTypeKeydown($event, option, getUserTypeGlobalIndex(group, i))"
-                        (mouseenter)="setFocusedUserTypeIndex(getUserTypeGlobalIndex(group, i))"
-                      >
+                     >
                         <div>{{ option.value }}</div>
                       </div>
                     </div>

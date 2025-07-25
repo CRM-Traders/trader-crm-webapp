@@ -360,7 +360,8 @@ interface ClientFile {
                   : 'This client has no uploaded files yet.'
               }}
             </p>
-            <button
+              <div *hasPermission="30">
+              <button
               *ngIf="!searchTerm && !categoryFilter"
               type="button"
               (click)="openUploadModal()"
@@ -368,6 +369,7 @@ interface ClientFile {
             >
               Upload First File
             </button>
+              </div>
           </div>
 
           <!-- Files -->

@@ -66,6 +66,16 @@ interface InlineCommentState {
   isLoading: boolean;
 }
 
+interface DropdownPosition {
+  top: number;
+  left: number;
+}
+
+interface DropdownState {
+  visible: boolean;
+  position: DropdownPosition;
+}
+
 @Component({
   selector: 'app-clients',
   standalone: true,
@@ -120,6 +130,10 @@ export class ClientsComponent implements OnInit {
   inlineCommentForm: FormGroup;
   isSubmittingInlineComment = false;
   inlineCommentState: InlineCommentState | null = null;
+
+  // Add new properties for dropdown positioning
+  operatorDropdownPositions: Map<string, DropdownPosition> = new Map();
+  salesStatusDropdownPositions: Map<string, DropdownPosition> = new Map();
 
   // Tooltip state
   tooltipState: {
@@ -304,6 +318,7 @@ export class ClientsComponent implements OnInit {
       filterable: false,
       cellTemplate: null,
       selector: (row: Client) => row,
+      permission: 2,
     },
     {
       field: 'affiliateName',
@@ -561,6 +576,7 @@ export class ClientsComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'date',
+      selector: (row: Client) => row.lastComment?.createdAt || '-',
       type: 'date',
       format: 'short',
       hidden: true,
@@ -1701,13 +1717,56 @@ export class ClientsComponent implements OnInit {
     this.operatorDropdownStates.forEach((state, id) => {
       if (id !== clientId) {
         this.operatorDropdownStates.set(id, false);
+        this.operatorDropdownPositions.delete(id);
       }
     });
 
     // Close all sales status dropdowns
     this.salesStatusDropdownStates.clear();
+    this.salesStatusDropdownPositions.clear();
 
     if (!currentState) {
+      // Calculate position for the dropdown
+      const target = event.target as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      
+      // Estimate dropdown height (search input + max items + some padding)
+      const estimatedDropdownHeight = 300; // Adjust based on your dropdown height
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      let topPosition: number;
+      
+      if (spaceBelow >= estimatedDropdownHeight) {
+        // Position below the button
+        topPosition = rect.bottom + window.scrollY + 120;
+      } else if (spaceAbove >= estimatedDropdownHeight) {
+        // Position above the button
+        topPosition = rect.top + window.scrollY - 100;
+      } else {
+        // If not enough space above or below, position below but adjust for viewport
+        topPosition = Math.max(10, viewportHeight + window.scrollY - estimatedDropdownHeight - 10);
+      }
+      
+      // Calculate horizontal position with overflow protection
+      const dropdownWidth = 250; // Approximate width of the dropdown
+      const viewportWidth = window.innerWidth;
+      let leftPosition = rect.left + window.scrollX + 96;
+      
+      // Check if dropdown would overflow the right edge
+      if (leftPosition + dropdownWidth > viewportWidth + window.scrollX) {
+        leftPosition = viewportWidth + window.scrollX - dropdownWidth - 10;
+      }
+      
+      // Ensure dropdown doesn't go off the left edge
+      leftPosition = Math.max(10, leftPosition);
+      
+      this.operatorDropdownPositions.set(clientId, {
+        top: topPosition,
+        left: leftPosition
+      });
+
       // Initialize search term and filtered results for this client
       this.operatorSearchTerms.set(clientId, '');
       this.filteredOperators.set(clientId, [...this.operators]);
@@ -1819,6 +1878,7 @@ export class ClientsComponent implements OnInit {
 
     // Close dropdown and clear search
     this.operatorDropdownStates.set(clientId, false);
+    this.operatorDropdownPositions.delete(clientId);
     this.operatorSearchTerms.set(clientId, '');
 
     // Trigger change detection to update the UI immediately
@@ -1846,13 +1906,56 @@ export class ClientsComponent implements OnInit {
     this.salesStatusDropdownStates.forEach((state, id) => {
       if (id !== clientId) {
         this.salesStatusDropdownStates.set(id, false);
+        this.salesStatusDropdownPositions.delete(id);
       }
     });
 
     // Close all operator dropdowns
     this.operatorDropdownStates.clear();
+    this.operatorDropdownPositions.clear();
 
     if (!currentState) {
+      // Calculate position for the dropdown
+      const target = event.target as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      
+      // Estimate dropdown height (search input + max items + some padding)
+      const estimatedDropdownHeight = 300; // Adjust based on your dropdown height
+      const viewportHeight = window.innerHeight;
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      let topPosition: number;
+      
+      if (spaceBelow >= estimatedDropdownHeight) {
+        // Position below the button
+        topPosition = rect.bottom + window.scrollY + 110;
+      } else if (spaceAbove >= estimatedDropdownHeight) {
+        // Position above the button
+        topPosition = rect.top + window.scrollY - 120;
+      } else {
+        // If not enough space above or below, position below but adjust for viewport
+        topPosition = Math.max(10, viewportHeight + window.scrollY - estimatedDropdownHeight - 10);
+      }
+      
+      // Calculate horizontal position with overflow protection
+      const dropdownWidth = 200; // Approximate width of the sales status dropdown
+      const viewportWidth = window.innerWidth;
+      let leftPosition = rect.left + window.scrollX + 220;
+      
+      // Check if dropdown would overflow the right edge
+      if (leftPosition + dropdownWidth > viewportWidth + window.scrollX) {
+        leftPosition = viewportWidth + window.scrollX - 220;
+      }
+      
+      // Ensure dropdown doesn't go off the left edge
+      leftPosition = Math.max(10, leftPosition);
+      
+      this.salesStatusDropdownPositions.set(clientId, {
+        top: topPosition,
+        left: leftPosition
+      });
+
       // Initialize search term and filtered results for this client
       this.salesStatusSearchTerms.set(clientId, '');
       this.filteredSalesStatuses.set(clientId, [...this.salesStatusOptions]);
@@ -1943,6 +2046,7 @@ export class ClientsComponent implements OnInit {
 
     // Close dropdown and clear search
     this.salesStatusDropdownStates.set(clientId, false);
+    this.salesStatusDropdownPositions.delete(clientId);
     this.salesStatusSearchTerms.set(clientId, '');
 
     // Trigger change detection to update the UI immediately
@@ -1989,9 +2093,11 @@ export class ClientsComponent implements OnInit {
     // Close dropdowns if click is outside
     if (!operatorDropdowns) {
       this.operatorDropdownStates.clear();
+      this.operatorDropdownPositions.clear();
     }
     if (!salesStatusDropdowns) {
       this.salesStatusDropdownStates.clear();
+      this.salesStatusDropdownPositions.clear();
     }
 
     // Existing inline comment logic
@@ -2008,9 +2114,13 @@ export class ClientsComponent implements OnInit {
     // Reset focus indices when closing dropdowns
     if (!operatorDropdowns) {
       this.focusedOperatorIndices.clear();
+      this.operatorSearchTerms.clear();
+      this.filteredOperators.clear();
     }
     if (!salesStatusDropdowns) {
       this.focusedSalesStatusIndices.clear();
+      this.salesStatusSearchTerms.clear();
+      this.filteredSalesStatuses.clear();
     }
   }
 

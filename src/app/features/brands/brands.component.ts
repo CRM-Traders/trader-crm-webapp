@@ -117,6 +117,13 @@ export class BrandsComponent implements OnInit, OnDestroy {
       action: (item: Brand) => this.openDetailsModal(item),
       permission: 69,
     },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      action: (item: Brand) => this.confirmDelete(item),
+      permission: 70,
+    },
   ];
 
   constructor() {}
@@ -258,6 +265,8 @@ export class BrandsComponent implements OnInit, OnDestroy {
         finalize(() => {
           this.showDeleteModal = false;
           this.brandToDelete = null;
+          this.refreshSpecificGrid();
+          this.loadBrandStatistics();
         })
       )
       .subscribe((result) => {
