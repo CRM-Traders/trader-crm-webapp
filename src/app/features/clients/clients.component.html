@@ -302,7 +302,7 @@
                     (keydown)="
                       onSalesStatusButtonKeydown(value.id || row.id, $event)
                     "
-                    class="text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[120px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="text-sm w-42 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[120px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span class="truncate">{{
                       getSelectedSalesStatusName(
@@ -332,7 +332,9 @@
                   <!-- Dropdown Panel -->
                   <div
                     *ngIf="salesStatusDropdownStates.get(value.id || row.id) && hasPermission(53)"
-                    class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[200px]"
+                    class="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[200px]"
+                    [style.top.px]="salesStatusDropdownPositions.get(value.id || row.id)?.top || 0"
+                    [style.left.px]="salesStatusDropdownPositions.get(value.id || row.id)?.left || 0"
                   >
                     <!-- Search Input -->
                     <div class="p-3 border-b border-gray-200">
@@ -488,7 +490,7 @@
                     (keydown)="
                       onOperatorButtonKeydown(value.id || row.id, $event)
                     "
-                    class="text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[140px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="text-sm w-42 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[140px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span class="truncate">{{
                       getSelectedOperatorName(value.id || row.id, value || row)
@@ -515,7 +517,9 @@
                   <!-- Dropdown Panel -->
                   <div
                     *ngIf="operatorDropdownStates.get(value.id || row.id) && hasPermission(2)"
-                    class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[250px]"
+                    class="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[250px]"
+                    [style.top.px]="operatorDropdownPositions.get(value.id || row.id)?.top || 0"
+                    [style.left.px]="operatorDropdownPositions.get(value.id || row.id)?.left || 0"
                   >
                     <!-- Search Input -->
                     <div class="p-3 border-b border-gray-200">
