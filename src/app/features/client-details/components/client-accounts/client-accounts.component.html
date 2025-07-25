@@ -495,7 +495,7 @@
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Get started by creating a new trading account for this client.
                 </p>
-                <div class="mt-6">
+                <div class="mt-6" *hasPermission="39">
                   <button
                     type="button"
                     (click)="toggleCreateModal()"
