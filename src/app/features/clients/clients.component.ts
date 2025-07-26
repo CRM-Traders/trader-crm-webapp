@@ -174,10 +174,14 @@ export class ClientsComponent implements OnInit {
   gridColumns: GridColumn[] = [
     {
       field: 'isOnline',
-      header: '',
+      header: 'Online',
       sortable: true,
       filterable: true,
       filterType: 'select',
+      filterOptions: [
+        { value: true, label: 'Online' },
+        { value: false, label: 'Offline' },
+      ],
       cellTemplate: null, // Will be set in ngOnInit
     },
     {

@@ -65,6 +65,7 @@ export class GridComponent implements OnInit, OnDestroy {
   private globalFilterSubject = new Subject<string>();
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
+  @ViewChild('columnSelectorDropdown', { static: false }) columnSelectorDropdown!: ElementRef;
 
   @Input() permission: number = -1;
   @Input() selectionPermission: number = -1; // New input for selection permission
@@ -153,6 +154,19 @@ export class GridComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     this.contextMenuVisible = false;
+    
+    // Close column selector if clicking outside
+    if (this.isColumnSelectorVisible) {
+      const target = event.target as Node;
+      const columnSelectorButton = this.gridContainer?.nativeElement.querySelector('[data-column-selector-button]');
+      const columnSelectorDropdown = this.columnSelectorDropdown?.nativeElement;
+      
+      // Check if click is outside both the button and dropdown
+      if (columnSelectorButton && !columnSelectorButton.contains(target) && 
+          columnSelectorDropdown && !columnSelectorDropdown.contains(target)) {
+        this.isColumnSelectorVisible = false;
+      }
+    }
   }
 
   @HostListener('document:contextmenu', ['$event'])

@@ -82,6 +82,11 @@ export class OfficesComponent implements OnInit, OnDestroy {
       field: 'isActive',
       header: 'Status',
       sortable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: true, label: 'Active' },
+        { value: false, label: 'Inactive' },
+      ],
       filterable: true,
     },
     {

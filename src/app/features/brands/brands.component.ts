@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
 import { BrandsService } from './services/brands.service';
 import { Brand } from './models/brand.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
@@ -22,6 +22,8 @@ import { BrandCreationModalComponent } from './components/brand-creation-modal/b
 import { BrandDetailsModalComponent } from './components/brand-details-modal/brand-details-modal.component';
 import { GridService } from '../../shared/services/grid/grid.service';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { CountryService } from '../../core/services/country.service';
+import { OfficesService } from '../officies/services/offices.service';
 
 @Component({
   selector: 'app-brands',
@@ -41,6 +43,8 @@ export class BrandsComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
   private grid = inject(GridService);
+  private countryService = inject(CountryService);
+  private officesService = inject(OfficesService);
 
   private destroy$ = new Subject<void>();
   gridId = 'brands-grid';
@@ -69,6 +73,8 @@ export class BrandsComponent implements OnInit, OnDestroy {
       header: 'Country',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
       selector: (row: Brand) => row.country || 'N/A',
     },
     {
@@ -76,6 +82,11 @@ export class BrandsComponent implements OnInit, OnDestroy {
       header: 'Status',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: true, label: 'Active' },
+        { value: false, label: 'Inactive' },
+      ],
       cellTemplate: null, // Will be set in ngOnInit
     },
     {
@@ -105,6 +116,8 @@ export class BrandsComponent implements OnInit, OnDestroy {
       header: 'Office Name',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
       selector: (row: Brand) => row.officeName || null,
     },
   ];
@@ -131,6 +144,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeGridTemplates();
     this.loadBrandStatistics();
+    this.initializeFilterOptions();
   }
 
   ngOnDestroy(): void {
@@ -171,6 +185,59 @@ export class BrandsComponent implements OnInit, OnDestroy {
           this.activeCount = stats.value.activeBrands;
         }
       });
+  }
+
+  private initializeFilterOptions(): void {
+    forkJoin({
+      countries: this.countryService.getCountries(),
+      offices: this.loadOfficesDropdown(),
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          return of({
+            countries: [],
+            offices: [],
+          });
+        })
+      )
+      .subscribe(({ countries, offices }) => {
+        this.updateColumnFilterOptions(
+          'country',
+          countries.map((c) => ({ value: c.name, label: c.name }))
+        );
+
+        this.updateColumnFilterOptions('officeName', offices);
+      });
+  }
+
+  private updateColumnFilterOptions(field: string, options: any[]): void {
+    const column = this.gridColumns.find((col) => col.field === field);
+    if (column) {
+      column.filterOptions = options;
+    }
+  }
+
+  private loadOfficesDropdown() {
+    return this.officesService
+      .getOfficeDropdown({
+        pageIndex: 0,
+        pageSize: 1000,
+        sortField: 'name',
+        sortDirection: 'asc',
+      })
+      .pipe(
+        catchError(() => of({ items: [] })),
+        takeUntil(this.destroy$)
+      )
+      .toPromise()
+      .then(
+        (response: any) =>
+          response?.items?.map((office: any) => ({
+            value: office.value,
+            label: office.value,
+          })) || []
+      );
   }
 
   onRowClick(brand: Brand): void {

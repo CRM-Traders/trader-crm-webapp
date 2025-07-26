@@ -98,6 +98,7 @@
         <button
           *ngIf="showColumnSelector"
           (click)="toggleColumnSelector()"
+          data-column-selector-button
           class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           [ngClass]="{
             'bg-blue-50': isColumnSelectorVisible && !isDarkMode,
@@ -141,6 +142,7 @@
 
         <!-- Column Selector Dropdown -->
         <div
+          #columnSelectorDropdown
           *ngIf="isColumnSelectorVisible"
           class="absolute top-full right-0 mt-1 w-[50vw] max-w-lg z-50 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600"
           (click)="$event.stopPropagation()"
