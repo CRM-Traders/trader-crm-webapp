@@ -10,6 +10,7 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
+  HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -127,6 +128,7 @@ export interface DropdownSearchResponse<T = DropdownItem> {
       <!-- Dropdown Menu -->
       <div
         *ngIf="isOpen"
+        (click)="$event.stopPropagation()"
         class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-hidden"
       >
         <!-- Loading Indicator -->
@@ -373,10 +375,24 @@ export class FilterableDropdownComponent
     }
   }
 
-  onInputBlur() {
-    setTimeout(() => {
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    // Check if the click is inside the dropdown container
+    const isInsideDropdown = this.searchInput?.nativeElement?.closest('.relative')?.contains(target);
+    
+    // Close dropdown if click is outside
+    if (this.isOpen && !isInsideDropdown) {
       this.closeDropdown();
-    }, 200);
+    }
+  }
+
+  onInputBlur() {
+    // Remove the timeout-based approach as we now use click-outside
+    // setTimeout(() => {
+    //   this.closeDropdown();
+    // }, 200);
   }
 
   onKeyDown(event: KeyboardEvent) {

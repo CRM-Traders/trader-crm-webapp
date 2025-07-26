@@ -1,12 +1,16 @@
 // src/app/shared/components/grid-filter/grid-filter.component.ts
 import {
   Component,
+  ElementRef,
   EventEmitter,
   HostListener,
   Input,
   OnDestroy,
   OnInit,
   Output,
+  QueryList,
+  ViewChild,
+  ViewChildren,
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -58,6 +62,9 @@ export class GridFilterComponent implements OnInit, OnDestroy {
   @Input() gridId: string = 'default-grid';
 
   @Output() filterChange = new EventEmitter<GridFilterState>();
+
+  @ViewChild('filterSelectorDropdown', { static: false }) filterSelectorDropdown!: ElementRef;
+  @ViewChildren('multiSelectDropdown') multiSelectDropdowns!: QueryList<ElementRef>;
 
   // Filter selector state
   isFilterSelectorOpen = false;
@@ -156,6 +163,35 @@ export class GridFilterComponent implements OnInit, OnDestroy {
       activeFilter.multiSelectValues = [...gridFilter.value];
     } else {
       activeFilter.value = gridFilter.value;
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    // Check if the click is on the filter selector button
+    const isFilterSelectorButton = target.closest('button[type="button"]')?.textContent?.includes('Add Filter');
+    
+    // Check if the click is inside the filter selector dropdown
+    const isInsideFilterSelector = this.filterSelectorDropdown?.nativeElement?.contains(target);
+    
+    // Check if the click is inside any multi-select dropdown
+    const isInsideMultiSelectDropdown = this.multiSelectDropdowns?.some(
+      dropdown => dropdown.nativeElement?.contains(target)
+    );
+    
+    // Check if the click is on any multi-select dropdown button
+    const isMultiSelectButton = target.closest('button[type="button"]')?.closest('.relative');
+    
+    // Close filter selector dropdown if click is outside
+    if (this.isFilterSelectorOpen && !isFilterSelectorButton && !isInsideFilterSelector) {
+      this.isFilterSelectorOpen = false;
+    }
+    
+    // Close multi-select dropdowns if click is outside
+    if (this.openDropdowns.size > 0 && !isInsideMultiSelectDropdown && !isMultiSelectButton) {
+      this.openDropdowns.clear();
     }
   }
 

@@ -20,6 +20,8 @@ import {
   UserType,
   UserTypeLabels,
   UserTypeColors,
+  BranchDropdownItem,
+  BranchDropdownResponse,
 } from './models/operators.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
@@ -35,6 +37,16 @@ import {
 import { Router } from '@angular/router';
 import { OperatorRegistrationModalComponent } from './components/operator-registration-modal/operator-registration-modal.component';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+
+interface RoleDropdownItem {
+  id: string;
+  value: string;
+}
+
+interface DepartmentDropdownItem {
+  id: string;
+  value: string;
+}
 
 @Component({
   selector: 'app-operators',
@@ -68,6 +80,12 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   operatorToDelete: Operator | null = null;
   statistics: OperatorStatistics | null = null;
 
+  // Filter options properties
+  departmentOptions: { id: string; value: string; label: string }[] = [];
+  roleOptions: { value: string; label: string }[] = [];
+  branchOptions: { value: string; label: string }[] = [];
+  userTypeOptions: { value: number; label: string }[] = [];
+
   BranchType = BranchType;
   BranchTypeLabels = BranchTypeLabels;
   BranchTypeColors = BranchTypeColors;
@@ -81,6 +99,11 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       header: 'Status',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: true, label: 'Online' },
+        { value: false, label: 'Offline' },
+      ],
       cellTemplate: null, // Will be set in ngOnInit
       width: '20px',
     },
@@ -102,6 +125,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       header: 'Department',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated after loading departments
       selector: (row: Operator) => row.departmentName || '-',
     },
     {
@@ -109,6 +134,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       header: 'Role',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated after loading roles
       selector: (row: Operator) => row.roleName || '-',
     },
     {
@@ -117,6 +144,13 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
+      filterType: 'select',
+      filterOptions: [
+        { value: 0, label: 'Brand' },
+        { value: 1, label: 'Desk' },
+        { value: 2, label: 'Team' },
+        { value: 3, label: 'Office' },
+      ],
       selector: (row: Operator) => row.branchTypeName || '-',
     },
     {
@@ -124,6 +158,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       header: 'Branch',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated after loading branches
       selector: (row: Operator) => row.branchName || '-',
     },
     {
@@ -132,6 +168,8 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       cellTemplate: null, // Will be set in ngOnInit
+      filterType: 'select',
+      filterOptions: [], // Will be populated after loading user types
       selector: (row: Operator) => row.userTypeName || '-',
     },
     {
@@ -181,6 +219,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeGridTemplates();
     this.loadOperatorStatistics();
+    this.loadFilterOptions();
   }
 
   ngOnDestroy(): void {
@@ -225,6 +264,166 @@ export class OperatorsComponent implements OnInit, OnDestroy {
           this.statistics = statistics.value;
         }
       });
+  }
+
+  private loadFilterOptions(): void {
+    this.loadDepartments();
+    this.loadBranches();
+    this.loadUserTypes();
+  }
+
+  private loadDepartments(): void {
+    const requestBody = {
+      pageIndex: 0,
+      pageSize: 1000,
+      globalFilter: null,
+    };
+
+    this.operatorsService.getDepartmentsDropdown(requestBody)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to load departments');
+          return of({ items: [] });
+        })
+      )
+      .subscribe((response: any) => {
+        this.departmentOptions = response.items.map((dept: any) => ({
+          id: dept.id,
+          value: dept.value,
+          label: dept.value,
+        }));
+        this.updateGridFilterOptions();
+      });
+  }
+
+  private loadRolesByDepartment(departmentId: string): void {
+    this.operatorsService.getOperatorRolesByDepartment(departmentId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to load roles for department');
+          return of([]);
+        })
+      )
+      .subscribe((roles: any) => {
+        this.roleOptions = roles.items.map((role: any) => ({
+          value: role.value,
+          label: role.value,
+        }));
+        this.updateGridFilterOptions();
+      });
+  }
+
+  onFilterChange(filters: any): void {
+    // Check if department filter has changed
+    if (filters.filters && filters.filters.departmentName) {
+      const departmentFilter = filters.filters.departmentName;
+      
+      if (departmentFilter.value && departmentFilter.value.length > 0) {
+        // Get the first selected department (assuming single selection for now)
+        const selectedDepartmentValue = departmentFilter.value[0];
+        // Find the department by its value (display name) to get the ID
+        const department = this.departmentOptions.find(dept => dept.value === selectedDepartmentValue);
+        if (department) {
+          // Load roles for the selected department using its ID
+          this.loadRolesByDepartment(department.id);
+        }
+      } else {
+        // If no department is selected, clear roles
+        this.roleOptions = [];
+        this.updateGridFilterOptions();
+      }
+    }
+  }
+
+  private loadBranches(): void {
+    // Load branches for all types
+    const branchTypes = [BranchType.Brand, BranchType.Desk, BranchType.Team, BranchType.Office];
+    const allBranches: { value: string; label: string }[] = [];
+    let completedRequests = 0;
+
+    branchTypes.forEach(branchType => {
+      const params = {
+        pageIndex: 0,
+        pageSize: 1000,
+        globalFilter: null,
+      };
+
+      let observable;
+      switch (branchType) {
+        case BranchType.Office:
+          observable = this.operatorsService.getOfficesDropdown(params);
+          break;
+        case BranchType.Desk:
+          observable = this.operatorsService.getDesksDropdown(params);
+          break;
+        case BranchType.Team:
+          observable = this.operatorsService.getTeamsDropdown(params);
+          break;
+        case BranchType.Brand:
+          observable = this.operatorsService.getBrandsDropdown(params);
+          break;
+        default:
+          completedRequests++;
+          return;
+      }
+
+      observable.pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          completedRequests++;
+          return of({ items: [] });
+        })
+      ).subscribe((response: any) => {
+        const branches = response.items.map((branch: any) => ({
+          value: branch.value,
+          label: branch.value,
+        }));
+        allBranches.push(...branches);
+        completedRequests++;
+        
+        // Update when all requests are completed
+        if (completedRequests === branchTypes.length) {
+          this.branchOptions = allBranches;
+          this.updateGridFilterOptions();
+        }
+      });
+    });
+  }
+
+  private loadUserTypes(): void {
+    this.userTypeOptions = Object.entries(UserTypeLabels).map(([value, label]) => ({
+      value: Number(value),
+      label,
+    }));
+    this.updateGridFilterOptions();
+  }
+
+  private updateGridFilterOptions(): void {
+    // Update department filter options
+    const departmentCol = this.gridColumns.find(col => col.field === 'departmentName');
+    if (departmentCol) {
+      departmentCol.filterOptions = this.departmentOptions;
+    }
+
+    // Update role filter options
+    const roleCol = this.gridColumns.find(col => col.field === 'roleName');
+    if (roleCol) {
+      roleCol.filterOptions = this.roleOptions;
+    }
+
+    // Update branch filter options
+    const branchCol = this.gridColumns.find(col => col.field === 'branchName');
+    if (branchCol) {
+      branchCol.filterOptions = this.branchOptions;
+    }
+
+    // Update user type filter options
+    const userTypeCol = this.gridColumns.find(col => col.field === 'userType');
+    if (userTypeCol) {
+      userTypeCol.filterOptions = this.userTypeOptions;
+    }
   }
 
   onRowClick(operator: Operator): void {

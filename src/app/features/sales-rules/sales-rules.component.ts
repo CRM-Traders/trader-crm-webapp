@@ -7,7 +7,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import {
   GridColumn,
@@ -16,6 +16,8 @@ import {
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
 import { SalesRulesService } from './services/sales-rules.service';
+import { CountryService } from '../../core/services/country.service';
+import { LanguageService } from '../../core/services/language.service';
 import {
   SalesRule,
   SalesRuleDetails,
@@ -42,6 +44,8 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
   private salesRulesService = inject(SalesRulesService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
+  private countryService = inject(CountryService);
+  private languageService = inject(LanguageService);
   private destroy$ = new Subject<void>();
   gridId = 'sales-rules-grid';
 
@@ -121,7 +125,8 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       header: 'Country',
       sortable: true,
       filterable: true,
-      filterType: 'text',
+      filterType: 'select',
+      filterOptions: [],
       selector: (row: SalesRule) =>
         row.country && row.country.trim() !== ''
           ? row.country
@@ -132,7 +137,8 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       header: 'Language',
       sortable: true,
       filterable: true,
-      filterType: 'text',
+      filterType: 'select',
+      filterOptions: [],
       selector: (row: SalesRule) =>
         row.language && row.language.trim() !== ''
           ? row.language
@@ -178,6 +184,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.setupCellTemplates();
+    this.initializeFilterOptions();
   }
 
   ngOnDestroy(): void {
@@ -339,5 +346,42 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
 
   getSourcesDisplay(sources: string): string {
     return sources && sources.trim() !== '' ? sources : 'All Sources';
+  }
+
+  private initializeFilterOptions(): void {
+    forkJoin({
+      countries: this.countryService.getCountries(),
+      languages: of(this.languageService.getAllLanguages()),
+    }).subscribe({
+      next: (response: { countries: any[]; languages: Array<{ key: string; value: string }> }) => {
+        this.gridColumns = this.gridColumns.map((col) => {
+          if (col.field === 'country') {
+            return {
+              ...col,
+              filterType: 'select',
+              filterOptions: response.countries.map((country) => ({
+                label: country.name,
+                value: country.code,
+              })),
+            };
+          }
+          if (col.field === 'language') {
+            return {
+              ...col,
+              filterType: 'select',
+              filterOptions: response.languages.map((language) => ({
+                label: language.value,
+                value: language.key,
+              })),
+            };
+          }
+          return col;
+        });
+      },
+      error: (error) => {
+        this.alertService.error('Failed to load filters');
+        console.error(error);
+      },
+    });
   }
 }
