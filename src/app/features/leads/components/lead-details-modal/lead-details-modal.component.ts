@@ -828,7 +828,7 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
 
   selectCountry(country: Country): void {
     this.selectedCountry = country;
-    this.editForm.patchValue({ country: country.code });
+    this.editForm.patchValue({ country: country.name });
     this.countryDropdownOpen = false;
     this.countrySearchTerm = '';
     this.filteredCountries = this.availableCountries;

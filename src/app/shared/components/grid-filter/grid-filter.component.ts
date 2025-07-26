@@ -343,10 +343,6 @@ export class GridFilterComponent implements OnInit, OnDestroy {
   }
 
   applyFilter(activeFilter: ActiveFilter): void {
-    if (!this.isValidActiveFilter(activeFilter)) {
-      return;
-    }
-
     let value: any;
     let operator = activeFilter.operator;
 
@@ -354,6 +350,12 @@ export class GridFilterComponent implements OnInit, OnDestroy {
     if (this.isTextType(activeFilter.column)) {
       value = activeFilter.value;
       operator = FilterOperator.CONTAINS; // Always use contains for text
+      
+      // If text value is empty, remove the filter instead of applying it
+      if (!value || value.trim() === '') {
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
+      }
     } else if (
       this.isNumberType(activeFilter.column) ||
       this.isDateType(activeFilter.column)
@@ -380,16 +382,34 @@ export class GridFilterComponent implements OnInit, OnDestroy {
         value = activeFilter.valueTo;
         operator = FilterOperator.LESS_THAN_OR_EQUALS;
       } else {
-        return; // No valid range values
+        // Remove filter if no valid range values
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
       }
     } else if (this.isBooleanType(activeFilter.column)) {
       value = activeFilter.value;
       operator = FilterOperator.EQUALS;
+      
+      // If boolean value is empty, remove the filter
+      if (value === null || value === undefined || value === '') {
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
+      }
     } else if (this.isSelectType(activeFilter.column)) {
       value = [...(activeFilter.multiSelectValues || [])];
       operator = FilterOperator.IN;
-      if (value.length === 0) return; // No values selected
+      if (value.length === 0) {
+        // Remove filter if no values selected
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
+      }
     } else {
+      return;
+    }
+
+    // Validate the filter before applying
+    if (!this.isValidActiveFilter(activeFilter)) {
+      this.removeAppliedFilter(activeFilter.column.field);
       return;
     }
 

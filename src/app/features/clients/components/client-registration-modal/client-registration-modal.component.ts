@@ -180,6 +180,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                 type="email"
                 id="email"
                 formControlName="email"
+                autocomplete="email"
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 [class.border-red-500]="
                   registrationForm.get('email')?.invalid &&
@@ -218,6 +219,7 @@ import { Observable, map, Subject, takeUntil } from 'rxjs';
                 type="text"
                 id="username"
                 formControlName="username"
+                autocomplete="username"
                 class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                 [class.border-red-500]="
                   registrationForm.get('username')?.invalid &&
@@ -927,7 +929,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
   selectCountry(country: Country): void {
     this.selectedCountry = country;
-    this.registrationForm.patchValue({ country: country.code });
+    this.registrationForm.patchValue({ country: country.name });
     this.countryDropdownOpen = false;
     this.countrySearchTerm = '';
     this.filteredCountries = this.countries;
@@ -969,7 +971,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
   selectLanguage(language: { key: string; value: string }): void {
     this.selectedLanguage = language;
-    this.registrationForm.patchValue({ language: language.key });
+    this.registrationForm.patchValue({ language: language.value });
     this.languageDropdownOpen = false;
     this.languageSearchTerm = '';
     this.filteredLanguages = this.languages;

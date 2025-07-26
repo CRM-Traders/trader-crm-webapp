@@ -14,6 +14,9 @@ import { Team } from './models/team.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
+import { DesksService } from '../desks/services/desks.service';
+import { BrandsService } from '../brands/services/brands.service';
+import { OfficesService } from '../officies/services/offices.service';
 import {
   GridColumn,
   GridAction,
@@ -39,6 +42,9 @@ export class TeamsComponent implements OnInit, OnDestroy {
   private teamsService = inject(TeamsService);
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
+  private desksService = inject(DesksService);
+  private brandsService = inject(BrandsService);
+  private officesService = inject(OfficesService);
 
   private destroy$ = new Subject<void>();
   gridId = 'teams-grid';
@@ -65,24 +71,35 @@ export class TeamsComponent implements OnInit, OnDestroy {
       header: 'Desk',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
     },
     {
       field: 'officeName',
       header: 'Office',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
     },
     {
       field: 'brandName',
       header: 'Brand',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
     },
     {
       field: 'isActive',
       header: 'Status',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: true, label: 'Active' },
+        { value: false, label: 'Inactive' },
+      ],
     },
     {
       field: 'createdAt',
@@ -132,6 +149,7 @@ export class TeamsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeGridTemplates();
     this.loadTeamStatistics();
+    this.loadFilterOptions();
   }
 
   ngOnDestroy(): void {
@@ -146,6 +164,81 @@ export class TeamsComponent implements OnInit, OnDestroy {
     if (statusColumn) {
       statusColumn.cellTemplate = this.statusCellTemplate;
     }
+  }
+
+  private loadFilterOptions(): void {
+    this.loadDeskFilterOptions();
+    this.loadOfficeFilterOptions();
+    this.loadBrandFilterOptions();
+  }
+
+  private loadDeskFilterOptions(): void {
+    this.desksService
+      .getDeskDropdown({ pageIndex: 0, pageSize: 1000 })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Failed to load desk filter options:', error);
+          return of({ items: [] });
+        })
+      )
+      .subscribe((response) => {
+        const deskColumn = this.gridColumns.find(
+          (col) => col.field === 'deskName'
+        );
+        if (deskColumn && response && Array.isArray(response.items)) {
+          deskColumn.filterOptions = response.items.map((desk: any) => ({
+            value: desk.value,
+            label: desk.value,
+          }));
+        }
+      });
+  }
+
+  private loadOfficeFilterOptions(): void {
+    this.officesService
+      .getOfficeDropdown({ pageIndex: 0, pageSize: 1000 })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Failed to load office filter options:', error);
+          return of({ items: [] });
+        })
+      )
+      .subscribe((response) => {
+        const officeColumn = this.gridColumns.find(
+          (col) => col.field === 'officeName'
+        );
+        if (officeColumn && response && Array.isArray(response.items)) {
+          officeColumn.filterOptions = response.items.map((office: any) => ({
+            value: office.value,
+            label: office.value,
+          }));
+        }
+      });
+  }
+
+  private loadBrandFilterOptions(): void {
+    this.brandsService
+      .getBrandsDropdown({ pageIndex: 0, pageSize: 1000, sortField: 'name', sortDirection: 'asc' as const })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Failed to load brand filter options:', error);
+          return of({ items: [] });
+        })
+      )
+      .subscribe((response: any) => {
+        const brandColumn = this.gridColumns.find(
+          (col) => col.field === 'brandName'
+        );
+        if (brandColumn) {
+          brandColumn.filterOptions = response.items.map((brand: any) => ({
+            value: brand.value,
+            label: brand.value,
+          }));
+        }
+      });
   }
 
   private loadTeamStatistics(): void {

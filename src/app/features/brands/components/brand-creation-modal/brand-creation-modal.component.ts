@@ -534,7 +534,7 @@ export class BrandCreationModalComponent implements OnInit {
 
   selectCountry(country: Country): void {
     this.selectedCountry = country;
-    this.brandForm.patchValue({ country: country.code });
+    this.brandForm.patchValue({ country: country.name });
     this.countryDropdownOpen = false;
     this.countrySearchTerm = '';
     this.filteredCountries = this.availableCountries;
