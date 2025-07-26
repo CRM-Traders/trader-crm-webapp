@@ -15,7 +15,7 @@ import { AlertService } from '../../../../core/services/alert.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import { CountryService } from '../../../../core/services/country.service';
 import { LanguageService } from '../../../../core/services/language.service';
-import { AffiliatesService } from '../../../affiliates/services/affiliates.service';
+import { ClientsService, AffiliateDropdownItem, AffiliateSearchParams, AffiliateSearchResponse } from '../../../clients/services/clients.service';
 
 import {
   OfficeRule,
@@ -28,7 +28,6 @@ import {
   OperatorDropdownItem,
 } from '../../models/office-rules.model';
 import { Country } from '../../../../core/models/country.model';
-import { Affiliate } from '../../../affiliates/models/affiliates.model';
 
 @Component({
   selector: 'app-create-rule-modal',
@@ -53,7 +52,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   private officeRulesService = inject(OfficeRulesService);
   private countryService = inject(CountryService);
   private languageService = inject(LanguageService);
-  private affiliatesService = inject(AffiliatesService);
+  private clientsService = inject(ClientsService);
   private alertService = inject(AlertService);
   private destroy$ = new Subject<void>();
 
@@ -74,19 +73,25 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   languageDropdownOpen = false;
   languageSearchTerm = '';
 
-  // Partners (Affiliates)
-  availablePartners: Affiliate[] = [];
-  filteredPartners: Affiliate[] = [];
-  selectedPartners: Affiliate[] = [];
-  partnerDropdownOpen = false;
-  partnerSearchTerm = '';
+  // Partners (Affiliates) - Updated to use ClientsService approach
+  affiliateDropdownOpen = false;
+  affiliateLoading = false;
+  affiliateSearchTerm = '';
+  availableAffiliates: AffiliateDropdownItem[] = [];
+  selectedAffiliates: AffiliateDropdownItem[] = [];
+  currentAffiliatePage = 0;
+  affiliatePageSize = 20;
+  hasMoreAffiliates = false;
 
-  // Affiliate Referrals
-  availableAffiliateReferrals: Affiliate[] = [];
-  filteredAffiliateReferrals: Affiliate[] = [];
-  selectedAffiliateReferrals: Affiliate[] = [];
+  // Affiliate Referrals - Updated to use ClientsService approach
   affiliateReferralDropdownOpen = false;
+  affiliateReferralLoading = false;
   affiliateReferralSearchTerm = '';
+  availableAffiliateReferrals: AffiliateDropdownItem[] = [];
+  selectedAffiliateReferrals: AffiliateDropdownItem[] = [];
+  currentAffiliateReferralPage = 0;
+  affiliateReferralPageSize = 20;
+  hasMoreAffiliateReferrals = false;
 
   // Operators
   availableOperators: OperatorDropdownItem[] = [];
@@ -137,7 +142,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   private closeAllDropdowns(): void {
     this.countryDropdownOpen = false;
     this.languageDropdownOpen = false;
-    this.partnerDropdownOpen = false;
+    this.affiliateDropdownOpen = false;
     this.affiliateReferralDropdownOpen = false;
     this.operatorDropdownOpen = false;
   }
@@ -155,24 +160,6 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     // Load languages
     this.availableLanguages = this.languageService.getAllLanguages();
     this.filteredLanguages = this.availableLanguages;
-
-    // Load affiliates for partners
-    this.affiliatesService
-      .getActiveAffiliates()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((response: any) => {
-        this.availablePartners = response.items || [];
-        this.filteredPartners = this.availablePartners;
-      });
-
-    // Load affiliates for affiliate referrals (same data for now)
-    this.affiliatesService
-      .getActiveAffiliates()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((response: any) => {
-        this.availableAffiliateReferrals = response.items || [];
-        this.filteredAffiliateReferrals = this.availableAffiliateReferrals;
-      });
 
     // Load operators
     this.officeRulesService
@@ -205,8 +192,10 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     // Set selected items
     this.selectedCountries = this.availableCountries.filter(c => countries.includes(c.code));
     this.selectedLanguages = this.availableLanguages.filter(l => languages.includes(l.key));
-    this.selectedPartners = this.availablePartners.filter(p => partners.includes(p.id));
-    this.selectedAffiliateReferrals = this.availableAffiliateReferrals.filter(a => affiliateReferrals.includes(a.id));
+    
+    // For affiliates, we'll need to load them first and then filter
+    this.loadAffiliatesForEdit(partners, 'partners');
+    this.loadAffiliatesForEdit(affiliateReferrals, 'referrals');
 
     // Set selected operators from existing rule
     if (this.rule.operators && this.rule.operators.length > 0) {
@@ -224,6 +213,25 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
       type: this.rule.type,
       sources: this.rule.sources,
     });
+  }
+
+  private loadAffiliatesForEdit(affiliateIds: string[], type: 'partners' | 'referrals'): void {
+    if (affiliateIds.length === 0) return;
+
+    // Load all affiliates to find the ones we need
+    this.clientsService.getAffiliatesDropdown({ pageSize: 1000 })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((response: AffiliateSearchResponse) => {
+        const allAffiliates = response.items;
+        
+        if (type === 'partners') {
+          this.selectedAffiliates = allAffiliates.filter(aff => affiliateIds.includes(aff.affiliateId));
+          this.updateAffiliatesFormValue();
+        } else if (type === 'referrals') {
+          this.selectedAffiliateReferrals = allAffiliates.filter(aff => affiliateIds.includes(aff.affiliateId));
+          this.updateAffiliateReferralsFormValue();
+        }
+      });
   }
 
   // Countries methods
@@ -326,57 +334,123 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     this.ruleForm.patchValue({ languages: value });
   }
 
-  // Partners methods
-  togglePartnerDropdown(): void {
+  // Partners (Affiliates) methods - Updated to use ClientsService approach
+  toggleAffiliateDropdown(): void {
     // If this dropdown is already open, just close it
-    if (this.partnerDropdownOpen) {
-      this.partnerDropdownOpen = false;
+    if (this.affiliateDropdownOpen) {
+      this.affiliateDropdownOpen = false;
       return;
     }
     // Close all other dropdowns first, then open this one
     this.closeAllDropdowns();
-    this.partnerDropdownOpen = true;
-  }
+    this.affiliateDropdownOpen = true;
 
-  onPartnerSearch(event: Event): void {
-    const value = (event.target as HTMLInputElement).value.toLowerCase();
-    this.partnerSearchTerm = value;
-    this.filteredPartners = this.availablePartners.filter(partner =>
-      partner.name.toLowerCase().includes(value)
-    );
-  }
-
-  togglePartnerSelection(partner: Affiliate): void {
-    const index = this.selectedPartners.findIndex(p => p.id === partner.id);
-    if (index > -1) {
-      this.selectedPartners.splice(index, 1);
-    } else {
-      this.selectedPartners.push(partner);
+    if (this.availableAffiliates.length === 0) {
+      this.loadAffiliates();
     }
-    this.updatePartnersFormValue();
+  }
+
+  onAffiliateSearch(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.affiliateSearchTerm = value;
+    this.currentAffiliatePage = 0;
+    this.loadAffiliates(true);
+  }
+
+  onAffiliateDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 5 &&
+      this.hasMoreAffiliates &&
+      !this.affiliateLoading
+    ) {
+      this.currentAffiliatePage++;
+      this.loadAffiliates();
+    }
+  }
+
+  toggleAffiliateSelection(affiliate: AffiliateDropdownItem): void {
+    const index = this.selectedAffiliates.findIndex(a => a.affiliateId === affiliate.affiliateId);
+    if (index > -1) {
+      this.selectedAffiliates.splice(index, 1);
+    } else {
+      this.selectedAffiliates.push(affiliate);
+    }
+    this.updateAffiliatesFormValue();
     // Don't close dropdown for multiple selection - let user select multiple items
   }
 
-  isPartnerSelected(partner: Affiliate): boolean {
-    return this.selectedPartners.some(p => p.id === partner.id);
+  isAffiliateSelected(affiliate: AffiliateDropdownItem): boolean {
+    return this.selectedAffiliates.some(a => a.affiliateId === affiliate.affiliateId);
   }
 
-  getSelectedPartnersText(): string {
-    if (this.selectedPartners.length === 0) {
+  getSelectedAffiliatesText(): string {
+    if (this.selectedAffiliates.length === 0) {
       return 'Select partners...';
     }
-    if (this.selectedPartners.length === 1) {
-      return this.selectedPartners[0].name;
+    if (this.selectedAffiliates.length === 1) {
+      return this.selectedAffiliates[0].userFullName;
     }
-    return `${this.selectedPartners.length} partners selected`;
+    return `${this.selectedAffiliates.length} partners selected`;
   }
 
-  private updatePartnersFormValue(): void {
-    const value = this.selectedPartners.map(p => p.id).join(';');
+  private updateAffiliatesFormValue(): void {
+    const value = this.selectedAffiliates.map(a => a.affiliateId).join(';');
     this.ruleForm.patchValue({ partners: value });
   }
 
-  // Affiliate Referrals methods
+  clearAffiliateSelection(): void {
+    this.selectedAffiliates = [];
+    this.updateAffiliatesFormValue();
+  }
+
+  private loadAffiliates(reset: boolean = false): void {
+    if (this.affiliateLoading) return;
+
+    if (reset) {
+      this.currentAffiliatePage = 0;
+      this.availableAffiliates = [];
+    }
+
+    this.affiliateLoading = true;
+
+    const searchParams: AffiliateSearchParams = {
+      globalFilter: this.affiliateSearchTerm || undefined,
+      pageIndex: this.currentAffiliatePage,
+      pageSize: this.affiliatePageSize,
+    };
+
+    this.clientsService.getAffiliatesDropdown(searchParams).subscribe({
+      next: (response: AffiliateSearchResponse) => {
+        let newAffiliates = response.items;
+        
+        if (reset) {
+          this.availableAffiliates = newAffiliates;
+        } else {
+          this.availableAffiliates = [
+            ...this.availableAffiliates,
+            ...newAffiliates,
+          ];
+        }
+        
+        // Sort affiliates alphabetically by userFullName
+        this.availableAffiliates.sort((a: AffiliateDropdownItem, b: AffiliateDropdownItem) => 
+          a.userFullName.localeCompare(b.userFullName)
+        );
+        
+        this.hasMoreAffiliates = response.hasNextPage;
+        this.affiliateLoading = false;
+      },
+      error: (error) => {
+        this.affiliateLoading = false;
+        this.alertService.error('Failed to load affiliates');
+      },
+    });
+  }
+
+  // Affiliate Referrals methods - Updated to use ClientsService approach
   toggleAffiliateReferralDropdown(): void {
     // If this dropdown is already open, just close it
     if (this.affiliateReferralDropdownOpen) {
@@ -386,18 +460,35 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     // Close all other dropdowns first, then open this one
     this.closeAllDropdowns();
     this.affiliateReferralDropdownOpen = true;
+
+    if (this.availableAffiliateReferrals.length === 0) {
+      this.loadAffiliateReferrals();
+    }
   }
 
   onAffiliateReferralSearch(event: Event): void {
-    const value = (event.target as HTMLInputElement).value.toLowerCase();
+    const value = (event.target as HTMLInputElement).value;
     this.affiliateReferralSearchTerm = value;
-    this.filteredAffiliateReferrals = this.availableAffiliateReferrals.filter(referral =>
-      referral.name.toLowerCase().includes(value)
-    );
+    this.currentAffiliateReferralPage = 0;
+    this.loadAffiliateReferrals(true);
   }
 
-  toggleAffiliateReferralSelection(referral: Affiliate): void {
-    const index = this.selectedAffiliateReferrals.findIndex(r => r.id === referral.id);
+  onAffiliateReferralDropdownScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = target;
+
+    if (
+      scrollTop + clientHeight >= scrollHeight - 5 &&
+      this.hasMoreAffiliateReferrals &&
+      !this.affiliateReferralLoading
+    ) {
+      this.currentAffiliateReferralPage++;
+      this.loadAffiliateReferrals();
+    }
+  }
+
+  toggleAffiliateReferralSelection(referral: AffiliateDropdownItem): void {
+    const index = this.selectedAffiliateReferrals.findIndex(r => r.affiliateId === referral.affiliateId);
     if (index > -1) {
       this.selectedAffiliateReferrals.splice(index, 1);
     } else {
@@ -407,8 +498,8 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     // Don't close dropdown for multiple selection - let user select multiple items
   }
 
-  isAffiliateReferralSelected(referral: Affiliate): boolean {
-    return this.selectedAffiliateReferrals.some(r => r.id === referral.id);
+  isAffiliateReferralSelected(referral: AffiliateDropdownItem): boolean {
+    return this.selectedAffiliateReferrals.some(r => r.affiliateId === referral.affiliateId);
   }
 
   getSelectedAffiliateReferralsText(): string {
@@ -416,14 +507,63 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
       return 'Select affiliate referrals...';
     }
     if (this.selectedAffiliateReferrals.length === 1) {
-      return this.selectedAffiliateReferrals[0].name;
+      return this.selectedAffiliateReferrals[0].userFullName;
     }
     return `${this.selectedAffiliateReferrals.length} affiliate referrals selected`;
   }
 
   private updateAffiliateReferralsFormValue(): void {
-    const value = this.selectedAffiliateReferrals.map(r => r.id).join(';');
+    const value = this.selectedAffiliateReferrals.map(r => r.affiliateId).join(';');
     this.ruleForm.patchValue({ affiliateReferrals: value });
+  }
+
+  clearAffiliateReferralSelection(): void {
+    this.selectedAffiliateReferrals = [];
+    this.updateAffiliateReferralsFormValue();
+  }
+
+  private loadAffiliateReferrals(reset: boolean = false): void {
+    if (this.affiliateReferralLoading) return;
+
+    if (reset) {
+      this.currentAffiliateReferralPage = 0;
+      this.availableAffiliateReferrals = [];
+    }
+
+    this.affiliateReferralLoading = true;
+
+    const searchParams: AffiliateSearchParams = {
+      globalFilter: this.affiliateReferralSearchTerm || undefined,
+      pageIndex: this.currentAffiliateReferralPage,
+      pageSize: this.affiliateReferralPageSize,
+    };
+
+    this.clientsService.getAffiliatesDropdown(searchParams).subscribe({
+      next: (response: AffiliateSearchResponse) => {
+        let newAffiliates = response.items;
+        
+        if (reset) {
+          this.availableAffiliateReferrals = newAffiliates;
+        } else {
+          this.availableAffiliateReferrals = [
+            ...this.availableAffiliateReferrals,
+            ...newAffiliates,
+          ];
+        }
+        
+        // Sort affiliates alphabetically by userFullName
+        this.availableAffiliateReferrals.sort((a: AffiliateDropdownItem, b: AffiliateDropdownItem) => 
+          a.userFullName.localeCompare(b.userFullName)
+        );
+        
+        this.hasMoreAffiliateReferrals = response.hasNextPage;
+        this.affiliateReferralLoading = false;
+      },
+      error: (error) => {
+        this.affiliateReferralLoading = false;
+        this.alertService.error('Failed to load affiliate referrals');
+      },
+    });
   }
 
   // Operators methods
@@ -476,8 +616,6 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     const value = this.selectedOperators.map(o => o.id).join(';');
     this.ruleForm.patchValue({ operators: value });
   }
-
-
 
   onSubmit(): void {
     if (this.ruleForm.invalid) {
