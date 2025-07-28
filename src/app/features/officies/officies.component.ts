@@ -75,7 +75,7 @@ export class OfficesComponent implements OnInit, OnDestroy {
       field: 'source',
       header: 'Source',
       sortable: true,
-      filterable: true,
+      filterable: false,
       selector: (row: Office) => row.source || 'Not specified',
     },
     {
