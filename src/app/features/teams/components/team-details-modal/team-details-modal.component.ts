@@ -33,6 +33,7 @@ import {
   DeskDropdownItem,
   DeskDropdownResponse,
 } from '../../models/team.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 interface BrandDropdownItem {
   id: string;
@@ -51,7 +52,7 @@ interface BrandDropdownResponse {
 @Component({
   selector: 'app-team-details-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   template: `
     <div class="w-full">
       <!-- Modal Header -->
@@ -555,7 +556,7 @@ interface BrandDropdownResponse {
 
             <!-- Edit Actions -->
             <div class="mt-6 space-y-2">
-              <div class="text-end">
+              <div class="text-end" *hasPermission="79">
                 <button
                   *ngIf="!isEditing"
                   type="button"

@@ -35,11 +35,12 @@ import {
   DeskUpdateRequest,
 } from '../../models/desk.model';
 import { BrandDropdownItem } from '../../../brands/models/brand.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-desk-details-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   template: `
     <div class="w-full">
       <!-- Modal Header -->
@@ -528,7 +529,7 @@ import { BrandDropdownItem } from '../../../brands/models/brand.model';
 
             <!-- Edit Actions -->
             <div class="mt-6 space-y-2">
-              <div class="text-end">
+              <div class="text-end" *hasPermission="74">
                 <button
                   *ngIf="!isEditing"
                   type="button"

@@ -26,11 +26,12 @@ import {
   OfficeDropdownItem,
   OfficesListRequest,
 } from '../../../officies/models/office.model';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-brand-details-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HasPermissionDirective],
   template: `
     <div class="w-full">
       <!-- Modal Header -->
@@ -454,7 +455,7 @@ import {
 
             <!-- Edit Actions -->
             <div class="mt-6 space-y-2">
-              <div class="text-end">
+              <div class="text-end" *hasPermission="69">
                 <button
                   *ngIf="!isEditing"
                   type="button"
