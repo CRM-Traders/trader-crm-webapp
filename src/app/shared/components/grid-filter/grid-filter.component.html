@@ -10,7 +10,7 @@
       <div class="relative">
         <button
           type="button"
-          (click)="toggleFilterSelector()"
+          (click)="toggleFilterSelector(); $event.stopPropagation()"
           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white hover:bg-gray-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500/10"
         >
           <svg
@@ -45,7 +45,9 @@
 
         <!-- Filter Selector Dropdown -->
         <div
+          #filterSelectorDropdown
           *ngIf="isFilterSelectorOpen"
+          (click)="$event.stopPropagation()"
           class="absolute z-[999] mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg"
         >
           <!-- Search in filters -->
@@ -303,7 +305,7 @@
               <!-- Dropdown Trigger -->
               <button
                 type="button"
-                (click)="toggleFilterDropdown(activeFilter.id)"
+                (click)="toggleFilterDropdown(activeFilter.id); $event.stopPropagation()"
                 class="w-full h-[38px] flex items-center justify-between p-2.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500/10 transition-colors duration-200"
               >
                 <!-- Dropdown Arrow -->
@@ -325,7 +327,9 @@
 
               <!-- Dropdown Menu -->
               <div
+                #multiSelectDropdown
                 *ngIf="isFilterDropdownOpen(activeFilter.id)"
+                (click)="$event.stopPropagation()"
                 class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-400 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-64 overflow-hidden"
               >
                 <!-- Options List -->
@@ -333,7 +337,6 @@
                   <div
                     *ngFor="let option of getFilterOptions(activeFilter.column)"
                     class="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-400/40 cursor-pointer group"
-                    (click)="toggleOptionSelection(activeFilter, option.value)"
                   >
                     <input
                       type="checkbox"
@@ -347,7 +350,6 @@
                         toggleMultiSelectValue(activeFilter, option.value);
                         applyFilter(activeFilter)
                       "
-                      (click)="$event.stopPropagation()"
                       class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500/10 dark:bg-gray-700 dark:border-gray-600"
                     />
                     <label

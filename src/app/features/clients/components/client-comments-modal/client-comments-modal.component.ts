@@ -19,11 +19,12 @@ import {
   ClientCommentUpdateRequest,
 } from '../../models/client-comments.model';
 import { Subject, takeUntil, finalize } from 'rxjs';
+import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
   selector: 'app-client-comments-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, HasPermissionDirective],
   templateUrl: './client-comments-modal.component.html',
   styles: [],
 })

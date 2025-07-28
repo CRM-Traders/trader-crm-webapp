@@ -15,6 +15,7 @@ import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
 import { LanguageService } from '../../core/services/language.service';
+import { BrandsService } from '../brands/services/brands.service';
 import {
   GridColumn,
   GridAction,
@@ -41,6 +42,7 @@ export class DesksComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private modalService = inject(ModalService);
   private languageService = inject(LanguageService);
+  private brandsService = inject(BrandsService);
 
   private destroy$ = new Subject<void>();
   gridId = 'desks-grid';
@@ -76,11 +78,18 @@ export class DesksComponent implements OnInit, OnDestroy {
       header: 'Brand',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
     },
     {
       field: 'isActive',
       header: 'Status',
       sortable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: true, label: 'Active' },
+        { value: false, label: 'Inactive' },
+      ],
       filterable: true,
     },
     {
@@ -88,6 +97,11 @@ export class DesksComponent implements OnInit, OnDestroy {
       header: 'Type',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [
+        { value: 0, label: 'Sales' },
+        { value: 1, label: 'Retention' },
+      ],
       cellTemplate: null, // Will be set in ngOnInit
     },
     {
@@ -95,15 +109,17 @@ export class DesksComponent implements OnInit, OnDestroy {
       header: 'Language',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
       cellTemplate: null, // Will be set in ngOnInit
     },
-    {
-      field: 'teamsCount',
-      header: 'Teams',
-      sortable: true,
-      filterable: true,
-      selector: (row: Desk) => row.teamsCount || 0,
-    },
+    // {
+    //   field: 'teamsCount',
+    //   header: 'Teams',
+    //   sortable: true,
+    //   filterable: true,
+    //   selector: (row: Desk) => row.teamsCount || 0,
+    // },
     {
       field: 'createdAt',
       header: 'Created Date',
@@ -143,6 +159,7 @@ export class DesksComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeGridTemplates();
     this.loadDeskStatistics();
+    this.loadFilterOptions();
   }
 
   ngOnDestroy(): void {
@@ -168,6 +185,57 @@ export class DesksComponent implements OnInit, OnDestroy {
     );
     if (languageColumn) {
       languageColumn.cellTemplate = this.languageCellTemplate;
+    }
+  }
+
+  private loadFilterOptions(): void {
+    this.loadBrandFilterOptions();
+    this.loadLanguageFilterOptions();
+  }
+
+  private loadBrandFilterOptions(): void {
+    const request = {
+      pageIndex: 0,
+      pageSize: 1000, // Get all brands for filter options
+      sortField: 'name',
+      sortDirection: 'asc' as const,
+      visibleColumns: null,
+      globalFilter: null,
+      filters: null,
+    };
+
+    this.brandsService
+      .getBrandsDropdown(request)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          console.error('Failed to load brand filter options:', error);
+          return of({ items: [] });
+        })
+      )
+      .subscribe((response) => {
+        const brandColumn = this.gridColumns.find(
+          (col) => col.field === 'brandName'
+        );
+        if (brandColumn) {
+          brandColumn.filterOptions = response.items.map((brand) => ({
+            value: brand.value,
+            label: brand.value,
+          }));
+        }
+      });
+  }
+
+  private loadLanguageFilterOptions(): void {
+    const languages = this.languageService.getAllLanguages();
+    const languageColumn = this.gridColumns.find(
+      (col) => col.field === 'language'
+    );
+    if (languageColumn) {
+      languageColumn.filterOptions = languages.map((lang) => ({
+        value: lang.key,
+        label: lang.value,
+      }));
     }
   }
 

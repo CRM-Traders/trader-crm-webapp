@@ -331,12 +331,12 @@
             <button
               type="button"
               class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              (click)="togglePartnerDropdown()"
+              (click)="toggleAffiliateDropdown()"
             >
-              <span class="truncate">{{ getSelectedPartnersText() }}</span>
+              <span class="truncate">{{ getSelectedAffiliatesText() }}</span>
               <svg
                 class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="partnerDropdownOpen"
+                [class.rotate-180]="affiliateDropdownOpen"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -352,42 +352,73 @@
 
             <!-- Dropdown Panel -->
             <div
-              *ngIf="partnerDropdownOpen"
+              *ngIf="affiliateDropdownOpen"
               class="absolute !z-[99999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
               style="z-index: 99999 !important;"
             >
               <!-- Search Input -->
               <div class="p-3 border-b border-gray-200 dark:border-gray-700">
                 <input
-                  #partnerSearchInput
+                  #affiliateSearchInput
                   type="text"
                   placeholder="Search partners..."
                   class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onPartnerSearch($event)"
-                  [value]="partnerSearchTerm"
+                  (input)="onAffiliateSearch($event)"
+                  [value]="affiliateSearchTerm"
                 />
               </div>
 
-              <!-- Partners List -->
-              <div class="max-h-48 overflow-y-auto">
+              <!-- Affiliates List -->
+              <div 
+                class="max-h-48 overflow-y-auto"
+                (scroll)="onAffiliateDropdownScroll($event)"
+              >
                 <div
-                  *ngFor="let partner of filteredPartners"
+                  *ngFor="let affiliate of availableAffiliates"
                   class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
-                  (click)="togglePartnerSelection(partner)"
+                  (click)="toggleAffiliateSelection(affiliate)"
                 >
                   <input
                     type="checkbox"
-                    [checked]="isPartnerSelected(partner)"
+                    [checked]="isAffiliateSelected(affiliate)"
                     class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     (click)="$event.stopPropagation()"
-                    (change)="togglePartnerSelection(partner)"
+                    (change)="toggleAffiliateSelection(affiliate)"
                   />
-                  {{ partner.name }}
+                  {{ affiliate.userFullName }}
+                </div>
+
+                <!-- Loading indicator -->
+                <div
+                  *ngIf="affiliateLoading"
+                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  <svg
+                    class="animate-spin -ml-1 mr-2 h-4 w-4 inline"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Loading...
                 </div>
 
                 <!-- No results -->
                 <div
-                  *ngIf="filteredPartners.length === 0"
+                  *ngIf="!affiliateLoading && availableAffiliates.length === 0 && affiliateSearchTerm"
                   class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
                   No partners found
@@ -447,9 +478,12 @@
               </div>
 
               <!-- Affiliate Referrals List -->
-              <div class="max-h-48 overflow-y-auto">
+              <div 
+                class="max-h-48 overflow-y-auto"
+                (scroll)="onAffiliateReferralDropdownScroll($event)"
+              >
                 <div
-                  *ngFor="let referral of filteredAffiliateReferrals"
+                  *ngFor="let referral of availableAffiliateReferrals"
                   class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
                   (click)="toggleAffiliateReferralSelection(referral)"
                 >
@@ -460,12 +494,40 @@
                     (click)="$event.stopPropagation()"
                     (change)="toggleAffiliateReferralSelection(referral)"
                   />
-                  {{ referral.name }}
+                  {{ referral.userFullName }}
+                </div>
+
+                <!-- Loading indicator -->
+                <div
+                  *ngIf="affiliateReferralLoading"
+                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+                >
+                  <svg
+                    class="animate-spin -ml-1 mr-2 h-4 w-4 inline"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Loading...
                 </div>
 
                 <!-- No results -->
                 <div
-                  *ngIf="filteredAffiliateReferrals.length === 0"
+                  *ngIf="!affiliateReferralLoading && availableAffiliateReferrals.length === 0 && affiliateReferralSearchTerm"
                   class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
                   No affiliate referrals found

@@ -65,6 +65,7 @@ export class GridComponent implements OnInit, OnDestroy {
   private globalFilterSubject = new Subject<string>();
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
+  @ViewChild('columnSelectorDropdown', { static: false }) columnSelectorDropdown!: ElementRef;
 
   @Input() permission: number = -1;
   @Input() selectionPermission: number = -1; // New input for selection permission
@@ -153,6 +154,19 @@ export class GridComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     this.contextMenuVisible = false;
+    
+    // Close column selector if clicking outside
+    if (this.isColumnSelectorVisible) {
+      const target = event.target as Node;
+      const columnSelectorButton = this.gridContainer?.nativeElement.querySelector('[data-column-selector-button]');
+      const columnSelectorDropdown = this.columnSelectorDropdown?.nativeElement;
+      
+      // Check if click is outside both the button and dropdown
+      if (columnSelectorButton && !columnSelectorButton.contains(target) && 
+          columnSelectorDropdown && !columnSelectorDropdown.contains(target)) {
+        this.isColumnSelectorVisible = false;
+      }
+    }
   }
 
   @HostListener('document:contextmenu', ['$event'])
@@ -249,7 +263,12 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   get hasActionsColumn(): boolean {
-    return this.showActions && this.actions.length > 0;
+    if (!this.showActions || this.actions.length === 0) {
+      return false;
+    }
+    
+    // Check if user has permission for at least one action
+    return this.actions.some(action => this.authService.hasPermission(action.permission));
   }
 
   get isSelectionEnabled(): boolean {
@@ -326,6 +345,12 @@ export class GridComponent implements OnInit, OnDestroy {
 
   onRowRightClick(row: any, event: MouseEvent): void {
     if (!this.enableContextMenu || this.actions.length === 0) {
+      return;
+    }
+
+    // Check if user has permission for at least one action
+    const hasAnyPermission = this.actions.some(action => this.authService.hasPermission(action.permission));
+    if (!hasAnyPermission) {
       return;
     }
 

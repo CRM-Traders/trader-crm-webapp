@@ -1,12 +1,16 @@
 // src/app/shared/components/grid-filter/grid-filter.component.ts
 import {
   Component,
+  ElementRef,
   EventEmitter,
   HostListener,
   Input,
   OnDestroy,
   OnInit,
   Output,
+  QueryList,
+  ViewChild,
+  ViewChildren,
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -58,6 +62,9 @@ export class GridFilterComponent implements OnInit, OnDestroy {
   @Input() gridId: string = 'default-grid';
 
   @Output() filterChange = new EventEmitter<GridFilterState>();
+
+  @ViewChild('filterSelectorDropdown', { static: false }) filterSelectorDropdown!: ElementRef;
+  @ViewChildren('multiSelectDropdown') multiSelectDropdowns!: QueryList<ElementRef>;
 
   // Filter selector state
   isFilterSelectorOpen = false;
@@ -156,6 +163,35 @@ export class GridFilterComponent implements OnInit, OnDestroy {
       activeFilter.multiSelectValues = [...gridFilter.value];
     } else {
       activeFilter.value = gridFilter.value;
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    
+    // Check if the click is on the filter selector button
+    const isFilterSelectorButton = target.closest('button[type="button"]')?.textContent?.includes('Add Filter');
+    
+    // Check if the click is inside the filter selector dropdown
+    const isInsideFilterSelector = this.filterSelectorDropdown?.nativeElement?.contains(target);
+    
+    // Check if the click is inside any multi-select dropdown
+    const isInsideMultiSelectDropdown = this.multiSelectDropdowns?.some(
+      dropdown => dropdown.nativeElement?.contains(target)
+    );
+    
+    // Check if the click is on any multi-select dropdown button
+    const isMultiSelectButton = target.closest('button[type="button"]')?.closest('.relative');
+    
+    // Close filter selector dropdown if click is outside
+    if (this.isFilterSelectorOpen && !isFilterSelectorButton && !isInsideFilterSelector) {
+      this.isFilterSelectorOpen = false;
+    }
+    
+    // Close multi-select dropdowns if click is outside
+    if (this.openDropdowns.size > 0 && !isInsideMultiSelectDropdown && !isMultiSelectButton) {
+      this.openDropdowns.clear();
     }
   }
 
@@ -343,10 +379,6 @@ export class GridFilterComponent implements OnInit, OnDestroy {
   }
 
   applyFilter(activeFilter: ActiveFilter): void {
-    if (!this.isValidActiveFilter(activeFilter)) {
-      return;
-    }
-
     let value: any;
     let operator = activeFilter.operator;
 
@@ -354,6 +386,12 @@ export class GridFilterComponent implements OnInit, OnDestroy {
     if (this.isTextType(activeFilter.column)) {
       value = activeFilter.value;
       operator = FilterOperator.CONTAINS; // Always use contains for text
+      
+      // If text value is empty, remove the filter instead of applying it
+      if (!value || value.trim() === '') {
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
+      }
     } else if (
       this.isNumberType(activeFilter.column) ||
       this.isDateType(activeFilter.column)
@@ -380,16 +418,34 @@ export class GridFilterComponent implements OnInit, OnDestroy {
         value = activeFilter.valueTo;
         operator = FilterOperator.LESS_THAN_OR_EQUALS;
       } else {
-        return; // No valid range values
+        // Remove filter if no valid range values
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
       }
     } else if (this.isBooleanType(activeFilter.column)) {
       value = activeFilter.value;
       operator = FilterOperator.EQUALS;
+      
+      // If boolean value is empty, remove the filter
+      if (value === null || value === undefined || value === '') {
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
+      }
     } else if (this.isSelectType(activeFilter.column)) {
       value = [...(activeFilter.multiSelectValues || [])];
       operator = FilterOperator.IN;
-      if (value.length === 0) return; // No values selected
+      if (value.length === 0) {
+        // Remove filter if no values selected
+        this.removeAppliedFilter(activeFilter.column.field);
+        return;
+      }
     } else {
+      return;
+    }
+
+    // Validate the filter before applying
+    if (!this.isValidActiveFilter(activeFilter)) {
+      this.removeAppliedFilter(activeFilter.column.field);
       return;
     }
 
