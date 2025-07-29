@@ -710,12 +710,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
         ({ countries, languages, desks, teams, salesAgents, timezones }) => {
           this.updateColumnFilterOptions(
             'country',
-            countries.map((c) => ({ value: c.code, label: c.name }))
+            countries.map((c) => ({ value: c.name, label: c.name }))
           );
 
           this.updateColumnFilterOptions(
             'language',
-            languages.map((l) => ({ value: l.key, label: l.value }))
+            languages.map((l) => ({ value: l.value, label: l.value }))
           );
 
           this.updateColumnFilterOptions('deskId', desks);
