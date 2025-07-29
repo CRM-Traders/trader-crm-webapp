@@ -507,6 +507,10 @@ export class GridFilterComponent implements OnInit, OnDestroy {
       filter.operator = this.getDefaultOperator(filter.column);
     });
     this.appliedFilters = [];
+    this.gridService.updateState(this.gridId, {
+      filters: { filters: {}, globalFilter: undefined },
+    });
+    this.emitFilterChange();
   }
 
   private emitFilterChange(): void {

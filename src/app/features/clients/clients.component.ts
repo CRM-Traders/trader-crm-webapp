@@ -232,7 +232,8 @@ export class ClientsComponent implements OnInit {
       header: 'Affiliate ID',
       sortable: true,
       filterable: true,
-      filterType: 'text',
+      filterType: 'select',
+      filterOptions: [],
       hidden: true,
       permission: 12,
     },
@@ -1578,6 +1579,7 @@ export class ClientsComponent implements OnInit {
       .toPromise()
       .then((response: any) => {
         const operators = response || [];
+        console.log(operators);
         // Sort operators alphabetically by their display value
         return operators.sort(
           (a: OperatorDropdownItem, b: OperatorDropdownItem) =>
@@ -1587,13 +1589,33 @@ export class ClientsComponent implements OnInit {
   }
 
   private loadAffiliatesDropdown(): void {
-    const affiliateOptions = [
-      { value: 'affiliate1', label: 'Affiliate 1' },
-      { value: 'affiliate2', label: 'Affiliate 2' },
-    ];
+    this.clientsService
+      .getAffiliatesDropdown({
+        pageIndex: 0,
+        pageSize: 1000,
+      })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => of({ items: [] }))
+      )
+      .subscribe((response) => {
+        const affiliateOptions = [
+          ...response.items.map((affiliate) => ({
+            value: affiliate.userFullName,
+            label: affiliate.userFullName,
+          })),
+        ];
+        const affiliateIdOptions = [
+          ...response.items.map((affiliate) => ({
+            value: affiliate.affiliateId,
+            label: affiliate.userFullName,
+          })),
+        ];
 
-    this.updateColumnFilterOptions('affiliateName', affiliateOptions);
-    this.updateColumnFilterOptions('affiliateReferral', affiliateOptions);
+        this.updateColumnFilterOptions('affiliateName', affiliateOptions);
+        this.updateColumnFilterOptions('affiliateReferral', affiliateOptions);
+        this.updateColumnFilterOptions('affiliateId', affiliateIdOptions);
+      });
   }
 
   private loadTimezones() {
