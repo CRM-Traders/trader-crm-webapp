@@ -1483,9 +1483,9 @@ export class ClientsComponent implements OnInit {
           this.updateColumnFilterOptions('officeId', offices);
           this.updateColumnFilterOptions('deskId', desks);
           this.updateColumnFilterOptions('teamId', teams);
-          this.updateColumnFilterOptions('operatorId', operators);
-          this.updateColumnFilterOptions('retentionOperatorId', operators);
-          this.updateColumnFilterOptions('salesOperatorId', operators);
+          this.updateColumnFilterOptions('operatorId', this.processOperatorFilterOptions(operators));
+          this.updateColumnFilterOptions('retentionOperatorId', this.processOperatorFilterOptions(operators));
+          this.updateColumnFilterOptions('salesOperatorId', this.processOperatorFilterOptions(operators));
           this.updateColumnFilterOptions('timezone', timezones);
 
           // Store operators for the assign operator dropdown
@@ -1579,14 +1579,21 @@ export class ClientsComponent implements OnInit {
       .toPromise()
       .then((response: any) => {
         const operators = response || [];
-        const operatorOptions = operators.map((operator: OperatorDropdownItem) => ({
-          value: operator.id,
-          label: operator.value,
-        }));
-        return operatorOptions.sort(
-          (a: any, b: any) => a.label.localeCompare(b.label)
+        return operators.sort(
+          (a: OperatorDropdownItem, b: OperatorDropdownItem) =>
+            a.value.localeCompare(b.value)
         );
       });
+  }
+
+  private processOperatorFilterOptions(operators: OperatorDropdownItem[]): { value: string; label: string }[] {
+    const operatorOptions = operators.map((operator: OperatorDropdownItem) => ({
+      value: operator.id,
+      label: operator.value,
+    }));
+    return operatorOptions.sort(
+      (a: any, b: any) => a.label.localeCompare(b.label)
+    );
   }
 
   private loadAffiliatesDropdown(): void {
