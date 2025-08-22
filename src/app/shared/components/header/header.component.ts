@@ -9,6 +9,7 @@ import { UserMenuComponent } from '../user-menu/user-menu.component';
 import { NotificationsComponent } from '../notifications/notifications.component';
 import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
 import { LocalizationService } from '../../../core/services/localization.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -26,7 +27,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private navService = inject(NavigationService);
   private localizationService = inject(LocalizationService);
   private router = inject(Router);
-
+  public environment = environment;
   // Reference signal directly in the template
   userRole = this.authService.userRole;
   isUserMenuOpen = false;

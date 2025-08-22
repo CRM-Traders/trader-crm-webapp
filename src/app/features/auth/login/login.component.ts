@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TwoFactorComponent } from '../two-factor/two-factor.component';
 import { AuthResponse } from '../../../core/models/auth-response.model';
 import { UserRole } from '../../../core/models/roles.model';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -30,7 +31,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-
+  public environment = environment;
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required]],
     password: ['', [Validators.required]],

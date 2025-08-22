@@ -13,6 +13,7 @@ import { Router, RouterModule } from '@angular/router';
 import { NavItem } from '../../../core/models/nav-item.model';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-sidebar',
@@ -28,7 +29,8 @@ export class SidebarComponent implements OnInit {
   private renderer = inject(Renderer2);
   private cdr = inject(ChangeDetectorRef);
   public router = inject(Router);
-
+  public environment = environment;
+  
   @Input() expanded = true;
   navItems: NavItem[] = [];
 
