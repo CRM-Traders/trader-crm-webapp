@@ -506,7 +506,7 @@
             (dblclick)="onRowClick(item, $event)"
             (contextmenu)="onRowRightClick(item, $event)"
             [ngClass]="{
-              'bg-blue-50 dark:bg-blue-900/10': selectedItems.includes(item)
+              'bg-blue-50/20 dark:bg-blue-900/10': selectedItems.includes(item)
             }"
           >
             <!-- Checkbox Column -->
@@ -734,7 +734,7 @@
             *ngFor="let page of pageNumbers"
             (click)="onPageChange(page)"
             [ngClass]="{
-              'bg-blue-50': pagination.pageIndex === page && !isDarkMode,
+              'bg-blue-50/20': pagination.pageIndex === page && !isDarkMode,
               'bg-blue-900/20': pagination.pageIndex === page && isDarkMode,
               'text-blue-600': pagination.pageIndex === page && !isDarkMode,
               'text-blue-400': pagination.pageIndex === page && isDarkMode,
