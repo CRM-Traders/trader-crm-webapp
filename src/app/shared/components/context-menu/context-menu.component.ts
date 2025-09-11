@@ -44,12 +44,14 @@ import { HasPermissionDirective } from '../../../core/directives/has-permission.
                 action.type === 'warning' && !isActionDisabled(action)
             }"
           >
+            <div class="bg-[#ffffff] p-1 rounded-md mr-2">
             <img
               *ngIf="action.icon"
               [src]="getIconSvg(action.icon)"
-              class="w-4 h-4 mr-2"
+              class="w-4 h-4"
               [alt]="action.label"
             />
+            </div>
             {{ action.label }}
           </button>
         </ng-container>

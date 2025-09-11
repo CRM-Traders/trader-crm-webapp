@@ -1,0 +1,980 @@
+<div class="general-container w-full mx-auto bg-white dark:bg-gray-900">
+    <!-- Header Section -->
+    <div class="relative z-10 bg-white dark:bg-gray-900">
+      <div class="px-6 py-4">
+        <!-- Top Header -->
+        <div
+          class="sticky z-50 py-3 bg-white top-0 flex items-center justify-between mb-4"
+        >
+          <div class="flex items-center space-x-4">
+            <button
+              type="button"
+              (click)="goBack()"
+              class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                ></path>
+              </svg>
+              Back to Operators
+            </button>
+            <div class="flex items-center space-x-2">
+              <div
+                class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg"
+              >
+                {{ getInitials(operator.userFullName) }}
+              </div>
+              <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ operator.userFullName }}
+                </h1>
+                <p
+                  class="text-sm text-gray-500 dark:text-gray-400"
+                  *hasPermission="111"
+                >
+                  Operator ID: {{ operator.id }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="UserTypeColors[operator.userType]"
+              >
+                {{ UserTypeLabels[operator.userType] }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center space-x-3">
+            <button
+              *hasPermission="99"
+              type="button"
+              (click)="changePassword()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                ></path>
+              </svg>
+              Change Password
+            </button>
+            <button
+              type="button"
+              (click)="openPermissions()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                ></path>
+              </svg>
+              Permissions
+            </button>
+            <button
+              type="button"
+              (click)="refreshData()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                ></path>
+              </svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Operator Summary Cards -->
+        <div
+          class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6"
+        >
+          <!-- User Type -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              User Type
+            </div>
+            <div class="font-semibold text-gray-900 dark:text-white">
+              {{ UserTypeLabels[operator.userType] }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              {{ operator.userTypeName }}
+            </div>
+          </div>
+
+          <!-- Departments -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Departments
+            </div>
+            <div class="font-semibold text-gray-900 dark:text-white">
+              {{ operator.departments?.length || 0 }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              {{ getDepartmentsSummary() }}
+            </div>
+          </div>
+
+          <!-- Primary Role -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Primary Role
+            </div>
+            <div class="font-semibold text-gray-900 dark:text-white">
+              {{ operator.roleName || 'Not assigned' }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              {{ operator.departmentName }}
+            </div>
+          </div>
+
+          <!-- Branches -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Branches
+            </div>
+            <div class="font-semibold text-gray-900 dark:text-white">
+              {{ operator.branches?.length || 0 }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              {{ getBranchesSummary() }}
+            </div>
+          </div>
+
+          <!-- Primary Branch -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Primary Branch
+            </div>
+            <div class="font-semibold text-gray-900 dark:text-white">
+              {{ operator.branchName || 'Not assigned' }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              {{ BranchTypeLabels[operator.branchType] }}
+            </div>
+          </div>
+
+          <!-- Created Date -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+            <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Created
+            </div>
+            <div class="font-semibold text-gray-900 dark:text-white">
+              {{ operator.createdAt | date : 'short' }}
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              by {{ operator.createdBy }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="sticky top-0 z-10 bg-white">
+          <div
+            class="flex justify-center flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700"
+          >
+            <button
+              *ngFor="let section of navigationSections"
+              type="button"
+              class="px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors"
+              [ngClass]="{
+                'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20':
+                  activeSection === section.key,
+                'text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600':
+                  activeSection !== section.key
+              }"
+              (click)="setActiveSection(section.key)"
+            >
+              <div
+                class="flex items-center"
+                *hasPermission="section.permission"
+              >
+                <ng-container [ngSwitch]="section.key">
+                  <!-- Profile Icon -->
+                  <svg
+                    *ngSwitchCase="'profile'"
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    ></path>
+                  </svg>
+                  <!-- Departments Icon -->
+                  <svg
+                    *ngSwitchCase="'departments'"
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    ></path>
+                  </svg>
+                  <!-- Branches Icon -->
+                  <svg
+                    *ngSwitchCase="'branches'"
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    ></path>
+                  </svg>
+                  <!-- Default Icon for other sections -->
+                  <svg
+                    *ngSwitchDefault
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    ></path>
+                  </svg>
+                </ng-container>
+                <ng-container *hasPermission="section.permission">{{
+                  section.label
+                }}</ng-container>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="px-6 py-6">
+      <div [ngSwitch]="activeSection">
+        <!-- Profile Section -->
+        <div *ngSwitchCase="'profile'" class="max-w-6xl mx-auto">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Operator Profile
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400">
+              Manage operator information and assignments
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Personal Information Form -->
+            <div
+              class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+            >
+              <div class="flex items-center justify-between mb-6">
+                <h3
+                  class="text-lg font-semibold text-gray-900 dark:text-white"
+                >
+                  Personal Information
+                </h3>
+                <ng-container *hasPermission="102">
+                  <button
+                    type="button"
+                    *ngIf="!isEditingProfile"
+                    (click)="startEditProfile()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      ></path>
+                    </svg>
+                    Edit
+                  </button>
+                </ng-container>
+              </div>
+
+              <form [formGroup]="profileForm" class="space-y-4">
+                <!-- First Name and Last Name -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      First Name <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      formControlName="firstName"
+                      [readonly]="!isEditingProfile"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      [class.bg-gray-50]="!isEditingProfile"
+                      [class.dark:bg-gray-800]="!isEditingProfile"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Last Name <span class="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      formControlName="lastName"
+                      [readonly]="!isEditingProfile"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      [class.bg-gray-50]="!isEditingProfile"
+                      [class.dark:bg-gray-800]="!isEditingProfile"
+                    />
+                  </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Email <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    [readonly]="!isEditingProfile"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [class.bg-gray-50]="!isEditingProfile"
+                    [class.dark:bg-gray-800]="!isEditingProfile"
+                  />
+                </div>
+
+                <!-- Phone Number -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    formControlName="phoneNumber"
+                    [readonly]="!isEditingProfile"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [class.bg-gray-50]="!isEditingProfile"
+                    [class.dark:bg-gray-800]="!isEditingProfile"
+                  />
+                </div>
+
+                <!-- User Type -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    User Type <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    formControlName="userType"
+                    [disabled]="!isEditingProfile"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [class.bg-gray-50]="!isEditingProfile"
+                    [class.dark:bg-gray-800]="!isEditingProfile"
+                  >
+                    <optgroup label="Administrators">
+                      <option [value]="UserType.CompanyAdmin">
+                        Company Admin
+                      </option>
+                      <option [value]="UserType.BrandAdmin">
+                        Brand Admin
+                      </option>
+                    </optgroup>
+                    <optgroup label="Heads of Department">
+                      <option [value]="UserType.SalesHOD">Sales HOD</option>
+                      <option [value]="UserType.RetentionHOD">
+                        Retention HOD
+                      </option>
+                      <option [value]="UserType.SupportHOD">
+                        Support HOD
+                      </option>
+                      <option [value]="UserType.PspHOD">PSP HOD</option>
+                    </optgroup>
+                    <optgroup label="Managers">
+                      <option [value]="UserType.SalesManager">
+                        Sales Manager
+                      </option>
+                      <option [value]="UserType.RetentionManager">
+                        Retention Manager
+                      </option>
+                      <option [value]="UserType.SupportManager">
+                        Support Manager
+                      </option>
+                      <option [value]="UserType.PSPManager">
+                        PSP Manager
+                      </option>
+                      <option [value]="UserType.BOManager">BO Manager</option>
+                      <option [value]="UserType.ComplianceManager">
+                        Compliance Manager
+                      </option>
+                      <option [value]="UserType.OperationsManager">
+                        Operations Manager
+                      </option>
+                      <option [value]="UserType.DealingManager">
+                        Dealing Manager
+                      </option>
+                    </optgroup>
+                    <optgroup label="Team Leads">
+                      <option [value]="UserType.SalesLead">Sales Lead</option>
+                      <option [value]="UserType.RetentionLead">
+                        Retention Lead
+                      </option>
+                      <option [value]="UserType.SupportLead">
+                        Support Lead
+                      </option>
+                    </optgroup>
+                    <optgroup label="Agents">
+                      <option [value]="UserType.SalesAgent">
+                        Sales Agent
+                      </option>
+                      <option [value]="UserType.RetentionAgent">
+                        Retention Agent
+                      </option>
+                      <option [value]="UserType.SupportAgent">
+                        Support Agent
+                      </option>
+                    </optgroup>
+                    <optgroup label="Other">
+                      <option [value]="UserType.AffiliateManager">
+                        Affiliate Manager
+                      </option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <!-- Action Buttons for Profile -->
+                <div
+                  *ngIf="isEditingProfile"
+                  class="flex justify-end space-x-3 pt-4"
+                >
+                  <button
+                    *hasPermission="102"
+                    type="button"
+                    (click)="cancelEditProfile()"
+                    class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    *hasPermission="102"
+                    type="button"
+                    (click)="saveProfileInfo()"
+                    [disabled]="profileForm.invalid || isSavingProfile"
+                    class="px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ isSavingProfile ? 'Saving...' : 'Save Changes' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- System Information -->
+            <div
+              *hasPermission="103"
+              class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+            >
+              <h3
+                class="text-lg font-semibold text-gray-900 dark:text-white mb-6"
+              >
+                System Information
+              </h3>
+
+              <div class="space-y-4">
+                <div class="grid grid-cols-1 gap-4">
+                  <div *hasPermission="111">
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Operator ID
+                    </label>
+                    <div class="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        [value]="operator.id"
+                        readonly
+                        class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 font-mono text-sm"
+                      />
+                      <button
+                        type="button"
+                        (click)="copyToClipboard(operator.id)"
+                        class="p-2 text-gray-400 hover:text-gray-600"
+                        title="Copy Operator ID"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          ></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      User ID
+                    </label>
+                    <div class="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        [value]="operator.userId"
+                        readonly
+                        class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 font-mono text-sm"
+                      />
+                      <button
+                        type="button"
+                        (click)="copyToClipboard(operator.userId)"
+                        class="p-2 text-gray-400 hover:text-gray-600"
+                        title="Copy User ID"
+                      >
+                        <svg
+                          class="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          ></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Created
+                    </label>
+                    <input
+                      type="text"
+                      [value]="operator.createdAt | date : 'medium'"
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800"
+                    />
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      by {{ operator.createdBy }}
+                    </p>
+                  </div>
+
+                  <div *ngIf="operator.lastModifiedAt">
+                    <label
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Last Modified
+                    </label>
+                    <input
+                      type="text"
+                      [value]="operator.lastModifiedAt | date : 'medium'"
+                      readonly
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800"
+                    />
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      by {{ operator.lastModifiedBy }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Departments Section -->
+        <div *ngSwitchCase="'departments'" class="max-w-6xl mx-auto">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Department Assignments
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400">
+              Manage operator department and role assignments
+            </p>
+          </div>
+
+          <!-- Add Department Form -->
+          <div
+            *hasPermission="106"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
+          >
+            <h3
+              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+            >
+              Add Department
+            </h3>
+            <form [formGroup]="departmentForm" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Department <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    formControlName="departmentId"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    (change)="onDepartmentChange($event.target)"
+                  >
+                    <option value="">Select</option>
+                    <option
+                      *ngFor="let dept of availableDepartments"
+                      [value]="dept.id"
+                    >
+                      {{ dept.value }}
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Role <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    formControlName="roleId"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [disabled]="!availableRoles.length"
+                  >
+                    <option value="">
+                      {{
+                        availableRoles.length ? 'Select' : '-- No items --'
+                      }}
+                    </option>
+                    <option
+                      *ngFor="let role of availableRoles"
+                      [value]="role.id"
+                    >
+                      {{ role.value }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button
+                  type="button"
+                  (click)="addDepartment()"
+                  [disabled]="departmentForm.invalid || isAddingDepartment"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    ></path>
+                  </svg>
+                  {{ isAddingDepartment ? 'Adding...' : 'Add Department' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Departments List -->
+          <div
+            *hasPermission="105"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+          >
+            <div
+              class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+            >
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Assigned Departments
+              </h3>
+            </div>
+            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+              <div
+                *ngFor="let dept of operator.departments; let i = index"
+                class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+              >
+                <div>
+                  <p
+                    class="text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    {{ dept.departmentName }}
+                    <span *ngIf="i === 0" class="text-xs text-blue-600 dark:text-blue-400 ml-2">(Default)</span>
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Role: {{ dept.roleName }}
+                  </p>
+                </div>
+                <ng-container *hasPermission="107">
+                  <button
+                    *ngIf="i > 0"
+                    type="button"
+                    (click)="removeDepartment(dept.operatorDepartmentRoleId)"
+                    class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                    title="Remove Department"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      ></path>
+                    </svg>
+                  </button>
+                </ng-container>
+              </div>
+              <div
+                *ngIf="
+                  !operator.departments || operator.departments.length === 0
+                "
+                class="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+              >
+                No departments assigned yet
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Branches Section -->
+        <div *ngSwitchCase="'branches'" class="max-w-6xl mx-auto">
+          <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Branch Assignments
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400">
+              Manage operator branch assignments
+            </p>
+          </div>
+
+          <!-- Add Branch Form -->
+          <div
+            *hasPermission="109"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
+          >
+            <h3
+              class="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+            >
+              Add Branch
+            </h3>
+            <form [formGroup]="branchForm" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Branch Type <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    formControlName="branchType"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    (change)="onBranchTypeChange()"
+                  >
+                    <option value="">Select</option>
+                    <option [value]="BranchType.Office">Office</option>
+                    <option [value]="BranchType.Desk">Desk</option>
+                    <option [value]="BranchType.Team">Team</option>
+                    <option [value]="BranchType.Brand">Brand</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Branch <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    formControlName="branchId"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [disabled]="
+                      !branchForm.get('branchType')?.value || loadingBranches
+                    "
+                  >
+                    <option value="">
+                      {{
+                        branchForm.get('branchType')?.value
+                          ? loadingBranches
+                            ? 'Loading...'
+                            : availableBranches.length
+                            ? 'Select'
+                            : 'No branches available'
+                          : 'Select branch type first'
+                      }}
+                    </option>
+                    <option
+                      *ngFor="let branch of availableBranches"
+                      [value]="branch.id"
+                    >
+                      {{ branch.value }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button
+                  type="button"
+                  (click)="addBranch()"
+                  [disabled]="branchForm.invalid || isAddingBranch"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg
+                    class="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    ></path>
+                  </svg>
+                  {{ isAddingBranch ? 'Adding...' : 'Add Branch' }}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Branches List -->
+          <div
+            *hasPermission="108"
+            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+          >
+            <div
+              class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
+            >
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                Assigned Branches
+              </h3>
+            </div>
+            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+              <div
+                *ngFor="let branch of operator.branches"
+                class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+              >
+                <div>
+                  <p
+                    class="text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Type: {{ branch.type }}
+                  </p>
+                  <p
+                    class="text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    Branch: {{ branch.name }}
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    ID: {{ branch.id }}
+                  </p>
+                </div>
+                <button
+                  *hasPermission="110"
+                  type="button"
+                  (click)="removeBranch(branch.id)"
+                  class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                  title="Remove Branch"
+                >
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+              <div
+                *ngIf="!operator.branches || operator.branches.length === 0"
+                class="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+              >
+                No branches assigned yet
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

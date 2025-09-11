@@ -64,9 +64,8 @@
             >
               <div
                 *ngFor="let office of offices; let i = index"
-                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
-                [class.bg-blue-100]="isOfficeFocused(i)"
-                [class.dark:bg-blue-400]="isOfficeFocused(i)"
+                class="px-3 py-2 hover:bg-gray-100/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                [class.bg-[#ededed09]]="isOfficeFocused(i)"
                 [tabindex]="0"
                 (click)="selectOffice(office)"
                 (keydown)="onOfficeKeydown($event, office, i)"

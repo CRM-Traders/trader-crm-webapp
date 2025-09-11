@@ -82,6 +82,7 @@ export class AffiliatesComponent implements OnInit {
       sortable: true,
       filterable: true,
       filterType: 'text',
+      cellClass: 'text-primary-500 hover:text-blue-400 hover:underline',
       cellTemplate: null, // Will be set in ngOnInit
       hidden: false,
     },
