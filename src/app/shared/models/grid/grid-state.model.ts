@@ -7,6 +7,9 @@ export interface GridState {
   sort?: GridSort;
   pagination: GridPagination;
   visibleColumns: string[];
+  // Indicates whether visibleColumns has been explicitly initialized by the user or code
+  // This allows distinguishing between "no state yet" and "intentionally empty" selections
+  columnsInitialized?: boolean;
 }
 
 export interface GridDataResponse<T = any> {

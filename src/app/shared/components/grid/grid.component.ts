@@ -206,10 +206,14 @@ export class GridComponent implements OnInit, OnDestroy {
 
     this.updateVisibleColumns();
 
-    this.gridService.setVisibleColumns(
-      this.gridId,
-      this.visibleColumns.map((col) => col.field)
-    );
+    // Initialize visible columns only if they were never initialized before
+    const initialState = this.gridService.getCurrentState(this.gridId);
+    if (!initialState.columnsInitialized) {
+      this.gridService.setVisibleColumns(
+        this.gridId,
+        this.visibleColumns.map((col) => col.field)
+      );
+    }
 
     // Reset pagination to initial state when component initializes
     this.pagination.pageIndex = 0;
@@ -221,7 +225,7 @@ export class GridComponent implements OnInit, OnDestroy {
     // Restore other state properties (but keep pageIndex at 0)
     this.currentSort = currentState.sort;
 
-    if (currentState.visibleColumns.length > 0) {
+    if (currentState.columnsInitialized) {
       this.visibleColumns = this.columns.filter((col) =>
         currentState.visibleColumns.includes(col.field)
       );
@@ -238,7 +242,7 @@ export class GridComponent implements OnInit, OnDestroy {
         }
         this.currentSort = state.sort;
 
-        if (state.visibleColumns.length > 0) {
+        if (state.columnsInitialized) {
           this.visibleColumns = this.columns.filter((col) =>
             state.visibleColumns.includes(col.field)
           );

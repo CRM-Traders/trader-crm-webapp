@@ -48,8 +48,8 @@ export class GridColumnSelectorComponent implements OnInit, OnChanges {
     // Get the current state from the grid service
     const currentState = this.gridService.getCurrentState(this.gridId);
 
-    if (currentState.visibleColumns.length > 0) {
-      // Use the saved state if it exists
+    if (currentState.columnsInitialized) {
+      // Use the saved state, even if it's intentionally empty
       this.selectedColumns = currentState.visibleColumns;
     } else {
       // Fall back to default values (non-hidden columns)
