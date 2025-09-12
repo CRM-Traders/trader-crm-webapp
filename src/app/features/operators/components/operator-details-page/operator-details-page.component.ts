@@ -311,7 +311,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         lastname: this.profileForm.value.lastName,
         email: this.profileForm.value.email,
         phoneNumber: this.profileForm.value.phoneNumber || null,
-        userType: this.profileForm.value.userType,
+        userType: Number(this.profileForm.value.userType),
       };
 
       this.operatorsService
