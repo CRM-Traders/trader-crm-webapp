@@ -1,1 +1,483 @@
-<p>operator-registration-modal works!</p>
+<div class="w-full">
+    <!-- Modal Header -->
+    <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+        <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
+            New Operator
+        </h4>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="px-6 py-6">
+        <form [formGroup]="registrationForm" class="space-y-4">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Username <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="username" formControlName="username" placeholder="Username"
+                    class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [class.border-red-500]="
+              registrationForm.get('username')?.invalid &&
+              registrationForm.get('username')?.touched
+            " />
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+              registrationForm.get('username')?.invalid &&
+              registrationForm.get('username')?.touched
+            ">
+                    Username is required
+                </p>
+            </div>
+
+            <!-- First Name and Last Name Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="firstName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        First name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="firstName" formControlName="firstName" placeholder="First name"
+                        class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        [class.border-red-500]="
+                registrationForm.get('firstName')?.invalid &&
+                registrationForm.get('firstName')?.touched
+              " />
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('firstName')?.invalid &&
+                registrationForm.get('firstName')?.touched
+              ">
+                        First name is required
+                    </p>
+                </div>
+
+                <div>
+                    <label for="lastName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Last name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="lastName" formControlName="lastName" placeholder="Last name"
+                        class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        [class.border-red-500]="
+                registrationForm.get('lastName')?.invalid &&
+                registrationForm.get('lastName')?.touched
+              " />
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('lastName')?.invalid &&
+                registrationForm.get('lastName')?.touched
+              ">
+                        Last name is required
+                    </p>
+                </div>
+            </div>
+
+            <!-- Email and Password Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Email <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" id="email" formControlName="email" placeholder="Email"
+                        class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        [class.border-red-500]="
+                registrationForm.get('email')?.invalid &&
+                registrationForm.get('email')?.touched
+              " />
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('email')?.invalid &&
+                registrationForm.get('email')?.touched
+              ">
+                        <span *ngIf="registrationForm.get('email')?.errors?.['required']">Email is required</span>
+                        <span *ngIf="registrationForm.get('email')?.errors?.['email']">Please enter a valid email</span>
+                    </p>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Password <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative" #userTypeDropdownRoot (click)="$event.stopPropagation()">
+                        <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password"
+                            placeholder="Password"
+                            class="w-full px-3 py-2 pr-20 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                            [class.border-red-500]="
+                  registrationForm.get('password')?.invalid &&
+                  registrationForm.get('password')?.touched
+                " />
+                        <div class="absolute inset-y-0 right-0 flex items-center">
+                            <button type="button"
+                                class="px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 border-r border-gray-300 dark:border-gray-600"
+                                (click)="generatePassword()" title="Generate Password">
+                                Gen
+                            </button>
+                            <button type="button" class="px-2 flex items-center" (click)="togglePasswordVisibility()"
+                                title="Toggle Password Visibility">
+                                <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path *ngIf="!showPassword" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path *ngIf="!showPassword" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    <path *ngIf="showPassword" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('password')?.invalid &&
+                registrationForm.get('password')?.touched
+              ">
+                        Password is required
+                    </p>
+                </div>
+            </div>
+
+            <!-- Phone and User Type Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="phoneNumber" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone
+                    </label>
+                    <input type="tel" id="phoneNumber" formControlName="phoneNumber" placeholder="Phone"
+                        class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" />
+                </div>
+
+                <div>
+                    <label for="userType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        User Type <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative" #departmentDropdownRoot (click)="$event.stopPropagation()">
+                        <!-- Custom Dropdown Button -->
+                        <button type="button"
+                            class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                            [class.border-red-500]="
+                  registrationForm.get('userType')?.invalid &&
+                  registrationForm.get('userType')?.touched
+                " (click)="toggleUserTypeDropdown()" (keydown)="onUserTypeButtonKeydown($event)">
+                            <span class="truncate">{{ getSelectedUserTypeName() }}</span>
+                            <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="userTypeDropdownOpen"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Panel -->
+                        <div *ngIf="userTypeDropdownOpen"
+                            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                            <!-- Search Input -->
+                            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                                <input #userTypeSearchInput type="text" placeholder="Search user types..."
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    (input)="onUserTypeSearch($event)" [value]="userTypeSearchTerm" />
+                            </div>
+
+                            <!-- User Types List -->
+                            <div class="max-h-48 overflow-y-auto">
+                                <div *ngFor="let group of getFilteredUserTypeGroups()"
+                                    class="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                                    <!-- Group Header -->
+                                    <div
+                                        class="px-3 py-2 bg-gray-50 dark:bg-gray-700 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        {{ group.group }}
+                                    </div>
+
+                                    <!-- Group Options -->
+                                    <div *ngFor="let option of group.options; let i = index"
+                                        class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                        (click)="selectUserType(option)">
+                                        <div>{{ option.value }}</div>
+                                    </div>
+                                </div>
+
+                                <!-- No results -->
+                                <div *ngIf="getFilteredUserTypeGroups().length === 0"
+                                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <span *ngIf="userTypeSearchTerm">No user types match your search</span>
+                                    <span *ngIf="!userTypeSearchTerm">No user types found</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('userType')?.invalid &&
+                registrationForm.get('userType')?.touched
+              ">
+                        User type is required
+                    </p>
+                </div>
+            </div>
+
+            <!-- Department and Role Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="departmentId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Department <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative" #roleDropdownRoot (click)="$event.stopPropagation()">
+                        <!-- Custom Dropdown Button -->
+                        <button type="button"
+                            class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                            [class.border-red-500]="
+                  registrationForm.get('departmentId')?.invalid &&
+                  registrationForm.get('departmentId')?.touched
+                " (click)="toggleDepartmentDropdown()" (keydown)="onDepartmentButtonKeydown($event)">
+                            <span class="truncate">{{
+                                getSelectedDepartmentName()
+                                }}</span>
+                            <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="departmentDropdownOpen"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Panel -->
+                        <div *ngIf="departmentDropdownOpen"
+                            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                            <!-- Search Input -->
+                            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                                <input #departmentSearchInput type="text" placeholder="Search departments..."
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    (input)="onDepartmentSearch($event)" [value]="departmentSearchTerm" />
+                            </div>
+
+                            <!-- Departments List -->
+                            <div class="max-h-48 overflow-y-auto" (scroll)="onDepartmentDropdownScroll($event)">
+                                <div *ngFor="let department of getFilteredDepartments(); let i = index"
+                                    class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                    [tabindex]="0" (click)="selectDepartment(department)"
+                                    (keydown)="onDepartmentKeydown($event, department, i)"
+                                    (mouseenter)="setFocusedDepartmentIndex(i)">
+                                    <div>{{ department.value }}</div>
+                                </div>
+
+                                <!-- Loading indicator -->
+                                <div *ngIf="departmentLoading"
+                                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <svg class="animate-spin h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </div>
+
+                                <!-- No results -->
+                                <div *ngIf="
+                      !departmentLoading &&
+                      getFilteredDepartments().length === 0
+                    " class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <span *ngIf="departmentSearchTerm">No departments match your search</span>
+                                    <span *ngIf="!departmentSearchTerm">No departments found</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('departmentId')?.invalid &&
+                registrationForm.get('departmentId')?.touched
+              ">
+                        Department is required
+                    </p>
+                </div>
+
+                <div>
+                    <label for="roleId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Role <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative" #branchDropdownRoot (click)="$event.stopPropagation()">
+                        <!-- Custom Dropdown Button -->
+                        <button type="button"
+                            class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                            [class.border-red-500]="
+                  registrationForm.get('roleId')?.invalid &&
+                  registrationForm.get('roleId')?.touched
+                " [disabled]="!availableRoles.length" (click)="toggleRoleDropdown()"
+                            (keydown)="onRoleButtonKeydown($event)">
+                            <span class="truncate">{{ getSelectedRoleName() }}</span>
+                            <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="roleDropdownOpen"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Panel -->
+                        <div *ngIf="roleDropdownOpen"
+                            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                            <!-- Search Input -->
+                            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                                <input #roleSearchInput type="text" placeholder="Search roles..."
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    (input)="onRoleSearch($event)" [value]="roleSearchTerm" />
+                            </div>
+
+                            <!-- Roles List -->
+                            <div class="max-h-48 overflow-y-auto">
+                                <div *ngFor="let role of getFilteredRoles(); let i = index"
+                                    class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                    [tabindex]="0" (click)="selectRole(role)" (keydown)="onRoleKeydown($event, role, i)"
+                                    (mouseenter)="setFocusedRoleIndex(i)">
+                                    <div>{{ role.value }}</div>
+                                </div>
+
+                                <!-- Loading indicator -->
+                                <div *ngIf="roleLoading"
+                                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <svg class="animate-spin h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </div>
+
+                                <!-- No results -->
+                                <div *ngIf="!roleLoading && getFilteredRoles().length === 0"
+                                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    No roles found
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('roleId')?.invalid &&
+                registrationForm.get('roleId')?.touched
+              ">
+                        Role is required
+                    </p>
+                </div>
+            </div>
+
+            <!-- Branch Type and Branch Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="branchType" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Branch type <span class="text-red-500">*</span>
+                    </label>
+                    <select id="branchType" formControlName="branchType"
+                        class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        [class.border-red-500]="
+                registrationForm.get('branchType')?.invalid &&
+                registrationForm.get('branchType')?.touched
+              " (change)="onBranchTypeChange($event)">
+                        <option value="">Select</option>
+                        <option [value]="BranchType.Office">Office</option>
+                        <option [value]="BranchType.Desk">Desk</option>
+                        <option [value]="BranchType.Team">Team</option>
+                        <option [value]="BranchType.Brand">Brand</option>
+                    </select>
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('branchType')?.invalid &&
+                registrationForm.get('branchType')?.touched
+              ">
+                        Branch type is required
+                    </p>
+                </div>
+
+                <div>
+                    <label for="branchId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Branch <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <!-- Custom Dropdown Button -->
+                        <button type="button"
+                            class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                            [class.border-red-500]="
+                  registrationForm.get('branchId')?.invalid &&
+                  registrationForm.get('branchId')?.touched
+                " [disabled]="
+                  !registrationForm.get('branchType')?.value || branchLoading
+                " (click)="toggleBranchDropdown()" (keydown)="onBranchButtonKeydown($event)">
+                            <span class="truncate">{{ getSelectedBranchName() }}</span>
+                            <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="branchDropdownOpen"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown Panel -->
+                        <div *ngIf="branchDropdownOpen"
+                            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                            <!-- Search Input -->
+                            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                                <input #branchSearchInput type="text" placeholder="Search branches..."
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    (input)="onBranchSearch($event)" [value]="branchSearchTerm" />
+                            </div>
+
+                            <!-- Branches List -->
+                            <div class="max-h-28 overflow-y-auto" (scroll)="onBranchDropdownScroll($event)">
+                                <div *ngFor="let branch of availableBranches; let i = index"
+                                    class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                    [tabindex]="0" (click)="selectBranch(branch)"
+                                    (keydown)="onBranchKeydown($event, branch, i)"
+                                    (mouseenter)="setFocusedBranchIndex(i)">
+                                    <div>{{ getBranchDisplayText(branch) }}</div>
+                                </div>
+
+                                <!-- Loading indicator -->
+                                <div *ngIf="branchLoading"
+                                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <svg class="animate-spin h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </div>
+
+                                <!-- No results -->
+                                <div *ngIf="!branchLoading && availableBranches.length === 0"
+                                    class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    No branches found
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                registrationForm.get('branchId')?.invalid &&
+                registrationForm.get('branchId')?.touched
+              ">
+                        Branch is required
+                    </p>
+                </div>
+            </div>
+        </form>
+
+        <!-- Note -->
+        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/5 rounded-lg">
+            <p class="text-sm text-blue-600 dark:text-blue-400">
+                <strong>Note:</strong> You will be able to set additional
+                departments in operator's profile once it's created
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+        <button type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-400/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            (click)="onCancel()">
+            Cancel
+        </button>
+        <button type="button"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            (click)="onSubmit()" [disabled]="registrationForm.invalid || isSubmitting">
+            <span class="flex items-center">
+                <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                {{ isSubmitting ? 'Creating...' : 'Create & open' }}
+            </span>
+        </button>
+    </div>
+</div>

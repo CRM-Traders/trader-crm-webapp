@@ -4,6 +4,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { DashboardService } from './services/dashboard.services';
 import { DashboardData, OfficeDashboardStats, DepositStat, Transaction, UserTicket, PaymentType, PaymentStatus, TransactionType, DepositType, TicketType, TicketStatus } from './models/dashboard.models';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { AlertService } from '../../core/services/alert.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +15,7 @@ import { HasPermissionDirective } from '../../core/directives/has-permission.dir
 })
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
+  private alertService = inject(AlertService);
 
   dashboardData: DashboardData | null = null;
   officeDashboardStats: OfficeDashboardStats | null = null;
@@ -49,6 +51,138 @@ export class DashboardComponent implements OnInit {
       error: (err) => {
         this.error = 'Failed to load dashboard data';
         this.loading = false;
+      },
+    });
+  }
+
+  // Section-specific refreshers
+  refreshNewLeads(): void {
+    this.dashboardService.getDashboardData().subscribe({
+      next: (data) => {
+        if (!this.dashboardData) {
+          this.dashboardData = data;
+        } else {
+          this.dashboardData.newLeads = data.newLeads;
+        }
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshRegistrationCountries(): void {
+    this.dashboardService.getDashboardData().subscribe({
+      next: (data) => {
+        if (!this.dashboardData) {
+          this.dashboardData = data;
+        } else {
+          this.dashboardData.registrationCountries = data.registrationCountries;
+        }
+        this.registrationCountries = this.getValidCountries();
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshLeadsTraffic(): void {
+    this.dashboardService.getOfficeDashboardStats().subscribe({
+      next: (data: OfficeDashboardStats) => {
+        if (data && Array.isArray(data.depositStats)) {
+          this.leadsTraffic = data.depositStats;
+        }
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshProductivityStats(): void {
+    this.dashboardService.getOfficeDashboardStats().subscribe({
+      next: (data: OfficeDashboardStats) => {
+        if (data && Array.isArray(data.depositStats)) {
+          this.productivityStats = data.depositStats;
+        }
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshDepositAttempts(): void {
+    this.dashboardService.getOfficeDashboardStats().subscribe({
+      next: (data: OfficeDashboardStats) => {
+        this.depositAttempts = (data.transactions || []).filter(
+          (t: Transaction) => t.transactionType === TransactionType.Deposit,
+        );
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshFailedDeposits(): void {
+    this.dashboardService.getOfficeDashboardStats().subscribe({
+      next: (data: OfficeDashboardStats) => {
+        this.failedDeposits = (data.transactions || []).filter(
+          (t: Transaction) =>
+            t.transactionType === TransactionType.Deposit &&
+            t.transactionStatus === PaymentStatus.Failed,
+        );
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshRecentTickets(): void {
+    this.dashboardService.getOfficeDashboardStats().subscribe({
+      next: (data: OfficeDashboardStats) => {
+        this.recentTickets = data.usersTickets || [];
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshBonuses(): void {
+    this.dashboardService.getOfficeDashboardStats().subscribe({
+      next: (data: OfficeDashboardStats) => {
+        this.bonuses = (data.transactions || []).filter(
+          (t: Transaction) => t.paymentMethod === PaymentType.Bonus,
+        );
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
+      },
+    });
+  }
+
+  refreshDeposits(): void {
+    this.dashboardService.getOfficeDashboardStats().subscribe({
+      next: (data: OfficeDashboardStats) => {
+        this.deposits = (data.transactions || []).filter(
+          (t: Transaction) => t.transactionType === TransactionType.Deposit,
+        );
+        this.alertService.success('Successfully updated');
+      },
+      error: () => {
+        // no-op for now
       },
     });
   }

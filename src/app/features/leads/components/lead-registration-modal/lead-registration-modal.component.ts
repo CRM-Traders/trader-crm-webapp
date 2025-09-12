@@ -5,6 +5,7 @@ import {
   OnInit,
   OnDestroy,
   HostListener,
+  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -202,7 +203,7 @@ import { LeadsService } from '../../services/leads.service';
           <!-- Phone and Country Row -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Language Selection -->
-            <div class="relative">
+            <div class="relative" data-dropdown="language">
               <label
                 for="language"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -296,7 +297,7 @@ import { LeadsService } from '../../services/leads.service';
               </p>
             </div>
             <!-- Country Selection -->
-            <div class="relative">
+            <div class="relative" data-dropdown="country">
               <label
                 for="country"
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
@@ -542,6 +543,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private countryService = inject(CountryService);
   private languageService = inject(LanguageService);
+  private ngZone = inject(NgZone);
   private destroy$ = new Subject<void>();
 
   registrationForm!: FormGroup;
@@ -577,11 +579,19 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
         this.selectedLanguage = englishLanguage;
       }
     }, 0);
+
+    document.addEventListener('mousedown', this.boundGlobalHandler, true);
+    document.addEventListener('touchstart', this.boundGlobalHandler, true);
+    document.addEventListener('click', this.boundGlobalHandler, true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    document.removeEventListener('mousedown', this.boundGlobalHandler, true);
+    document.removeEventListener('touchstart', this.boundGlobalHandler, true);
+    document.removeEventListener('click', this.boundGlobalHandler, true);
   }
 
   private initForm(): void {
@@ -768,12 +778,7 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    const target = event.target as HTMLElement;
-
-    // Close dropdowns if clicking outside
-    if (!target.closest('.relative')) {
-      this.closeAllDropdowns();
-    }
+    this.handleGlobalPointerEvent(event);
   }
 
   private closeAllDropdowns(): void {
@@ -782,6 +787,24 @@ export class LeadRegistrationModalComponent implements OnInit, OnDestroy {
     this.focusedCountryIndex = -1;
     this.focusedLanguageIndex = -1;
   }
+
+  private handleGlobalPointerEvent(event: Event): void {
+    const target = event.target as HTMLElement;
+
+    const insideAnyDropdown = target.closest('[data-dropdown]');
+    if (!insideAnyDropdown) {
+      this.closeAllDropdowns();
+      return;
+    }
+
+    const inCountry = !!target.closest('[data-dropdown="country"]');
+    const inLanguage = !!target.closest('[data-dropdown="language"]');
+
+    if (!inCountry) this.countryDropdownOpen = false;
+    if (!inLanguage) this.languageDropdownOpen = false;
+  }
+
+  private boundGlobalHandler = (event: Event) => this.ngZone.run(() => this.handleGlobalPointerEvent(event));
 
   // Keyboard navigation methods for Country dropdown
   isCountryFocused(index: number): boolean {

@@ -7,6 +7,7 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -598,6 +599,7 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   private desksService = inject(DesksService);
   private languageService = inject(LanguageService);
   private alertService = inject(AlertService);
+  private ngZone = inject(NgZone);
   private destroy$ = new Subject<void>();
 
   editForm: FormGroup;
@@ -659,11 +661,19 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
     this.loadInitialOffices();
     this.loadAvailableLanguages();
     this.filteredLanguages = this.availableLanguages;
+
+    document.addEventListener('mousedown', this.boundGlobalHandler, true);
+    document.addEventListener('touchstart', this.boundGlobalHandler, true);
+    document.addEventListener('click', this.boundGlobalHandler, true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    document.removeEventListener('mousedown', this.boundGlobalHandler, true);
+    document.removeEventListener('touchstart', this.boundGlobalHandler, true);
+    document.removeEventListener('click', this.boundGlobalHandler, true);
   }
 
   private loadDeskDetails(): void {
@@ -816,14 +826,16 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
   // Close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  private handleGlobalPointerEvent(event: Event): void {
     const target = event.target as HTMLElement;
 
-    // Check if click is inside dropdown containers
     const brandDropdown = target.closest('[data-dropdown="brand"]');
     const languageDropdown = target.closest('[data-dropdown="language"]');
     const deskTypeDropdown = target.closest('[data-dropdown="deskType"]');
 
-    // Close dropdowns if click is outside
     if (!brandDropdown) {
       this.officeDropdownOpen = false;
       this.focusedBrandIndex = -1;
@@ -837,6 +849,8 @@ export class DeskDetailsModalComponent implements OnInit, OnDestroy {
       this.focusedDeskTypeIndex = -1;
     }
   }
+
+  private boundGlobalHandler = (event: Event) => this.ngZone.run(() => this.handleGlobalPointerEvent(event));
 
   // Language dropdown methods
   toggleLanguageDropdown(): void {

@@ -110,7 +110,7 @@
           >
             <!-- Section Header Row -->
             <tr
-              class="group transition-colors duration-150 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-400/20"
+              class="group transition-colors duration-150 cursor-pointer hover:bg-gray-50/20"
               [class.border-b]="!isLast"
               [class.border-gray-100]="!isLast && !isDarkMode"
               (click)="toggleSection(section)"
@@ -233,6 +233,7 @@
                           [class.bg-blue-600]="
                             isPermissionSelected(permission.id)
                           "
+                          [class.bg-gray-400]="!isPermissionSelected(permission.id)"
                           [class.dark:bg-gray-400]="
                             !isPermissionSelected(permission.id)
                           "

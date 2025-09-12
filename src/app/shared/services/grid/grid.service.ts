@@ -29,6 +29,7 @@ export class GridService {
       totalPages: 0,
     },
     visibleColumns: [],
+    columnsInitialized: false,
   };
 
   private gridStateMap: Map<string, BehaviorSubject<GridState>> = new Map();
@@ -172,6 +173,7 @@ export class GridService {
     const newState = {
       ...currentState,
       visibleColumns: columns,
+      columnsInitialized: true,
     };
 
     this.gridStateMap.get(gridId)!.next(newState);
@@ -281,7 +283,7 @@ export class GridService {
       sortField: state.sort?.field || null,
       sortDirection: state.sort?.direction || null,
       visibleColumns:
-        state.visibleColumns.length > 0 ? state.visibleColumns : null,
+        state.columnsInitialized ? state.visibleColumns : null,
       globalFilter: state.filters.globalFilter || null,
       filters:
         Object.keys(transformedFilters).length > 0 ? transformedFilters : null,

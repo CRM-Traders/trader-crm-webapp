@@ -7,6 +7,7 @@ import {
   OnInit,
   OnDestroy,
   HostListener,
+  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -180,7 +181,7 @@ import {
                   >
                     <a
                       [href]="'mailto:' + lead?.email"
-                      class="text-blue-600 hover:text-blue-800 hover:underline"
+                      class="text-primary-500 hover:text-blue-400 hover:underline"
                     >
                       {{ lead?.email }}
                     </a>
@@ -212,7 +213,7 @@ import {
                     <a
                       *ngIf="lead?.telephone"
                       [href]="'tel:' + lead?.telephone"
-                      class="text-blue-600 hover:text-blue-800 hover:underline"
+                      class="text-primary-500 hover:text-blue-400 hover:underline"
                     >
                       {{ lead?.telephone }}
                     </a>
@@ -641,6 +642,7 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private countryService = inject(CountryService);
   private languageService = inject(LanguageService);
+  private ngZone = inject(NgZone);
   private destroy$ = new Subject<void>();
 
   editForm: FormGroup;
@@ -688,11 +690,19 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
     this.loadLeadData();
     this.loadCountries();
     this.loadLanguages();
+
+    document.addEventListener('mousedown', this.boundGlobalHandler, true);
+    document.addEventListener('touchstart', this.boundGlobalHandler, true);
+    document.addEventListener('click', this.boundGlobalHandler, true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    document.removeEventListener('mousedown', this.boundGlobalHandler, true);
+    document.removeEventListener('touchstart', this.boundGlobalHandler, true);
+    document.removeEventListener('click', this.boundGlobalHandler, true);
   }
 
   private loadLeadData(): void {
@@ -904,7 +914,10 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    // Close dropdowns when clicking outside
+    this.handleGlobalPointerEvent(event);
+  }
+
+  private handleGlobalPointerEvent(event: Event): void {
     const target = event.target as HTMLElement;
     if (!target.closest('[data-dropdown]')) {
       this.countryDropdownOpen = false;
@@ -913,6 +926,8 @@ export class LeadDetailsModalComponent implements OnInit, OnDestroy {
       this.focusedLanguageIndex = -1;
     }
   }
+
+  private boundGlobalHandler = (event: Event) => this.ngZone.run(() => this.handleGlobalPointerEvent(event));
 
   // Keyboard navigation methods for Country dropdown
   isCountryFocused(index: number): boolean {

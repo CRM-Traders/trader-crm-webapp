@@ -64,9 +64,8 @@
             >
               <div
                 *ngFor="let office of offices; let i = index"
-                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
-                [class.bg-blue-100]="isOfficeFocused(i)"
-                [class.dark:bg-blue-400]="isOfficeFocused(i)"
+                class="px-3 py-2 hover:bg-gray-100/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                [class.bg-[#ededed09]]="isOfficeFocused(i)"
                 [tabindex]="0"
                 (click)="selectOffice(office)"
                 (keydown)="onOfficeKeydown($event, office, i)"
@@ -168,7 +167,7 @@
             <div class="max-h-48 overflow-y-auto">
               <div
                 *ngFor="let dept of getFilteredDepartments()"
-                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                class="px-3 py-2 hover:bg-gray-100/10 cursor-pointer text-sm text-gray-900 dark:text-white"
                 (click)="selectDepartment(dept)"
               >
                 <div>{{ dept.value }}</div>
@@ -401,7 +400,7 @@
               let isLast = last
             ">
             <!-- Section Header Row -->
-            <tr class="group transition-colors duration-150 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-400/20"
+            <tr class="group transition-colors duration-150 cursor-pointer hover:bg-gray-50/20"
               [class.border-b]="!isLast" [class.border-gray-100]="!isLast && !isDarkMode"
               (click)="toggleSection(section)">
               <!-- Section Name with Expand/Collapse -->
@@ -468,6 +467,7 @@
                           (click)="togglePermission(permission.id)"
                           class="relative inline-flex h-4.5 w-8 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                           [class.bg-blue-600]="isPermissionSelected(permission.id)"
+                          [class.bg-gray-400]="!isPermissionSelected(permission.id)"
                           [class.dark:bg-gray-400]="!isPermissionSelected(permission.id)">
                           <span
                             class="inline-block h-3 w-3 transform rounded-full bg-gray-200 transition-transform duration-200"

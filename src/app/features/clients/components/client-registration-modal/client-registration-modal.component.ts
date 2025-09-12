@@ -5,6 +5,7 @@ import {
   OnInit,
   OnDestroy,
   HostListener,
+  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -730,6 +731,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private countryService = inject(CountryService);
   private languageService = inject(LanguageService);
+  private ngZone = inject(NgZone);
   private destroy$ = new Subject<void>();
 
   isSubmitting = false;
@@ -797,11 +799,20 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
         this.selectedLanguage = englishLanguage;
       }
     }, 0);
+
+    // Capture-phase listeners to detect outside clicks reliably
+    document.addEventListener('mousedown', this.boundGlobalHandler, true);
+    document.addEventListener('touchstart', this.boundGlobalHandler, true);
+    document.addEventListener('click', this.boundGlobalHandler, true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    document.removeEventListener('mousedown', this.boundGlobalHandler, true);
+    document.removeEventListener('touchstart', this.boundGlobalHandler, true);
+    document.removeEventListener('click', this.boundGlobalHandler, true);
   }
 
   togglePasswordVisibility(): void {
@@ -1132,14 +1143,16 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   // Close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  private handleGlobalPointerEvent(event: Event): void {
     const target = event.target as HTMLElement;
 
-    // Check if click is inside any dropdown container
     const countryDropdown = target.closest('[data-dropdown="country"]');
     const languageDropdown = target.closest('[data-dropdown="language"]');
     const affiliateDropdown = target.closest('[data-dropdown="affiliate"]');
 
-    // Close dropdowns if click is outside all dropdowns
     if (!countryDropdown && !languageDropdown && !affiliateDropdown) {
       this.countryDropdownOpen = false;
       this.languageDropdownOpen = false;
@@ -1149,6 +1162,8 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       this.focusedAffiliateIndex = -1;
     }
   }
+
+  private boundGlobalHandler = (event: Event) => this.ngZone.run(() => this.handleGlobalPointerEvent(event));
 
   getCountryNameByCode(countryCode: string): string {
     const country = this.countries.find((c) => c.code === countryCode);

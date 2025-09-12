@@ -163,7 +163,7 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
                     >
                       <a
                         [href]="'mailto:' + affiliate.email"
-                        class="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                        class="text-primary-500 hover:text-blue-400 hover:underline dark:hover:text-blue-300"
                       >
                         {{ affiliate.email }}
                       </a>
@@ -262,7 +262,7 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
                       *ngIf="!isEditing && affiliate.website"
                       [href]="affiliate.website"
                       target="_blank"
-                      class="text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 dark:text-blue-400 dark:hover:text-blue-300"
+                      class="text-sm text-primary-500 hover:text-blue-400 hover:underline flex items-center gap-1 dark:hover:text-blue-300"
                     >
                       {{ affiliate.website }}
                       <svg

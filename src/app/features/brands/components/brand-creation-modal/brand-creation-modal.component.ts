@@ -1,6 +1,6 @@
 // src/app/features/brands/components/brand-creation-modal/brand-creation-modal.component.ts
 
-import { Component, inject, Input, OnInit, HostListener } from '@angular/core';
+import { Component, inject, Input, OnInit, HostListener, ViewChild, ElementRef, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -26,349 +26,19 @@ import {
   selector: 'app-brand-creation-modal',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  template: `
-    <div class="w-full">
-      <!-- Modal Header -->
-      <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-        <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
-          Create New Brand
-        </h4>
-      </div>
-
-      <!-- Modal Body -->
-      <div class="px-6 py-6">
-        <form [formGroup]="brandForm" class="space-y-6">
-          <!-- Brand Name -->
-          <div>
-            <label
-              for="name"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Brand Name <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              formControlName="name"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              [class.border-red-500]="
-                brandForm.get('name')?.invalid && brandForm.get('name')?.touched
-              "
-              [class.focus:ring-red-500]="
-                brandForm.get('name')?.invalid && brandForm.get('name')?.touched
-              "
-              placeholder="Enter brand name"
-            />
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                brandForm.get('name')?.invalid && brandForm.get('name')?.touched
-              "
-            >
-              <span *ngIf="brandForm.get('name')?.errors?.['required']">
-                Brand name is required
-              </span>
-              <span *ngIf="brandForm.get('name')?.errors?.['minlength']">
-                Brand name must be at least 2 characters long
-              </span>
-              <span *ngIf="brandForm.get('name')?.errors?.['maxlength']">
-                Brand name cannot exceed 100 characters
-              </span>
-            </p>          </div>
-
-          <!-- Country Selection -->
-          <div class="relative">
-            <label
-              for="country"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Country <span class="text-red-500">*</span>
-            </label>
-
-            <!-- Custom Dropdown Button -->
-            <button
-              type="button"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              [class.border-red-500]="
-                brandForm.get('country')?.invalid &&
-                brandForm.get('country')?.touched
-              "
-              (click)="toggleCountryDropdown()"
-              (keydown)="onCountryButtonKeydown($event)"
-            >
-              <span class="truncate">{{ getSelectedCountryName() }}</span>
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="countryDropdownOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Dropdown Panel -->
-            <div
-              *ngIf="countryDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-            >
-              <!-- Search Input -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  #countrySearchInput
-                  type="text"
-                  placeholder="Search countries..."
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onCountrySearch($event)"
-                  [value]="countrySearchTerm"
-                />
-              </div>
-
-              <!-- Countries List -->
-              <div class="max-h-48 overflow-y-auto">
-                <div
-                  *ngFor="let country of filteredCountries; let i = index"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
-                  [class.bg-blue-100]="isCountryFocused(i)"
-                  [class.dark:bg-blue-400]="isCountryFocused(i)"
-                  [tabindex]="0"
-                  (click)="selectCountry(country)"
-                  (keydown)="onCountryKeydown($event, country, i)"
-                  (mouseenter)="setFocusedCountryIndex(i)"
-                >
-                  {{ country.name }}
-                </div>
-
-                <!-- No results -->
-                <div
-                  *ngIf="filteredCountries.length === 0"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No countries found
-                </div>
-              </div>
-            </div>
-
-            <!-- Validation Error -->
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                brandForm.get('country')?.invalid &&
-                brandForm.get('country')?.touched
-              "
-            >
-              <span *ngIf="brandForm.get('country')?.errors?.['required']">
-                Country selection is required
-              </span>
-            </p>
-          </div>
-
-          <!-- Office Selection -->
-          <div class="relative">
-            <label
-              for="officeId"
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Office <span class="text-red-500">*</span>
-            </label>
-
-            <!-- Custom Dropdown Button -->
-            <button
-              type="button"
-              class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-              [class.border-red-500]="
-                brandForm.get('officeId')?.invalid &&
-                brandForm.get('officeId')?.touched
-              "
-              (click)="toggleOfficeDropdown()"
-              (keydown)="onOfficeButtonKeydown($event)"
-            >
-              <span class="truncate">{{ getSelectedOfficeName() }}</span>
-              <svg
-                class="w-4 h-4 ml-2 transition-transform"
-                [class.rotate-180]="officeDropdownOpen"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                ></path>
-              </svg>
-            </button>
-
-            <!-- Dropdown Panel -->
-            <div
-              *ngIf="officeDropdownOpen"
-              class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
-            >
-              <!-- Search Input -->
-              <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-                <input
-                  #officeSearchInput
-                  type="text"
-                  placeholder="Search offices..."
-                  class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  (input)="onOfficeSearch($event)"
-                  [value]="officeSearchTerm"
-                />
-              </div>
-
-              <!-- Offices List -->
-              <div
-                class="max-h-28 overflow-y-auto"
-                (scroll)="onOfficeDropdownScroll($event)"
-              >
-                <div
-                  *ngFor="let office of availableOffices; let i = index"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
-                  [class.bg-blue-100]="isOfficeFocused(i)"
-                  [class.dark:bg-blue-400]="isOfficeFocused(i)"
-                  [tabindex]="0"
-                  (click)="selectOffice(office)"
-                  (keydown)="onOfficeKeydown($event, office, i)"
-                  (mouseenter)="setFocusedOfficeIndex(i)"
-                >
-                  <div>{{ office.value }}</div>
-                </div>
-
-                <!-- Loading indicator -->
-                <div
-                  *ngIf="officeLoading"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  <svg
-                    class="animate-spin h-4 w-4 mx-auto"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </div>
-
-                <!-- No results -->
-                <div
-                  *ngIf="!officeLoading && availableOffices.length === 0"
-                  class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
-                >
-                  No offices found
-                </div>
-              </div>
-            </div>
-
-            <!-- Validation Error -->
-            <p
-              class="mt-1 text-sm text-red-600 dark:text-red-400"
-              *ngIf="
-                brandForm.get('officeId')?.invalid &&
-                brandForm.get('officeId')?.touched
-              "
-            >
-              <span *ngIf="brandForm.get('officeId')?.errors?.['required']">
-                Office selection is required
-              </span>
-            </p>
-          </div>
-
-          <!-- Is Active Checkbox -->
-          <div>
-            <div class="flex items-center">
-              <input
-                type="checkbox"
-                id="isActive"
-                formControlName="isActive"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label
-                for="isActive"
-                class="ml-2 block text-sm text-gray-700 dark:text-gray-300"
-              >
-                Active Brand
-              </label>
-            </div>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Active brands are available for use across the system
-            </p>
-          </div>
-        </form>
-      </div>
-
-      <!-- Modal Footer -->
-      <div
-        class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3"
-      >
-        <button
-          type="button"
-          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          (click)="onCancel()"
-          [disabled]="isSubmitting"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          (click)="onSubmit()"
-          [disabled]="brandForm.invalid || isSubmitting"
-        >
-          <span class="flex items-center">
-            <svg
-              *ngIf="isSubmitting"
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            {{ isSubmitting ? 'Creating...' : 'Create Brand' }}
-          </span>
-        </button>
-      </div>
-    </div>
-  `,
+  templateUrl: './brand-creation-modal.component.html',
   styles: [],
 })
-export class BrandCreationModalComponent implements OnInit {
+export class BrandCreationModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
+  @ViewChild('countryDropdownContainer') countryDropdownContainer?: ElementRef<HTMLElement>;
+  @ViewChild('officeDropdownContainer') officeDropdownContainer?: ElementRef<HTMLElement>;
 
   private fb = inject(FormBuilder);
   private brandsService = inject(BrandsService);
   private alertService = inject(AlertService);
   private countryService = inject(CountryService);
+  private ngZone = inject(NgZone);
 
   isSubmitting = false;
   brandForm: FormGroup;
@@ -413,6 +83,17 @@ export class BrandCreationModalComponent implements OnInit {
   ngOnInit(): void {
     this.loadOffices();
     this.loadCountries();
+
+    // Add capture-phase listeners to reliably detect outside clicks
+    document.addEventListener('mousedown', this.boundGlobalHandler, true);
+    document.addEventListener('touchstart', this.boundGlobalHandler, true);
+    document.addEventListener('click', this.boundGlobalHandler, true);
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('mousedown', this.boundGlobalHandler, true);
+    document.removeEventListener('touchstart', this.boundGlobalHandler, true);
+    document.removeEventListener('click', this.boundGlobalHandler, true);
   }
 
   // Office dropdown methods
@@ -593,8 +274,38 @@ export class BrandCreationModalComponent implements OnInit {
   // Close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    // Close dropdowns when clicking outside
-    if (!(event.target as Element).closest('.relative')) {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  @HostListener('document:mousedown', ['$event'])
+  onDocumentMouseDown(event: Event): void {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  @HostListener('document:touchstart', ['$event'])
+  onDocumentTouchStart(event: Event): void {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  private handleGlobalPointerEvent(event: Event): void {
+    const targetNode = event.target as Node;
+    const clickedInsideCountry = this.countryDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+    const clickedInsideOffice = this.officeDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+
+    if (!clickedInsideCountry && !clickedInsideOffice) {
+      this.closeAllDropdowns();
+    }
+  }
+
+  private boundGlobalHandler = (event: Event) => this.ngZone.run(() => this.handleGlobalPointerEvent(event));
+
+  // Fallback for cases where document click might be stopped by modal overlay/portals
+  onRootClick(event: MouseEvent): void {
+    const targetNode = event.target as Node;
+    const clickedInsideCountry = this.countryDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+    const clickedInsideOffice = this.officeDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+
+    if (!clickedInsideCountry && !clickedInsideOffice) {
       this.closeAllDropdowns();
     }
   }

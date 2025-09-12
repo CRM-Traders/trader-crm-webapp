@@ -475,6 +475,27 @@ select {
   }
 }
 
+// Improve native control rendering in dark mode
+.dark input,
+.dark textarea,
+.dark select {
+  color-scheme: dark;
+}
+
+// Ensure date/time picker icons are visible in dark mode
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.dark input[type="month"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator,
+.dark input[type="date"]::picker-indicator,
+.dark input[type="datetime-local"]::picker-indicator,
+.dark input[type="month"]::picker-indicator,
+.dark input[type="time"]::picker-indicator {
+  /* Keep native icons; just make them visible on dark backgrounds */
+  filter: invert(1) brightness(1.2);
+  opacity: 1;
+}
+
 // === ALERTS & NOTIFICATIONS ===
 .alert {
   padding: 1rem;

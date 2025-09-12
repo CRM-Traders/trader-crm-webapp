@@ -241,10 +241,10 @@ interface OperatorSelection {
               <h4 class="text-md font-medium text-gray-900 dark:text-white">
                 Operators ({{ currentOperators.length }})
               </h4>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 relative">
                 <button
                   type="button"
-                  class="px-3 py-1 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  class="px-3 py-1 text-sm font-medium text-blue-500 bg-blue-50 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-400/20 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   (click)="toggleOperatorDropdown()"
                   [disabled]="
                     currentOperators.length >= 4 || isLoadingOperators
@@ -271,7 +271,7 @@ interface OperatorSelection {
                 <!-- Dropdown Menu -->
                 <div
                   *ngIf="showOperatorDropdown"
-                  class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50"
+                  class="absolute right-0 top-10 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50"
                 >
                   <div class="p-4">
                     <div class="flex items-center justify-between mb-3">

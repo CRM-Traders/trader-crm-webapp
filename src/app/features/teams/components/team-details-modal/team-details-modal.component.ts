@@ -7,6 +7,7 @@ import {
   ViewChild,
   ElementRef,
   HostListener,
+  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -626,6 +627,7 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private teamsService = inject(TeamsService);
   private alertService = inject(AlertService);
+  private ngZone = inject(NgZone);
   private destroy$ = new Subject<void>();
 
   editForm: FormGroup;
@@ -680,11 +682,19 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
     this.initializeSearchObservables();
     this.loadInitialBrands();
     this.setupBrandWatcher();
+
+    document.addEventListener('mousedown', this.boundGlobalHandler, true);
+    document.addEventListener('touchstart', this.boundGlobalHandler, true);
+    document.addEventListener('click', this.boundGlobalHandler, true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    document.removeEventListener('mousedown', this.boundGlobalHandler, true);
+    document.removeEventListener('touchstart', this.boundGlobalHandler, true);
+    document.removeEventListener('click', this.boundGlobalHandler, true);
   }
 
   private loadTeamData(): void {
@@ -1166,13 +1176,15 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
   // Close dropdown when clicking outside
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  private handleGlobalPointerEvent(event: Event): void {
     const target = event.target as HTMLElement;
 
-    // Check if click is inside dropdown containers
     const brandDropdown = target.closest('[data-dropdown="brand"]');
     const deskDropdown = target.closest('[data-dropdown="desk"]');
 
-    // Close dropdowns if click is outside
     if (!brandDropdown) {
       this.brandDropdownOpen = false;
       this.focusedBrandIndex = -1;
@@ -1182,4 +1194,6 @@ export class TeamDetailsModalComponent implements OnInit, OnDestroy {
       this.focusedDeskIndex = -1;
     }
   }
+
+  private boundGlobalHandler = (event: Event) => this.ngZone.run(() => this.handleGlobalPointerEvent(event));
 }
