@@ -151,6 +151,7 @@
               New Leads
             </h3>
             <button
+              (click)="refreshNewLeads()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg
@@ -233,6 +234,7 @@
               Clients Traffic
             </h3>
             <button
+              (click)="refreshLeadsTraffic()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg
@@ -365,6 +367,7 @@
             Productivity Tracker
           </h3>
           <button
+            (click)="refreshProductivityStats()"
             class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
           >
             <svg
@@ -476,6 +479,7 @@
               New Deposit Opening Attempts
             </h3>
             <button
+              (click)="refreshDepositAttempts()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg
@@ -581,6 +585,7 @@
               Registration Countries
             </h3>
             <button
+              (click)="refreshRegistrationCountries()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg
@@ -665,6 +670,7 @@
               Recent Failed Deposits
             </h3>
             <button
+              (click)="refreshFailedDeposits()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg
@@ -771,6 +777,7 @@
               {{ getTotalTicketsValue() | number : "1.2-2" }}$)
             </h3>
             <button
+              (click)="refreshRecentTickets()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg
@@ -895,6 +902,7 @@
               Bonuses
             </h3>
             <button
+              (click)="refreshBonuses()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg
@@ -985,6 +993,7 @@
               {{ getTotalDepositsValue() | number : "1.2-2" }}$)
             </h3>
             <button
+              (click)="refreshDeposits()"
               class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               <svg

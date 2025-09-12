@@ -178,6 +178,9 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         userType: this.operator.userType,
       });
 
+      // Ensure non-editable controls are actually disabled at the form control level
+      this.updateProfileEditableControls();
+
       this.loadUserDetails();
     }
   }
@@ -290,6 +293,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   startEditProfile(): void {
     this.isEditingProfile = true;
+    this.updateProfileEditableControls();
   }
 
   cancelEditProfile(): void {
@@ -469,5 +473,15 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   removeBranch(branchId: string): void {
     this.operatorsService.removeUserOrganization(branchId).subscribe();
+  }
+
+  private updateProfileEditableControls(): void {
+    const userTypeControl = this.profileForm.get('userType');
+    if (!userTypeControl) return;
+    if (this.isEditingProfile) {
+      userTypeControl.enable({ emitEvent: false });
+    } else {
+      userTypeControl.disable({ emitEvent: false });
+    }
   }
 }

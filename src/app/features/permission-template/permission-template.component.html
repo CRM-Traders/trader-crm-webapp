@@ -167,7 +167,7 @@
             <div class="max-h-48 overflow-y-auto">
               <div
                 *ngFor="let dept of getFilteredDepartments()"
-                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white"
+                class="px-3 py-2 hover:bg-gray-100/10 cursor-pointer text-sm text-gray-900 dark:text-white"
                 (click)="selectDepartment(dept)"
               >
                 <div>{{ dept.value }}</div>

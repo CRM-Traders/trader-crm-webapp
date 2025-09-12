@@ -75,7 +75,7 @@
     <!-- Dropdown menu -->
     <div
       *ngIf="isDropdownOpen"
-      class="dropdown-menu absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl py-1 z-50 transform transition-all duration-200 ease-out"
+      class="dropdown-menu absolute right-0 w-52 bg-[#123456] border border-gray-200 dark:border-gray-700 rounded-md shadow-xl py-1 z-50 transform transition-all duration-200 ease-out"
       [ngClass]="{
         'top-full mt-1': dropdownPosition === 'bottom',
         'bottom-full mb-1': dropdownPosition === 'top'
@@ -98,7 +98,7 @@
             *ngIf="!action.separator && isActionVisible(action)"
             [disabled]="isActionDisabled(action)"
             (click)="executeAction(action, $event)"
-            class="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-200/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150"
+            class="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors duration-150"
             [ngClass]="{
               'text-gray-700 dark:text-gray-200':
                 !isActionDisabled(action) && action.type !== 'danger',
