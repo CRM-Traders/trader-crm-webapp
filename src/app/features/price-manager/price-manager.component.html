@@ -95,7 +95,7 @@
             <!-- Clients List -->
             <div class="max-h-48 overflow-y-auto">
               <div *ngFor="let client of filteredClients(); let i = index"
-                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                class="px-3 py-2 hover:bg-gray-100/10 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
                 [class.bg-blue-100]="isClientFocused(i)" [class.dark:bg-blue-400]="isClientFocused(i)" [tabindex]="0"
                 (click)="selectClient(client)" (keydown)="onClientKeydown($event, client, i)"
                 (mouseenter)="setFocusedClientIndex(i)">
