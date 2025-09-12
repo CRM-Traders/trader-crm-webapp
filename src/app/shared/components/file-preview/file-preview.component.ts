@@ -29,225 +29,48 @@ export interface PreviewFile {
   selector: 'app-file-preview',
   standalone: true,
   imports: [CommonModule, HasPermissionDirective],
-  template: `
-    <div
-      class="file-preview-container bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl overflow-hidden"
-    >
-      <div class="preview-header flex justify-between items-center">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          {{ file.fileName }}
-        </h3>
-        <div class="flex gap-2">
-          <button
-            *hasPermission="154"
-            (click)="download()"
-            class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Download
-          </button>
-          <button
-            (click)="onClose()"
-            class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
+  templateUrl: './file-preview.component.html',
+  // styles: [
+  //   `
+  //     .file-preview-container {
+  //       @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden;
+  //       width: 90vw;
+  //       max-width: 1200px;
+  //       height: 85vh;
+  //       display: flex;
+  //       flex-direction: column;
+  //     }
 
-      <div class="preview-content">
-        @if (loading) {
-        <div class="flex items-center justify-center h-full">
-          <div
-            class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
-          ></div>
-          <span class="ml-3 text-gray-600 dark:text-gray-400"
-            >Loading preview...</span
-          >
-        </div>
-        } @else if (error) {
-        <div class="flex flex-col items-center justify-center h-full">
-          <svg
-            class="w-16 h-16 text-gray-400 mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            ></path>
-          </svg>
-          <p class="text-gray-600 dark:text-gray-400 mb-4">{{ error }}</p>
-          <button
-            (click)="loadPreview()"
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-        } @else { @switch (previewType) { @case ('image') {
-        <div class="flex items-center justify-center h-full">
-          <img
-            [src]="previewUrl!"
-            [alt]="file.fileName"
-            class="max-w-90 my-8 max-h-full object-contain rounded-lg shadow-lg"
-            (error)="onImageError()"
-          />
-        </div>
-        } @case ('pdf') {
-        <iframe
-          [src]="safeUrl!"
-          class="w-full h-full rounded-lg"
-          frameborder="0"
-          (error)="onPreviewError()"
-        ></iframe>
-        } @case ('video') {
-        <div class="flex items-center justify-center h-full">
-          <video
-            [src]="previewUrl!"
-            controls
-            class="max-w-90 my-8 max-h-full rounded-lg shadow-lg"
-            (error)="onPreviewError()"
-          ></video>
-        </div>
-        } @case ('audio') {
-        <div class="flex items-center justify-center h-full">
-          <div class="text-center">
-            <svg
-              class="w-24 h-24 text-gray-400 mx-auto mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-              ></path>
-            </svg>
-            <audio
-              [src]="previewUrl!"
-              controls
-              class="mb-4"
-              (error)="onPreviewError()"
-            ></audio>
-            <p class="text-gray-600 dark:text-gray-400">{{ file.fileName }}</p>
-          </div>
-        </div>
-        } @default {
-        <div class="flex flex-col items-center justify-center h-full">
-          <svg
-            class="w-24 h-24 text-gray-400 mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            ></path>
-          </svg>
-          <p class="text-xl font-medium text-gray-900 dark:text-white mb-2">
-            {{ file.fileName }}
-          </p>
-          @if (file.fileSize) {
-          <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-            {{ formatFileSize(file.fileSize) }}
-          </p>
-          }
-          <p class="text-sm text-gray-500 mb-4">
-            Preview not available for this file type
-          </p>
-          @if (file.fileUrl) {
-          <a
-            [href]="file.fileUrl"
-            target="_blank"
-            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              ></path>
-            </svg>
-            Open in New Tab
-          </a>
-          }
-        </div>
-        } } }
-      </div>
+  //     .preview-header {
+  //       @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center;
+  //       flex-shrink: 0;
+  //     }
 
-      <!-- File Info Footer -->
-      <div class="preview-footer">
-        <div
-          class="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400"
-        >
-          @if (file.fileSize) {
-          <span>Size: {{ formatFileSize(file.fileSize) }}</span>
-          } @if (file.contentType) {
-          <span>Type: {{ file.contentType }}</span>
-          } @if (file.createdAt || file.uploadedAt) {
-          <span
-            >Uploaded: {{ formatDate(file.createdAt || file.uploadedAt) }}</span
-          >
-          }
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [
-    `
-      .file-preview-container {
-        @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden;
-        width: 90vw;
-        max-width: 1200px;
-        height: 85vh;
-        display: flex;
-        flex-direction: column;
-      }
+  //     .preview-content {
+  //       @apply flex-1 overflow-hidden;
+  //       min-height: 0;
+  //     }
 
-      .preview-header {
-        @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center;
-        flex-shrink: 0;
-      }
+  //     img{
+  //       max-width: 500px;
+  //     }
 
-      .preview-content {
-        @apply flex-1 overflow-hidden;
-        min-height: 0;
-      }
+  //     .preview-footer {
+  //       @apply px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700;
+  //       flex-shrink: 0;
+  //     }
 
-      img{
-        max-width: 500px;
-      }
+  //     img,
+  //     video {
+  //       max-height: calc(85vh - 140px);
+  //     }
 
-      .preview-footer {
-        @apply px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700;
-        flex-shrink: 0;
-      }
-
-      img,
-      video {
-        max-height: calc(85vh - 140px);
-      }
-
-      iframe {
-        height: calc(85vh - 140px);
-        min-height: 500px;
-      }
-    `,
-  ],
+  //     iframe {
+  //       height: calc(85vh - 140px);
+  //       min-height: 500px;
+  //     }
+  //   `,
+  // ],
 })
 export class FilePreviewComponent implements OnInit, OnDestroy {
   @Input({ required: true }) file!: PreviewFile;

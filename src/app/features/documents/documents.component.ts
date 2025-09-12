@@ -214,7 +214,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       case DocumentStatus.Processing:
         return 'Processing';
       default:
-        return 'Unknown';
+        return 'Deleted';
     }
   }
 
@@ -246,7 +246,7 @@ export class DocumentsComponent implements OnInit, OnDestroy {
       case DocumentType.Other:
         return 'Other';
       default:
-        return 'Unknown';
+        return 'Deleted';
     }
   }
 
