@@ -1,1 +1,230 @@
-<p>team-creation-modal works!</p>
+<div class="w-full">
+    <!-- Modal Header -->
+    <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+        <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
+            Create New Team
+        </h4>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="px-6 py-6">
+        <form [formGroup]="teamForm" class="space-y-6">
+            <!-- Team Name -->
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Team Name <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="name" formControlName="name"
+                    class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [class.border-red-500]="
+              teamForm.get('name')?.invalid && teamForm.get('name')?.touched
+            " [class.focus:ring-red-500]="
+              teamForm.get('name')?.invalid && teamForm.get('name')?.touched
+            " placeholder="Enter team name" />
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+              teamForm.get('name')?.invalid && teamForm.get('name')?.touched
+            ">
+                    <span *ngIf="teamForm.get('name')?.errors?.['required']">
+                        Team name is required
+                    </span>
+                    <span *ngIf="teamForm.get('name')?.errors?.['minlength']">
+                        Team name must be at least 2 characters long
+                    </span>
+                    <span *ngIf="teamForm.get('name')?.errors?.['maxlength']">
+                        Team name cannot exceed 100 characters
+                    </span>
+                </p>
+            </div>
+
+            <!-- Brand Selection -->
+            <div class="relative" data-dropdown="brand">
+                <label for="brandId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Brand <span class="text-red-500">*</span>
+                </label>
+
+                <!-- Brand Dropdown Button -->
+                <button type="button"
+                    class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                    [class.border-red-500]="
+              teamForm.get('brandId')?.invalid &&
+              teamForm.get('brandId')?.touched
+            " (click)="toggleBrandDropdown()" (keydown)="onBrandButtonKeydown($event)">
+                    <span class="truncate">{{ getSelectedBrandName() }}</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="brandDropdownOpen" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <!-- Brand Dropdown Panel -->
+                <div *ngIf="brandDropdownOpen"
+                    class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                    <!-- Search Input -->
+                    <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                        <input #brandSearchInput type="text" placeholder="Search brands..."
+                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            (input)="onBrandSearch($event)" [value]="brandSearchTerm" />
+                    </div>
+
+                    <!-- Brands List -->
+                    <div class="max-h-48 overflow-y-auto" (scroll)="onBrandDropdownScroll($event)">
+                        <div *ngFor="let brand of availableBrands; let i = index"
+                            class="px-3 py-2 hover:bg-gray-500/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                            [tabindex]="0" (click)="selectBrand(brand)" (keydown)="onBrandKeydown($event, brand, i)"
+                            (mouseenter)="setFocusedBrandIndex(i)">
+                            <div class="flex flex-col">
+                                <span class="font-medium">{{ brand.value }}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400" *ngIf="brand.description">
+                                    {{ brand.description }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Loading indicator -->
+                        <div *ngIf="brandLoading"
+                            class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <svg class="animate-spin h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </div>
+
+                        <!-- No results -->
+                        <div *ngIf="!brandLoading && availableBrands.length === 0"
+                            class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                            No brands found
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Error -->
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+              teamForm.get('brandId')?.invalid &&
+              teamForm.get('brandId')?.touched
+            ">
+                    <span *ngIf="teamForm.get('brandId')?.errors?.['required']">
+                        Brand selection is required
+                    </span>
+                </p>
+            </div>
+
+            <!-- Desk Selection -->
+            <div class="relative" data-dropdown="desk">
+                <label for="deskId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Desk <span class="text-red-500">*</span>
+                </label>
+
+                <!-- Custom Dropdown Button -->
+                <button type="button"
+                    class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+                    [class.border-red-500]="
+              teamForm.get('deskId')?.invalid &&
+              teamForm.get('deskId')?.touched
+            " [class.opacity-50]="!teamForm.get('brandId')?.value" [disabled]="!teamForm.get('brandId')?.value"
+                    (click)="toggleDeskDropdown()" (keydown)="onDeskButtonKeydown($event)">
+                    <span class="truncate">{{ getSelectedDeskName() }}</span>
+                    <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="deskDropdownOpen" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+
+                <!-- Helper text -->
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400" *ngIf="!teamForm.get('brandId')?.value">
+                    Please select a brand first to choose a desk
+                </p>
+
+                <!-- Dropdown Panel -->
+                <div *ngIf="deskDropdownOpen && teamForm.get('brandId')?.value"
+                    class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                    <!-- Search Input -->
+                    <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                        <input #deskSearchInput type="text" placeholder="Search desks..."
+                            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            (input)="onDeskSearch($event)" [value]="deskSearchTerm" />
+                    </div>
+
+                    <!-- Desks List -->
+                    <div class="max-h-28 overflow-y-auto" (scroll)="onDeskDropdownScroll($event)">
+                        <div *ngFor="let desk of availableDesks; let i = index"
+                            class="px-3 py-2 hover:bg-gray-500/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                            [tabindex]="0" (click)="selectDesk(desk)" (keydown)="onDeskKeydown($event, desk, i)"
+                            (mouseenter)="setFocusedDeskIndex(i)">
+                            <div class="flex flex-col">
+                                <span class="font-medium">{{ desk.value }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Loading indicator -->
+                        <div *ngIf="deskLoading" class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <svg class="animate-spin h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </div>
+
+                        <!-- No results -->
+                        <div *ngIf="!deskLoading && availableDesks.length === 0"
+                            class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                            No desks found
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Validation Error -->
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+              teamForm.get('deskId')?.invalid &&
+              teamForm.get('deskId')?.touched
+            ">
+                    <span *ngIf="teamForm.get('deskId')?.errors?.['required']">
+                        Desk selection is required
+                    </span>
+                </p>
+            </div>
+
+            <!-- Is Active Checkbox -->
+            <div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="isActive" formControlName="isActive"
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                    <label for="isActive" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                        Active Team
+                    </label>
+                </div>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Active teams are available for use across the system
+                </p>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div
+        class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+        <button type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            (click)="onCancel()" [disabled]="isSubmitting">
+            Cancel
+        </button>
+        <button type="button"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            (click)="onSubmit()" [disabled]="teamForm.invalid || isSubmitting">
+            <span class="flex items-center">
+                <svg *ngIf="isSubmitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                {{ isSubmitting ? 'Creating...' : 'Create Team' }}
+            </span>
+        </button>
+    </div>
+</div>

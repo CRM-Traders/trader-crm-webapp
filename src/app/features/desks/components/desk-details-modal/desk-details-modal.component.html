@@ -1,1 +1,355 @@
-<p>desk-details-modal works!</p>
+<div class="w-full">
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                Desk Details - {{ desk?.name || 'Loading...' }}
+            </h2>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading && !desk" class="px-6 py-8 text-center">
+        <svg class="animate-spin h-8 w-8 mx-auto text-blue-600" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+        </svg>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Loading desk details...</p>
+    </div>
+
+    <!-- Modal Body -->
+    <div *ngIf="desk" class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[100vh] overflow-y-auto">
+        <div class="space-y-6">
+            <!-- Desk Information Section -->
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <form [formGroup]="editForm" class="space-y-4">
+                    <!-- Desk Name -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Desk Name
+                        </label>
+                        <div *ngIf="isEditing">
+                            <input type="text" formControlName="name"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                [class.border-red-500]="
+                    editForm.get('name')?.invalid &&
+                    editForm.get('name')?.touched
+                  " />
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                    editForm.get('name')?.invalid &&
+                    editForm.get('name')?.touched
+                  ">
+                                <span *ngIf="editForm.get('name')?.errors?.['required']">
+                                    Desk name is required
+                                </span>
+                                <span *ngIf="editForm.get('name')?.errors?.['minlength']">
+                                    Desk name must be at least 2 characters long
+                                </span>
+                            </p>
+                        </div>
+                        <span *ngIf="!isEditing" class="text-sm text-gray-900 dark:text-white font-medium">
+                            {{ desk.name }}
+                        </span>
+                    </div>
+
+                    <!-- Brand -->
+                    <div class="relative" data-dropdown="brand">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Brand
+                        </label>
+                        <div *ngIf="isEditing">
+                            <!-- Custom Dropdown Button -->
+                            <button type="button"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
+                                [class.border-red-500]="
+                    editForm.get('brandId')?.invalid &&
+                    editForm.get('brandId')?.touched
+                  " (click)="toggleOfficeDropdown()" (keydown)="onBrandButtonKeydown($event)">
+                                <span class="truncate">{{ getSelectedOfficeName() }}</span>
+                                <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="officeDropdownOpen"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown Panel -->
+                            <div *ngIf="officeDropdownOpen"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                                <!-- Search Input -->
+                                <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                                    <input #officeSearchInput type="text" placeholder="Search brands..."
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        (input)="onOfficeSearch($event)" [value]="officeSearchTerm" />
+                                </div>
+
+                                <!-- Brands List -->
+                                <div class="max-h-48 overflow-y-auto" (scroll)="onOfficeDropdownScroll($event)">
+                                    <div *ngFor="let brand of availableOffices; let i = index"
+                                        class="px-3 py-2 hover:bg-gray-500/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                        [class.bg-blue-100]="isBrandFocused(i)"
+                                        [class.dark:bg-blue-400]="isBrandFocused(i)" [tabindex]="0"
+                                        (click)="selectOffice(brand)" (keydown)="onBrandKeydown($event, brand, i)"
+                                        (mouseenter)="setFocusedBrandIndex(i)">
+                                        <div class="flex justify-between items-center">
+                                            <span>{{ brand.value }}</span>
+                                            <span class="text-xs text-gray-500">{{
+                                                brand.value
+                                                }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Loading indicator -->
+                                    <div *ngIf="officeLoading"
+                                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        <svg class="animate-spin h-4 w-4 mx-auto" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                    </div>
+
+                                    <!-- No results -->
+                                    <div *ngIf="!officeLoading && availableOffices.length === 0"
+                                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        No brands found
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Validation Error -->
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400" *ngIf="
+                    editForm.get('brandId')?.invalid &&
+                    editForm.get('brandId')?.touched
+                  ">
+                                <span *ngIf="editForm.get('brandId')?.errors?.['required']">
+                                    Brand selection is required
+                                </span>
+                            </p>
+                        </div>
+                        <span *ngIf="!isEditing"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                            <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path
+                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                            {{ desk.brandName }}
+                        </span>
+                    </div>
+                    <!-- Language -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Language
+                        </label>
+                        <div *ngIf="isEditing" class="relative" data-dropdown="language">
+                            <!-- Custom Dropdown Button -->
+                            <button type="button"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
+                                (click)="toggleLanguageDropdown()" (keydown)="onLanguageButtonKeydown($event)">
+                                <span class="truncate">{{
+                                    getSelectedLanguageName()
+                                    }}</span>
+                                <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="languageDropdownOpen"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown Panel -->
+                            <div *ngIf="languageDropdownOpen"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                                <!-- Search Input -->
+                                <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                                    <input #languageSearchInput type="text" placeholder="Search languages..."
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        (input)="onLanguageSearch($event)" [value]="languageSearchTerm" />
+                                </div>
+
+                                <!-- Languages List -->
+                                <div class="max-h-48 overflow-y-auto">
+                                    <div class="px-3 py-2 hover:bg-gray-500/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                         [tabindex]="0"
+                                        (click)="selectLanguage(null)" (keydown)="onLanguageKeydown($event, null, -1)"
+                                        (mouseenter)="setFocusedLanguageIndex(-1)">
+                                        No specific language
+                                    </div>
+                                    <div *ngFor="let lang of filteredLanguages; let i = index"
+                                        class="px-3 py-2 hover:bg-gray-500/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                        [tabindex]="0"
+                                        (click)="selectLanguage(lang)" (keydown)="onLanguageKeydown($event, lang, i)"
+                                        (mouseenter)="setFocusedLanguageIndex(i)">
+                                        {{ lang.value }}
+                                    </div>
+
+                                    <!-- No results -->
+                                    <div *ngIf="filteredLanguages.length === 0"
+                                        class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        No languages found
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span *ngIf="!isEditing && desk.language"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                            {{ getLanguageLabel(desk.language) }}
+                        </span>
+                        <span *ngIf="!isEditing && !desk.language" class="text-gray-400 text-sm">
+                            No Language
+                        </span>
+                    </div>
+                    <!-- Desk Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Desk Type
+                        </label>
+                        <div *ngIf="isEditing" class="relative" data-dropdown="deskType">
+                            <!-- Custom Dropdown Button -->
+                            <button type="button"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-left flex justify-between items-center"
+                                (click)="toggleDeskTypeDropdown()" (keydown)="onDeskTypeButtonKeydown($event)">
+                                <span class="truncate">{{
+                                    getSelectedDeskTypeName()
+                                    }}</span>
+                                <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="deskTypeDropdownOpen"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown Panel -->
+                            <div *ngIf="deskTypeDropdownOpen"
+                                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                                <!-- Desk Types List -->
+                                <div class="max-h-48 overflow-y-auto">
+                                    <div *ngFor="let type of deskTypes; let i = index"
+                                        class="px-3 py-2 hover:bg-gray-500/10 cursor-pointer text-sm text-gray-900 dark:text-white"
+                                        [tabindex]="0"
+                                        (click)="selectDeskType(type)" (keydown)="onDeskTypeKeydown($event, type, i)"
+                                        (mouseenter)="setFocusedDeskTypeIndex(i)">
+                                        {{ type.label }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <span *ngIf="!isEditing"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                            [ngClass]="getTypeClasses(desk.type)">
+                            {{ getTypeLabel(desk.type) }}
+                        </span>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Status
+                        </label>
+                        <div *ngIf="isEditing" class="flex items-center">
+                            <input type="checkbox" formControlName="isActive"
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                            <label class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                                Active Desk
+                            </label>
+                        </div>
+                        <span *ngIf="!isEditing"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="{
+                  'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
+                    desk.isActive,
+                  'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200':
+                    !desk.isActive
+                }">
+                            {{ desk.isActive ? 'Active' : 'Inactive' }}
+                        </span>
+                    </div>
+
+                    <!-- Teams Count -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Teams Count
+                        </label>
+                        <span class="text-sm text-gray-900 dark:text-white">
+                            {{ desk.teamsCount || 0 }}
+                        </span>
+                    </div>
+
+                    <!-- Created Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Created Date
+                            </label>
+                            <span class="text-sm text-gray-900 dark:text-white">
+                                {{ desk.createdAt | date : 'medium' }}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Created By
+                            </label>
+                            <span class="text-sm text-gray-900 dark:text-white">
+                                {{ desk.createdBy || 'System' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Last Modified Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="desk.lastModifiedAt">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Last Modified
+                            </label>
+                            <span class="text-sm text-gray-900 dark:text-white">
+                                {{ desk.lastModifiedAt | date : 'medium' }}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Modified By
+                            </label>
+                            <span class="text-sm text-gray-900 dark:text-white">
+                                {{ desk.lastModifiedBy || 'System' }}
+                            </span>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Edit Actions -->
+                <div class="mt-6 space-y-2">
+                    <div class="text-end" *hasPermission="74">
+                        <button *ngIf="!isEditing" type="button"
+                            class="w-fit mx-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                            (click)="startEdit()">
+                            Edit Desk
+                        </button>
+                    </div>
+                    <div *ngIf="isEditing" class="flex items-center justify-between gap-4">
+                        <button type="button"
+                            class="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200/30 dark:bg-gray-700/30 hover:bg-gray-300/30 dark:hover:bg-gray-600/30 rounded-md transition-colors"
+                            (click)="cancelEdit()">
+                            Cancel
+                        </button>
+                        <button type="button"
+                            class="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50"
+                            [disabled]="editForm.invalid || saving" (click)="saveDesk()">
+                            {{ saving ? 'Saving...' : 'Save Changes' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+        <button type="button"
+            class="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            (click)="onClose()">
+            Close
+        </button>
+    </div>
+</div>

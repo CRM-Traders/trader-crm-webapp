@@ -213,7 +213,7 @@
               <div class="max-h-48 overflow-y-auto">
                 <div
                   *ngFor="let country of filteredCountries"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
+                  class="px-3 py-2 hover:bg-gray-400/10 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
                   (click)="toggleCountrySelection(country)"
                 >
                   <input
@@ -291,7 +291,7 @@
               <div class="max-h-48 overflow-y-auto">
                 <div
                   *ngFor="let language of filteredLanguages"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
+                  class="px-3 py-2 hover:bg-gray-400/10 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
                   (click)="toggleLanguageSelection(language)"
                 >
                   <input
@@ -375,7 +375,7 @@
               >
                 <div
                   *ngFor="let affiliate of availableAffiliates"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
+                  class="px-3 py-2 hover:bg-gray-400/10 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
                   (click)="toggleAffiliateSelection(affiliate)"
                 >
                   <input
@@ -484,7 +484,7 @@
               >
                 <div
                   *ngFor="let referral of availableAffiliateReferrals"
-                  class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
+                    class="px-3 py-2 hover:bg-gray-400/10 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
                   (click)="toggleAffiliateReferralSelection(referral)"
                 >
                   <input
@@ -591,7 +591,7 @@
             <div class="max-h-48 overflow-y-auto">
               <div
                 *ngFor="let operator of filteredOperators"
-                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
+                  class="px-3 py-2 hover:bg-gray-400/10 cursor-pointer text-sm text-gray-900 dark:text-white flex items-center"
                 (click)="toggleOperatorSelection(operator)"
               >
                 <input
