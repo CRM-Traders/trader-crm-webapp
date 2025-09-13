@@ -42,7 +42,7 @@
   <div *ngIf="secondaryActions.length > 0" class="relative inline-block">
     <button
       (click)="toggleDropdown($event)"
-      class="dropdown-button inline-flex items-center relative justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-[#ffffff] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-300/30 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+      class="dropdown-button inline-flex items-center relative justify-center w-8 h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-[#ffffff] text-gray-700 dark:text-gray-200 hover:bg-gray-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
       [ngClass]="{ active: isDropdownOpen }"
       [attr.aria-expanded]="isDropdownOpen"
       [attr.aria-haspopup]="true"

@@ -191,7 +191,7 @@ export class HierarchyNodeComponent {
       office: count === 1 ? 'brand' : 'brands',
       brand: count === 1 ? 'desk' : 'desks',
       desk: count === 1 ? 'team' : 'teams',
-      team: count === 1 ? 'member' : 'members',
+      team: count === 1 ? 'operator' : 'operators',
     };
 
     const type = typeMap[this.node.type as keyof typeof typeMap] || 'items';

@@ -46,11 +46,15 @@
                     <span [class]="getNameClasses()" [innerHTML]="getHighlightedName()">
                     </span>
 
+
+                    @if (getChildrenCount() === '0') {
+                    {{ '' }}
+                    } @else {
                     <span
-                        class="text-xs ms-7 text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/10 px-2 py-1 rounded-full">
+                        class="text-xs ms-7 text-blue-800 bg-blue-100 px-2 py-1 rounded-full">
                         {{ getChildrenCount() }}
                     </span>
-
+                    }
                     <!-- Role Badge for Members -->
                     <span *ngIf="node.type === 'member' && node.data?.role"
                         class="ml-2 px-2 py-1 text-xs font-medium bg-blue-100/10 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200 rounded-full">

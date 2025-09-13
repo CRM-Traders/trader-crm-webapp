@@ -349,7 +349,7 @@ interface OperatorSelection {
                     >
                       <div
                         *ngFor="let operator of availableOperators"
-                        class="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/20 cursor-pointer"
+                        class="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-400/50 cursor-pointer"
                         (click)="selectOperator(operator)"
                       >
                         <div class="flex items-center">
