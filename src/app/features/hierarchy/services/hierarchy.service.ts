@@ -304,7 +304,7 @@ export class HierarchyService {
       [UserRole.User]: 'User',
     };
 
-    return roleNames[role] || 'Unknown';
+    return roleNames[role] || '';
   }
 
   getNodeIcon(type: string): string {

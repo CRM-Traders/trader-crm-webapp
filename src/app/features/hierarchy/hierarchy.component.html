@@ -7,7 +7,7 @@
                     Organization Hierarchy
                 </h1>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Manage your organizational structure and team members
+                    Manage your organizational structure and team operators
                 </p>
             </div>
         </div>
@@ -17,7 +17,7 @@
 
     <div class="mb-8" *hasPermission="81">
         <!-- Statistics -->
-        <div *ngIf="hierarchyStats()" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div *ngIf="hierarchyStats()" class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div class="text-center p-4 bg-[#8B5CF6]/60 rounded-lg">
                 <div class="text-2xl font-bold text-white">
                     {{ hierarchyStats()!.offices }}
@@ -36,11 +36,17 @@
                 </div>
                 <div class="text-sm text-white/90">Desks</div>
             </div>
+            <div class="text-center p-4 bg-[#3B82F6]/60 rounded-lg">
+                <div class="text-2xl font-bold text-white">
+                    {{ hierarchyStats()!.teams }}
+                </div>
+                <div class="text-sm text-white/90">Teams</div>
+            </div>
             <div class="text-center p-4 bg-[#F59E0B]/60 rounded-lg">
                 <div class="text-2xl font-bold text-white">
                     {{ hierarchyStats()!.members }}
                 </div>
-                <div class="text-sm text-white/90">Members</div>
+                <div class="text-sm text-white/90">Operators</div>
             </div>
         </div>
     </div>
@@ -115,13 +121,13 @@
             </div>
             <div class="space-y-2 max-h-40 overflow-y-auto">
                 <div *ngFor="let result of searchResults()" (click)="navigateToNode(result)"
-                    class="p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/10 transition-colors">
-                    <div class="font-medium text-gray-900 dark:text-gray-100"
+                    class="p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-500/50 transition-colors">
+                    <div class="font-medium text-primary-500"
                         [innerHTML]="getHighlightedText(result.node.name, searchQuery)"></div>
-                    <div class="text-sm text-gray-500 dark:text-gray-400" [innerHTML]="
+                    <div class="text-sm text-gray-500" [innerHTML]="
             getHighlightedText(result.path.join(' > '), searchQuery)
           "></div>
-                    <div class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    <div class="text-xs text-primary-500 mt-1">
                         Matches: {{ result.matches.join(', ') }}
                     </div>
                 </div>

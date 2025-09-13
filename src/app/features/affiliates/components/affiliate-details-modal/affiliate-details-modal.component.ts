@@ -214,7 +214,7 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
                       <a
                         *ngIf="affiliate.phone"
                         [href]="'tel:' + affiliate.phone"
-                        class="text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                        class="text-primary-500 hover:text-primary-600 hover:underline"
                       >
                         {{ affiliate.phone }}
                       </a>
@@ -481,7 +481,7 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
         <button
           *hasPermission="118"
           type="button"
-          class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-red-300 dark:border-red-600 text-sm font-medium rounded-md text-red-700 dark:text-red-400 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          class="w-full inline-flex justify-center items-center px-4 py-2.5 border border-red-300 dark:border-red-600 text-sm font-medium rounded-md text-red-700 dark:text-red-400 bg-white hover:bg-red-50 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           [disabled]="(affiliate.clientsCount || 0) > 0 || loadingDetails"
           [title]="
             (affiliate.clientsCount || 0) > 0
