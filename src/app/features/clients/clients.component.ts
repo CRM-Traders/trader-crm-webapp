@@ -1,5 +1,3 @@
-// src/app/features/clients/clients.component.ts
-
 import {
   Component,
   OnInit,
@@ -140,11 +138,9 @@ export class ClientsComponent implements OnInit {
   isSubmittingInlineComment = false;
   inlineCommentState: InlineCommentState | null = null;
 
-  // Add new properties for dropdown positioning
   operatorDropdownPositions: Map<string, DropdownPosition> = new Map();
   salesStatusDropdownPositions: Map<string, DropdownPosition> = new Map();
 
-  // Tooltip state
   tooltipState: {
     visible: boolean;
     text: string;
@@ -161,7 +157,6 @@ export class ClientsComponent implements OnInit {
   totalCount = 0;
   activeCount = 0;
 
-  // Searchable dropdown states
   operatorDropdownStates: Map<string, boolean> = new Map();
   salesStatusDropdownStates: Map<string, boolean> = new Map();
   operatorSearchTerms: Map<string, string> = new Map();
@@ -170,7 +165,6 @@ export class ClientsComponent implements OnInit {
   filteredSalesStatuses: Map<string, { value: number; label: string }[]> =
     new Map();
 
-  // Keyboard navigation properties
   focusedOperatorIndices: Map<string, number> = new Map();
   focusedSalesStatusIndices: Map<string, number> = new Map();
 
@@ -725,7 +719,6 @@ export class ClientsComponent implements OnInit {
       )
       .subscribe((event: NavigationEnd) => {
         console.log(event);
-        // Check if we're navigating to the clients route
         if (event.url.includes('/clients')) {
           console.log('it includes');
           this.reinitializeComponent();
@@ -743,23 +736,18 @@ export class ClientsComponent implements OnInit {
         label: label,
       })
     );
-    // Close inline comment on outside click
     document.addEventListener('click', this.onDocumentClick.bind(this));
   }
 
   private reinitializeComponent(): void {
-    // Reset the operators first
     this.operators = [];
     this.operatorsLoaded = false;
 
-    // Clear any cached data
     this.clearCommentsCache();
 
-    // Re-initialize everything
     this.initializeGridTemplates();
     this.loadClientStatistics();
 
-    // Call initializeFilterOptions without the destroy$ or create a new subscription
     this.loadFilterOptionsDirectly();
 
     this.salesStatusOptions = Object.entries(KycStatusLabels).map(
@@ -771,13 +759,8 @@ export class ClientsComponent implements OnInit {
   }
 
   private loadFilterOptionsDirectly(): void {
-    console.log('Loading filter options...');
-
-    // Test each service call individually
     this.loadOperatorsDropdown().then(
       (operators) => {
-        console.log('Operators loaded individually:', operators);
-        // Set them directly for now as a workaround
         this.operators = operators;
         this.operatorsLoaded = true;
         this.cdr.detectChanges();
@@ -785,28 +768,14 @@ export class ClientsComponent implements OnInit {
       (error) => console.error('Operators failed:', error)
     );
 
-    // Test other services
-    this.loadOfficesDropdown().then(
-      (offices) => console.log('Offices loaded:', offices),
-      (error) => console.error('Offices failed:', error)
-    );
+    this.loadOfficesDropdown().then();
 
-    this.loadDesksDropdown().then(
-      (desks) => console.log('Desks loaded:', desks),
-      (error) => console.error('Desks failed:', error)
-    );
+    this.loadDesksDropdown().then();
 
-    this.loadTeamsDropdown().then(
-      (teams) => console.log('Teams loaded:', teams),
-      (error) => console.error('Teams failed:', error)
-    );
+    this.loadTeamsDropdown().then();
 
-    this.loadClientStatistics().then(
-      (stats) => console.log('Statistics loaded:', stats),
-      (error) => console.error('Statistics failed:', error)
-    );
+    this.loadClientStatistics().then();
 
-    // For now, let's just load the critical data directly
     this.loadOperatorsDirectly();
   }
 
@@ -916,13 +885,6 @@ export class ClientsComponent implements OnInit {
       latestCommentColumn.cellTemplate = this.latestCommentCellTemplate;
     }
 
-    // const clientOperatorColumn = this.gridColumns.find(
-    //   (col) => col.field === 'clientOperator'
-    // );
-    // if (clientOperatorColumn) {
-    //   clientOperatorColumn.cellTemplate = this.clientOperatorCellTemplate;
-    // }
-
     const assignOperatorColumn = this.gridColumns.find(
       (col) => col.field === 'assignOperator'
     );
@@ -932,11 +894,6 @@ export class ClientsComponent implements OnInit {
   }
 
   private loadClientStatistics() {
-    // return this.clientsService.getActiveClients().pipe((result: any) => {
-    //   this.totalCount = result.totalUsers;
-    //   this.activeCount = result.activeUsersTotalCount;
-    // });
-
     return this.clientsService
       .getActiveClients()
       .pipe(
@@ -1012,7 +969,6 @@ export class ClientsComponent implements OnInit {
       }
     );
 
-    // Handle both result and dismissed promises
     modalRef.result.then(
       (result) => {
         this.refreshGrid();
