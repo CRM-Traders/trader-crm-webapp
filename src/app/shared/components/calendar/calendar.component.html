@@ -219,7 +219,7 @@
     <div class="grid grid-cols-7 border-t border-gray-200 dark:border-gray-700">
       <div
         *ngFor="let day of calendarDays"
-        class="min-h-[100px] border-b border-r border-gray-200 dark:border-gray-700 p-1 relative cursor-pointer hover:!bg-gray-300 dark:hover:bg-gray-700"
+        class="min-h-[100px] border-b border-r border-gray-200 dark:border-gray-700 p-1 relative cursor-pointer hover:bg-gray-500/40"
         [class.bg-white]="day.isCurrentMonth && isDarkMode()"
         [class.bg-gray-800]="day.isCurrentMonth && isDarkMode()"
         [class.bg-gray-50]="!day.isCurrentMonth && !isDarkMode()"
@@ -309,7 +309,6 @@
         [class.bg-blue-50]="isToday(dateItem) && !isDarkMode()"
         [class.bg-blue-100]="isToday(dateItem) && isDarkMode()"
         [class.bg-blue-200]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && !isDarkMode()"
-        [class.bg-blue-300]="selectedDate() && isSameDay(dateItem, selectedDate()!) && !isToday(dateItem) && isDarkMode()"
         [class.font-bold]="isToday(dateItem)"
         (click)="selectDate({date: dateItem, day: dateItem.getDate(), isCurrentMonth: true, isToday: isToday(dateItem), hasEvents: false, events: []})"
         (dblclick)="openCreateEventModal(dateItem)"
@@ -347,7 +346,7 @@
 
       <div
         *ngFor="let date of weekDates; let dayIndex = index"
-        class="relative border-r border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-300/30"
+        class="relative border-r border-gray-200 dark:border-gray-700 hover:bg-gray-500/40"
         (dblclick)="openCreateEventModal(date)"
       >
         <div
@@ -357,10 +356,12 @@
 
         <div
           *ngFor="let event of weekEvents['day_' + dayIndex]"
-          class="absolute w-[95%] px-2 py-1 text-xs rounded overflow-hidden border-l-4 z-10 cursor-pointer hover:shadow-lg"
+          class="absolute px-2 py-1 text-xs rounded overflow-hidden border-l-4 z-10 cursor-pointer hover:shadow-lg"
           [class]="getEventStyles(event.color)"
           [style.top]="calculateEventPosition(event, dayIndex).top"
           [style.height]="calculateEventPosition(event, dayIndex).height"
+          [style.left]="calculateEventPosition(event, dayIndex).left"
+          [style.width]="calculateEventPosition(event, dayIndex).width"
           (click)="openEventDetails(event)"
         >
           <div class="font-semibold truncate">{{ event.title }}</div>
@@ -517,7 +518,7 @@
       <ng-container *ngIf="selectedDate(); else groupedEvents">
         <div
           *ngFor="let event of allEvents"
-          class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+          class="px-4 py-3 hover:bg-gray-500/40 cursor-pointer"
           (click)="openEventDetails(event)"
         >
           <div class="flex items-start justify-between">
@@ -621,7 +622,7 @@
 
           <div
             *ngFor="let event of group.events"
-            class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+            class="px-4 py-3 hover:bg-gray-500/40 cursor-pointer"
             (click)="openEventDetails(event)"
           >
             <div class="flex items-start justify-between">
@@ -974,7 +975,7 @@
             <button
               type="button"
               (click)="closeEventModal()"
-              class="px-4 py-2 border border-gray-300/30 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="px-4 py-2 border border-gray-300/30 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-500/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               Cancel
             </button>
@@ -1182,7 +1183,7 @@ class="fixed inset-0 bg-black/30 overflow-y-auto h-full w-full z-50"
     <div class="flex justify-center space-x-3 mt-4">
       <button
         (click)="showDeleteConfirm = false"
-        class="px-4 py-2 bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 border border-gray-300/30 rounded-md text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        class="px-4 py-2 bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-300 border border-gray-300/30 rounded-md text-sm font-medium hover:bg-gray-500/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
       >
         Cancel
       </button>

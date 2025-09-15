@@ -81,6 +81,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
   weekHours: string[] = [];
   weekDates: Date[] = [];
   weekEvents: Record<string, CalendarEventDisplay[]> = {};
+  // Layout cache for week view overlapping events: dayKey -> eventId -> { left, width }
+  private weekEventLayoutCache: Record<string, Record<string, { left: string; width: string }>> = {};
 
   // Available colors for events
   availableColors = [
@@ -521,7 +523,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
   // Helper Methods
   private formatDateForInput(date: Date): string {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private formatTimeForInput(date: Date): string {
@@ -653,11 +658,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
     // Update week events
     this.weekEvents = {};
+    this.weekEventLayoutCache = {};
     this.weekDates.forEach((date, dayIndex) => {
       const dayKey = `day_${dayIndex}`;
-      this.weekEvents[dayKey] = events.filter((event) =>
-        this.isSameDay(event.start, date)
-      );
+      const dayEvents = events.filter((event) => this.isSameDay(event.start, date));
+      this.weekEvents[dayKey] = dayEvents;
+      this.computeWeekDayLayout(dayIndex, dayEvents);
     });
   }
 
@@ -807,7 +813,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
   calculateEventPosition(
     event: CalendarEventDisplay,
     dayIndex: number
-  ): { top: string; height: string } {
+  ): { top: string; height: string; left: string; width: string } {
     const startHour = event.start.getHours();
     const startMinutes = event.start.getMinutes();
     const endHour = event.end.getHours();
@@ -818,7 +824,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
     const duration = endHour - startHour + (endMinutes - startMinutes) / 60;
     const height = Math.max(30, duration * hourHeight);
 
-    return { top: `${top}px`, height: `${height}px` };
+    const dayKey = `day_${dayIndex}`;
+    const layout = this.weekEventLayoutCache[dayKey]?.[event.id];
+    const left = layout?.left ?? '2px';
+    const width = layout?.width ?? 'calc(100% - 4px)';
+
+    return { top: `${top}px`, height: `${height}px`, left, width };
   }
 
   getEventStyles(color: string): string {
@@ -836,6 +847,84 @@ export class CalendarComponent implements OnInit, OnDestroy {
     };
 
     return bgColors[color] || bgColors['blue'];
+  }
+
+  // Compute horizontal layout for overlapping events in a week day column
+  private computeWeekDayLayout(dayIndex: number, dayEvents: CalendarEventDisplay[]): void {
+    const dayKey = `day_${dayIndex}`;
+    this.weekEventLayoutCache[dayKey] = {};
+
+    if (!dayEvents || dayEvents.length === 0) {
+      return;
+    }
+
+    // Sort by start time, then by end time
+    const sorted = [...dayEvents].sort((a, b) => {
+      const aStart = a.start.getTime();
+      const bStart = b.start.getTime();
+      if (aStart !== bStart) return aStart - bStart;
+      return a.end.getTime() - b.end.getTime();
+    });
+
+    // Build clusters of overlapping events (transitive overlap)
+    const clusters: CalendarEventDisplay[][] = [];
+    let currentCluster: CalendarEventDisplay[] = [];
+    let clusterMaxEnd = -1;
+    for (const ev of sorted) {
+      if (currentCluster.length === 0) {
+        currentCluster.push(ev);
+        clusterMaxEnd = ev.end.getTime();
+      } else {
+        const evStart = ev.start.getTime();
+        if (evStart < clusterMaxEnd) {
+          currentCluster.push(ev);
+          clusterMaxEnd = Math.max(clusterMaxEnd, ev.end.getTime());
+        } else {
+          clusters.push(currentCluster);
+          currentCluster = [ev];
+          clusterMaxEnd = ev.end.getTime();
+        }
+      }
+    }
+    if (currentCluster.length > 0) {
+      clusters.push(currentCluster);
+    }
+
+    // For each cluster, assign columns
+    for (const cluster of clusters) {
+      // columns: each column holds the end time of the last placed event
+      const columnEnds: number[] = [];
+      const assignments: Array<{ id: string; column: number }> = [];
+
+      for (const ev of cluster) {
+        const start = ev.start.getTime();
+        let assigned = false;
+        for (let c = 0; c < columnEnds.length; c++) {
+          if (start >= columnEnds[c]) {
+            assignments.push({ id: ev.id, column: c });
+            columnEnds[c] = ev.end.getTime();
+            assigned = true;
+            break;
+          }
+        }
+        if (!assigned) {
+          const newCol = columnEnds.length;
+          assignments.push({ id: ev.id, column: newCol });
+          columnEnds.push(ev.end.getTime());
+        }
+      }
+
+      const columnsCount = columnEnds.length;
+      // Compute left/width with small inner gap
+      const gapPx = 4; // total gap allowance
+      for (const { id, column } of assignments) {
+        const leftPercent = (100 / columnsCount) * column;
+        const widthPercent = 100 / columnsCount;
+        const left = `calc(${leftPercent}% + 2px)`;
+        const width = `calc(${widthPercent}% - ${gapPx}px)`;
+        this.weekEventLayoutCache[dayKey][id] = { left, width };
+      }
+    }
   }
 
   getDotColor(color: string): string {
