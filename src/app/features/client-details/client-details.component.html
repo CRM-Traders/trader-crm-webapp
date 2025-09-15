@@ -145,13 +145,13 @@
             Status
           </div>
           <div class="flex items-center">
-            <div class="w-2 h-2 rounded-full mr-2" [ngClass]="client.lastLogin ? 'bg-green-500' : 'bg-red-500'"></div>
+            <div class="w-2 h-2 rounded-full mr-2" [ngClass]="client.status ? 'bg-green-500' : 'bg-red-500'"></div>
             <span class="font-semibold text-gray-900 dark:text-white">
-              {{ client.lastLogin ? "Online" : "Offline" }}
+              {{ client.status ? "Online" : "Offline" }}
             </span>
           </div>
           <div class="text-xs text-gray-500 dark:text-gray-400">
-            {{ client.lastLogin ? "Recently active" : "No login history" }}
+            {{ client.lastLogin ? ('Last login: ' + (client.lastLogin | date : 'short')) : 'No login history' }}
           </div>
         </div>
 
