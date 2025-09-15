@@ -9,7 +9,7 @@ import {
   EventEmitter,
 } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize, forkJoin, take, filter } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
 import {
   GridColumn,
@@ -48,6 +48,7 @@ import { OperatorsService } from '../operators/services/operators.service';
 import { OfficeRulesService } from '../officies/services/office-rules.service';
 import { AssignOperatorModalComponent } from '../clients/components/assign-operator-modal/assign-operator-modal.component';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { NavigationEnd, Router } from '@angular/router';
 
 @Component({
   selector: 'app-leads',
@@ -70,6 +71,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
   private operatorsService = inject(OperatorsService);
   private officeRulesService = inject(OfficeRulesService);
   private destroy$ = new Subject<void>();
+  private router = inject(Router);
 
   gridId = 'leads-grid';
 
@@ -387,7 +389,18 @@ export class LeadsComponent implements OnInit, OnDestroy {
     // },
   ];
 
-  constructor() {}
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: any) => {
+        if (event.url && event.url.includes('/leads')) {
+          this.reinitializeComponent();
+        }
+      });
+  }
 
   ngOnInit(): void {
     this.initializeGridTemplates();
@@ -686,7 +699,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
 
   private initializeFilterOptions(): void {
     forkJoin({
-      countries: this.countryService.getCountries(),
+      countries: this.countryService.getCountries().pipe(take(1)),
       languages: of(this.languageService.getAllLanguages()),
       desks: this.loadDesksDropdown(),
       teams: this.loadTeamsDropdown(),
@@ -706,24 +719,22 @@ export class LeadsComponent implements OnInit, OnDestroy {
           });
         })
       )
-      .subscribe(
-        ({ countries, languages, desks, teams, salesAgents, timezones }) => {
-          this.updateColumnFilterOptions(
-            'country',
-            countries.map((c) => ({ value: c.name, label: c.name }))
-          );
+      .subscribe(({ countries, languages, desks, teams, salesAgents, timezones }) => {
+        const countryOptions = (Array.isArray(countries) ? countries : []).map(
+          (c: any) => ({ value: c.code ?? c.name, label: c.name })
+        );
+        this.updateColumnFilterOptions('country', countryOptions);
 
-          this.updateColumnFilterOptions(
-            'language',
-            languages.map((l) => ({ value: l.value, label: l.value }))
-          );
+        this.updateColumnFilterOptions(
+          'language',
+          languages.map((l: any) => ({ value: l.key, label: l.value }))
+        );
 
-          this.updateColumnFilterOptions('deskId', desks);
-          this.updateColumnFilterOptions('teamId', teams);
-          this.updateColumnFilterOptions('salesAgentId', salesAgents);
-          this.updateColumnFilterOptions('timezone', timezones);
-        }
-      );
+        this.updateColumnFilterOptions('deskId', desks);
+        this.updateColumnFilterOptions('teamId', teams);
+        this.updateColumnFilterOptions('salesAgentId', salesAgents);
+        this.updateColumnFilterOptions('timezone', timezones);
+      });
   }
 
   private updateColumnFilterOptions(field: string, options: any[]): void {
@@ -731,6 +742,12 @@ export class LeadsComponent implements OnInit, OnDestroy {
     if (column) {
       column.filterOptions = options;
     }
+  }
+
+  private reinitializeComponent(): void {
+    this.initializeGridTemplates();
+    this.initializeFilterOptions();
+    this.loadStatistics();
   }
 
   private loadDesksDropdown() {
