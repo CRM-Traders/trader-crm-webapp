@@ -83,7 +83,7 @@
               *ngIf="expanded && item.label === 'Calendar'"
               class="badge calendar-badge"
             >
-              Today 0
+              Today {{ todayEventsCount() }}
             </span>
 
             <div *ngIf="!expanded" class="tooltip">
@@ -101,7 +101,7 @@
                 *ngIf="item.label === 'Calendar'"
                 class="tooltip-badge calendar-tooltip-badge"
               >
-                Today 0
+                Today {{ todayEventsCount() }}
               </span>
             </div>
           </a>

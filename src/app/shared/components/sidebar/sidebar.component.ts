@@ -8,12 +8,14 @@ import {
   Renderer2,
   ViewEncapsulation,
   ChangeDetectorRef,
+  computed,
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { NavItem } from '../../../core/models/nav-item.model';
 import { NavigationService } from '../../../core/services/navigation.service';
 import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 import { environment } from '../../../../environments/environment';
+import { CalendarService } from '../calendar/services/calendar.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -30,9 +32,27 @@ export class SidebarComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   public router = inject(Router);
   public environment = environment;
+  private readonly calendarService = inject(CalendarService);
   
   @Input() expanded = true;
   navItems: NavItem[] = [];
+
+  // Reactive count of today's calendar events (overlap with local day)
+  readonly todayEventsCount = computed(() => {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    return this.calendarService
+      .events()
+      .filter((event) => {
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
+        return eventStart <= endOfToday && eventEnd >= startOfToday;
+      }).length;
+  });
 
   ngOnInit(): void {
     this.navItems = this.navService.getNavigationItems();
