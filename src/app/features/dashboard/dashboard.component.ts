@@ -191,11 +191,10 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.getOfficeDashboardStats().subscribe({
       next: (data: OfficeDashboardStats) => {
         this.officeDashboardStats = data;
-        // Set leadsTraffic and productivityStats from depositStats
-        if (data && Array.isArray(data.depositStats)) {
-          this.leadsTraffic = data.depositStats;
-          this.productivityStats = data.depositStats;
-        }
+        // Build leadsTraffic and productivityStats from transactions
+        const builtStats = this.buildDepositStatsFromTransactions(data.transactions || []);
+        this.leadsTraffic = builtStats;
+        this.productivityStats = builtStats;
         
         // Calculate monthly deposit income from transactions
         this.monthlyDepositIncome = this.calculateMonthlyDepositIncome(data.transactions || []);
@@ -218,6 +217,50 @@ export class DashboardComponent implements OnInit {
         console.error('Failed to load office dashboard stats:', err);
       },
     });
+  }
+
+  private buildDepositStatsFromTransactions(transactions: Transaction[]): DepositStat[] {
+    const now = new Date();
+    const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const endOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+    const startOfWeek = (date: Date) => {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+      return new Date(d.getFullYear(), d.getMonth(), diff);
+    };
+    const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
+    const endOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const ranges: { type: DepositType; label: string; start: Date; end: Date }[] = [
+      { type: DepositType.Today, label: 'Today', start: startOfDay(now), end: endOfDay(now) },
+      { type: DepositType.Yesterday, label: 'Yesterday', start: startOfDay(new Date(now.getTime() - 86400000)), end: endOfDay(new Date(now.getTime() - 86400000)) },
+      { type: DepositType.LastWeek, label: 'LastWeek', start: startOfWeek(new Date(now.getTime() - 7 * 86400000)), end: endOfDay(new Date(startOfWeek(new Date(now.getTime() - 7 * 86400000)).getTime() + 6 * 86400000)) },
+      { type: DepositType.ThisMonth, label: 'ThisMonth', start: startOfMonth(now), end: endOfMonth(now) },
+      { type: DepositType.LastMonth, label: 'LastMonth', start: startOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1)), end: endOfMonth(new Date(now.getFullYear(), now.getMonth() - 1, 1)) },
+    ];
+
+    const isDeposit = (t: Transaction) => t.transactionType === TransactionType.Deposit;
+
+    const stats: DepositStat[] = ranges.map(r => {
+      const inRange = transactions.filter(t => {
+        if (!isDeposit(t)) return false;
+        const d = new Date(t.transactionDate);
+        return d >= r.start && d <= r.end;
+      });
+      const depositCount = inRange.length;
+      const amount = inRange.reduce((sum, t) => sum + t.amount, 0);
+      const clients = new Set(inRange.map(t => t.userId));
+      return {
+        depositTypeEnum: r.type,
+        depositType: r.label,
+        depositCount,
+        amount,
+        clientsCount: clients.size,
+      } as DepositStat;
+    });
+
+    return stats;
   }
 
   scrollToTop(): void {
@@ -309,7 +352,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  getPaymentTypeDisplay(paymentType: PaymentType): string {
+  getPaymentTypeDisplay(paymentType: PaymentType | null): string {
     switch (paymentType) {
       case PaymentType.Bonus:
         return 'Bonus';
@@ -338,7 +381,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  getPaymentStatusDisplay(paymentStatus: PaymentStatus): string {
+  getPaymentStatusDisplay(paymentStatus: PaymentStatus | null): string {
     switch (paymentStatus) {
       case PaymentStatus.Completed:
         return 'Completed';
@@ -375,8 +418,57 @@ export class DashboardComponent implements OnInit {
         return 'Credit In';
       case TransactionType.CreditOut:
         return 'Credit Out';
+      case TransactionType.MarginLock:
+        return 'Margin Lock';
+      case TransactionType.Liquidation:
+        return 'Liquidation';
+      case TransactionType.OrderPlaced:
+        return 'Order Placed';
+      case TransactionType.PositionClosed:
+        return 'Position Closed';
+      case TransactionType.PositionClosedWithLoss:
+        return 'Position Closed (Loss)';
+      case TransactionType.Swap:
+        return 'Swap';
       default:
         return 'Unknown';
+    }
+  }
+
+  getTransactionTypeClass(transactionType: TransactionType): string {
+    switch (transactionType) {
+      case TransactionType.Deposit:
+        return 'bg-green-100 text-green-800';
+      case TransactionType.Withdrawal:
+        return 'bg-blue-100 text-blue-800';
+      case TransactionType.Buy:
+        return 'bg-indigo-100 text-indigo-800';
+      case TransactionType.Sell:
+        return 'bg-pink-100 text-pink-800';
+      case TransactionType.Fee:
+        return 'bg-yellow-100 text-yellow-800';
+      case TransactionType.PnLAdjustment:
+        return 'bg-purple-100 text-purple-800';
+      case TransactionType.Transfer:
+        return 'bg-gray-100 text-gray-800';
+      case TransactionType.CreditIn:
+        return 'bg-emerald-100 text-emerald-800';
+      case TransactionType.CreditOut:
+        return 'bg-orange-100 text-orange-800';
+      case TransactionType.MarginLock:
+        return 'bg-amber-100 text-amber-800';
+      case TransactionType.Liquidation:
+        return 'bg-red-100 text-red-800';
+      case TransactionType.OrderPlaced:
+        return 'bg-sky-100 text-sky-800';
+      case TransactionType.PositionClosed:
+        return 'bg-teal-100 text-teal-800';
+      case TransactionType.PositionClosedWithLoss:
+        return 'bg-rose-100 text-rose-800';
+      case TransactionType.Swap:
+        return 'bg-cyan-100 text-cyan-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   }
 
@@ -393,7 +485,7 @@ export class DashboardComponent implements OnInit {
     return transactions
       .filter(transaction => {
         const transactionDate = new Date(transaction.transactionDate);
-        return transactionDate >= todayStart && transactionDate <= todayEnd;
+        return transaction.transactionType === TransactionType.Deposit && transactionDate >= todayStart && transactionDate <= todayEnd;
       })
       .reduce((total, transaction) => total + transaction.amount, 0);
   }
@@ -411,7 +503,7 @@ export class DashboardComponent implements OnInit {
     return transactions
       .filter(transaction => {
         const transactionDate = new Date(transaction.transactionDate);
-        return transactionDate >= monthStart && transactionDate <= monthEnd;
+        return transaction.transactionType === TransactionType.Deposit && transactionDate >= monthStart && transactionDate <= monthEnd;
       })
       .reduce((total, transaction) => total + transaction.amount, 0);
   }
@@ -519,7 +611,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  getPaymentTypeClass(paymentType: PaymentType): string {
+  getPaymentTypeClass(paymentType: PaymentType | null): string {
     switch (paymentType) {
       case PaymentType.Bonus:
         return 'bg-purple-100 text-purple-800';

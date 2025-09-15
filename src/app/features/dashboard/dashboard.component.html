@@ -538,10 +538,10 @@
                     class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
                   >
                     <span
-                      [ngClass]="getPaymentTypeClass(attempt.paymentMethod)"
+                      [ngClass]="getTransactionTypeClass(attempt.transactionType)"
                       class="px-2 py-1 rounded font-semibold"
                     >
-                      {{ getPaymentTypeDisplay(attempt.paymentMethod) }}
+                      {{ getTransactionTypeDisplay(attempt.transactionType) }}
                     </span>
                   </td>
                   <td
@@ -729,10 +729,11 @@
                     class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"
                   >
                     <span
-                      [ngClass]="getPaymentTypeClass(failed.paymentMethod)"
+                      *ngIf="failed.paymentMethod as paymentMethod"
+                      [ngClass]="getPaymentTypeClass(paymentMethod)"
                       class="px-2 py-1 rounded font-semibold"
                     >
-                      {{ getPaymentTypeDisplay(failed.paymentMethod) }}
+                      {{ getPaymentTypeDisplay(paymentMethod) }}
                     </span>
                   </td>
                   <td
