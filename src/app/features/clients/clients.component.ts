@@ -1,5 +1,3 @@
-// src/app/features/clients/clients.component.ts
-
 import {
   Component,
   OnInit,
@@ -18,7 +16,17 @@ import {
   FormBuilder,
   Validators,
 } from '@angular/forms';
-import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
+import {
+  Subject,
+  takeUntil,
+  catchError,
+  of,
+  finalize,
+  forkJoin,
+  filter,
+  from,
+  take,
+} from 'rxjs';
 import { ClientsService } from './services/clients.service';
 import {
   Client,
@@ -46,7 +54,7 @@ import {
   PasswordChangeComponent,
   PasswordChangeData,
 } from '../../shared/components/password-change/password-change.component';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { CountryService } from '../../core/services/country.service';
 import { LanguageService } from '../../core/services/language.service';
 import { OperatorsService } from '../operators/services/operators.service';
@@ -131,11 +139,9 @@ export class ClientsComponent implements OnInit {
   isSubmittingInlineComment = false;
   inlineCommentState: InlineCommentState | null = null;
 
-  // Add new properties for dropdown positioning
   operatorDropdownPositions: Map<string, DropdownPosition> = new Map();
   salesStatusDropdownPositions: Map<string, DropdownPosition> = new Map();
 
-  // Tooltip state
   tooltipState: {
     visible: boolean;
     text: string;
@@ -152,7 +158,6 @@ export class ClientsComponent implements OnInit {
   totalCount = 0;
   activeCount = 0;
 
-  // Searchable dropdown states
   operatorDropdownStates: Map<string, boolean> = new Map();
   salesStatusDropdownStates: Map<string, boolean> = new Map();
   operatorSearchTerms: Map<string, string> = new Map();
@@ -161,7 +166,6 @@ export class ClientsComponent implements OnInit {
   filteredSalesStatuses: Map<string, { value: number; label: string }[]> =
     new Map();
 
-  // Keyboard navigation properties
   focusedOperatorIndices: Map<string, number> = new Map();
   focusedSalesStatusIndices: Map<string, number> = new Map();
 
@@ -170,6 +174,8 @@ export class ClientsComponent implements OnInit {
   ClientStatusColors = ClientStatusColors;
   KycStatus = KycStatus;
   KycStatusLabels = KycStatusLabels;
+
+  operatorsLoaded = false;
 
   gridColumns: GridColumn[] = [
     {
@@ -706,6 +712,17 @@ export class ClientsComponent implements OnInit {
       note: ['', [Validators.required]],
       isPinnedComment: [false],
     });
+
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: NavigationEnd) => {
+        if (event.url.includes('/clients')) {
+          this.reinitializeComponent();
+        }
+      });
   }
 
   ngOnInit(): void {
@@ -718,9 +735,131 @@ export class ClientsComponent implements OnInit {
         label: label,
       })
     );
-
-    // Close inline comment on outside click
     document.addEventListener('click', this.onDocumentClick.bind(this));
+  }
+
+  private reinitializeComponent(): void {
+    this.operators = [];
+    this.operatorsLoaded = false;
+
+    this.clearCommentsCache();
+
+    this.initializeGridTemplates();
+    this.loadClientStatistics();
+
+    this.loadFilterOptionsDirectly();
+
+    this.salesStatusOptions = Object.entries(KycStatusLabels).map(
+      ([value, label]) => ({
+        value: Number(value),
+        label: label,
+      })
+    );
+  }
+
+  private loadFilterOptionsDirectly(): void {
+    this.loadOperatorsDropdown().then(
+      (operators) => {
+        this.updateColumnFilterOptions(
+          'operatorId',
+          this.processOperatorFilterOptions(operators)
+        );
+        this.updateColumnFilterOptions(
+          'retentionOperatorId',
+          this.processOperatorFilterOptions(operators)
+        );
+        this.updateColumnFilterOptions(
+          'salesOperatorId',
+          this.processOperatorFilterOptions(operators)
+        );
+
+        this.operators = operators;
+        this.operatorsLoaded = true;
+        this.cdr.detectChanges();
+      },
+      (error) => console.error('Operators failed:', error)
+    );
+
+    // Load countries once synchronously from the subject stream
+    this.countryService
+      .getCountries()
+      .pipe(take(1), catchError(() => of([])))
+      .subscribe((countries: any) => {
+        const list = Array.isArray(countries) ? countries : [];
+        const countryOptions = list.map((c: any) => ({
+          value: c.code,
+          label: c.name,
+        }));
+        this.updateColumnFilterOptions('country', countryOptions);
+        this.updateColumnFilterOptions('passportCountry', countryOptions);
+      });
+
+    const languages = this.languageService.getAllLanguages();
+    this.updateColumnFilterOptions(
+      'language',
+      languages.map((l: any) => ({ value: l.key, label: l.value }))
+    );
+
+    this.loadTimezones().then((timezones) => {
+      this.updateColumnFilterOptions('timezone', timezones);
+    });
+
+    this.loadOfficesDropdown().then((offices) =>
+      this.updateColumnFilterOptions('officeId', offices)
+    );
+
+    this.loadDesksDropdown().then((desks) =>
+      this.updateColumnFilterOptions('deskId', desks)
+    );
+
+    this.loadTeamsDropdown().then((teams) =>
+      this.updateColumnFilterOptions('teamId', teams)
+    );
+
+    this.loadClientStatistics().then();
+
+    // Ensure affiliates dropdowns are also refreshed on component change
+    this.loadAffiliatesDropdown();
+  }
+
+  // Simplified method to just load operators
+  private async loadOperatorsDirectly(): Promise<void> {
+    try {
+      const operators = await this.loadOperatorsDropdown();
+      this.operators = operators;
+      this.operatorsLoaded = true;
+
+      // Load other dropdowns individually with error handling
+      try {
+        const offices = await this.loadOfficesDropdown();
+        this.updateColumnFilterOptions('officeId', offices);
+      } catch (e) {
+        console.error('Office load failed:', e);
+      }
+
+      try {
+        const desks = await this.loadDesksDropdown();
+        this.updateColumnFilterOptions('deskId', desks);
+      } catch (e) {
+        console.error('Desk load failed:', e);
+      }
+
+      try {
+        const teams = await this.loadTeamsDropdown();
+        this.updateColumnFilterOptions('teamId', teams);
+      } catch (e) {
+        console.error('Team load failed:', e);
+      }
+
+      // Load affiliates
+      this.loadAffiliatesDropdown();
+
+      // Trigger change detection
+      this.cdr.detectChanges();
+
+    } catch (error) {
+      console.error('Failed to load operators:', error);
+    }
   }
 
   ngOnDestroy(): void {
@@ -787,13 +926,6 @@ export class ClientsComponent implements OnInit {
       latestCommentColumn.cellTemplate = this.latestCommentCellTemplate;
     }
 
-    // const clientOperatorColumn = this.gridColumns.find(
-    //   (col) => col.field === 'clientOperator'
-    // );
-    // if (clientOperatorColumn) {
-    //   clientOperatorColumn.cellTemplate = this.clientOperatorCellTemplate;
-    // }
-
     const assignOperatorColumn = this.gridColumns.find(
       (col) => col.field === 'assignOperator'
     );
@@ -803,11 +935,6 @@ export class ClientsComponent implements OnInit {
   }
 
   private loadClientStatistics() {
-    // return this.clientsService.getActiveClients().pipe((result: any) => {
-    //   this.totalCount = result.totalUsers;
-    //   this.activeCount = result.activeUsersTotalCount;
-    // });
-
     return this.clientsService
       .getActiveClients()
       .pipe(
@@ -883,7 +1010,6 @@ export class ClientsComponent implements OnInit {
       }
     );
 
-    // Handle both result and dismissed promises
     modalRef.result.then(
       (result) => {
         this.refreshGrid();
@@ -1350,8 +1476,6 @@ export class ClientsComponent implements OnInit {
             }`
           );
 
-          // Don't refresh the grid since we've already updated the data
-          // this.refreshGrid();
           this.loadClientStatistics();
           this.refreshClientComments(clientId);
         }
@@ -1483,13 +1607,24 @@ export class ClientsComponent implements OnInit {
           this.updateColumnFilterOptions('officeId', offices);
           this.updateColumnFilterOptions('deskId', desks);
           this.updateColumnFilterOptions('teamId', teams);
-          this.updateColumnFilterOptions('operatorId', this.processOperatorFilterOptions(operators));
-          this.updateColumnFilterOptions('retentionOperatorId', this.processOperatorFilterOptions(operators));
-          this.updateColumnFilterOptions('salesOperatorId', this.processOperatorFilterOptions(operators));
+          this.updateColumnFilterOptions(
+            'operatorId',
+            this.processOperatorFilterOptions(operators)
+          );
+          this.updateColumnFilterOptions(
+            'retentionOperatorId',
+            this.processOperatorFilterOptions(operators)
+          );
+          this.updateColumnFilterOptions(
+            'salesOperatorId',
+            this.processOperatorFilterOptions(operators)
+          );
           this.updateColumnFilterOptions('timezone', timezones);
 
-          // Store operators for the assign operator dropdown
           this.operators = operators;
+          this.operatorsLoaded = true;
+
+          this.cdr.detectChanges();
 
           this.loadAffiliatesDropdown();
         }
@@ -1586,13 +1721,15 @@ export class ClientsComponent implements OnInit {
       });
   }
 
-  private processOperatorFilterOptions(operators: OperatorDropdownItem[]): { value: string; label: string }[] {
+  private processOperatorFilterOptions(
+    operators: OperatorDropdownItem[]
+  ): { value: string; label: string }[] {
     const operatorOptions = operators.map((operator: OperatorDropdownItem) => ({
       value: operator.id,
       label: operator.value,
     }));
-    return operatorOptions.sort(
-      (a: any, b: any) => a.label.localeCompare(b.label)
+    return operatorOptions.sort((a: any, b: any) =>
+      a.label.localeCompare(b.label)
     );
   }
 
@@ -1762,15 +1899,15 @@ export class ClientsComponent implements OnInit {
       // Calculate position for the dropdown
       const target = event.target as HTMLElement;
       const rect = target.getBoundingClientRect();
-      
+
       // Estimate dropdown height (search input + max items + some padding)
       const estimatedDropdownHeight = 300; // Adjust based on your dropdown height
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
+
       let topPosition: number;
-      
+
       if (spaceBelow >= estimatedDropdownHeight) {
         // Position below the button
         topPosition = rect.bottom + window.scrollY + 120;
@@ -1779,25 +1916,28 @@ export class ClientsComponent implements OnInit {
         topPosition = rect.top + window.scrollY - 100;
       } else {
         // If not enough space above or below, position below but adjust for viewport
-        topPosition = Math.max(10, viewportHeight + window.scrollY - estimatedDropdownHeight - 10);
+        topPosition = Math.max(
+          10,
+          viewportHeight + window.scrollY - estimatedDropdownHeight - 10
+        );
       }
-      
+
       // Calculate horizontal position with overflow protection
       const dropdownWidth = 250; // Approximate width of the dropdown
       const viewportWidth = window.innerWidth;
       let leftPosition = rect.left + window.scrollX + 96;
-      
+
       // Check if dropdown would overflow the right edge
       if (leftPosition + dropdownWidth > viewportWidth + window.scrollX) {
         leftPosition = viewportWidth + window.scrollX - dropdownWidth - 10;
       }
-      
+
       // Ensure dropdown doesn't go off the left edge
       leftPosition = Math.max(10, leftPosition);
-      
+
       this.operatorDropdownPositions.set(clientId, {
         top: topPosition,
-        left: leftPosition
+        left: leftPosition,
       });
 
       // Initialize search term and filtered results for this client
@@ -1951,15 +2091,15 @@ export class ClientsComponent implements OnInit {
       // Calculate position for the dropdown
       const target = event.target as HTMLElement;
       const rect = target.getBoundingClientRect();
-      
+
       // Estimate dropdown height (search input + max items + some padding)
       const estimatedDropdownHeight = 300; // Adjust based on your dropdown height
       const viewportHeight = window.innerHeight;
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
+
       let topPosition: number;
-      
+
       if (spaceBelow >= estimatedDropdownHeight) {
         // Position below the button
         topPosition = rect.bottom + window.scrollY + 110;
@@ -1968,25 +2108,28 @@ export class ClientsComponent implements OnInit {
         topPosition = rect.top + window.scrollY - 120;
       } else {
         // If not enough space above or below, position below but adjust for viewport
-        topPosition = Math.max(10, viewportHeight + window.scrollY - estimatedDropdownHeight - 10);
+        topPosition = Math.max(
+          10,
+          viewportHeight + window.scrollY - estimatedDropdownHeight - 10
+        );
       }
-      
+
       // Calculate horizontal position with overflow protection
       const dropdownWidth = 200; // Approximate width of the sales status dropdown
       const viewportWidth = window.innerWidth;
       let leftPosition = rect.left + window.scrollX + 220;
-      
+
       // Check if dropdown would overflow the right edge
       if (leftPosition + dropdownWidth > viewportWidth + window.scrollX) {
         leftPosition = viewportWidth + window.scrollX - 220;
       }
-      
+
       // Ensure dropdown doesn't go off the left edge
       leftPosition = Math.max(10, leftPosition);
-      
+
       this.salesStatusDropdownPositions.set(clientId, {
         top: topPosition,
-        left: leftPosition
+        left: leftPosition,
       });
 
       // Initialize search term and filtered results for this client

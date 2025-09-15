@@ -7,7 +7,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize, forkJoin, take, filter } from 'rxjs';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import {
   GridColumn,
@@ -32,6 +32,7 @@ import {
 import { SalesRuleFormModalComponent } from './components/sales-rule-form-modal/sales-rule-form-modal.component';
 import { SalesRuleDetailsModalComponent } from './components/sales-rule-details-modal/sales-rule-details-modal.component';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { NavigationEnd, Router } from '@angular/router';
 
 @Component({
   selector: 'app-sales-rules',
@@ -47,6 +48,7 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
   private countryService = inject(CountryService);
   private languageService = inject(LanguageService);
   private destroy$ = new Subject<void>();
+  private router = inject(Router);
   gridId = 'sales-rules-grid';
 
   @ViewChild('priorityCell', { static: true })
@@ -181,6 +183,19 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
       permission: 86,
     },
   ];
+
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((event: any) => {
+        if (event.url && event.url.includes('/sales-rules')) {
+          this.reinitializeComponent();
+        }
+      });
+  }
 
   ngOnInit(): void {
     this.setupCellTemplates();
@@ -350,18 +365,22 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
 
   private initializeFilterOptions(): void {
     forkJoin({
-      countries: this.countryService.getCountries(),
+      countries: this.countryService.getCountries().pipe(take(1)),
       languages: of(this.languageService.getAllLanguages()),
-    }).subscribe({
-      next: (response: { countries: any[]; languages: Array<{ key: string; value: string }> }) => {
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => of({ countries: [], languages: [] }))
+      )
+      .subscribe((response: { countries: any[]; languages: Array<{ key: string; value: string }> }) => {
         this.gridColumns = this.gridColumns.map((col) => {
           if (col.field === 'country') {
             return {
               ...col,
               filterType: 'select',
-              filterOptions: response.countries.map((country) => ({
+              filterOptions: (Array.isArray(response.countries) ? response.countries : []).map((country: any) => ({
                 label: country.name,
-                value: country.code,
+                value: country.code ?? country.name,
               })),
             };
           }
@@ -377,11 +396,11 @@ export class SalesRulesComponent implements OnInit, OnDestroy {
           }
           return col;
         });
-      },
-      error: (error) => {
-        this.alertService.error('Failed to load filters');
-        console.error(error);
-      },
-    });
+      });
+  }
+
+  private reinitializeComponent(): void {
+    this.setupCellTemplates();
+    this.initializeFilterOptions();
   }
 }

@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, of, finalize, forkJoin } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize, forkJoin, take } from 'rxjs';
 import { BrandsService } from './services/brands.service';
 import { Brand } from './models/brand.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
@@ -189,7 +189,7 @@ export class BrandsComponent implements OnInit, OnDestroy {
 
   private initializeFilterOptions(): void {
     forkJoin({
-      countries: this.countryService.getCountries(),
+      countries: this.countryService.getCountries().pipe(take(1)),
       offices: this.loadOfficesDropdown(),
     })
       .pipe(
@@ -202,10 +202,10 @@ export class BrandsComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe(({ countries, offices }) => {
-        this.updateColumnFilterOptions(
-          'country',
-          countries.map((c) => ({ value: c.name, label: c.name }))
+        const countryOptions = (Array.isArray(countries) ? countries : []).map(
+          (c: any) => ({ value: c.code ?? c.name, label: c.name })
         );
+        this.updateColumnFilterOptions('country', countryOptions);
 
         this.updateColumnFilterOptions('officeName', offices);
       });
