@@ -32,7 +32,13 @@ export enum TransactionType {
   PnLAdjustment = 6,
   Transfer = 7,
   CreditIn = 8,
-  CreditOut = 9
+  CreditOut = 9,
+  MarginLock = 10,
+  Liquidation = 11,
+  OrderPlaced = 12,
+  PositionClosed = 13,
+  PositionClosedWithLoss = 14,
+  Swap = 15
 }
 
 export enum PaymentType {
