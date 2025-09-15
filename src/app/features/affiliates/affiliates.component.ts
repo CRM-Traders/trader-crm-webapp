@@ -217,30 +217,23 @@ export class AffiliatesComponent implements OnInit {
     this.affiliatesService
       .deleteAffiliate(this.affiliateToDelete.id)
       .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          if (error.status === 409) {
-            this.alertService.error(
-              'Cannot delete affiliate with associated clients'
-            );
-          } else {
-            this.alertService.error('Failed to delete affiliate');
-          }
-          return of(null);
-        }),
-        finalize(() => {
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
           this.alertService.success('Affiliate deleted successfully');
           this.showDeleteModal = false;
           this.affiliateToDelete = null;
           this.loadAffiliates();
           this.refreshSpecificGrid();
-        })
-      )
-      .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success('Affiliate deleted successfully');
-          this.refreshSpecificGrid();
-        }
+        },
+        error: (error) => {
+          if (error.status === 409) {
+            this.alertService.error('Cannot delete affiliate with associated clients');
+          } else {
+            this.alertService.error('Failed to delete affiliate');
+          }
+        },
       });
   }
 

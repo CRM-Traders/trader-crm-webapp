@@ -323,6 +323,41 @@ export class PriceManagerComponent implements OnInit, OnDestroy, AfterViewInit {
     return order.id;
   }
 
+  // Prevent invalid characters in number input (no exponent, plus, or minus)
+  preventInvalidNumberInput(event: KeyboardEvent): void {
+    const invalidKeys = ['e', 'E', '+', '-'];
+    if (invalidKeys.includes(event.key)) {
+      event.preventDefault();
+      return;
+    }
+
+    // Only allow a single decimal separator
+    if (event.key === '.') {
+      const target = event.target as HTMLInputElement;
+      if (target && target.value.includes('.')) {
+        event.preventDefault();
+      }
+    }
+  }
+
+  // Normalize number on blur to avoid scientific notation and negatives
+  formatOrderPrice(orderId: string): void {
+    const value = this.orderPriceUpdates[orderId];
+    if (value === undefined || value === null || isNaN(value as any)) {
+      return;
+    }
+    let numeric = Number(value);
+    if (!isFinite(numeric)) {
+      return;
+    }
+    if (numeric < 0) {
+      numeric = 0;
+    }
+    // Limit to 8 decimal places and coerce out of exponential format
+    const fixed = Number(numeric.toFixed(8));
+    this.orderPriceUpdates[orderId] = fixed;
+  }
+
   // Configuration arrays
   intervals = [
     { value: '1m', label: '1 Minute' },

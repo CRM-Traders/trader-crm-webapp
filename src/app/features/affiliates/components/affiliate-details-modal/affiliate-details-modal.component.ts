@@ -506,6 +506,64 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
           </svg>
           Delete Affiliate
         </button>
+
+        <!-- Delete Confirmation Dialog -->
+        <div *ngIf="showDeleteConfirm" class="fixed inset-0 z-50">
+          <div class="absolute inset-0 bg-black/30" (click)="cancelDeleteConfirm()"></div>
+          <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div
+              class="w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-gray-200 dark:ring-gray-700 overflow-hidden"
+            >
+              <div class="px-6 py-5">
+                <div class="flex items-start">
+                  <div
+                    class="flex-shrink-0 h-10 w-10 rounded-full bg-red-100 flex items-center justify-center mr-3"
+                  >
+                    <svg
+                      class="h-6 w-6 text-red-600"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                      Delete Affiliate
+                    </h3>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      Are you sure you want to delete
+                      <strong>{{ affiliate.name }}</strong>? This action cannot be undone.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-gray-50 dark:bg-gray-900 px-6 py-3 flex justify-end gap-3">
+                <button
+                  type="button"
+                  class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  (click)="deleteAffiliate()"
+                >
+                  Delete
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  (click)="cancelDeleteConfirm()"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -523,6 +581,7 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
   isEditing = false;
   loading = false;
   loadingDetails = false;
+  showDeleteConfirm = false;
 
   constructor() {
     this.editForm = this.fb.group({
@@ -647,40 +706,36 @@ export class AffiliateDetailsModalComponent implements OnInit, OnDestroy {
       this.alertService.error('Cannot delete affiliate with active clients');
       return;
     }
+    this.showDeleteConfirm = true;
+  }
 
-    if (
-      confirm(
-        `Are you sure you want to delete ${this.affiliate?.name}? This action cannot be undone.`
-      )
-    ) {
-      this.deleteAffiliate();
-    }
+  cancelDeleteConfirm(): void {
+    this.showDeleteConfirm = false;
   }
 
   deleteAffiliate(): void {
     if (!this.affiliate || !this.affiliate.id) return;
+    this.showDeleteConfirm = false;
     this.loading = true;
     this.affiliatesService
       .deleteAffiliate(this.affiliate.id)
       .pipe(
         takeUntil(this.destroy$),
-        catchError((error) => {
+        finalize(() => (this.loading = false))
+      )
+      .subscribe({
+        next: () => {
+          // 204 No Content emits undefined → this is success
+          this.alertService.success('Affiliate deleted successfully');
+          this.modalRef.close(true);
+        },
+        error: (error) => {
           if (error.status === 409) {
-            this.alertService.error(
-              'Cannot delete affiliate with associated clients'
-            );
+            this.alertService.error('Cannot delete affiliate with associated clients');
           } else {
             this.alertService.error('Failed to delete affiliate');
           }
-          return of(null);
-        }),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success('Affiliate deleted successfully');
-          this.modalRef.close(true);
-        }
+        },
       });
   }
 }
