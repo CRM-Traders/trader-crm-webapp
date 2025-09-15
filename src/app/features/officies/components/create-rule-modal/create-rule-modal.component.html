@@ -10,7 +10,7 @@
     <div class="px-6 py-6 max-h-[100vh] overflow-y-auto">
       <form [formGroup]="ruleForm" class="space-y-6">
         <!-- Rule Name and Category Row -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" (click)="onRootClick($event)">
           <!-- Rule Name -->
           <div>
             <label
@@ -160,18 +160,22 @@
         <!-- Countries and Languages Row -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Countries Selection -->
-          <div class="relative">
+          <div class="relative" #countryDropdownContainer>
             <label
               for="countries"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Countries
+              Countries <span class="text-red-500">*</span>
             </label>
 
             <!-- Custom Dropdown Button -->
             <button
               type="button"
               class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+              [class.border-red-500]="
+                ruleForm.get('countries')?.invalid &&
+                ruleForm.get('countries')?.touched
+              "
               (click)="toggleCountryDropdown()"
             >
               <span class="truncate">{{ getSelectedCountriesText() }}</span>
@@ -190,6 +194,18 @@
                 ></path>
               </svg>
             </button>
+
+            <p
+              class="mt-1 text-sm text-red-600 dark:text-red-400"
+              *ngIf="
+                ruleForm.get('countries')?.invalid &&
+                ruleForm.get('countries')?.touched
+              "
+            >
+              <span *ngIf="ruleForm.get('countries')?.errors?.['required']"
+                >At least one country is required</span
+              >
+            </p>
 
             <!-- Dropdown Panel -->
             <div
@@ -238,7 +254,7 @@
           </div>
 
           <!-- Languages Selection -->
-          <div class="relative">
+          <div class="relative" #languageDropdownContainer>
             <label
               for="languages"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -317,9 +333,9 @@
         </div>
 
         <!-- Partners and Affiliate Referrals Row -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" (click)="onRootClick($event)">
           <!-- Partners (Affiliates) Selection -->
-          <div class="relative">
+          <div class="relative" #affiliateDropdownContainer>
             <label
               for="partners"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -428,7 +444,7 @@
           </div>
 
           <!-- Affiliate Referrals Selection -->
-          <div class="relative">
+          <div class="relative" #affiliateReferralDropdownContainer>
             <label
               for="affiliateReferrals"
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -538,7 +554,7 @@
         </div>
 
         <!-- Operators Selection -->
-        <div class="relative">
+        <div class="relative" #operatorDropdownContainer (click)="onRootClick($event)">
           <label
             for="operators"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
