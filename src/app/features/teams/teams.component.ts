@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize, tap } from 'rxjs';
 import { TeamsService } from './services/teams.service';
 import { Team } from './models/team.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
@@ -330,6 +330,11 @@ export class TeamsComponent implements OnInit, OnDestroy {
       .deleteTeam(this.teamToDelete.id)
       .pipe(
         takeUntil(this.destroy$),
+        tap(() => {
+          this.alertService.success('Team deleted successfully');
+          this.refreshSpecificGrid();
+          this.loadTeamStatistics();
+        }),
         catchError((error) => {
           if (error.status === 409) {
             this.alertService.error(
@@ -345,13 +350,7 @@ export class TeamsComponent implements OnInit, OnDestroy {
           this.teamToDelete = null;
         })
       )
-      .subscribe((result) => {
-        if (result !== null) {
-          this.alertService.success('Team deleted successfully');
-          this.refreshSpecificGrid();
-          this.loadTeamStatistics();
-        }
-      });
+      .subscribe();
   }
 
   onFileSelected(event: Event): void {

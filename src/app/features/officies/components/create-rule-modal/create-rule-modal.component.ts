@@ -1,6 +1,6 @@
 // src/app/features/officies/components/create-rule-modal/create-rule-modal.component.ts
 
-import { Component, OnInit, OnDestroy, inject, Input, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, Input, HostListener, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -45,6 +45,12 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   @Input() types: RuleType[] = [];
   @Input() isEditing = false;
 
+  @ViewChild('countryDropdownContainer') countryDropdownContainer?: ElementRef<HTMLElement>;
+  @ViewChild('languageDropdownContainer') languageDropdownContainer?: ElementRef<HTMLElement>;
+  @ViewChild('affiliateDropdownContainer') affiliateDropdownContainer?: ElementRef<HTMLElement>;
+  @ViewChild('affiliateReferralDropdownContainer') affiliateReferralDropdownContainer?: ElementRef<HTMLElement>;
+  @ViewChild('operatorDropdownContainer') operatorDropdownContainer?: ElementRef<HTMLElement>;
+
   // Make RuleCategory enum available in template
   RuleCategory = RuleCategory;
 
@@ -55,6 +61,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
   private clientsService = inject(ClientsService);
   private alertService = inject(AlertService);
   private destroy$ = new Subject<void>();
+  private ngZone = inject(NgZone);
 
   ruleForm: FormGroup;
   isSubmitting = false;
@@ -106,7 +113,7 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
       category: ['', [Validators.required]],
       priority: ['', [Validators.required]],
       type: ['', [Validators.required]],
-      countries: [''],
+      countries: ['', [Validators.required]],
       languages: [''],
       partners: [''],
       affiliateReferrals: [''],
@@ -124,19 +131,61 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
       // Set English as default language for new rules
       this.setDefaultLanguage();
     }
+
+    // Add capture-phase listeners to detect outside clicks reliably
+    document.addEventListener('mousedown', this.boundGlobalHandler, true);
+    document.addEventListener('touchstart', this.boundGlobalHandler, true);
+    document.addEventListener('click', this.boundGlobalHandler, true);
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    document.removeEventListener('mousedown', this.boundGlobalHandler, true);
+    document.removeEventListener('touchstart', this.boundGlobalHandler, true);
+    document.removeEventListener('click', this.boundGlobalHandler, true);
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
-    // Close dropdowns when clicking outside
-    if (!(event.target as Element).closest('.relative')) {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  @HostListener('document:mousedown', ['$event'])
+  onDocumentMouseDown(event: Event): void {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  @HostListener('document:touchstart', ['$event'])
+  onDocumentTouchStart(event: Event): void {
+    this.handleGlobalPointerEvent(event);
+  }
+
+  private handleGlobalPointerEvent(event: Event): void {
+    const targetNode = (event?.target as Node) ?? null;
+    if (!targetNode) {
+      return;
+    }
+
+    const insideCountry = this.countryDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+    const insideLanguage = this.languageDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+    const insideAffiliate = this.affiliateDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+    const insideAffiliateReferral = this.affiliateReferralDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+    const insideOperator = this.operatorDropdownContainer?.nativeElement.contains(targetNode) ?? false;
+
+    if (!insideCountry && !insideLanguage && !insideAffiliate && !insideAffiliateReferral && !insideOperator) {
       this.closeAllDropdowns();
     }
+  }
+
+  private boundGlobalHandler = (evt: MouseEvent | TouchEvent | Event) => {
+    this.ngZone.run(() => this.handleGlobalPointerEvent(evt as Event));
+  };
+
+  // Fallback for cases where document events might be stopped by overlays
+  onRootClick(event: MouseEvent): void {
+    this.handleGlobalPointerEvent(event);
   }
 
   private closeAllDropdowns(): void {
@@ -192,6 +241,9 @@ export class CreateRuleModalComponent implements OnInit, OnDestroy {
     // Set selected items
     this.selectedCountries = this.availableCountries.filter(c => countries.includes(c.code));
     this.selectedLanguages = this.availableLanguages.filter(l => languages.includes(l.key));
+    // Ensure form controls receive values for validation and submission
+    this.updateCountriesFormValue();
+    this.updateLanguagesFormValue();
     
     // For affiliates, we'll need to load them first and then filter
     this.loadAffiliatesForEdit(partners, 'partners');
