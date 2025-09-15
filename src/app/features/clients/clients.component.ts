@@ -25,6 +25,7 @@ import {
   forkJoin,
   filter,
   from,
+  take,
 } from 'rxjs';
 import { ClientsService } from './services/clients.service';
 import {
@@ -718,9 +719,7 @@ export class ClientsComponent implements OnInit {
         takeUntil(this.destroy$)
       )
       .subscribe((event: NavigationEnd) => {
-        console.log(event);
         if (event.url.includes('/clients')) {
-          console.log('it includes');
           this.reinitializeComponent();
         }
       });
@@ -761,6 +760,19 @@ export class ClientsComponent implements OnInit {
   private loadFilterOptionsDirectly(): void {
     this.loadOperatorsDropdown().then(
       (operators) => {
+        this.updateColumnFilterOptions(
+          'operatorId',
+          this.processOperatorFilterOptions(operators)
+        );
+        this.updateColumnFilterOptions(
+          'retentionOperatorId',
+          this.processOperatorFilterOptions(operators)
+        );
+        this.updateColumnFilterOptions(
+          'salesOperatorId',
+          this.processOperatorFilterOptions(operators)
+        );
+
         this.operators = operators;
         this.operatorsLoaded = true;
         this.cdr.detectChanges();
@@ -768,22 +780,52 @@ export class ClientsComponent implements OnInit {
       (error) => console.error('Operators failed:', error)
     );
 
-    this.loadOfficesDropdown().then();
+    // Load countries once synchronously from the subject stream
+    this.countryService
+      .getCountries()
+      .pipe(take(1), catchError(() => of([])))
+      .subscribe((countries: any) => {
+        const list = Array.isArray(countries) ? countries : [];
+        const countryOptions = list.map((c: any) => ({
+          value: c.code,
+          label: c.name,
+        }));
+        this.updateColumnFilterOptions('country', countryOptions);
+        this.updateColumnFilterOptions('passportCountry', countryOptions);
+      });
 
-    this.loadDesksDropdown().then();
+    const languages = this.languageService.getAllLanguages();
+    this.updateColumnFilterOptions(
+      'language',
+      languages.map((l: any) => ({ value: l.key, label: l.value }))
+    );
 
-    this.loadTeamsDropdown().then();
+    this.loadTimezones().then((timezones) => {
+      this.updateColumnFilterOptions('timezone', timezones);
+    });
+
+    this.loadOfficesDropdown().then((offices) =>
+      this.updateColumnFilterOptions('officeId', offices)
+    );
+
+    this.loadDesksDropdown().then((desks) =>
+      this.updateColumnFilterOptions('deskId', desks)
+    );
+
+    this.loadTeamsDropdown().then((teams) =>
+      this.updateColumnFilterOptions('teamId', teams)
+    );
 
     this.loadClientStatistics().then();
 
-    this.loadOperatorsDirectly();
+    // Ensure affiliates dropdowns are also refreshed on component change
+    this.loadAffiliatesDropdown();
   }
 
   // Simplified method to just load operators
   private async loadOperatorsDirectly(): Promise<void> {
     try {
       const operators = await this.loadOperatorsDropdown();
-      console.log('Setting operators directly:', operators);
       this.operators = operators;
       this.operatorsLoaded = true;
 
@@ -815,7 +857,6 @@ export class ClientsComponent implements OnInit {
       // Trigger change detection
       this.cdr.detectChanges();
 
-      console.log('All critical data loaded');
     } catch (error) {
       console.error('Failed to load operators:', error);
     }
@@ -1435,8 +1476,6 @@ export class ClientsComponent implements OnInit {
             }`
           );
 
-          // Don't refresh the grid since we've already updated the data
-          // this.refreshGrid();
           this.loadClientStatistics();
           this.refreshClientComments(clientId);
         }
@@ -1582,12 +1621,9 @@ export class ClientsComponent implements OnInit {
           );
           this.updateColumnFilterOptions('timezone', timezones);
 
-          // Store operators for the assign operator dropdown
           this.operators = operators;
-          this.operatorsLoaded = true; // Set the flag
-          console.log('test');
-          console.log(this.operatorsLoaded);
-          // Trigger change detection to update the view
+          this.operatorsLoaded = true;
+
           this.cdr.detectChanges();
 
           this.loadAffiliatesDropdown();
