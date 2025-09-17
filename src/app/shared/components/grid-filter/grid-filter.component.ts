@@ -63,8 +63,10 @@ export class GridFilterComponent implements OnInit, OnDestroy {
 
   @Output() filterChange = new EventEmitter<GridFilterState>();
 
-  @ViewChild('filterSelectorDropdown', { static: false }) filterSelectorDropdown!: ElementRef;
-  @ViewChildren('multiSelectDropdown') multiSelectDropdowns!: QueryList<ElementRef>;
+  @ViewChild('filterSelectorDropdown', { static: false })
+  filterSelectorDropdown!: ElementRef;
+  @ViewChildren('multiSelectDropdown')
+  multiSelectDropdowns!: QueryList<ElementRef>;
 
   // Filter selector state
   isFilterSelectorOpen = false;
@@ -169,28 +171,41 @@ export class GridFilterComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
-    
+
     // Check if the click is on the filter selector button
-    const isFilterSelectorButton = target.closest('button[type="button"]')?.textContent?.includes('Add Filter');
-    
+    const isFilterSelectorButton = target
+      .closest('button[type="button"]')
+      ?.textContent?.includes('Add Filter');
+
     // Check if the click is inside the filter selector dropdown
-    const isInsideFilterSelector = this.filterSelectorDropdown?.nativeElement?.contains(target);
-    
+    const isInsideFilterSelector =
+      this.filterSelectorDropdown?.nativeElement?.contains(target);
+
     // Check if the click is inside any multi-select dropdown
     const isInsideMultiSelectDropdown = this.multiSelectDropdowns?.some(
-      dropdown => dropdown.nativeElement?.contains(target)
+      (dropdown) => dropdown.nativeElement?.contains(target)
     );
-    
+
     // Check if the click is on any multi-select dropdown button
-    const isMultiSelectButton = target.closest('button[type="button"]')?.closest('.relative');
-    
+    const isMultiSelectButton = target
+      .closest('button[type="button"]')
+      ?.closest('.relative');
+
     // Close filter selector dropdown if click is outside
-    if (this.isFilterSelectorOpen && !isFilterSelectorButton && !isInsideFilterSelector) {
+    if (
+      this.isFilterSelectorOpen &&
+      !isFilterSelectorButton &&
+      !isInsideFilterSelector
+    ) {
       this.isFilterSelectorOpen = false;
     }
-    
+
     // Close multi-select dropdowns if click is outside
-    if (this.openDropdowns.size > 0 && !isInsideMultiSelectDropdown && !isMultiSelectButton) {
+    if (
+      this.openDropdowns.size > 0 &&
+      !isInsideMultiSelectDropdown &&
+      !isMultiSelectButton
+    ) {
       this.openDropdowns.clear();
     }
   }
@@ -386,7 +401,7 @@ export class GridFilterComponent implements OnInit, OnDestroy {
     if (this.isTextType(activeFilter.column)) {
       value = activeFilter.value;
       operator = FilterOperator.CONTAINS; // Always use contains for text
-      
+
       // If text value is empty, remove the filter instead of applying it
       if (!value || value.trim() === '') {
         this.removeAppliedFilter(activeFilter.column.field);
@@ -425,7 +440,7 @@ export class GridFilterComponent implements OnInit, OnDestroy {
     } else if (this.isBooleanType(activeFilter.column)) {
       value = activeFilter.value;
       operator = FilterOperator.EQUALS;
-      
+
       // If boolean value is empty, remove the filter
       if (value === null || value === undefined || value === '') {
         this.removeAppliedFilter(activeFilter.column.field);
@@ -665,5 +680,46 @@ export class GridFilterComponent implements OnInit, OnDestroy {
     } else {
       filter.multiSelectValues.splice(index, 1);
     }
+  }
+
+  // Add these methods to your GridFilterComponent class:
+
+  /**
+   * Select all options in the multi-select dropdown
+   * @param activeFilter The active filter to update
+   */
+  selectAllFilterOptions(activeFilter: ActiveFilter): void {
+    if (!activeFilter.multiSelectValues) {
+      activeFilter.multiSelectValues = [];
+    }
+
+    // Get all available option values
+    const allOptions = this.getFilterOptions(activeFilter.column);
+
+    // Set all option values as selected
+    activeFilter.multiSelectValues = allOptions.map((option) => option.value);
+
+    // Apply the filter with all selected values
+    this.applyFilter(activeFilter);
+  }
+
+  clearAllFilterOptions(activeFilter: ActiveFilter): void {
+    activeFilter.multiSelectValues = [];
+
+    this.applyFilter(activeFilter);
+  }
+
+  areAllOptionsSelected(activeFilter: ActiveFilter): boolean {
+    const allOptions = this.getFilterOptions(activeFilter.column);
+    const selectedValues = activeFilter.multiSelectValues || [];
+
+    return allOptions.length > 0 && allOptions.length === selectedValues.length;
+  }
+
+  isPartiallySelected(activeFilter: ActiveFilter): boolean {
+    const selectedCount = (activeFilter.multiSelectValues || []).length;
+    const totalCount = this.getFilterOptions(activeFilter.column).length;
+
+    return selectedCount > 0 && selectedCount < totalCount;
   }
 }

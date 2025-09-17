@@ -55,6 +55,9 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
   generatedPassword: string | null = null;
   passwordCopied = false;
 
+  private usernameManuallyEdited = false;
+  private generatedUsernameBase = '';
+
   // Dropdown data
   countries: Country[] = [];
   languages: Array<{ key: string; value: string }> = [];
@@ -115,6 +118,8 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
       }
     }, 0);
 
+    this.setupUsernameAutoGeneration();
+
     // Capture-phase listeners to detect outside clicks reliably
     document.addEventListener('mousedown', this.boundGlobalHandler, true);
     document.addEventListener('touchstart', this.boundGlobalHandler, true);
@@ -132,6 +137,58 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
+  }
+
+  private setupUsernameAutoGeneration(): void {
+    // Listen to firstName changes
+    this.registrationForm
+      .get('firstName')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((firstName) => {
+        if (!this.usernameManuallyEdited && firstName) {
+          this.generateUsername();
+        }
+      });
+
+    // Listen to lastName changes
+    this.registrationForm
+      .get('lastName')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((lastName) => {
+        if (!this.usernameManuallyEdited && lastName) {
+          this.generateUsername();
+        }
+      });
+
+    // Listen to username manual changes
+    this.registrationForm
+      .get('username')
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((username) => {
+        // Check if the username was manually edited by the user
+        if (
+          username &&
+          this.generatedUsernameBase &&
+          username !== this.generatedUsernameBase
+        ) {
+          // User has manually edited the username
+          this.usernameManuallyEdited = true;
+        }
+      });
+  }
+  private generateUsername(): void {
+    const firstName = this.registrationForm.get('firstName')?.value || '';
+    const lastName = this.registrationForm.get('lastName')?.value || '';
+
+    if (!firstName && !lastName) {
+      return;
+    }
+
+    // Generate username variations
+    const username = this.createUsernameVariation(firstName, lastName);
+
+    this.generatedUsernameBase = username;
+    this.registrationForm.patchValue({ username }, { emitEvent: false });
   }
 
   generatePassword(): void {
@@ -164,6 +221,76 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
 
     this.registrationForm.patchValue({ password });
     this.showPassword = true; // Show the generated password
+  }
+
+  private async generateUniqueUsername(): Promise<void> {
+    const firstName = this.registrationForm.get('firstName')?.value || '';
+    const lastName = this.registrationForm.get('lastName')?.value || '';
+
+    if (!firstName && !lastName) {
+      return;
+    }
+
+    let username = '';
+    username = this.createUsernameVariation(firstName, lastName);
+
+    this.generatedUsernameBase = username;
+    this.registrationForm.patchValue({ username }, { emitEvent: false });
+  }
+
+  public regenerateUsername(): void {
+    this.usernameManuallyEdited = false;
+    this.generateUsername();
+  }
+
+  public resetUsernameGeneration(): void {
+    this.usernameManuallyEdited = false;
+    this.generatedUsernameBase = '';
+  }
+
+  private createUsernameVariation(
+    firstName: string,
+    lastName: string,
+    suffix: string = ''
+  ): string {
+    firstName = this.normalizeString(firstName);
+    lastName = this.normalizeString(lastName);
+
+    if (!firstName && !lastName) {
+      return '';
+    }
+
+    const randomNum =
+      suffix || Math.floor(Math.random() * (9999 - 100 + 1) + 100).toString();
+
+    const patterns = [
+      () => `${firstName}.${lastName}${randomNum}`,
+      () => `${firstName.charAt(0)}.${lastName}${randomNum}`,
+      () => `${firstName}_${lastName.charAt(0)}${randomNum}`,
+      () => `${firstName.charAt(0)}${lastName}${randomNum}`,
+      () => `${firstName}${randomNum}`,
+      () => `${lastName}${randomNum}`,
+    ];
+
+    let selectedPattern: string;
+
+    if (firstName && lastName) {
+      const patternIndex = Math.floor(Math.random() * 4);
+      selectedPattern = patterns[patternIndex]();
+    } else if (firstName) {
+      selectedPattern = patterns[4]();
+    } else {
+      selectedPattern = patterns[5]();
+    }
+
+    return selectedPattern.toLowerCase();
+  }
+
+  private normalizeString(str: string): string {
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
   }
 
   private loadCountries(): void {
@@ -203,7 +330,7 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.clientsService.getAffiliatesDropdown(searchParams).subscribe({
       next: (response: AffiliateSearchResponse) => {
         let newAffiliates = response.items;
-        
+
         if (reset) {
           this.availableAffiliates = newAffiliates;
         } else {
@@ -212,12 +339,13 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
             ...newAffiliates,
           ];
         }
-        
+
         // Sort affiliates alphabetically by userFullName
-        this.availableAffiliates.sort((a: AffiliateDropdownItem, b: AffiliateDropdownItem) => 
-          a.userFullName.localeCompare(b.userFullName)
+        this.availableAffiliates.sort(
+          (a: AffiliateDropdownItem, b: AffiliateDropdownItem) =>
+            a.userFullName.localeCompare(b.userFullName)
         );
-        
+
         this.hasMoreAffiliates = response.hasNextPage;
         this.affiliateLoading = false;
       },
@@ -478,7 +606,8 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  private boundGlobalHandler = (event: Event) => this.ngZone.run(() => this.handleGlobalPointerEvent(event));
+  private boundGlobalHandler = (event: Event) =>
+    this.ngZone.run(() => this.handleGlobalPointerEvent(event));
 
   getCountryNameByCode(countryCode: string): string {
     const country = this.countries.find((c) => c.code === countryCode);
@@ -499,7 +628,11 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.focusedCountryIndex = index;
   }
 
-  onCountryKeydown(event: KeyboardEvent, country: Country, index: number): void {
+  onCountryKeydown(
+    event: KeyboardEvent,
+    country: Country,
+    index: number
+  ): void {
     switch (event.key) {
       case 'Enter':
       case ' ':
@@ -541,7 +674,11 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.focusedLanguageIndex = index;
   }
 
-  onLanguageKeydown(event: KeyboardEvent, language: { key: string; value: string }, index: number): void {
+  onLanguageKeydown(
+    event: KeyboardEvent,
+    language: { key: string; value: string },
+    index: number
+  ): void {
     switch (event.key) {
       case 'Enter':
       case ' ':
@@ -583,7 +720,11 @@ export class ClientRegistrationModalComponent implements OnInit, OnDestroy {
     this.focusedAffiliateIndex = index;
   }
 
-  onAffiliateKeydown(event: KeyboardEvent, affiliate: AffiliateDropdownItem, index: number): void {
+  onAffiliateKeydown(
+    event: KeyboardEvent,
+    affiliate: AffiliateDropdownItem,
+    index: number
+  ): void {
     switch (event.key) {
       case 'Enter':
       case ' ':

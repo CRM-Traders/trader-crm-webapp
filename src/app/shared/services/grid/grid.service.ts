@@ -1,7 +1,8 @@
 // src/app/shared/services/grid.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map, tap, switchMap } from 'rxjs/operators';
 import { HttpService } from '../../../core/services/http.service';
 import { FilterOperator } from '../../models/grid/filter-operator.model';
 import { GridExportOptions } from '../../models/grid/grid-export.model';
@@ -10,12 +11,23 @@ import { GridPagination } from '../../models/grid/grid-pagination.model';
 import { GridSort } from '../../models/grid/grid-sort.model';
 import { GridState } from '../../models/grid/grid-state.model';
 
+// Interface for the backend response
+interface GridStateResponse {
+  [gridId: string]: GridState;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class GridService {
   private httpService = inject(HttpService);
 
+  // Endpoints for grid state persistence
+  private readonly GRID_STATE_GET_ENDPOINT =
+    'identity/api/users/get-user-settings';
+  private readonly GRID_STATE_UPDATE_ENDPOINT = 'identity/api/users/upsert';
+
+  // Default state for new grids
   private defaultState: GridState = {
     filters: {
       filters: {},
@@ -32,153 +44,435 @@ export class GridService {
     columnsInitialized: false,
   };
 
+  // Cache for grid states
   private gridStateMap: Map<string, BehaviorSubject<GridState>> = new Map();
+  private loadedGridIds: Set<string> = new Set();
+  private saveDebounceTimers: Map<string, any> = new Map();
 
+  // Store the complete grid states from backend
+  private allGridStates: GridStateResponse = {};
+
+  /**
+   * Initialize grid state from backend or create default
+   */
+  initializeGridState(gridId: string): Observable<GridState> {
+    // If already loaded, return current state
+    if (this.loadedGridIds.has(gridId)) {
+      return this.getState(gridId);
+    }
+
+    // Load all states from backend
+    return this.loadAllStatesFromBackend().pipe(
+      map((allStates) => {
+        // Check if this gridId exists in the response
+        let state: GridState;
+
+        if (allStates && allStates[gridId]) {
+          // Use existing state from backend
+          state = this.mergeWithDefault(allStates[gridId]);
+        } else {
+          // Create new default state for this grid
+          state = { ...this.defaultState };
+          // Save the new grid state to backend
+          this.addNewGridState(gridId, state);
+        }
+
+        // Initialize the state subject
+        if (!this.gridStateMap.has(gridId)) {
+          this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(state));
+        } else {
+          this.gridStateMap.get(gridId)!.next(state);
+        }
+
+        // Mark as loaded
+        this.loadedGridIds.add(gridId);
+
+        return state;
+      }),
+      catchError((error) => {
+        console.error(`Failed to load grid state for ${gridId}:`, error);
+        // On error, use default state
+        const defaultStateCopy = { ...this.defaultState };
+
+        if (!this.gridStateMap.has(gridId)) {
+          this.gridStateMap.set(
+            gridId,
+            new BehaviorSubject<GridState>(defaultStateCopy)
+          );
+        }
+
+        this.loadedGridIds.add(gridId);
+        return of(defaultStateCopy);
+      })
+    );
+  }
+
+  /**
+   * Load all grid states from backend
+   */
+  private loadAllStatesFromBackend(): Observable<GridStateResponse> {
+    return this.httpService.get<any>(this.GRID_STATE_GET_ENDPOINT).pipe(
+      map((response) => {
+        // Handle different response formats
+        let gridStates: GridStateResponse = {};
+
+        if (response && response.body) {
+          // If response has body field with stringified JSON
+          try {
+            gridStates = JSON.parse(response.body);
+          } catch (error) {
+            console.error(
+              'Failed to parse grid states from response.body:',
+              error
+            );
+            gridStates = {};
+          }
+        } else if (response && response.gridStates) {
+          // If response has gridStates field
+          gridStates = response.gridStates;
+        } else if (response && typeof response === 'string') {
+          // If response is a string, try to parse it
+          try {
+            gridStates = JSON.parse(response);
+          } catch (error) {
+            console.error(
+              'Failed to parse grid states from string response:',
+              error
+            );
+            gridStates = {};
+          }
+        } else if (response && typeof response === 'object') {
+          // If response is directly the grid states object
+          gridStates = response;
+        }
+
+        this.allGridStates = gridStates;
+        return gridStates;
+      }),
+      catchError((error) => {
+        console.error('Failed to load grid states from backend:', error);
+        this.allGridStates = {};
+        return of({});
+      })
+    );
+  }
+
+  /**
+   * Merge state with default to ensure all properties exist
+   */
+  private mergeWithDefault(state: GridState): GridState {
+    return {
+      ...this.defaultState,
+      ...state,
+      filters: {
+        ...this.defaultState.filters,
+        ...(state.filters || {}),
+        filters: state.filters?.filters || {},
+      },
+      pagination: {
+        ...this.defaultState.pagination,
+        ...(state.pagination || {}),
+      },
+      visibleColumns: state.visibleColumns || [],
+      columnsInitialized: state.columnsInitialized || false,
+    };
+  }
+
+  /**
+   * Add new grid state to the backend
+   */
+  private addNewGridState(gridId: string, state: GridState): void {
+    // Update local cache
+    this.allGridStates[gridId] = state;
+
+    // Save to backend (debounced)
+    this.saveStateDebounced(gridId, state);
+  }
+
+  /**
+   * Save grid state to backend
+   */
+  private saveGridState(gridId: string, state: GridState): Observable<any> {
+    // Update the specific grid state in our cache
+    this.allGridStates[gridId] = state;
+
+    // Prepare the request body with stringified grid states
+    const requestBody = {
+      body: JSON.stringify(this.allGridStates),
+    };
+
+    return this.httpService
+      .post(this.GRID_STATE_UPDATE_ENDPOINT, requestBody)
+      .pipe(
+        tap(() => {
+          console.log(`Grid state saved successfully for ${gridId}`);
+        }),
+        catchError((error) => {
+          console.error(`Failed to save grid state for ${gridId}:`, error);
+          return of(null);
+        })
+      );
+  }
+
+  /**
+   * Debounced save to avoid too many API calls
+   */
+  private saveStateDebounced(gridId: string, state: GridState): void {
+    // Clear existing timer
+    if (this.saveDebounceTimers.has(gridId)) {
+      clearTimeout(this.saveDebounceTimers.get(gridId));
+    }
+
+    // Set new timer
+    const timer = setTimeout(() => {
+      this.saveGridState(gridId, state).subscribe({
+        next: () => console.log(`Grid state saved for ${gridId}`),
+        error: (error) =>
+          console.error(`Failed to save grid state for ${gridId}:`, error),
+      });
+      this.saveDebounceTimers.delete(gridId);
+    }, 500); // 500ms debounce
+
+    this.saveDebounceTimers.set(gridId, timer);
+  }
+
+  /**
+   * Get observable of grid state
+   */
   getState(gridId: string): Observable<GridState> {
     if (!this.gridStateMap.has(gridId)) {
-      this.gridStateMap.set(
-        gridId,
-        new BehaviorSubject<GridState>({ ...this.defaultState })
-      );
+      // Initialize and load from backend
+      return this.initializeGridState(gridId);
     }
     return this.gridStateMap.get(gridId)!.asObservable();
   }
 
+  /**
+   * Get current grid state synchronously
+   */
   getCurrentState(gridId: string): GridState {
     if (!this.gridStateMap.has(gridId)) {
+      // Create default state if not exists
+      const defaultStateCopy = { ...this.defaultState };
       this.gridStateMap.set(
         gridId,
-        new BehaviorSubject<GridState>({ ...this.defaultState })
+        new BehaviorSubject<GridState>(defaultStateCopy)
       );
+      // Trigger async load
+      this.initializeGridState(gridId).subscribe();
+      return defaultStateCopy;
     }
     return this.gridStateMap.get(gridId)!.value;
   }
 
+  /**
+   * Update grid state
+   */
   updateState(gridId: string, state: Partial<GridState>): void {
-    if (!this.gridStateMap.has(gridId)) {
-      this.gridStateMap.set(
-        gridId,
-        new BehaviorSubject<GridState>({ ...this.defaultState })
-      );
-    }
-
-    const currentState = this.gridStateMap.get(gridId)!.value;
-    const newState = { ...currentState, ...state };
-    this.gridStateMap.get(gridId)!.next(newState);
-  }
-
-  resetState(gridId: string): void {
-    if (this.gridStateMap.has(gridId)) {
-      this.gridStateMap.get(gridId)!.next({ ...this.defaultState });
-    } else {
-      this.gridStateMap.set(
-        gridId,
-        new BehaviorSubject<GridState>({ ...this.defaultState })
-      );
-    }
-  }
-
-  setFilter(gridId: string, filter: GridFilter): void {
-    const currentState = this.gridStateMap.get(gridId)?.value || {
-      ...this.defaultState,
+    const currentState = this.getCurrentState(gridId);
+    const newState = {
+      ...currentState,
+      ...state,
+      // Deep merge for nested objects
+      filters: state.filters
+        ? {
+            ...currentState.filters,
+            ...state.filters,
+            filters: state.filters.filters || currentState.filters.filters,
+          }
+        : currentState.filters,
+      pagination: state.pagination
+        ? {
+            ...currentState.pagination,
+            ...state.pagination,
+          }
+        : currentState.pagination,
     };
+
+    // Update local state
+    if (!this.gridStateMap.has(gridId)) {
+      this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    } else {
+      this.gridStateMap.get(gridId)!.next(newState);
+    }
+
+    // Update cache
+    this.allGridStates[gridId] = newState;
+
+    // Save to backend (debounced)
+    this.saveStateDebounced(gridId, newState);
+  }
+
+  /**
+   * Reset grid state to default
+   */
+  resetState(gridId: string): void {
+    const resetState = { ...this.defaultState };
+
+    if (this.gridStateMap.has(gridId)) {
+      this.gridStateMap.get(gridId)!.next(resetState);
+    } else {
+      this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(resetState));
+    }
+
+    // Update cache
+    this.allGridStates[gridId] = resetState;
+
+    // Save reset state to backend
+    this.saveStateDebounced(gridId, resetState);
+  }
+
+  /**
+   * Set filter for a field
+   */
+  setFilter(gridId: string, filter: GridFilter): void {
+    const currentState = this.getCurrentState(gridId);
     const newFilters = {
       ...currentState.filters.filters,
       [filter.field]: filter,
     };
 
-    const newState = {
-      ...currentState,
+    this.updateState(gridId, {
       filters: {
         ...currentState.filters,
         filters: newFilters,
       },
-    };
-
-    this.gridStateMap.get(gridId)!.next(newState);
+    });
   }
 
+  /**
+   * Remove filter for a field
+   */
   removeFilter(gridId: string, field: string): void {
-    const currentState = this.gridStateMap.get(gridId)?.value || {
-      ...this.defaultState,
-    };
+    const currentState = this.getCurrentState(gridId);
     const newFilters = { ...currentState.filters.filters };
     delete newFilters[field];
 
-    const newState = {
-      ...currentState,
+    this.updateState(gridId, {
       filters: {
         ...currentState.filters,
         filters: newFilters,
       },
-    };
-
-    this.gridStateMap.get(gridId)!.next(newState);
+    });
   }
 
-  setGlobalFilter(gridId: string, value: string): void {
-    const currentState = this.gridStateMap.get(gridId)?.value || {
-      ...this.defaultState,
-    };
+  /**
+   * Clear all filters
+   */
+  clearAllFilters(gridId: string): void {
+    const currentState = this.getCurrentState(gridId);
 
-    const newState = {
-      ...currentState,
+    this.updateState(gridId, {
+      filters: {
+        filters: {},
+        globalFilter: undefined,
+      },
+    });
+  }
+
+  /**
+   * Set global filter
+   */
+  setGlobalFilter(gridId: string, value: string): void {
+    const currentState = this.getCurrentState(gridId);
+
+    this.updateState(gridId, {
       filters: {
         ...currentState.filters,
         globalFilter: value,
       },
-    };
-
-    this.gridStateMap.get(gridId)!.next(newState);
+    });
   }
 
-  setSort(gridId: string, sort: GridSort): void {
-    const currentState = this.gridStateMap.get(gridId)?.value || {
-      ...this.defaultState,
-    };
-
-    const newState = {
-      ...currentState,
-      sort,
-    };
-
-    this.gridStateMap.get(gridId)!.next(newState);
+  /**
+   * Set sort
+   */
+  setSort(gridId: string, sort: GridSort | undefined): void {
+    this.updateState(gridId, { sort });
   }
 
+  /**
+   * Set pagination
+   */
   setPagination(gridId: string, pagination: Partial<GridPagination>): void {
-    const currentState = this.gridStateMap.get(gridId)?.value || {
-      ...this.defaultState,
-    };
+    const currentState = this.getCurrentState(gridId);
 
-    const newState = {
-      ...currentState,
+    this.updateState(gridId, {
       pagination: {
         ...currentState.pagination,
         ...pagination,
       },
-    };
-
-    this.gridStateMap.get(gridId)!.next(newState);
+    });
   }
 
+  /**
+   * Set visible columns
+   */
   setVisibleColumns(gridId: string, columns: string[]): void {
-    if (!this.gridStateMap.has(gridId)) {
-      this.gridStateMap.set(
-        gridId,
-        new BehaviorSubject<GridState>({ ...this.defaultState })
-      );
-    }
-
-    const currentState = this.gridStateMap.get(gridId)!.value;
-    const newState = {
-      ...currentState,
+    this.updateState(gridId, {
       visibleColumns: columns,
       columnsInitialized: true,
-    };
-
-    this.gridStateMap.get(gridId)!.next(newState);
+    });
   }
 
+  /**
+   * Force save current state immediately (useful before navigation)
+   */
+  forceSaveState(gridId: string): Observable<any> {
+    // Clear any pending debounced saves
+    if (this.saveDebounceTimers.has(gridId)) {
+      clearTimeout(this.saveDebounceTimers.get(gridId));
+      this.saveDebounceTimers.delete(gridId);
+    }
+
+    const currentState = this.getCurrentState(gridId);
+    return this.saveGridState(gridId, currentState);
+  }
+
+  /**
+   * Force save all states
+   */
+  forceSaveAllStates(): Observable<any> {
+    // Clear all pending debounced saves
+    this.saveDebounceTimers.forEach((timer) => clearTimeout(timer));
+    this.saveDebounceTimers.clear();
+
+    const requestBody = {
+      body: JSON.stringify(this.allGridStates),
+    };
+
+    return this.httpService.post(this.GRID_STATE_UPDATE_ENDPOINT, requestBody);
+  }
+
+  /**
+   * Load all grid states (useful for preloading)
+   */
+  loadAllGridStates(): Observable<GridStateResponse> {
+    return this.loadAllStatesFromBackend().pipe(
+      tap((states) => {
+        // Initialize all loaded states
+        if (states) {
+          Object.entries(states).forEach(([gridId, state]) => {
+            const mergedState = this.mergeWithDefault(state);
+
+            if (!this.gridStateMap.has(gridId)) {
+              this.gridStateMap.set(
+                gridId,
+                new BehaviorSubject<GridState>(mergedState)
+              );
+            } else {
+              this.gridStateMap.get(gridId)!.next(mergedState);
+            }
+            this.loadedGridIds.add(gridId);
+          });
+        }
+      })
+    );
+  }
+
+  /**
+   * Build query params for API requests
+   */
   buildQueryParams(state: GridState): HttpParams {
     let params = new HttpParams();
 
@@ -232,6 +526,9 @@ export class GridService {
     return params;
   }
 
+  /**
+   * Get operator suffix for query params
+   */
   private getOperatorSuffix(operator: FilterOperator): string {
     switch (operator) {
       case FilterOperator.EQUALS:
@@ -257,13 +554,31 @@ export class GridService {
     }
   }
 
+  /**
+   * Fetch data from API with current grid state
+   */
   fetchData<T>(endpoint: string, gridId: string): Observable<T> {
     const state = this.getCurrentState(gridId);
     const requestBody = this.buildRequestBody(state);
 
-    return this.httpService.post<T>(endpoint, requestBody);
+    return this.httpService.post<T>(endpoint, requestBody).pipe(
+      tap((response: any) => {
+        // Update pagination totals if response contains them
+        if (response && response.totalItems !== undefined) {
+          this.setPagination(gridId, {
+            totalItems: response.totalItems,
+            totalPages: Math.ceil(
+              response.totalItems / state.pagination.pageSize
+            ),
+          });
+        }
+      })
+    );
   }
 
+  /**
+   * Build request body for API
+   */
   private buildRequestBody(state: GridState): any {
     const transformedFilters: Record<string, any> = {};
     if (state.filters && state.filters.filters) {
@@ -282,14 +597,16 @@ export class GridService {
       pageSize: state.pagination.pageSize,
       sortField: state.sort?.field || null,
       sortDirection: state.sort?.direction || null,
-      visibleColumns:
-        state.columnsInitialized ? state.visibleColumns : null,
+      visibleColumns: state.columnsInitialized ? state.visibleColumns : null,
       globalFilter: state.filters.globalFilter || null,
       filters:
         Object.keys(transformedFilters).length > 0 ? transformedFilters : null,
     };
   }
 
+  /**
+   * Export data with options
+   */
   exportData(data: any[], options: GridExportOptions): void {
     switch (options.fileType) {
       case 'csv':
@@ -304,6 +621,9 @@ export class GridService {
     }
   }
 
+  /**
+   * Export to CSV
+   */
   private exportToCsv(data: any[], options: GridExportOptions): void {
     const fields = options.fields || Object.keys(data[0] || {});
 
@@ -326,30 +646,41 @@ export class GridService {
     this.downloadFile(blob, `${options.fileName}.csv`);
   }
 
+  /**
+   * Export to Excel (placeholder)
+   */
   private exportToExcel(data: any[], options: GridExportOptions): void {
+    // For now, export as CSV with .xls extension
     this.exportToCsv(data, {
       ...options,
       fileName: options.fileName,
     });
 
-    alert(
-      'Excel export is a placeholder. For a real implementation, use a library like exceljs.'
+    console.warn(
+      'Excel export: Using CSV format. For true Excel format, implement with a library like exceljs.'
     );
   }
 
+  /**
+   * Export to PDF (placeholder)
+   */
   private exportToPdf(data: any[], options: GridExportOptions): void {
-    // For a real implementation, you would use a library like pdfmake
-    // This is a placeholder
-    alert(
-      'PDF export is a placeholder. For a real implementation, use a library like pdfmake.'
+    console.warn(
+      'PDF export not implemented. Use a library like pdfmake or jsPDF.'
     );
   }
 
+  /**
+   * Get nested value from object
+   */
   private getNestedValue(obj: any, path: string): any {
     const keys = path.split('.');
     return keys.reduce((value, key) => value?.[key], obj);
   }
 
+  /**
+   * Download file helper
+   */
   private downloadFile(blob: Blob, filename: string): void {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -357,5 +688,19 @@ export class GridService {
     link.download = filename;
     link.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Cleanup method - call on service destroy or app termination
+   */
+  ngOnDestroy(): void {
+    // Save all pending states
+    this.saveDebounceTimers.forEach((timer, gridId) => {
+      clearTimeout(timer);
+      // Force save the state
+      const state = this.getCurrentState(gridId);
+      this.saveGridState(gridId, state).subscribe();
+    });
+    this.saveDebounceTimers.clear();
   }
 }

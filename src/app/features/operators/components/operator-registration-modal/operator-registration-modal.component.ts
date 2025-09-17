@@ -1,6 +1,14 @@
 // src/app/features/operators/components/operator-registration-modal/operator-registration-modal.component.ts
 
-import { Component, inject, Input, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnInit,
+  HostListener,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -37,8 +45,10 @@ interface RoleDropdownItem {
 })
 export class OperatorRegistrationModalComponent implements OnInit {
   @Input() modalRef!: ModalRef;
-  @ViewChild('userTypeDropdownRoot') userTypeDropdownRoot!: ElementRef<HTMLElement>;
-  @ViewChild('departmentDropdownRoot') departmentDropdownRoot!: ElementRef<HTMLElement>;
+  @ViewChild('userTypeDropdownRoot')
+  userTypeDropdownRoot!: ElementRef<HTMLElement>;
+  @ViewChild('departmentDropdownRoot')
+  departmentDropdownRoot!: ElementRef<HTMLElement>;
   @ViewChild('roleDropdownRoot') roleDropdownRoot!: ElementRef<HTMLElement>;
   @ViewChild('branchDropdownRoot') branchDropdownRoot!: ElementRef<HTMLElement>;
 
@@ -87,6 +97,9 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
   BranchType = BranchType;
   UserType = UserType;
+
+  private usernameManuallyEdited = false;
+  private generatedUsernameBase = '';
 
   userTypeOptions = [
     {
@@ -223,6 +236,116 @@ export class OperatorRegistrationModalComponent implements OnInit {
   ngOnInit() {
     this.setupFormChangeListeners();
     this.loadDepartments();
+
+    this.setupUsernameAutoGeneration();
+  }
+
+  private setupUsernameAutoGeneration(): void {
+    // Listen to firstName changes
+    this.registrationForm
+      .get('firstName')
+      ?.valueChanges.subscribe((firstName) => {
+        if (!this.usernameManuallyEdited && firstName) {
+          this.generateUsername();
+        }
+      });
+
+    // Listen to lastName changes
+    this.registrationForm
+      .get('lastName')
+      ?.valueChanges.subscribe((lastName) => {
+        if (!this.usernameManuallyEdited && lastName) {
+          this.generateUsername();
+        }
+      });
+
+    // Listen to username manual changes
+    this.registrationForm
+      .get('username')
+      ?.valueChanges.subscribe((username) => {
+        // Check if the username was manually edited by the user
+        if (
+          username &&
+          this.generatedUsernameBase &&
+          username !== this.generatedUsernameBase
+        ) {
+          // User has manually edited the username
+          this.usernameManuallyEdited = true;
+        }
+      });
+  }
+
+  private generateUsername(): void {
+    const firstName = this.registrationForm.get('firstName')?.value || '';
+    const lastName = this.registrationForm.get('lastName')?.value || '';
+
+    if (!firstName && !lastName) {
+      return;
+    }
+
+    // Generate username variations
+    const username = this.createUsernameVariation(firstName, lastName);
+
+    this.generatedUsernameBase = username;
+    // Update the form without triggering valueChanges to avoid infinite loop
+    this.registrationForm.patchValue({ username }, { emitEvent: false });
+  }
+
+  private createUsernameVariation(
+    firstName: string,
+    lastName: string,
+    suffix: string = ''
+  ): string {
+    // Clean and normalize names
+    firstName = this.normalizeString(firstName);
+    lastName = this.normalizeString(lastName);
+
+    if (!firstName && !lastName) {
+      return '';
+    }
+
+    // Generate a random 3-4 digit number for uniqueness
+    const randomNum =
+      suffix || Math.floor(Math.random() * (9999 - 100 + 1) + 100).toString();
+
+    // Different username patterns - pick one randomly
+    let selectedPattern: string;
+
+    if (firstName && lastName) {
+      const patterns = [
+        `${firstName}.${lastName}${randomNum}`, // john.doe123
+        `${firstName.charAt(0)}.${lastName}${randomNum}`, // j.doe123
+        `${firstName}_${lastName.charAt(0)}${randomNum}`, // john_d123
+        `${firstName.charAt(0)}${lastName}${randomNum}`, // jdoe123
+        `${firstName}${lastName.charAt(0)}${randomNum}`, // johnd123
+      ];
+      const patternIndex = Math.floor(Math.random() * patterns.length);
+      selectedPattern = patterns[patternIndex];
+    } else if (firstName) {
+      selectedPattern = `${firstName}${randomNum}`;
+    } else {
+      selectedPattern = `${lastName}${randomNum}`;
+    }
+
+    return selectedPattern.toLowerCase();
+  }
+
+  private normalizeString(str: string): string {
+    if (!str) return '';
+
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '') // Remove special characters and spaces
+      .trim();
+  }
+  public regenerateUsername(): void {
+    this.usernameManuallyEdited = false;
+    this.generateUsername();
+  }
+
+  public resetUsernameGeneration(): void {
+    this.usernameManuallyEdited = false;
+    this.generatedUsernameBase = '';
   }
 
   private setupFormChangeListeners(): void {
@@ -375,17 +498,21 @@ export class OperatorRegistrationModalComponent implements OnInit {
 
     switch (branchType) {
       case BranchType.Brand:
-        return `${branch.value}${branch.brandName ? ` - ${branch.brandName}` : ''
-          }${branch.country ? ` (${branch.country})` : ''}`;
+        return `${branch.value}${
+          branch.brandName ? ` - ${branch.brandName}` : ''
+        }${branch.country ? ` (${branch.country})` : ''}`;
       case BranchType.Office:
-        return `${branch.value}${branch.officeName ? ` - ${branch.officeName}` : ''
-          }${branch.language ? ` - ${branch.language}` : ''}`;
+        return `${branch.value}${
+          branch.officeName ? ` - ${branch.officeName}` : ''
+        }${branch.language ? ` - ${branch.language}` : ''}`;
       case BranchType.Desk:
-        return `${branch.value}${branch.deskName ? ` - ${branch.deskName}` : ''
-          }`;
+        return `${branch.value}${
+          branch.deskName ? ` - ${branch.deskName}` : ''
+        }`;
       case BranchType.Team:
-        return `${branch.value}${branch.deskName ? ` - ${branch.deskName}` : ''
-          }`;
+        return `${branch.value}${
+          branch.deskName ? ` - ${branch.deskName}` : ''
+        }`;
       default:
         return branch.value;
     }
@@ -685,7 +812,7 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.roleDropdownOpen = false;
     this.branchDropdownOpen = false;
     this.userTypeDropdownOpen = false;
-    
+
     // Reset focus indices
     this.focusedDepartmentIndex = -1;
     this.focusedRoleIndex = -1;
@@ -702,14 +829,14 @@ export class OperatorRegistrationModalComponent implements OnInit {
       this.branchDropdownRoot?.nativeElement,
     ];
 
-    const isInsideAnyDropdown = containers.some((el) => el && el.contains(target));
+    const isInsideAnyDropdown = containers.some(
+      (el) => el && el.contains(target)
+    );
 
     if (!isInsideAnyDropdown) {
       this.closeAllDropdowns();
     }
   }
-
-  
 
   // User Type dropdown methods
   toggleUserTypeDropdown(): void {
@@ -815,20 +942,20 @@ export class OperatorRegistrationModalComponent implements OnInit {
   }
 
   private getAllUserTypeOptions(): any[] {
-    return this.getFilteredUserTypeGroups().flatMap(group => group.options);
+    return this.getFilteredUserTypeGroups().flatMap((group) => group.options);
   }
 
   getUserTypeGlobalIndex(group: any, localIndex: number): number {
     const groups = this.getFilteredUserTypeGroups();
     let globalIndex = 0;
-    
+
     for (const g of groups) {
       if (g === group) {
         return globalIndex + localIndex;
       }
       globalIndex += g.options.length;
     }
-    
+
     return globalIndex;
   }
 
@@ -846,7 +973,11 @@ export class OperatorRegistrationModalComponent implements OnInit {
     this.focusedDepartmentIndex = index;
   }
 
-  onDepartmentKeydown(event: KeyboardEvent, department: any, index: number): void {
+  onDepartmentKeydown(
+    event: KeyboardEvent,
+    department: any,
+    index: number
+  ): void {
     switch (event.key) {
       case 'Enter':
       case ' ':
