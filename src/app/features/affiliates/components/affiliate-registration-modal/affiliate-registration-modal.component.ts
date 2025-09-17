@@ -34,40 +34,6 @@ import { AffiliatesService } from '../../services/affiliates.service';
         <!-- Modal Body -->
         <div class="px-6 py-6">
           <form [formGroup]="registrationForm" class="space-y-4">
-            <div>
-              <label
-                for="name"
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Name <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                formControlName="name"
-                class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                [class.border-red-500]="
-                  registrationForm.get('name')?.invalid &&
-                  registrationForm.get('name')?.touched
-                "
-                [class.focus:ring-red-500]="
-                  registrationForm.get('name')?.invalid &&
-                  registrationForm.get('name')?.touched
-                "
-              />
-              <p
-                class="mt-1 text-sm text-red-600 dark:text-red-400"
-                *ngIf="
-                  registrationForm.get('name')?.invalid &&
-                  registrationForm.get('name')?.touched
-                "
-              >
-                <span *ngIf="registrationForm.get('name')?.errors?.['required']"
-                  >Name is required</span
-                >
-              </p>
-            </div>
-
             <!-- First Name and Last Name Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -141,6 +107,46 @@ import { AffiliatesService } from '../../services/affiliates.service';
               </div>
             </div>
 
+            <div>
+              <label
+                for="name"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Name <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="name"
+                  formControlName="name"
+                  placeholder="Auto-generated or enter manually"
+                  class="w-full px-3 py-2 pr-10 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  [class.border-red-500]="
+                    registrationForm.get('name')?.invalid &&
+                    registrationForm.get('name')?.touched
+                  "
+                  [class.focus:ring-red-500]="
+                    registrationForm.get('name')?.invalid &&
+                    registrationForm.get('name')?.touched
+                  "
+                />
+              </div>
+              <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Full name will be auto-generated from first and last name
+              </p>
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  registrationForm.get('name')?.invalid &&
+                  registrationForm.get('name')?.touched
+                "
+              >
+                <span *ngIf="registrationForm.get('name')?.errors?.['required']"
+                  >Name is required</span
+                >
+              </p>
+            </div>
+
             <!-- Email and Username Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -188,20 +194,53 @@ import { AffiliatesService } from '../../services/affiliates.service';
                 >
                   Username <span class="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="username"
-                  formControlName="username"
-                  class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  [class.border-red-500]="
-                    registrationForm.get('username')?.invalid &&
-                    registrationForm.get('username')?.touched
-                  "
-                  [class.focus:ring-red-500]="
-                    registrationForm.get('username')?.invalid &&
-                    registrationForm.get('username')?.touched
-                  "
-                />
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="username"
+                    formControlName="username"
+                    placeholder="Auto-generated or enter manually"
+                    class="w-full px-3 py-2 pr-10 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    [class.border-red-500]="
+                      registrationForm.get('username')?.invalid &&
+                      registrationForm.get('username')?.touched
+                    "
+                    [class.focus:ring-red-500]="
+                      registrationForm.get('username')?.invalid &&
+                      registrationForm.get('username')?.touched
+                    "
+                  />
+
+                  <!-- Regenerate button for username -->
+                  <button
+                    type="button"
+                    class="absolute inset-y-0 right-0 px-2 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    (click)="regenerateUsername()"
+                    title="Generate new username"
+                    [disabled]="
+                      !registrationForm.get('firstName')?.value &&
+                      !registrationForm.get('lastName')?.value
+                    "
+                  >
+                    <svg
+                      class="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Username will be auto-generated from name or you can enter
+                  manually
+                </p>
                 <p
                   class="mt-1 text-sm text-red-600 dark:text-red-400"
                   *ngIf="
@@ -417,6 +456,11 @@ export class AffiliateRegistrationModalComponent {
   isSubmitting = false;
   registrationForm: FormGroup;
 
+  private usernameManuallyEdited = false;
+  private nameManuallyEdited = false;
+  private generatedUsernameBase = '';
+  private generatedNameBase = '';
+
   constructor() {
     this.registrationForm = this.fb.group({
       name: ['', Validators.required],
@@ -435,6 +479,161 @@ export class AffiliateRegistrationModalComponent {
         ],
       ],
     });
+
+    this.setupAutoGeneration();
+  }
+
+  private setupAutoGeneration(): void {
+    // Listen to firstName changes
+    this.registrationForm
+      .get('firstName')
+      ?.valueChanges.subscribe((firstName) => {
+        if (!this.nameManuallyEdited) {
+          this.generateName();
+        }
+        if (!this.usernameManuallyEdited && firstName) {
+          this.generateUsername();
+        }
+      });
+
+    // Listen to lastName changes
+    this.registrationForm
+      .get('lastName')
+      ?.valueChanges.subscribe((lastName) => {
+        if (!this.nameManuallyEdited) {
+          this.generateName();
+        }
+        if (!this.usernameManuallyEdited && lastName) {
+          this.generateUsername();
+        }
+      });
+
+    // Listen to name manual changes
+    this.registrationForm.get('name')?.valueChanges.subscribe((name) => {
+      // Check if the name was manually edited by the user
+      if (name && this.generatedNameBase && name !== this.generatedNameBase) {
+        this.nameManuallyEdited = true;
+      }
+    });
+
+    // Listen to username manual changes
+    this.registrationForm
+      .get('username')
+      ?.valueChanges.subscribe((username) => {
+        // Check if the username was manually edited by the user
+        if (
+          username &&
+          this.generatedUsernameBase &&
+          username !== this.generatedUsernameBase
+        ) {
+          this.usernameManuallyEdited = true;
+        }
+      });
+  }
+
+  /**
+   * Generates a full name from firstName and lastName
+   */
+  private generateName(): void {
+    const firstName = this.registrationForm.get('firstName')?.value || '';
+    const lastName = this.registrationForm.get('lastName')?.value || '';
+
+    if (!firstName && !lastName) {
+      return;
+    }
+
+    // Generate full name - simple concatenation with space
+    const fullName = `${firstName} ${lastName}`.trim();
+
+    this.generatedNameBase = fullName;
+    // Update the form without triggering valueChanges to avoid infinite loop
+    this.registrationForm.patchValue({ name: fullName }, { emitEvent: false });
+  }
+
+  /**
+   * Generates a unique username based on firstName and lastName
+   */
+  private generateUsername(): void {
+    const firstName = this.registrationForm.get('firstName')?.value || '';
+    const lastName = this.registrationForm.get('lastName')?.value || '';
+
+    if (!firstName && !lastName) {
+      return;
+    }
+
+    // Generate username variations
+    const username = this.createUsernameVariation(firstName, lastName);
+
+    this.generatedUsernameBase = username;
+    // Update the form without triggering valueChanges to avoid infinite loop
+    this.registrationForm.patchValue({ username }, { emitEvent: false });
+  }
+
+  /**
+   * Creates username variations based on different patterns
+   */
+  private createUsernameVariation(
+    firstName: string,
+    lastName: string,
+    suffix: string = ''
+  ): string {
+    // Clean and normalize names
+    firstName = this.normalizeString(firstName);
+    lastName = this.normalizeString(lastName);
+
+    if (!firstName && !lastName) {
+      return '';
+    }
+
+    const randomNum =
+      suffix || Math.floor(Math.random() * (9999 - 100 + 1) + 100).toString();
+
+    let selectedPattern: string;
+
+    if (firstName && lastName) {
+      const patterns = [
+        `${firstName}.${lastName}${randomNum}`,
+        `${firstName.charAt(0)}.${lastName}${randomNum}`,
+        `${firstName}_${lastName.charAt(0)}${randomNum}`,
+        `${firstName.charAt(0)}${lastName}${randomNum}`,
+        `${firstName}${lastName.charAt(0)}${randomNum}`,
+        `${firstName}${lastName}${randomNum}`,
+      ];
+      const patternIndex = Math.floor(Math.random() * patterns.length);
+      selectedPattern = patterns[patternIndex];
+    } else if (firstName) {
+      selectedPattern = `${firstName}${randomNum}`;
+    } else {
+      selectedPattern = `${lastName}${randomNum}`;
+    }
+
+    return selectedPattern.toLowerCase();
+  }
+
+  private normalizeString(str: string): string {
+    if (!str) return '';
+
+    return str
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
+  }
+
+  public regenerateName(): void {
+    this.nameManuallyEdited = false;
+    this.generateName();
+  }
+
+  public regenerateUsername(): void {
+    this.usernameManuallyEdited = false;
+    this.generateUsername();
+  }
+
+  public resetAutoGeneration(): void {
+    this.usernameManuallyEdited = false;
+    this.nameManuallyEdited = false;
+    this.generatedUsernameBase = '';
+    this.generatedNameBase = '';
   }
 
   generateSecretKey(): void {

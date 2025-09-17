@@ -28,6 +28,12 @@ export class NavigationService {
       permission: 121,
     },
     {
+      label: 'Clients',
+      icon: 'traders',
+      route: '/clients',
+      permission: 127,
+    },
+    {
       label: 'Offices',
       icon: 'offices',
       route: '/offices',
@@ -56,12 +62,6 @@ export class NavigationService {
       icon: 'operator',
       route: '/operators',
       permission: 130,
-    },
-    {
-      label: 'Clients',
-      icon: 'traders',
-      route: '/clients',
-      permission: 127,
     },
     {
       label: 'Leads',
