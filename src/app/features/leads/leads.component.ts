@@ -200,7 +200,6 @@ export class LeadsComponent implements OnInit, OnDestroy {
     {
       field: 'salesStatus',
       header: 'Sales Status',
-      sortable: true,
       filterable: true,
       filterType: 'select',
       filterOptions: Object.entries(KycStatusLabels).map(([value, label]) => ({
@@ -226,6 +225,7 @@ export class LeadsComponent implements OnInit, OnDestroy {
             return 'Unknown';
         }
       },
+      hidden: true,
     },
     {
       field: 'status',
@@ -238,8 +238,8 @@ export class LeadsComponent implements OnInit, OnDestroy {
         label: label,
       })),
       cellTemplate: null, // Will be set in ngOnInit
-      selector: (row: Client) =>
-        ClientStatusLabels[row.status as ClientStatus] || 'N/A',
+      selector: (row: Lead) =>
+        LeadStatusLabels[row.status as LeadStatus] || 'N/A',
     },
     {
       field: 'neverCalled',
