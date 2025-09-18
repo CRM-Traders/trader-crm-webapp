@@ -291,8 +291,8 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
 
   // Handle wallet creation success
   onWalletCreated(): void {
-    // You can add any additional logic here if needed
-    // For example, refresh wallet data or show success message
+    this.closeAddWalletModal();
+    this.loadAccounts();
   }
 
   // Context Menu Methods

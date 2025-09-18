@@ -136,9 +136,9 @@ export class ClientTradingActivityComponent
   }
 
   ngOnInit(): void {
-    if (this.clientId) {
-      this.loadClientOrders();
-    }
+    // if (this.clientId) {
+    //   this.loadClientOrders();
+    // }
   }
 
   ngOnDestroy(): void {
