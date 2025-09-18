@@ -293,113 +293,16 @@
             <ng-template #salesStatusCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">
                 <div class="relative" data-dropdown="salesStatus">
-                  <button
-                    type="button"
+                  <app-custom-select
                     [disabled]="updatingSalesStatus === (value.id || row.id) || !hasPermission(53)"
-                    (click)="
-                      toggleSalesStatusDropdown(value.id || row.id, $event)
-                    "
-                    (keydown)="
-                      onSalesStatusButtonKeydown(value.id || row.id, $event)
-                    "
-                    class="text-sm w-42 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[120px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span class="truncate">{{
-                      getSelectedSalesStatusName(
-                        value.id || row.id,
-                        value || row
-                      )
-                    }}</span>
-                    <svg
-                      *ngIf="hasPermission(53)"
-                      class="w-4 h-4 ml-2 transition-transform"
-                      [class.rotate-180]="
-                        salesStatusDropdownStates.get(value.id || row.id)
-                      "
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </button>
-
-                  <!-- Dropdown Panel -->
-                  <div
-                    *ngIf="salesStatusDropdownStates.get(value.id || row.id) && hasPermission(53)"
-                    class="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[200px]"
-                    [style.top.px]="salesStatusDropdownPositions.get(value.id || row.id)?.top || 0"
-                    [style.left.px]="salesStatusDropdownPositions.get(value.id || row.id)?.left || 0"
-                  >
-                    <!-- Search Input -->
-                    <div class="p-3 border-b border-gray-200">
-                      <input
-                        type="text"
-                        placeholder="Search status..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        (input)="
-                          onSalesStatusSearch(value.id || row.id, $event)
-                        "
-                        [value]="
-                          salesStatusSearchTerms.get(value.id || row.id) || ''
-                        "
-                      />
-                    </div>
-
-                    <!-- Status List -->
-                    <div class="max-h-48 overflow-y-auto">
-                      <div
-                        *ngFor="
-                          let status of filteredSalesStatuses.get(
-                            value.id || row.id
-                          ) || [];
-                          let i = index
-                        "
-                        class="px-3 py-2 hover:bg-gray-100/10 cursor-pointer text-sm text-gray-900"
-                        [class.bg-[#ededed09]]="
-                          isSalesStatusFocused(value.id || row.id, i)
-                        "
-                        [tabindex]="0"
-                        (click)="
-                          selectSalesStatus(
-                            value.id || row.id,
-                            status,
-                            value || row
-                          )
-                        "
-                        (keydown)="
-                          onSalesStatusKeydown(
-                            value.id || row.id,
-                            $event,
-                            status,
-                            i,
-                            value || row
-                          )
-                        "
-                        (mouseenter)="
-                          setFocusedSalesStatusIndex(value.id || row.id, i)
-                        "
-                      >
-                        {{ status.label }}
-                      </div>
-
-                      <!-- No results -->
-                      <div
-                        *ngIf="
-                          (filteredSalesStatuses.get(value.id || row.id) || [])
-                            .length === 0
-                        "
-                        class="px-3 py-2 text-center text-sm text-gray-500"
-                      >
-                        No status found
-                      </div>
-                    </div>
-                  </div>
+                    [options]="salesStatusOptions"
+                    [selectedValue]="(value?.saleStatusEnum ?? value?.salesStatus ?? row?.saleStatusEnum ?? row?.salesStatus) ?? null"
+                    [placeholder]="'Select status...'"
+                    [dropdownWidth]="180"
+                    [scrollContainers]="selectScrollContainers"
+                    (valueChange)="onSalesStatusSelect(value.id || row.id, $event, value || row)"
+                    class="min-w-[140px] text-xs"
+                  ></app-custom-select>
                 </div>
                 <div class="flex flex-col">
                   <button
@@ -481,108 +384,18 @@
             <ng-template #assignOperatorCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">
                 <div class="relative" data-dropdown="operator">
-                  <button
-                    type="button"
+                  <app-custom-select
                     [disabled]="
                       updatingOperatorAssignment === (value.id || row.id) || !hasPermission(2)
                     "
-                    (click)="toggleOperatorDropdown(value.id || row.id, $event)"
-                    (keydown)="
-                      onOperatorButtonKeydown(value.id || row.id, $event)
-                    "
-                    class="text-sm w-42 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 px-3 py-1 text-left flex justify-between items-center min-w-[140px] bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span class="truncate">{{
-                      getSelectedOperatorName(value.id || row.id, value || row)
-                    }}</span>
-                    <svg
-                      *ngIf="hasPermission(2)"
-                      class="w-4 h-4 ml-2 transition-transform"
-                      [class.rotate-180]="
-                        operatorDropdownStates.get(value.id || row.id)
-                      "
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </button>
-
-                  <!-- Dropdown Panel -->
-                  <div
-                    *ngIf="operatorDropdownStates.get(value.id || row.id) && hasPermission(2)"
-                    class="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden min-w-[250px]"
-                    [style.top.px]="operatorDropdownPositions.get(value.id || row.id)?.top || 0"
-                    [style.left.px]="operatorDropdownPositions.get(value.id || row.id)?.left || 0"
-                  >
-                    <!-- Search Input -->
-                    <div class="p-3 border-b border-gray-200">
-                      <input
-                        type="text"
-                        placeholder="Search operators..."
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        (input)="onOperatorSearch(value.id || row.id, $event)"
-                        [value]="
-                          operatorSearchTerms.get(value.id || row.id) || ''
-                        "
-                      />
-                    </div>
-
-                    <!-- Operators List -->
-                    <div class="max-h-48 overflow-y-auto">
-                      <div
-                        *ngFor="
-                          let operator of filteredOperators.get(
-                            value.id || row.id
-                          ) || [];
-                          let i = index
-                        "
-                        class="px-3 py-2 hover:bg-gray-100/10 cursor-pointer text-sm text-gray-900"
-                        [class.bg-[#ededed09]]="
-                          isOperatorFocused(value.id || row.id, i)
-                        "
-                        [tabindex]="0"
-                        (click)="
-                          selectOperator(
-                            value.id || row.id,
-                            operator,
-                            value || row
-                          )
-                        "
-                        (keydown)="
-                          onOperatorKeydown(
-                            value.id || row.id,
-                            $event,
-                            operator,
-                            i,
-                            value || row
-                          )
-                        "
-                        (mouseenter)="
-                          setFocusedOperatorIndex(value.id || row.id, i)
-                        "
-                      >
-                        {{ operator.value }}
-                      </div>
-
-                      <!-- No results -->
-                      <div
-                        *ngIf="
-                          (filteredOperators.get(value.id || row.id) || [])
-                            .length === 0
-                        "
-                        class="px-3 py-2 text-center text-sm text-gray-500"
-                      >
-                        No operators found
-                      </div>
-                    </div>
-                  </div>
+                    [options]="getOperatorOptions()"
+                    [selectedValue]="value?.clientOperator?.operatorId || row?.clientOperator?.operatorId || null"
+                    [placeholder]="'Select operator...'"
+                    [dropdownWidth]="200"
+                    [scrollContainers]="selectScrollContainers"
+                    (valueChange)="onOperatorSelect(value || row, $event)"
+                    class="min-w-[160px] text-xs"
+                  ></app-custom-select>
                 </div>
                 <div class="flex flex-col">
                   <button
