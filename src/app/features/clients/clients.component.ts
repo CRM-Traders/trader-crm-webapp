@@ -42,6 +42,7 @@ import {
   ClientCommentCreateRequest,
 } from './models/client-comments.model';
 import { GridComponent } from '../../shared/components/grid/grid.component';
+import { CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
 import {
@@ -93,6 +94,7 @@ interface DropdownState {
     ReactiveFormsModule,
     GridComponent,
     HasPermissionDirective,
+    CustomSelectComponent,
   ],
   templateUrl: './clients.component.html',
   styleUrls: ['./clients.component.scss'],
@@ -176,6 +178,9 @@ export class ClientsComponent implements OnInit {
   KycStatusLabels = KycStatusLabels;
 
   operatorsLoaded = false;
+
+  // Scroll containers to watch for dropdown repositioning
+  selectScrollContainers: string[] = ['.overflow-x-auto'];
 
   gridColumns: GridColumn[] = [
     {
@@ -736,6 +741,27 @@ export class ClientsComponent implements OnInit {
       })
     );
     document.addEventListener('click', this.onDocumentClick.bind(this));
+  }
+
+  // Options for CustomSelect (Operators)
+  getOperatorOptions(): { value: string; label: string }[] {
+    return (this.operators || []).map((op) => ({ value: op.id, label: op.value }));
+  }
+
+  // Handler for CustomSelect change (Operator)
+  onOperatorSelect(clientData: any, operatorId: string): void {
+    const clientId = clientData?.id || clientData?.row?.id;
+    if (!clientId) return;
+    const selected = (this.operators || []).find((o) => o.id === operatorId);
+    if (!selected) return;
+    this.selectOperator(clientId, selected, clientData);
+  }
+
+  // Handler for CustomSelect change (Sales Status)
+  onSalesStatusSelect(clientId: string, value: number, clientData: any): void {
+    const status = this.salesStatusOptions.find((s) => s.value === value);
+    if (!status) return;
+    this.selectSalesStatus(clientId, status, clientData);
   }
 
   private reinitializeComponent(): void {
