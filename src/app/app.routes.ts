@@ -215,6 +215,14 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard(133)],
       },
       {
+        path: 'departments',
+        loadComponent: () =>
+          import('./features/department-role/department-role.component').then(
+            (m) => m.DepartmentRoleComponent
+          ),
+        canActivate: [authGuard, roleGuard(133)],
+      },
+      {
         path: 'permission-templates',
         loadComponent: () =>
           import(

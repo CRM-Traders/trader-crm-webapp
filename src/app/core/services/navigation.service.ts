@@ -111,6 +111,12 @@ export class NavigationService {
       route: '/sources',
       permission: 133,
     },
+    {
+      label: 'Departments',
+      icon: 'role',
+      route: '/departments',
+      permission: 133,
+    },
   ];
 
   constructor(private router: Router) {
