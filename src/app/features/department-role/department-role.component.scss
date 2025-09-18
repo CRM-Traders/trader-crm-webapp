@@ -1,0 +1,362 @@
+:host {
+  display: block;
+}
+
+/* Container styling */
+.general-container {
+  min-height: calc(100vh - 200px);
+}
+
+/* Department icon hover effects */
+.w-10.h-10.rounded-lg {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.group:hover .w-10.h-10.rounded-lg {
+  transform: scale(1.05);
+}
+
+/* Toggle switch animations */
+button[type="button"] {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button[type="button"]:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+button[type="button"]:active {
+  transform: translateY(0);
+}
+
+/* Smooth transitions for expand/collapse */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Role card hover effects */
+.space-y-3 > div {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.space-y-3 > div:hover {
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dark .space-y-3 > div:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Department header hover state */
+.group:hover {
+  position: relative;
+}
+
+.group::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.group:hover::before {
+  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+}
+
+/* Status badge animations */
+.px-2.py-1.text-xs.rounded-full {
+  transition: all 0.2s ease;
+}
+
+/* Sync button animation */
+.flex.items-center.gap-2 svg {
+  transition: transform 0.3s ease;
+}
+
+.flex.items-center.gap-2:hover svg {
+  transform: rotate(180deg);
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.dark *:focus-visible {
+  outline-color: #60a5fa;
+}
+
+/* Disabled state styling */
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.opacity-50 {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Role icon pulsing effect when active */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.bg-blue-100.text-blue-600 {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom scrollbar styling */
+.overflow-hidden {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(203, 213, 225, 0.5) transparent;
+}
+
+.overflow-hidden::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.overflow-hidden::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.overflow-hidden::-webkit-scrollbar-thumb {
+  background-color: rgba(203, 213, 225, 0.5);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.overflow-hidden::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 0.8);
+}
+
+/* Dark mode scrollbar */
+.dark .overflow-hidden {
+  scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
+}
+
+.dark .overflow-hidden::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.5);
+}
+
+.dark .overflow-hidden::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 116, 139, 0.8);
+}
+
+/* Expand/collapse arrow animation */
+svg.transition-transform {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Empty state styling */
+.flex.flex-col.items-center svg {
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
+
+.flex.flex-col.items-center:hover svg {
+  opacity: 0.7;
+}
+
+/* Toggle All button specific styles */
+button.text-red-600.bg-red-50 {
+  &:hover {
+    background-color: rgb(254 226 226); /* red-100 */
+  }
+}
+
+.dark button.text-red-600.dark\:bg-red-900 {
+  background-color: rgba(127, 29, 29, 0.2);
+  color: rgb(239 68 68); /* red-500 in dark mode */
+
+  &:hover {
+    background-color: rgba(127, 29, 29, 0.3);
+  }
+}
+
+button.text-green-600.bg-green-50 {
+  &:hover {
+    background-color: rgb(220 252 231); /* green-100 */
+  }
+}
+
+.dark button.text-green-600.dark\:bg-green-900 {
+  background-color: rgba(20, 83, 45, 0.2);
+  color: rgb(34 197 94); /* green-500 in dark mode */
+
+  &:hover {
+    background-color: rgba(20, 83, 45, 0.3);
+  }
+}
+
+/* Button group styling */
+.flex.items-center.gap-3 button {
+  position: relative;
+  overflow: hidden;
+}
+
+.flex.items-center.gap-3 button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.flex.items-center.gap-3 button:active::after {
+  width: 100%;
+  height: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .py-4 {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .space-y-3 {
+    gap: 0.5rem;
+  }
+
+  .text-2xl {
+    font-size: 1.5rem;
+  }
+
+  /* Stack department toggle on mobile */
+  @media (max-width: 640px) {
+    .group.flex {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .group.flex > div:last-child {
+      margin-top: 1rem;
+      margin-left: 0;
+      justify-content: flex-end;
+    }
+  }
+}
+
+/* Print styles */
+@media print {
+  .bg-gradient-to-br {
+    background: #6b7280 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  button {
+    display: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .border {
+    border-width: 2px;
+  }
+
+  .ring-1 {
+    box-shadow: 0 0 0 2px currentColor;
+  }
+
+  button[type="button"] {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Smooth color transitions for theme switching */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevent transition on initial load */
+.no-transition * {
+  transition: none !important;
+}
+
+/* Department active gradient animation */
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-gradient-to-br {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* Role list enter animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.space-y-3 > div {
+  animation: slideIn 0.3s ease-out;
+}
+
+.space-y-3 > div:nth-child(n) {
+  animation-delay: calc(0.05s * var(--index, 0));
+}
