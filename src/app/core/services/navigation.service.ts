@@ -34,6 +34,12 @@ export class NavigationService {
       permission: 127,
     },
     {
+      label: 'Payments',
+      icon: 'payment',
+      route: '/payments',
+      permission: 127,
+    },
+    {
       label: 'Offices',
       icon: 'offices',
       route: '/offices',

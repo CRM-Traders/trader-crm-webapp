@@ -135,6 +135,14 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard(100)],
       },
       {
+        path: 'payments',
+        loadComponent: () =>
+          import('./features/payments/payments.component').then(
+            (m) => m.PaymentsComponent
+          ),
+        canActivate: [authGuard, roleGuard(132)],
+      },
+      {
         path: 'documents',
         loadComponent: () =>
           import('./features/documents/documents.component').then(

@@ -1,0 +1,483 @@
+// src/app/features/payments/payments.component.scss
+
+// Animation for payment cards
+.payment-card {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Statistics cards enhancement
+.stats-card {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .stats-icon {
+    transition: all 0.3s ease;
+  }
+
+  &:hover .stats-icon {
+    transform: scale(1.1);
+  }
+}
+
+// Payment status badges
+.payment-status {
+  &.pending {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+  }
+
+  &.completed {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #064e3b;
+  }
+
+  &.failed {
+    background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%);
+    color: #7f1d1d;
+  }
+
+  &.cancelled {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #374151;
+  }
+}
+
+// Payment type badges
+.payment-type {
+  &.deposit {
+    background-color: #dbeafe;
+    color: #1e3a8a;
+
+    &::before {
+      content: "↓";
+      margin-right: 4px;
+    }
+  }
+
+  &.withdraw {
+    background-color: #fee2e2;
+    color: #991b1b;
+
+    &::before {
+      content: "↑";
+      margin-right: 4px;
+    }
+  }
+
+  &.bonus {
+    background-color: #e9d5ff;
+    color: #581c87;
+
+    &::before {
+      content: "★";
+      margin-right: 4px;
+    }
+  }
+
+  &.refund {
+    background-color: #fed7aa;
+    color: #7c2d12;
+
+    &::before {
+      content: "↺";
+      margin-right: 4px;
+    }
+  }
+}
+
+// Grid customizations for payments
+.payments-grid {
+  .grid-header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .grid-row {
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f8fafc;
+      transform: scale(1.002);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    &.pending-row {
+      background-color: #fffbeb;
+
+      &:hover {
+        background-color: #fef3c7;
+      }
+    }
+  }
+
+  .transaction-id {
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+
+  .client-cell {
+    cursor: pointer;
+
+    &:hover {
+      .client-name {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Amount display styling
+.amount-display {
+  font-weight: 600;
+  font-family: "Roboto Mono", monospace;
+
+  &.positive {
+    color: #10b981;
+  }
+
+  &.negative {
+    color: #ef4444;
+  }
+
+  &.neutral {
+    color: #8b5cf6;
+  }
+}
+
+// Country flag styling
+.country-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  .flag-emoji {
+    font-size: 1.25rem;
+  }
+
+  .country-code {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+}
+
+// Date range selector styling
+.date-range-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+
+  input[type="date"] {
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+
+    &:focus {
+      outline: none;
+      border-color: #3b82f6;
+      ring: 2px;
+      ring-color: rgba(59, 130, 246, 0.1);
+    }
+  }
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+  }
+}
+
+// Action buttons in grid
+.payment-actions {
+  display: flex;
+  gap: 0.25rem;
+
+  .action-btn {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+
+    &.approve {
+      background-color: #10b981;
+      color: white;
+
+      &:hover {
+        background-color: #059669;
+      }
+    }
+
+    &.reject {
+      background-color: #ef4444;
+      color: white;
+
+      &:hover {
+        background-color: #dc2626;
+      }
+    }
+
+    &.view {
+      background-color: #3b82f6;
+      color: white;
+
+      &:hover {
+        background-color: #2563eb;
+      }
+    }
+  }
+}
+
+// Loading state for grid
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Payment method icons
+.payment-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &.electronic::before {
+    content: "💳";
+  }
+
+  &.bank-transfer::before {
+    content: "🏦";
+  }
+
+  &.crypto::before {
+    content: "₿";
+  }
+
+  &.bonus::before {
+    content: "🎁";
+  }
+
+  &.card::before {
+    content: "💳";
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 1280px) {
+  .stats-card {
+    padding: 1rem;
+
+    .stats-value {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .date-range-selector {
+    flex-direction: column;
+    width: 100%;
+
+    input[type="date"] {
+      width: 100%;
+    }
+  }
+
+  .stats-card {
+    padding: 0.75rem;
+
+    .stats-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    .stats-value {
+      font-size: 1.25rem;
+    }
+  }
+
+  .payments-grid {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .payment-actions {
+    flex-direction: column;
+
+    .action-btn {
+      width: 100%;
+    }
+  }
+}
+
+// Dark mode enhancements
+.dark {
+  .payment-card {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-color: #374151;
+  }
+
+  .stats-card {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-color: #374151;
+
+    &:hover {
+      border-color: #4b5563;
+    }
+  }
+
+  .payments-grid {
+    .grid-header {
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      border-color: #374151;
+    }
+
+    .grid-row {
+      &:hover {
+        background-color: #1f2937;
+      }
+
+      &.pending-row {
+        background-color: #422006;
+
+        &:hover {
+          background-color: #451a03;
+        }
+      }
+    }
+  }
+
+  .payment-status {
+    &.pending {
+      background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+      color: #fde68a;
+    }
+
+    &.completed {
+      background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+      color: #bbf7d0;
+    }
+
+    &.failed {
+      background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+      color: #fecaca;
+    }
+
+    &.cancelled {
+      background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+      color: #d1d5db;
+    }
+  }
+
+  .payment-type {
+    &.deposit {
+      background-color: #1e3a8a;
+      color: #bfdbfe;
+    }
+
+    &.withdraw {
+      background-color: #991b1b;
+      color: #fecaca;
+    }
+
+    &.bonus {
+      background-color: #581c87;
+      color: #e9d5ff;
+    }
+
+    &.refund {
+      background-color: #7c2d12;
+      color: #fed7aa;
+    }
+  }
+
+  .date-range-selector {
+    background-color: #1f2937;
+    border-color: #374151;
+
+    input[type="date"] {
+      background-color: #111827;
+      border-color: #374151;
+      color: #f3f4f6;
+
+      &:focus {
+        border-color: #3b82f6;
+      }
+    }
+
+    label {
+      color: #9ca3af;
+    }
+  }
+
+  .amount-display {
+    &.positive {
+      color: #34d399;
+    }
+
+    &.negative {
+      color: #f87171;
+    }
+
+    &.neutral {
+      color: #a78bfa;
+    }
+  }
+}
+
+// Print styles
+@media print {
+  .date-range-selector,
+  .payment-actions,
+  .action-btn {
+    display: none !important;
+  }
+
+  .payments-grid {
+    font-size: 10pt;
+
+    .grid-row {
+      page-break-inside: avoid;
+    }
+  }
+
+  .stats-card {
+    page-break-inside: avoid;
+  }
+}

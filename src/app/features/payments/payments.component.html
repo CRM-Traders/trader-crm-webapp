@@ -1,0 +1,351 @@
+<!-- src/app/features/payments/payments.component.html -->
+
+<div class="general-container bg-white">
+  <div class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-6">
+      <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Payments</h1>
+          <p class="mt-2 text-sm text-gray-700">
+            Monitor and manage all payment transactions. Double-click any
+            transaction for detailed view.
+          </p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex gap-3">
+          <!-- Date Range Selector -->
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">From:</label>
+            <input
+              type="date"
+              [(ngModel)]="dateRange.start"
+              (change)="onDateRangeChange()"
+              class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <label class="text-sm text-gray-600">To:</label>
+            <input
+              type="date"
+              [(ngModel)]="dateRange.end"
+              (change)="onDateRangeChange()"
+              class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8"
+    >
+      <!-- Total Transactions Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 uppercase">
+              Total Transactions
+            </p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">
+              {{ totalTransactions | number }}
+            </p>
+          </div>
+          <div class="ml-4 p-2 bg-blue-50 rounded-lg">
+            <svg
+              class="w-5 h-5 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Volume Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 uppercase">
+              Total Volume
+            </p>
+            <p class="mt-1 text-2xl font-semibold text-gray-900">
+              €{{ totalVolume | number : "1.2-2" }}
+            </p>
+          </div>
+          <div class="ml-4 p-2 bg-green-50 rounded-lg">
+            <svg
+              class="w-5 h-5 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 uppercase">Pending</p>
+            <p class="mt-1 text-2xl font-semibold text-yellow-600">
+              {{ pendingCount }}
+            </p>
+          </div>
+          <div class="ml-4 p-2 bg-yellow-50 rounded-lg">
+            <svg
+              class="w-5 h-5 text-yellow-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 uppercase">Completed</p>
+            <p class="mt-1 text-2xl font-semibold text-emerald-600">
+              {{ completedCount }}
+            </p>
+          </div>
+          <div class="ml-4 p-2 bg-emerald-50 rounded-lg">
+            <svg
+              class="w-5 h-5 text-emerald-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deposits Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 uppercase">Deposits</p>
+            <p class="mt-1 text-2xl font-semibold text-blue-600">
+              {{ depositsCount }}
+            </p>
+          </div>
+          <div class="ml-4 p-2 bg-blue-50 rounded-lg">
+            <svg
+              class="w-5 h-5 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 11l5-5m0 0l5 5m-5-5v12"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Withdrawals Card -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6">
+        <div class="flex items-center">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 uppercase">
+              Withdrawals
+            </p>
+            <p class="mt-1 text-2xl font-semibold text-red-600">
+              {{ withdrawalsCount }}
+            </p>
+          </div>
+          <div class="ml-4 p-2 bg-red-50 rounded-lg">
+            <svg
+              class="w-5 h-5 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 13l-5 5m0 0l-5-5m5 5V6"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="relative">
+      <div class="bg-white dark:bg-gray-800 rounded-xl">
+        <div class="overflow-x-auto">
+          <app-grid
+            [gridId]="gridId"
+            [endpoint]="'api/payments/grid'"
+            [columns]="gridColumns"
+            [actions]="gridActions"
+            [sortable]="true"
+            [enableContextMenu]="true"
+            [exportable]="true"
+            [selectable]="true"
+            [showColumnSelector]="true"
+            [showFilters]="true"
+            emptyMessage="No payments found"
+            (rowClick)="onRowClick($event)"
+            (rowDoubleClick)="onRowDoubleClick($event)"
+            (export)="onExport($event)"
+          >
+            <!-- Status Template -->
+            <ng-template #statusCell let-value="value">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                [ngClass]="{
+                  'bg-yellow-100 text-yellow-800': value === 'PENDING',
+                  'bg-green-100 text-green-800': value === 'COMPLETED',
+                  'bg-red-100 text-red-800': value === 'FAILED',
+                  'bg-gray-100 text-gray-800': value === 'CANCELLED'
+                }"
+              >
+                <span class="mr-1" [ngSwitch]="value">
+                  <svg
+                    *ngSwitchCase="'PENDING'"
+                    class="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <svg
+                    *ngSwitchCase="'COMPLETED'"
+                    class="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <svg
+                    *ngSwitchCase="'FAILED'"
+                    class="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <svg
+                    *ngSwitchCase="'CANCELLED'"
+                    class="w-3 h-3"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </span>
+                {{ value }}
+              </span>
+            </ng-template>
+
+            <!-- Payment Type Template -->
+            <ng-template #paymentTypeCell let-value="value">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium"
+                [ngClass]="{
+                  'bg-blue-100 text-blue-800': value === 'DEPOSIT',
+                  'bg-red-100 text-red-800': value === 'WITHDRAW',
+                  'bg-purple-100 text-purple-800': value === 'BONUS',
+                  'bg-orange-100 text-orange-800': value === 'REFUND'
+                }"
+              >
+                {{ value }}
+              </span>
+            </ng-template>
+
+            <!-- Country Template -->
+            <ng-template #countryCell let-value="value">
+              <span class="inline-flex items-center gap-1">
+                <span class="text-lg">{{ getCountryFlag(value) }}</span>
+                <span class="text-xs text-gray-600">{{ value }}</span>
+              </span>
+            </ng-template>
+
+            <!-- Amount Template -->
+            <ng-template #amountCell let-row="row">
+              <span
+                class="font-semibold"
+                [ngClass]="{
+                  'text-green-600': row.paymentType === 'DEPOSIT',
+                  'text-red-600': row.paymentType === 'WITHDRAW',
+                  'text-purple-600': row.paymentType === 'BONUS',
+                  'text-orange-600': row.paymentType === 'REFUND'
+                }"
+              >
+                {{ row.currency || "EUR" }} {{ row.amount | number : "1.2-2" }}
+              </span>
+            </ng-template>
+
+            <!-- Client Template -->
+            <ng-template #clientCell let-value="value" let-row="row">
+              <div class="flex flex-col">
+                <span
+                  class="font-medium text-gray-900 hover:text-blue-600 cursor-pointer"
+                >
+                  {{ value }}
+                </span>
+                <span class="text-xs text-gray-500" *ngIf="row.affiliateCode">
+                  {{ row.affiliateCode }}
+                </span>
+              </div>
+            </ng-template>
+          </app-grid>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
