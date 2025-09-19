@@ -1,10 +1,14 @@
-      :host {
-        display: block;
-        width: 100%;
-      }
-      .modal-backdrop {
-        @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center;
-      }
-      .modal-content {
-        @apply bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4;
-      }
+@use "tailwindcss" as *;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+.modal-backdrop {
+  @apply fixed inset-0 bg-black/50 z-50 flex items-center justify-center;
+}
+
+.modal-content {
+  @apply bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4;
+}

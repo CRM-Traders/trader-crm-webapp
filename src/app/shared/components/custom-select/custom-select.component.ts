@@ -37,6 +37,8 @@ export class CustomSelectComponent<T = any> implements OnInit, OnDestroy {
   @Input() maxHeight = 340;
   // CSS selectors for containers that should trigger reposition on scroll (e.g., table wrappers)
   @Input() scrollContainers: string[] = [];
+  // If true, dropdown will close when any scroll event occurs on window or specified containers
+  @Input() closeOnScroll = true;
 
   @Output() valueChange = new EventEmitter<T>();
 
@@ -52,8 +54,9 @@ export class CustomSelectComponent<T = any> implements OnInit, OnDestroy {
   private dropdownHost: HTMLElement | null = null;
   private embeddedViewRef: any | null = null;
 
-  private boundReposition = this.reposition.bind(this);
+  private boundHandleScroll = this.handleScroll.bind(this);
   private scrollElements: HTMLElement[] = [];
+  private isDocumentScrollListening = false;
 
   constructor(private elRef: ElementRef<HTMLElement>, private vcr: ViewContainerRef) {}
 
@@ -124,7 +127,7 @@ export class CustomSelectComponent<T = any> implements OnInit, OnDestroy {
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    if (this.isOpen) this.reposition();
+    if (this.isOpen) this.handleScroll();
   }
 
   private openDropdown(): void {
@@ -150,6 +153,14 @@ export class CustomSelectComponent<T = any> implements OnInit, OnDestroy {
     this.filteredOptions = [...this.options];
     this.reposition();
     this.attachScrollListeners();
+    // Capture any scroll within the document (including nested scrollable containers)
+    if (!this.isDocumentScrollListening) {
+      document.addEventListener('scroll', this.boundHandleScroll, {
+        passive: true,
+        capture: true,
+      });
+      this.isDocumentScrollListening = true;
+    }
   }
 
   private closeDropdown(): void {
@@ -210,7 +221,7 @@ export class CustomSelectComponent<T = any> implements OnInit, OnDestroy {
     this.scrollContainers.forEach((selector) => {
       const el = document.querySelector(selector) as HTMLElement | null;
       if (el) {
-        el.addEventListener('scroll', this.boundReposition, { passive: true });
+        el.addEventListener('scroll', this.boundHandleScroll, { passive: true });
         this.scrollElements.push(el);
       }
     });
@@ -218,18 +229,31 @@ export class CustomSelectComponent<T = any> implements OnInit, OnDestroy {
 
   private detachScrollElements(): void {
     this.scrollElements.forEach((el) =>
-      el.removeEventListener('scroll', this.boundReposition)
+      el.removeEventListener('scroll', this.boundHandleScroll)
     );
     this.scrollElements = [];
   }
 
   private detachListeners(): void {
     this.detachScrollElements();
+    if (this.isDocumentScrollListening) {
+      document.removeEventListener('scroll', this.boundHandleScroll, true);
+      this.isDocumentScrollListening = false;
+    }
   }
 
   private equals(a: any, b: any): boolean {
     // Loose equality for primitive ids; customize if needed
     return a === b;
+  }
+
+  private handleScroll(): void {
+    if (!this.isOpen) return;
+    if (this.closeOnScroll) {
+      this.closeDropdown();
+    } else {
+      this.reposition();
+    }
   }
 }
 

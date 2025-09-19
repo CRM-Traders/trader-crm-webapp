@@ -10,36 +10,7 @@ import { HierarchyService } from '../../services/hierarchy.service';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './hierarchy-node.component.html',
-  styles: [
-    `
-      .hierarchy-node {
-        @apply transition-all duration-200;
-      }
-
-      .hierarchy-node.highlight {
-        @apply bg-yellow-100 dark:bg-yellow-900/30 border-l-4 border-yellow-400;
-        animation: highlight-pulse 2s ease-in-out;
-      }
-
-      @keyframes highlight-pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.7;
-        }
-      }
-
-      .children-container {
-        @apply border-l border-gray-200 dark:border-gray-700 ml-3;
-      }
-
-      .node-selected {
-        @apply bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500;
-      }
-    `,
-  ],
+  styleUrls: ['./hierarchy-node.component.scss'],
 })
 export class HierarchyNodeComponent {
   @Input() node!: HierarchyNode;
