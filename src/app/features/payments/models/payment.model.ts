@@ -1,21 +1,15 @@
 export interface Payment {
   transactionId: string;
+  affiliate: string;
   client: string;
-  clientId: string;
-  affiliateId?: string;
-  affiliateCode?: string;
   originalAgent?: string;
-  originalAgentId?: string;
   country: string;
-  paymentType: 'DEPOSIT' | 'WITHDRAW' | 'BONUS' | 'REFUND';
+  paymentType: string;
   amount: number;
   currency: string;
   tradingAccount: string;
   paymentAggregator?: string;
   paymentMethod: string;
   dateTime: Date;
-  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
-  createdBy?: string;
-  processedBy?: string;
-  notes?: string;
+  status: string;
 }

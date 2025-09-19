@@ -75,7 +75,7 @@
               Total Volume
             </p>
             <p class="mt-1 text-2xl font-semibold text-gray-900">
-              €{{ totalVolume | number : "1.2-2" }}
+              $ {{ totalVolume | number : "1.2-2" }}
             </p>
           </div>
           <div class="ml-4 p-2 bg-green-50 rounded-lg">
@@ -213,9 +213,8 @@
         <div class="overflow-x-auto">
           <app-grid
             [gridId]="gridId"
-            [endpoint]="'api/payments/grid'"
+            [endpoint]="'identity/api/payments/grid'"
             [columns]="gridColumns"
-            [actions]="gridActions"
             [sortable]="true"
             [enableContextMenu]="true"
             [exportable]="true"
@@ -225,7 +224,6 @@
             emptyMessage="No payments found"
             (rowClick)="onRowClick($event)"
             (rowDoubleClick)="onRowDoubleClick($event)"
-            (export)="onExport($event)"
           >
             <!-- Status Template -->
             <ng-template #statusCell let-value="value">
@@ -299,8 +297,8 @@
                 [ngClass]="{
                   'bg-blue-100 text-blue-800': value === 'DEPOSIT',
                   'bg-red-100 text-red-800': value === 'WITHDRAW',
-                  'bg-purple-100 text-purple-800': value === 'BONUS',
-                  'bg-orange-100 text-orange-800': value === 'REFUND'
+                  'bg-purple-100 text-purple-800': value === 'BUY',
+                  'bg-orange-100 text-orange-800': value === 'SELL'
                 }"
               >
                 {{ value }}
@@ -316,17 +314,9 @@
             </ng-template>
 
             <!-- Amount Template -->
-            <ng-template #amountCell let-row="row">
-              <span
-                class="font-semibold"
-                [ngClass]="{
-                  'text-green-600': row.paymentType === 'DEPOSIT',
-                  'text-red-600': row.paymentType === 'WITHDRAW',
-                  'text-purple-600': row.paymentType === 'BONUS',
-                  'text-orange-600': row.paymentType === 'REFUND'
-                }"
-              >
-                {{ row.currency || "EUR" }} {{ row.amount | number : "1.2-2" }}
+            <ng-template #amountCell let-value="value">
+              <span class="font-semibold text-gray-900">
+                {{ value | number : "1.2-2" }}
               </span>
             </ng-template>
 
@@ -337,9 +327,6 @@
                   class="font-medium text-gray-900 hover:text-blue-600 cursor-pointer"
                 >
                   {{ value }}
-                </span>
-                <span class="text-xs text-gray-500" *ngIf="row.affiliateCode">
-                  {{ row.affiliateCode }}
                 </span>
               </div>
             </ng-template>
