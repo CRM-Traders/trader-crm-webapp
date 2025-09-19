@@ -16,8 +16,10 @@ import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
-import { Payment } from './models/payment.model';
+import { Payment, TransactionType } from './models/payment.model';
 import { PaymentsService } from './services/payments.service';
+import { CountryService } from '../../core/services/country.service';
+import { ClientsService } from '../clients/services/clients.service';
 
 @Component({
   selector: 'app-payments',
@@ -30,6 +32,8 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   private paymentsService = inject(PaymentsService);
   private alertService = inject(AlertService);
   private router = inject(Router);
+  private countryService = inject(CountryService);
+  private clientsService = inject(ClientsService);
 
   private destroy$ = new Subject<void>();
   gridId = 'payments-grid';
@@ -72,6 +76,8 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       header: 'Client',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
       cellTemplate: null,
     },
     {
@@ -79,6 +85,8 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       header: 'Affiliate',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
       selector: (row: Payment) => row.affiliate || 'N/A',
       cellClass: 'text-xs text-gray-500',
     },
@@ -95,6 +103,7 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       filterType: 'select',
+      filterOptions: [],
       cellTemplate: null,
     },
     {
@@ -105,9 +114,20 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       filterType: 'select',
       filterOptions: [
         { value: 'DEPOSIT', label: 'Deposit' },
-        { value: 'WITHDRAW', label: 'Withdrawal' },
+        { value: 'WITHDRAWAL', label: 'Withdrawal' },
         { value: 'BUY', label: 'Buy' },
         { value: 'SELL', label: 'Sell' },
+        { value: 'FEE', label: 'Fee' },
+        { value: 'PNL ADJUSTMENT', label: 'PnL Adjustment' },
+        { value: 'TRANSFER', label: 'Transfer' },
+        { value: 'CREDIT IN', label: 'Credit In' },
+        { value: 'CREDIT OUT', label: 'Credit Out' },
+        { value: 'MARGIN LOCK', label: 'Margin Lock' },
+        { value: 'LIQUIDATION', label: 'Liquidation' },
+        { value: 'ORDER PLACED', label: 'Order Placed' },
+        { value: 'POSITION CLOSED', label: 'Position Closed' },
+        { value: 'POSITION CLOSED (LOSS)', label: 'Position Closed (Loss)' },
+        { value: 'SWAP', label: 'Swap' },
       ],
     },
     {
@@ -189,11 +209,55 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeGridTemplates();
     this.loadPaymentStatistics();
+    this.initializeFilterOptions();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private updateColumnFilterOptions(field: string, options: any[]): void {
+    const column = this.gridColumns.find((col) => col.field === field);
+    if (column) {
+      column.filterOptions = options;
+    }
+  }
+
+  private initializeFilterOptions(): void {
+    // Countries
+    this.countryService
+      .getCountries()
+      .pipe(takeUntil(this.destroy$), catchError(() => of([])))
+      .subscribe((countries: any[]) => {
+        const options = countries.map((c: any) => ({ value: c.code, label: c.name }));
+        this.updateColumnFilterOptions('country', options);
+      });
+
+    // Affiliates (reuse ClientsService dropdown)
+    this.clientsService
+      .getAffiliatesDropdown({ pageIndex: 0, pageSize: 1000 })
+      .pipe(takeUntil(this.destroy$), catchError(() => of({ items: [] } as any)))
+      .subscribe((response: any) => {
+        const affiliateOptions = (response.items || []).map((a: any) => ({
+          value: a.userFullName,
+          label: a.userFullName,
+        }));
+        this.updateColumnFilterOptions('affiliate', affiliateOptions);
+      });
+
+    // Clients (fetch all clients via clients grid endpoint)
+    this.clientsService
+      .getClientsDropdown({ pageIndex: 0, pageSize: 1000 })
+      .pipe(takeUntil(this.destroy$), catchError(() => of({ items: [] } as any)))
+      .subscribe((response: any) => {
+        const items = response?.items || [];
+        const clientOptions = items.map((c: any) => ({
+          value: `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.email || c.username || c.id,
+          label: `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.email || c.username || c.id,
+        }));
+        this.updateColumnFilterOptions('client', clientOptions);
+      });
   }
 
   private initializeGridTemplates(): void {
@@ -348,5 +412,130 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   onDateRangeChange(): void {
     this.loadPaymentStatistics();
     this.refreshGrid();
+  }
+
+  // Transaction type helpers to render enum-based labels and colors
+  getTransactionTypeDisplay(type: number | string | null | undefined): string {
+    if (type === null || type === undefined) return 'Unknown';
+
+    // If backend returns numeric enum values
+    if (typeof type === 'number') {
+      switch (type as TransactionType) {
+        case TransactionType.Deposit:
+          return 'Deposit';
+        case TransactionType.Withdrawal:
+          return 'Withdrawal';
+        case TransactionType.Buy:
+          return 'Buy';
+        case TransactionType.Sell:
+          return 'Sell';
+        case TransactionType.Fee:
+          return 'Fee';
+        case TransactionType.PnLAdjustment:
+          return 'PnL Adjustment';
+        case TransactionType.Transfer:
+          return 'Transfer';
+        case TransactionType.CreditIn:
+          return 'Credit In';
+        case TransactionType.CreditOut:
+          return 'Credit Out';
+        case TransactionType.MarginLock:
+          return 'Margin Lock';
+        case TransactionType.Liquidation:
+          return 'Liquidation';
+        case TransactionType.OrderPlaced:
+          return 'Order Placed';
+        case TransactionType.PositionClosed:
+          return 'Position Closed';
+        case TransactionType.PositionClosedWithLoss:
+          return 'Position Closed (Loss)';
+        case TransactionType.Swap:
+          return 'Swap';
+        default:
+          return 'Unknown';
+      }
+    }
+
+    // If backend returns numeric enum as string like "12"
+    if (/^\d+$/.test(type)) {
+      const numeric = parseInt(type, 10);
+      return this.getTransactionTypeDisplay(numeric);
+    }
+
+    // If backend returns uppercase strings
+    switch (type) {
+      case 'DEPOSIT':
+        return 'Deposit';
+      case 'WITHDRAW':
+      case 'WITHDRAWAL':
+        return 'Withdrawal';
+      case 'BUY':
+        return 'Buy';
+      case 'SELL':
+        return 'Sell';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  getTransactionTypeClass(type: number | string | null | undefined): string {
+    if (type === null || type === undefined) return 'bg-gray-100 text-gray-800';
+
+    if (typeof type === 'number') {
+      switch (type as TransactionType) {
+        case TransactionType.Deposit:
+          return 'bg-green-100 text-green-800';
+        case TransactionType.Withdrawal:
+          return 'bg-blue-100 text-blue-800';
+        case TransactionType.Buy:
+          return 'bg-indigo-100 text-indigo-800';
+        case TransactionType.Sell:
+          return 'bg-pink-100 text-pink-800';
+        case TransactionType.Fee:
+          return 'bg-yellow-100 text-yellow-800';
+        case TransactionType.PnLAdjustment:
+          return 'bg-purple-100 text-purple-800';
+        case TransactionType.Transfer:
+          return 'bg-gray-100 text-gray-800';
+        case TransactionType.CreditIn:
+          return 'bg-emerald-100 text-emerald-800';
+        case TransactionType.CreditOut:
+          return 'bg-orange-100 text-orange-800';
+        case TransactionType.MarginLock:
+          return 'bg-amber-100 text-amber-800';
+        case TransactionType.Liquidation:
+          return 'bg-red-100 text-red-800';
+        case TransactionType.OrderPlaced:
+          return 'bg-sky-100 text-sky-800';
+        case TransactionType.PositionClosed:
+          return 'bg-teal-100 text-teal-800';
+        case TransactionType.PositionClosedWithLoss:
+          return 'bg-rose-100 text-rose-800';
+        case TransactionType.Swap:
+          return 'bg-cyan-100 text-cyan-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+
+    // Numeric enum as string like "12"
+    if (/^\d+$/.test(type)) {
+      const numeric = parseInt(type, 10);
+      return this.getTransactionTypeClass(numeric);
+    }
+
+    switch (type) {
+      case 'DEPOSIT':
+        return 'bg-green-100 text-green-800';
+      case 'WITHDRAW':
+      case 'WITHDRAWAL':
+        return 'bg-blue-100 text-blue-800';
+      case 'BUY':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'SELL':
+        return 'bg-pink-100 text-pink-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   }
 }
