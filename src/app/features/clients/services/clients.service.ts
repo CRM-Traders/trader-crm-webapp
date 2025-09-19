@@ -152,6 +152,25 @@ export class ClientsService {
     return this.httpService.get(`identity/api/users/get-active-users?role=22`);
   }
 
+  // Fetch clients via grid endpoint to build dropdowns (all clients, not only active)
+  getClientsDropdown(params: {
+    pageIndex?: number;
+    pageSize?: number;
+    globalFilter?: string | null;
+  } = {}) {
+    const request = {
+      pageIndex: params.pageIndex ?? 0,
+      pageSize: params.pageSize ?? 1000,
+      sortField: 'firstName',
+      sortDirection: 'asc',
+      visibleColumns: null,
+      globalFilter: params.globalFilter ?? null,
+      filters: null,
+    };
+
+    return this.httpService.post<any>(`${this.apiPath}/grid`, request);
+  }
+
   // TODO: Add password change method when API is ready
   changePassword(request: {
     clientId: string;

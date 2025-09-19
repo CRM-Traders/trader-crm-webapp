@@ -18,6 +18,8 @@ import {
 } from '../../shared/models/grid/grid-column.model';
 import { Payment, TransactionType } from './models/payment.model';
 import { PaymentsService } from './services/payments.service';
+import { CountryService } from '../../core/services/country.service';
+import { ClientsService } from '../clients/services/clients.service';
 
 @Component({
   selector: 'app-payments',
@@ -30,6 +32,8 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   private paymentsService = inject(PaymentsService);
   private alertService = inject(AlertService);
   private router = inject(Router);
+  private countryService = inject(CountryService);
+  private clientsService = inject(ClientsService);
 
   private destroy$ = new Subject<void>();
   gridId = 'payments-grid';
@@ -72,6 +76,8 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       header: 'Client',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
       cellTemplate: null,
     },
     {
@@ -79,6 +85,8 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       header: 'Affiliate',
       sortable: true,
       filterable: true,
+      filterType: 'select',
+      filterOptions: [],
       selector: (row: Payment) => row.affiliate || 'N/A',
       cellClass: 'text-xs text-gray-500',
     },
@@ -95,6 +103,7 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       sortable: true,
       filterable: true,
       filterType: 'select',
+      filterOptions: [],
       cellTemplate: null,
     },
     {
@@ -200,11 +209,55 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initializeGridTemplates();
     this.loadPaymentStatistics();
+    this.initializeFilterOptions();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private updateColumnFilterOptions(field: string, options: any[]): void {
+    const column = this.gridColumns.find((col) => col.field === field);
+    if (column) {
+      column.filterOptions = options;
+    }
+  }
+
+  private initializeFilterOptions(): void {
+    // Countries
+    this.countryService
+      .getCountries()
+      .pipe(takeUntil(this.destroy$), catchError(() => of([])))
+      .subscribe((countries: any[]) => {
+        const options = countries.map((c: any) => ({ value: c.code, label: c.name }));
+        this.updateColumnFilterOptions('country', options);
+      });
+
+    // Affiliates (reuse ClientsService dropdown)
+    this.clientsService
+      .getAffiliatesDropdown({ pageIndex: 0, pageSize: 1000 })
+      .pipe(takeUntil(this.destroy$), catchError(() => of({ items: [] } as any)))
+      .subscribe((response: any) => {
+        const affiliateOptions = (response.items || []).map((a: any) => ({
+          value: a.userFullName,
+          label: a.userFullName,
+        }));
+        this.updateColumnFilterOptions('affiliate', affiliateOptions);
+      });
+
+    // Clients (fetch all clients via clients grid endpoint)
+    this.clientsService
+      .getClientsDropdown({ pageIndex: 0, pageSize: 1000 })
+      .pipe(takeUntil(this.destroy$), catchError(() => of({ items: [] } as any)))
+      .subscribe((response: any) => {
+        const items = response?.items || [];
+        const clientOptions = items.map((c: any) => ({
+          value: `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.email || c.username || c.id,
+          label: `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.email || c.username || c.id,
+        }));
+        this.updateColumnFilterOptions('client', clientOptions);
+      });
   }
 
   private initializeGridTemplates(): void {
