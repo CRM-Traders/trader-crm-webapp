@@ -9,6 +9,7 @@ import { HttpService } from '../../../core/services/http.service';
 export class PaymentsService {
   private apiUrl = 'identity/api/payments';
 
+
   constructor(private http: HttpService) {}
 
   getPaymentStatistics(dateRange: any): Observable<any> {
