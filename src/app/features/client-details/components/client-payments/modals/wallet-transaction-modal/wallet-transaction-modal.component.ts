@@ -26,6 +26,7 @@ import {
 } from '../../models/wallet.model';
 import { AdminTradingAccountService } from '../../../client-accounts/services/admin-trading-accounts.service';
 import { TradingAccount } from '../../../client-accounts/models/trading-account.model';
+import { AlertService } from '../../../../../../core/services/alert.service';
 
 @Component({
   selector: 'app-wallet-transaction-modal',
@@ -46,6 +47,7 @@ export class WalletTransactionModalComponent
   private fb = inject(FormBuilder);
   private walletService = inject(WalletService);
   private adminTradingAccountsService = inject(AdminTradingAccountService);
+  private alertService = inject(AlertService);
   private destroy$ = new Subject<void>();
 
   transactionForm!: FormGroup;
@@ -219,7 +221,9 @@ export class WalletTransactionModalComponent
             this.onSuccess.emit();
             this.onModalClose();
           },
-          error: (error) => {},
+          error: (error: unknown) => {
+            this.alertService.error(this.getErrorMessage(error));
+          },
         });
     } else {
       if (selectedWallet.balance < parseFloat(formValue.amount)) {
@@ -240,7 +244,9 @@ export class WalletTransactionModalComponent
             this.onSuccess.emit();
             this.onModalClose();
           },
-          error: (error) => {},
+          error: (error: unknown) => {
+            this.alertService.error(this.getErrorMessage(error));
+          },
         });
     }
   }
@@ -301,5 +307,23 @@ export class WalletTransactionModalComponent
     const curr =
       currency || this.transactionForm?.get('currency')?.value || 'USD';
     return this.walletService.formatCurrency(amount, curr);
+  }
+
+  private getErrorMessage(error: unknown): string {
+    const safe: any = error as any;
+    const problemDetails = safe?.error ?? safe;
+    const detail = problemDetails?.detail;
+    const title = problemDetails?.title;
+    const message = problemDetails?.message || safe?.message;
+    if (typeof detail === 'string' && detail.trim()) {
+      return detail;
+    }
+    if (typeof title === 'string' && title.trim() && title !== '400') {
+      return title;
+    }
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+    return 'An unexpected error occurred. Please try again.';
   }
 }
