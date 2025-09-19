@@ -1,3 +1,5 @@
+@use "tailwindcss" as *;
+
 // Enhanced Price Manager Component Styles
 .enhanced-price-manager {
   min-height: 100vh;
@@ -186,7 +188,7 @@
   }
 
   &.warning {
-    @apply bg-yellow-500;
+    @apply bg-amber-500;
   }
 
   &.error {
@@ -318,10 +320,10 @@
   }
 
   &.alert-warning {
-    @apply bg-yellow-50 border-yellow-200 text-yellow-800;
+    @apply bg-amber-50 border-amber-200 text-amber-800;
 
     .dark & {
-      @apply bg-yellow-900/20 border-yellow-800 text-yellow-200;
+      @apply bg-amber-900/20 border-amber-800 text-amber-200;
     }
   }
 }

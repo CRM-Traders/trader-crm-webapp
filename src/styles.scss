@@ -642,7 +642,7 @@ button {
 }
 
 .general-container {
-  height: calc(100%);
+  height: calc(100vh + 15vh);
   overflow-y: auto;
   border-radius: 10px;
 }
