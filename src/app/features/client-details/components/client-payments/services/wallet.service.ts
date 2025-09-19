@@ -98,9 +98,6 @@ export class WalletService {
         }),
         catchError((error) => {
           this._loading.set(false);
-          this.alertService.error(
-            'Failed to process deposit. Please try again.'
-          );
           return throwError(() => error);
         })
       );
@@ -123,9 +120,6 @@ export class WalletService {
         }),
         catchError((error) => {
           this._loading.set(false);
-          this.alertService.error(
-            'Failed to process withdrawal. Please try again.'
-          );
           return throwError(() => error);
         })
       );
