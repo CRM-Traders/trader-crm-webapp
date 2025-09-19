@@ -247,8 +247,28 @@ export class CustomSelectComponent<T = any> implements OnInit, OnDestroy {
     return a === b;
   }
 
-  private handleScroll(): void {
+  private handleScroll(event?: Event): void {
     if (!this.isOpen) return;
+
+    // If the scroll event originated inside the dropdown content, do not close it.
+    if (event && this.dropdownHost) {
+      const targetNode = event.target as Node | null;
+      let insideDropdown = false;
+
+      const anyEvent = event as any;
+      if (typeof anyEvent.composedPath === 'function') {
+        const path = anyEvent.composedPath() as EventTarget[];
+        insideDropdown = path.includes(this.dropdownHost);
+      } else if (targetNode) {
+        insideDropdown = this.dropdownHost.contains(targetNode);
+      }
+
+      if (insideDropdown) {
+        this.reposition();
+        return;
+      }
+    }
+
     if (this.closeOnScroll) {
       this.closeDropdown();
     } else {
