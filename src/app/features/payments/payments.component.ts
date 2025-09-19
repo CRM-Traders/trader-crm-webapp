@@ -12,12 +12,10 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { GridComponent } from '../../shared/components/grid/grid.component';
 import { AlertService } from '../../core/services/alert.service';
-import { ModalService } from '../../shared/services/modals/modal.service';
 import {
   GridColumn,
   GridAction,
 } from '../../shared/models/grid/grid-column.model';
-import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 import { Payment } from './models/payment.model';
 import { PaymentsService } from './services/payments.service';
 
@@ -31,7 +29,6 @@ import { PaymentsService } from './services/payments.service';
 export class PaymentsComponent implements OnInit, OnDestroy {
   private paymentsService = inject(PaymentsService);
   private alertService = inject(AlertService);
-  private modalService = inject(ModalService);
   private router = inject(Router);
 
   private destroy$ = new Subject<void>();
@@ -82,7 +79,7 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       header: 'Affiliate',
       sortable: true,
       filterable: true,
-      selector: (row: Payment) => row.affiliateId || 'N/A',
+      selector: (row: Payment) => row.affiliate || 'N/A',
       cellClass: 'text-xs text-gray-500',
     },
     {
@@ -109,10 +106,9 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       filterOptions: [
         { value: 'DEPOSIT', label: 'Deposit' },
         { value: 'WITHDRAW', label: 'Withdrawal' },
-        { value: 'BONUS', label: 'Bonus' },
-        { value: 'REFUND', label: 'Refund' },
+        { value: 'BUY', label: 'Buy' },
+        { value: 'SELL', label: 'Sell' },
       ],
-      cellTemplate: null,
     },
     {
       field: 'amount',
@@ -171,30 +167,6 @@ export class PaymentsComponent implements OnInit, OnDestroy {
         { value: 'CANCELLED', label: 'Cancelled' },
       ],
       cellTemplate: null,
-    },
-  ];
-
-  gridActions: GridAction[] = [
-    {
-      id: 'view',
-      label: 'View Details',
-      icon: 'view',
-      action: (item: Payment) => this.openDetailsModal(item),
-      permission: 70, // Adjust permission as needed
-    },
-    {
-      id: 'approve',
-      label: 'Approve',
-      icon: 'check',
-      action: (item: Payment) => this.approvePayment(item),
-      permission: 71,
-    },
-    {
-      id: 'reject',
-      label: 'Reject',
-      icon: 'close',
-      action: (item: Payment) => this.rejectPayment(item),
-      permission: 72,
     },
   ];
 
@@ -367,38 +339,6 @@ export class PaymentsComponent implements OnInit, OnDestroy {
       detail: { gridId: this.gridId },
     });
     window.dispatchEvent(event);
-  }
-
-  onExport(options: any): void {
-    const request = {
-      ...this.dateRange,
-      sortField: options.sortField,
-      sortDirection: options.sortDirection,
-      globalFilter: options.globalFilter,
-    };
-
-    this.paymentsService
-      .exportPayments(request)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((error) => {
-          this.alertService.error('Failed to export payments');
-          return of(null);
-        })
-      )
-      .subscribe((blob) => {
-        if (blob) {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `payments_${
-            new Date().toISOString().split('T')[0]
-          }.csv`;
-          link.click();
-          window.URL.revokeObjectURL(url);
-          this.alertService.success('Export completed successfully');
-        }
-      });
   }
 
   getCountryFlag(countryCode: string): string {
