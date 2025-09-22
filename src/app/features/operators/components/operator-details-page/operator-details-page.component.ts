@@ -36,6 +36,7 @@ export enum OperatorDetailSection {
   Profile = 'profile',
   Departments = 'departments',
   Branches = 'branches',
+  Clients = 'clients',
   ActivityLog = 'activity-log',
   Settings = 'settings',
 }
@@ -88,6 +89,11 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   availableDepartments: any[] = [];
   availableRoles: OperatorRole[] = [];
   availableBranches: any[] = [];
+  assignedClients: any[] = [];
+  assignedClientsTotal = 0;
+  assignedClientsLoading = false;
+  clientsPageIndex = 0;
+  clientsPageSize = 100;
 
   // Constants
   BranchType = BranchType;
@@ -105,6 +111,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       permission: 105,
     },
     { key: OperatorDetailSection.Branches, label: 'Branches', permission: 108 },
+    { key: OperatorDetailSection.Clients, label: 'Clients', permission: 104 },
   ];
 
   constructor() {
@@ -212,6 +219,11 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   setActiveSection(section: OperatorDetailSection): void {
     this.activeSection = section;
+    if (section === OperatorDetailSection.Clients) {
+      if (!this.assignedClients.length) {
+        this.loadAssignedClients(true);
+      }
+    }
   }
 
   getInitials(fullName: string): string {
@@ -438,6 +450,43 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         this.alertService.error('Failed to load branches');
       },
     });
+  }
+
+  loadAssignedClients(reset: boolean = false): void {
+    if (!this.operator) return;
+    if (reset) {
+      this.clientsPageIndex = 0;
+    }
+
+    this.assignedClientsLoading = true;
+    const request = {
+      operatorId: this.operator.id,
+      pageIndex: this.clientsPageIndex,
+      pageSize: this.clientsPageSize,
+      sortField: null,
+      sortDirection: null,
+      visibleColumns: [ '' ],
+      globalFilter: null,
+      filters: null,
+    } as any;
+
+    this.operatorsService
+      .getOperatorClients(request)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to load assigned clients');
+          this.assignedClientsLoading = false;
+          return of(null);
+        })
+      )
+      .subscribe((response: any) => {
+        if (response) {
+          this.assignedClients = response.clients || [];
+          this.assignedClientsTotal = response.totalClients || 0;
+        }
+        this.assignedClientsLoading = false;
+      });
   }
 
   addBranch(): void {
