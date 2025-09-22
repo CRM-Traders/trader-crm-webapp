@@ -165,7 +165,8 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
         source: result.source,
         lastLogin: result.lastLogin,
         lastCommunication: result.lastCommunication,
-        balance: 0, // Not provided in API response, defaulting to 0
+        totalBalance: result.totalBalance,
+        balance: result.totalBalance, // Not provided in API response, defaulting to 0
       };
 
       this.loadPinnedNotes();
@@ -481,21 +482,24 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    navigator.clipboard.writeText(this.client.telephone).then(() => {
-      this.alertService.success('Phone number copied to clipboard');
-    }).catch(() => {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = this.client.telephone || '';
-      document.body.appendChild(textArea);
-      textArea.select();
-      try {
-        document.execCommand('copy');
+    navigator.clipboard
+      .writeText(this.client.telephone)
+      .then(() => {
         this.alertService.success('Phone number copied to clipboard');
-      } catch (err) {
-        this.alertService.error('Failed to copy phone number');
-      }
-      document.body.removeChild(textArea);
-    });
+      })
+      .catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = this.client.telephone || '';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          this.alertService.success('Phone number copied to clipboard');
+        } catch (err) {
+          this.alertService.error('Failed to copy phone number');
+        }
+        document.body.removeChild(textArea);
+      });
   }
 }
