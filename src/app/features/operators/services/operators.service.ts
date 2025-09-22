@@ -21,6 +21,32 @@ import {
   OperatorPersonalInfoUpdateRequest,
 } from '../models/operators.model';
 
+// Operator clients request/response models
+export interface OperatorClientsRequest {
+  operatorId: string;
+  pageIndex: number;
+  pageSize: number;
+  sortField: string | null;
+  sortDirection: string | null;
+  visibleColumns: string[] | null;
+  globalFilter: any;
+  filters: any;
+}
+
+export interface OperatorClientItem {
+  clientId: string;
+  clientName: string;
+  clientStatus: string;
+  assignDate: string;
+}
+
+export interface OperatorClientsResponse {
+  clients: OperatorClientItem[];
+  leads: any[];
+  totalClients: number;
+  totalLeads: number;
+}
+
 interface BranchDropdownResponse {
   items: BranchDropdownItem[];
   totalCount: number;
@@ -54,6 +80,7 @@ export class OperatorsService {
   private readonly officesApiPath = 'identity/api/offices';
   private readonly teamsApiPath = 'identity/api/teams';
   private readonly desksApiPath = 'identity/api/desks';
+  private readonly operatorClientApiPath = 'identity/api/operatorclient';
 
   getOperatorById(id: string): Observable<Operator> {
     return this.httpService.get<Operator>(`${this.apiPath}/${id}`);
@@ -285,6 +312,16 @@ export class OperatorsService {
   removeOperatorDepartmentRole(operatorDepartmentRoleId: string): Observable<void> {
     return this.httpService.delete<void>(
       `identity/api/operatordepartmentroles/remove/${operatorDepartmentRoleId}`
+    );
+  }
+
+  // Operator assigned clients
+  getOperatorClients(
+    request: OperatorClientsRequest
+  ): Observable<OperatorClientsResponse> {
+    return this.httpService.post<OperatorClientsResponse>(
+      `${this.operatorClientApiPath}/operator-clients`,
+      request
     );
   }
 }
