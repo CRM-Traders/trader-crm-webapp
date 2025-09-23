@@ -107,7 +107,6 @@ export class ClientsComponent implements OnInit {
   private languageService = inject(LanguageService);
   private operatorsService = inject(OperatorsService);
   private officesService = inject(OfficesService);
-  private officeRulesService = inject(OfficeRulesService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();

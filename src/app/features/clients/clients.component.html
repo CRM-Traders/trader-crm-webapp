@@ -178,6 +178,7 @@
             (selectionChange)="onSelectionChange($event)"
             (bulkActionExecuted)="onBulkActionExecuted($event)"
             (export)="onExport($event)"
+            [exportable]="true"
           >
             <!-- Online Status Cell Template -->
             <ng-template #onlineStatusCell let-value="value">
@@ -237,7 +238,7 @@
 
             <ng-container>
               <!-- Auto Login Cell Template -->
-              <ng-template #autoLoginCell let-value="value" let-row="row" >
+              <ng-template #autoLoginCell let-value="value" let-row="row">
                 <button
                   class="p-1 text-xs bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors"
                   (click)="onAutoLogin(value)"
@@ -294,13 +295,28 @@
               <div class="flex items-center gap-2">
                 <div class="relative" data-dropdown="salesStatus">
                   <app-custom-select
-                    [disabled]="updatingSalesStatus === (value.id || row.id) || !hasPermission(53)"
+                    [disabled]="
+                      updatingSalesStatus === (value.id || row.id) ||
+                      !hasPermission(53)
+                    "
                     [options]="salesStatusOptions"
-                    [selectedValue]="(value?.saleStatusEnum ?? value?.salesStatus ?? row?.saleStatusEnum ?? row?.salesStatus) ?? null"
+                    [selectedValue]="
+                      value?.saleStatusEnum ??
+                      value?.salesStatus ??
+                      row?.saleStatusEnum ??
+                      row?.salesStatus ??
+                      null
+                    "
                     [placeholder]="'Select status...'"
                     [dropdownWidth]="180"
                     [scrollContainers]="selectScrollContainers"
-                    (valueChange)="onSalesStatusSelect(value.id || row.id, $event, value || row)"
+                    (valueChange)="
+                      onSalesStatusSelect(
+                        value.id || row.id,
+                        $event,
+                        value || row
+                      )
+                    "
                     class="min-w-[140px] text-xs"
                   ></app-custom-select>
                 </div>
@@ -386,10 +402,15 @@
                 <div class="relative" data-dropdown="operator">
                   <app-custom-select
                     [disabled]="
-                      updatingOperatorAssignment === (value.id || row.id) || !hasPermission(2)
+                      updatingOperatorAssignment === (value.id || row.id) ||
+                      !hasPermission(2)
                     "
                     [options]="getOperatorOptions()"
-                    [selectedValue]="value?.clientOperator?.operatorId || row?.clientOperator?.operatorId || null"
+                    [selectedValue]="
+                      value?.clientOperator?.operatorId ||
+                      row?.clientOperator?.operatorId ||
+                      null
+                    "
                     [placeholder]="'Select operator...'"
                     [dropdownWidth]="200"
                     [scrollContainers]="selectScrollContainers"
