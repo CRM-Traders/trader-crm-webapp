@@ -521,7 +521,15 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   removeBranch(branchId: string): void {
-    this.operatorsService.removeUserOrganization(branchId).subscribe();
+    this.operatorsService.removeUserOrganization(branchId).subscribe({
+      next: () => {
+        this.alertService.success('Branch removed successfully');
+        this.loadOperatorDetails();
+      },
+      error: (error) => {
+        this.alertService.error('Failed to remove branch');
+      },
+    });
   }
 
   private updateProfileEditableControls(): void {
