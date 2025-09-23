@@ -35,6 +35,7 @@ export interface Client {
   isOnline?: boolean;
   clientOperator?: ClientOperator | null;
   totalBalance: number;
+  externalId: string;
 }
 
 export interface LastComment {

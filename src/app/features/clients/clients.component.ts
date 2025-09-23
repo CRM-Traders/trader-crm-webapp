@@ -107,7 +107,6 @@ export class ClientsComponent implements OnInit {
   private languageService = inject(LanguageService);
   private operatorsService = inject(OperatorsService);
   private officesService = inject(OfficesService);
-  private officeRulesService = inject(OfficeRulesService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
@@ -194,6 +193,15 @@ export class ClientsComponent implements OnInit {
         { value: false, label: 'Offline' },
       ],
       cellTemplate: null, // Will be set in ngOnInit
+    },
+    {
+      field: 'externalId',
+      header: 'Client ID',
+      sortable: true,
+      filterable: true,
+      filterType: 'text',
+      cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
+      permission: 17, //
     },
     {
       field: 'firstName',
@@ -544,17 +552,6 @@ export class ClientsComponent implements OnInit {
 
     // Date Range Filters
     {
-      field: 'registrationDate',
-      header: 'Registration Date',
-      sortable: true,
-      filterable: true,
-      filterType: 'date',
-      type: 'date',
-      format: 'short',
-      hidden: true,
-      permission: 14,
-    },
-    {
       field: 'affiliateFtdDate',
       header: 'Affiliate FTD Date',
       sortable: true,
@@ -662,6 +659,17 @@ export class ClientsComponent implements OnInit {
     },
     // Auto Login Column (hidden by default, shown on selection)
     {
+      field: 'registrationDate',
+      header: 'Registration Date',
+      sortable: true,
+      filterable: true,
+      filterType: 'date',
+      type: 'date',
+      format: 'short',
+      hidden: false,
+      permission: 14,
+    },
+    {
       field: 'autoLogin',
       header: 'Login',
       sortable: false,
@@ -745,7 +753,10 @@ export class ClientsComponent implements OnInit {
 
   // Options for CustomSelect (Operators)
   getOperatorOptions(): { value: string; label: string }[] {
-    return (this.operators || []).map((op) => ({ value: op.id, label: op.value }));
+    return (this.operators || []).map((op) => ({
+      value: op.id,
+      label: op.value,
+    }));
   }
 
   // Handler for CustomSelect change (Operator)
@@ -809,7 +820,10 @@ export class ClientsComponent implements OnInit {
     // Load countries once synchronously from the subject stream
     this.countryService
       .getCountries()
-      .pipe(take(1), catchError(() => of([])))
+      .pipe(
+        take(1),
+        catchError(() => of([]))
+      )
       .subscribe((countries: any) => {
         const list = Array.isArray(countries) ? countries : [];
         const countryOptions = list.map((c: any) => ({
@@ -882,7 +896,6 @@ export class ClientsComponent implements OnInit {
 
       // Trigger change detection
       this.cdr.detectChanges();
-
     } catch (error) {
       console.error('Failed to load operators:', error);
     }

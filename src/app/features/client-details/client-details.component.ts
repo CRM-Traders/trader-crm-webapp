@@ -166,7 +166,8 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
         lastLogin: result.lastLogin,
         lastCommunication: result.lastCommunication,
         totalBalance: result.totalBalance,
-        balance: result.totalBalance, // Not provided in API response, defaulting to 0
+        balance: result.totalBalance, // Not provided in API response, defaulting to 0,
+        externalId: result.externalId,
       };
 
       this.loadPinnedNotes();

@@ -33,10 +33,11 @@ import {
 import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 export enum OperatorDetailSection {
+  Clients = 'clients',
+
   Profile = 'profile',
   Departments = 'departments',
   Branches = 'branches',
-  Clients = 'clients',
   ActivityLog = 'activity-log',
   Settings = 'settings',
 }
@@ -71,7 +72,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  activeSection: OperatorDetailSection = OperatorDetailSection.Profile;
+  activeSection: OperatorDetailSection = OperatorDetailSection.Clients;
   operator!: Operator;
   operatorId!: string;
 
@@ -104,6 +105,8 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   UserTypeColors = UserTypeColors;
 
   navigationSections = [
+    { key: OperatorDetailSection.Clients, label: 'Clients', permission: 104 },
+
     { key: OperatorDetailSection.Profile, label: 'Profile', permission: 104 },
     {
       key: OperatorDetailSection.Departments,
@@ -111,7 +114,6 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       permission: 105,
     },
     { key: OperatorDetailSection.Branches, label: 'Branches', permission: 108 },
-    { key: OperatorDetailSection.Clients, label: 'Clients', permission: 104 },
   ];
 
   constructor() {
@@ -396,15 +398,17 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   removeDepartment(operatorDepartmentRoleId: string): void {
-    this.operatorsService.removeOperatorDepartmentRole(operatorDepartmentRoleId).subscribe({
-      next: () => {
-        this.alertService.success('Department removed successfully');
-        this.loadOperatorDetails();
-      },
-      error: (error) => {
-        this.alertService.error('Failed to remove department');
-      },
-    });
+    this.operatorsService
+      .removeOperatorDepartmentRole(operatorDepartmentRoleId)
+      .subscribe({
+        next: () => {
+          this.alertService.success('Department removed successfully');
+          this.loadOperatorDetails();
+        },
+        error: (error) => {
+          this.alertService.error('Failed to remove department');
+        },
+      });
   }
 
   onBranchTypeChange(): void {
@@ -465,7 +469,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       pageSize: this.clientsPageSize,
       sortField: null,
       sortDirection: null,
-      visibleColumns: [ '' ],
+      visibleColumns: [''],
       globalFilter: null,
       filters: null,
     } as any;
