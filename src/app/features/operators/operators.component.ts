@@ -212,6 +212,13 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       action: (item: Operator) => this.navigateToPermissions(item),
       permission: 100,
     },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: 'delete',
+      action: (item: Operator) => this.confirmDelete(item),
+      permission: -1,
+    },
   ];
 
   constructor() {}

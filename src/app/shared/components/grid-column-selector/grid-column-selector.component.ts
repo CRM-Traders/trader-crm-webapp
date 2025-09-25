@@ -32,6 +32,7 @@ export class GridColumnSelectorComponent implements OnInit, OnChanges {
 
   selectedColumns: string[] = [];
   selectAll: boolean = true;
+  searchTerm: string = '';
 
   ngOnInit(): void {
     this.initializeColumnSelection();
@@ -112,5 +113,18 @@ export class GridColumnSelectorComponent implements OnInit, OnChanges {
     this.gridService.setVisibleColumns(this.gridId, this.selectedColumns);
 
     this.columnsChange.emit(this.selectedColumns);
+  }
+
+  get filteredColumns(): GridColumn[] {
+    const query = this.searchTerm?.toLowerCase().trim();
+    if (!query) {
+      return this.columns;
+    }
+
+    return this.columns.filter((column) => {
+      const header = (column.header ?? '').toLowerCase();
+      const field = (column.field ?? '').toLowerCase();
+      return header.includes(query) || field.includes(query);
+    });
   }
 }
