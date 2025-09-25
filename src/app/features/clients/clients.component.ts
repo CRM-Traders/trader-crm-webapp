@@ -669,6 +669,15 @@ export class ClientsComponent implements OnInit {
       hidden: false,
       permission: 14,
     },
+
+    {
+      field: 'importedSource',
+      header: 'Imported Source',
+      sortable: false,
+      filterable: true,
+      filterType: 'text',
+      hidden: false,
+    },
     {
       field: 'autoLogin',
       header: 'Login',
@@ -1631,11 +1640,11 @@ export class ClientsComponent implements OnInit {
         }) => {
           this.updateColumnFilterOptions(
             'country',
-            countries.map((c) => ({ value: c.code, label: c.name }))
+            countries.map((c) => ({ value: c.name, label: c.name }))
           );
           this.updateColumnFilterOptions(
             'passportCountry',
-            countries.map((c) => ({ value: c.code, label: c.name }))
+            countries.map((c) => ({ value: c.name, label: c.name }))
           );
 
           this.updateColumnFilterOptions(

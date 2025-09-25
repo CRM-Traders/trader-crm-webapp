@@ -350,6 +350,30 @@
                 (click)="$event.stopPropagation()"
                 class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-64 overflow-hidden"
               >
+                <!-- Search in options -->
+                <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+                  <div class="relative">
+                    <input
+                      type="text"
+                      [(ngModel)]="optionSearchTerms[activeFilter.id]"
+                      placeholder="Search options..."
+                      class="w-full !pl-7 pr-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/10"
+                    />
+                    <svg
+                      class="absolute left-2 top-2.5 h-4 w-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      ></path>
+                    </svg>
+                  </div>
+                </div>
                 <!-- Select All / Clear All Header -->
                 <div
                   class="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50"
@@ -379,7 +403,7 @@
                 <!-- Options List -->
                 <div class="max-h-48 overflow-y-auto">
                   <div
-                    *ngFor="let option of getFilterOptions(activeFilter.column)"
+                    *ngFor="let option of getFilteredFilterOptions(activeFilter.column, activeFilter.id)"
                     (click)="
                       toggleMultiSelectValue(activeFilter, option.value);
                       applyFilter(activeFilter)
@@ -412,11 +436,11 @@
 
                   <!-- Empty State -->
                   <div
-                    *ngIf="getFilterOptions(activeFilter.column).length === 0"
+                    *ngIf="getFilteredFilterOptions(activeFilter.column, activeFilter.id).length === 0"
                     class="p-4 text-center"
                   >
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                      No options available
+                      No matching options
                     </p>
                   </div>
                 </div>
