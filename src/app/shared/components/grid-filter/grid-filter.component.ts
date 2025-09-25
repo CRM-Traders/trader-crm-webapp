@@ -75,6 +75,9 @@ export class GridFilterComponent implements OnInit, OnDestroy {
   filteredAvailableOptions: FilterOption[] = [];
   selectedFilterOptions: FilterOption[] = [];
 
+  // Per-select filter option search terms keyed by active filter id
+  optionSearchTerms: Record<string, string> = {};
+
   // Active filters
   activeFilters: ActiveFilter[] = [];
   appliedFilters: GridFilter[] = [];
@@ -235,6 +238,8 @@ export class GridFilterComponent implements OnInit, OnDestroy {
     } else {
       this.openDropdowns.clear(); // Close other dropdowns
       this.openDropdowns.add(filterId);
+      // Reset option search when opening a dropdown
+      this.optionSearchTerms[filterId] = '';
     }
   }
 
@@ -667,6 +672,17 @@ export class GridFilterComponent implements OnInit, OnDestroy {
 
   getFilterOptions(column: GridColumn): any[] {
     return column.filterOptions || [];
+  }
+
+  getFilteredFilterOptions(column: GridColumn, filterId: string): any[] {
+    const options = this.getFilterOptions(column);
+    const term = (this.optionSearchTerms[filterId] || '').toLowerCase().trim();
+    if (!term) return options;
+    return options.filter((opt: any) => {
+      const label = String(opt?.label ?? '').toLowerCase();
+      const value = String(opt?.value ?? '').toLowerCase();
+      return label.includes(term) || value.includes(term);
+    });
   }
 
   toggleMultiSelectValue(filter: ActiveFilter, value: string): void {
