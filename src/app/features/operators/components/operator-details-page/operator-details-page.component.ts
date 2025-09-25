@@ -146,7 +146,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
     this.operatorId = operatorId;
     this.loadOperatorDetails();
-    this.loadDepartments();
+    //this.loadDepartments();
   }
 
   ngOnDestroy(): void {
@@ -168,6 +168,8 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       .subscribe((operator) => {
         if (operator) {
           this.operator = operator;
+          this.loadAssignedClients();
+
           this.initializeForms();
         }
       });
