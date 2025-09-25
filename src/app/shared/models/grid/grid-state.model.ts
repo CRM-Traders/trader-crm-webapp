@@ -1,15 +1,16 @@
 import { GridFilterState } from './grid-filter-state.model';
 import { GridPagination } from './grid-pagination.model';
 import { GridSort } from './grid-sort.model';
+import { SavedFilter } from './saved-filter.model';
 
 export interface GridState {
   filters: GridFilterState;
   sort?: GridSort;
   pagination: GridPagination;
   visibleColumns: string[];
-  // Indicates whether visibleColumns has been explicitly initialized by the user or code
-  // This allows distinguishing between "no state yet" and "intentionally empty" selections
   columnsInitialized?: boolean;
+  savedFilters?: SavedFilter[]; // Add this line
+  activeFilterId?: string; // Add this to track which saved filter is active
 }
 
 export interface GridDataResponse<T = any> {
