@@ -19,18 +19,38 @@
       </label>
     </div>
 
-    <button
-      (click)="resetToDefault()"
-      class="text-sm text-primary-500 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 focus:outline-none"
-    >
-      Reset to Default
-    </button>
+    <div class="flex items-center gap-3">
+      <div class="relative">
+        <input
+          type="search"
+          [(ngModel)]="searchTerm"
+          placeholder="Search columns..."
+          class="w-48 sm:w-56 md:w-64 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+        <!-- <button
+          *ngIf="searchTerm"
+          type="button"
+          (click)="searchTerm=''"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          aria-label="Clear search"
+        >
+          &times;
+        </button> -->
+      </div>
+
+      <button
+        (click)="resetToDefault()"
+        class="text-sm text-primary-500 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 focus:outline-none"
+      >
+        Reset to Default
+      </button>
+    </div>
   </div>
 
   <div
     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3"
   >
-    <div *ngFor="let column of columns" class="flex items-center">
+    <div *ngFor="let column of filteredColumns" class="flex items-center">
       @if (column.permission){
       <ng-container *hasPermission="column.permission">
         <input
@@ -62,6 +82,13 @@
         {{ column.header }} </label
       >}
     </div>
+  </div>
+
+  <div
+    *ngIf="searchTerm && filteredColumns.length === 0"
+    class="mt-3 text-sm text-gray-500 dark:text-gray-400"
+  >
+    No matching columns.
   </div>
 
   <div
