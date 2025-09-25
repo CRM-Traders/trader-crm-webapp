@@ -10,6 +10,8 @@ import { GridFilter } from '../../models/grid/grid-filter.model';
 import { GridPagination } from '../../models/grid/grid-pagination.model';
 import { GridSort } from '../../models/grid/grid-sort.model';
 import { GridState } from '../../models/grid/grid-state.model';
+import { SavedFilter } from '../../models/grid/saved-filter.model';
+import { GridFilterState } from '../../models/grid/grid-filter-state.model';
 
 // Interface for the backend response
 interface GridStateResponse {
@@ -357,20 +359,6 @@ export class GridService {
   }
 
   /**
-   * Clear all filters
-   */
-  clearAllFilters(gridId: string): void {
-    const currentState = this.getCurrentState(gridId);
-
-    this.updateState(gridId, {
-      filters: {
-        filters: {},
-        globalFilter: undefined,
-      },
-    });
-  }
-
-  /**
    * Set global filter
    */
   setGlobalFilter(gridId: string, value: string): void {
@@ -702,5 +690,212 @@ export class GridService {
       this.saveGridState(gridId, state).subscribe();
     });
     this.saveDebounceTimers.clear();
+  }
+
+  getSavedFilters(gridId: string): SavedFilter[] {
+    const state = this.getCurrentState(gridId);
+    return state.savedFilters || [];
+  }
+
+  saveFilter(
+    gridId: string,
+    name: string,
+    filterState: GridFilterState
+  ): SavedFilter {
+    const state = this.getCurrentState(gridId);
+    const savedFilters = state.savedFilters || [];
+
+    const newFilter: SavedFilter = {
+      id: this.generateFilterId(),
+      name,
+      filterState: JSON.parse(JSON.stringify(filterState)), // Deep clone
+      createdAt: new Date(),
+    };
+
+    const updatedFilters = [...savedFilters, newFilter];
+
+    this.updateState(gridId, {
+      savedFilters: updatedFilters,
+      activeFilterId: newFilter.id,
+    });
+
+    return newFilter;
+  }
+
+  updateSavedFilter(
+    gridId: string,
+    filterId: string,
+    filterState: GridFilterState
+  ): void {
+    const state = this.getCurrentState(gridId);
+    const savedFilters = state.savedFilters || [];
+
+    const updatedFilters = savedFilters.map((filter) => {
+      if (filter.id === filterId) {
+        return {
+          ...filter,
+          filterState: JSON.parse(JSON.stringify(filterState)),
+          updatedAt: new Date(),
+        };
+      }
+      return filter;
+    });
+
+    this.updateState(gridId, {
+      savedFilters: updatedFilters,
+    });
+  }
+
+  deleteSavedFilter(gridId: string, filterId: string): void {
+    const state = this.getCurrentState(gridId);
+    const savedFilters = state.savedFilters || [];
+
+    const updatedFilters = savedFilters.filter(
+      (filter) => filter.id !== filterId
+    );
+
+    const updates: any = {
+      savedFilters: updatedFilters,
+    };
+
+    // If the deleted filter was active, clear the active filter
+    if (state.activeFilterId === filterId) {
+      updates.activeFilterId = undefined;
+    }
+
+    this.updateState(gridId, updates);
+  }
+
+  applySavedFilter(gridId: string, filter: SavedFilter): void {
+    const filterStateCopy = JSON.parse(JSON.stringify(filter.filterState));
+
+    this.updateState(gridId, {
+      filters: filterStateCopy,
+      activeFilterId: filter.id,
+    });
+  }
+
+  clearActiveSavedFilter(gridId: string): void {
+    this.updateState(gridId, {
+      activeFilterId: undefined,
+    });
+  }
+
+  isFilterNameExists(gridId: string, name: string): boolean {
+    const savedFilters = this.getSavedFilters(gridId);
+    return savedFilters.some(
+      (filter) => filter.name.toLowerCase() === name.toLowerCase()
+    );
+  }
+  private generateFilterId(): string {
+    return `filter_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  clearAllFilters(gridId: string): void {
+    const currentState = this.getCurrentState(gridId);
+
+    this.updateState(gridId, {
+      filters: {
+        filters: {},
+        globalFilter: undefined,
+      },
+      activeFilterId: undefined,
+    });
+  }
+
+  findMatchingSavedFilter(
+    gridId: string,
+    currentFilterState: GridFilterState
+  ): SavedFilter | undefined {
+    const savedFilters = this.getSavedFilters(gridId);
+
+    return savedFilters.find((savedFilter) => {
+      const savedState = savedFilter.filterState;
+
+      // Compare global filters
+      if (savedState.globalFilter !== currentFilterState.globalFilter) {
+        return false;
+      }
+
+      // Compare filter objects
+      const savedFilterKeys = Object.keys(savedState.filters || {});
+      const currentFilterKeys = Object.keys(currentFilterState.filters || {});
+
+      if (savedFilterKeys.length !== currentFilterKeys.length) {
+        return false;
+      }
+
+      // Check if all filters match
+      return savedFilterKeys.every((key) => {
+        const savedFilter = savedState.filters[key];
+        const currentFilter = currentFilterState.filters[key];
+
+        if (!currentFilter) return false;
+
+        return (
+          savedFilter.field === currentFilter.field &&
+          savedFilter.operator === currentFilter.operator &&
+          JSON.stringify(savedFilter.value) ===
+            JSON.stringify(currentFilter.value)
+        );
+      });
+    });
+  }
+
+  getActiveSavedFilter(gridId: string): SavedFilter | undefined {
+    const state = this.getCurrentState(gridId);
+    if (!state.activeFilterId || !state.savedFilters) {
+      return undefined;
+    }
+
+    return state.savedFilters.find(
+      (filter) => filter.id === state.activeFilterId
+    );
+  }
+
+  exportSavedFilters(gridId: string): string {
+    const savedFilters = this.getSavedFilters(gridId);
+    return JSON.stringify(savedFilters, null, 2);
+  }
+
+  importSavedFilters(gridId: string, filtersJson: string): void {
+    try {
+      const importedFilters = JSON.parse(filtersJson);
+
+      if (!Array.isArray(importedFilters)) {
+        throw new Error('Invalid filters format');
+      }
+
+      const state = this.getCurrentState(gridId);
+      const existingFilters = state.savedFilters || [];
+
+      // Merge imported filters with existing ones, avoiding duplicates by name
+      const mergedFilters = [...existingFilters];
+
+      importedFilters.forEach((importedFilter: SavedFilter) => {
+        const existingIndex = mergedFilters.findIndex(
+          (f) => f.name.toLowerCase() === importedFilter.name.toLowerCase()
+        );
+
+        if (existingIndex === -1) {
+          // Add new filter with new ID
+          mergedFilters.push({
+            ...importedFilter,
+            id: this.generateFilterId(),
+            createdAt: new Date(importedFilter.createdAt),
+            updatedAt: importedFilter.updatedAt
+              ? new Date(importedFilter.updatedAt)
+              : undefined,
+          });
+        }
+      });
+
+      this.updateState(gridId, {
+        savedFilters: mergedFilters,
+      });
+    } catch (error) {
+      console.error('Failed to import saved filters:', error);
+      throw new Error('Invalid filter format');
+    }
   }
 }

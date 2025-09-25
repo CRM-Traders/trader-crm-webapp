@@ -63,7 +63,25 @@
     </div>
 
     <!-- Action Buttons -->
+    <!-- src/app/shared/components/grid/grid.component.html (Updated Action Buttons section) -->
+    <!-- Replace the existing "Action Buttons" div with this updated version -->
+
+    <!-- Action Buttons -->
     <div class="flex items-center space-x-2">
+      <!-- Saved Filters Component -->
+      <app-grid-saved-filters
+        *ngIf="showFilters"
+        [savedFilters]="savedFilters"
+        [currentFilterState]="currentFilterState"
+        [activeFilterId]="activeFilterId"
+        [isDarkMode]="isDarkMode"
+        (filterSelected)="onSavedFilterSelected($event)"
+        (filterSaved)="onFilterSave($event)"
+        (filterUpdated)="onFilterUpdate($event)"
+        (filterDeleted)="onFilterDelete($event)"
+        (filtersCleared)="clearAllFilters()"
+      ></app-grid-saved-filters>
+
       <!-- Filters Button -->
       <button
         *ngIf="showFilters"
@@ -90,6 +108,18 @@
             />
           </svg>
           <span>Filters</span>
+          @if (currentFilterState && currentFilterState.filters &&
+          (Object.keys(currentFilterState.filters).length > 0 ||
+          currentFilterState.globalFilter)) {
+          <span
+            class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+          >
+            {{
+              Object.keys(currentFilterState.filters).length +
+                (currentFilterState.globalFilter ? 1 : 0)
+            }}
+          </span>
+          }
         </div>
       </button>
 
@@ -154,6 +184,48 @@
           ></app-grid-column-selector>
         </div>
       </div>
+
+      <!-- Export Button (Optional) -->
+      <!-- <div class="relative inline-block" *ngIf="exportable">
+        <button
+          (click)="toggleExportMenu()"
+          class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <div class="flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+              />
+            </svg>
+            <span>Export</span>
+          </div>
+        </button>
+
+        <!-- Export Dropdown -->
+      <!-- <div
+          *ngIf="isExportOpen"
+          class="absolute top-full right-0 mt-1 w-32 z-50 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600"
+        >
+          <div class="py-1">
+            <button
+              *ngFor="let type of exportTypes"
+              (click)="exportData(type.value)"
+              class="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              {{ type.label }}
+            </button>
+          </div>
+        </div>
+      </div> -->
 
       <!-- Refresh Button -->
       <button

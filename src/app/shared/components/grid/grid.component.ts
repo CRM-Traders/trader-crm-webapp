@@ -40,6 +40,8 @@ import { ContextMenuComponent } from '../context-menu/context-menu.component';
 import { GridDataResponse } from '../../models/grid/grid-state.model';
 import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 import { AuthService } from '../../../core/services/auth.service';
+import { GridSavedFiltersComponent } from '../grid-saved-filters/grid-saved-filters.component';
+import { SavedFilter } from '../../models/grid/saved-filter.model';
 
 @Component({
   selector: 'app-grid',
@@ -53,6 +55,7 @@ import { AuthService } from '../../../core/services/auth.service';
     GridActionButtonsComponent,
     ContextMenuComponent,
     HasPermissionDirective,
+    GridSavedFiltersComponent,
   ],
   templateUrl: './grid.component.html',
   styleUrls: ['./grid.component.scss'],
@@ -65,7 +68,8 @@ export class GridComponent implements OnInit, OnDestroy {
   private globalFilterSubject = new Subject<string>();
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
-  @ViewChild('columnSelectorDropdown', { static: false }) columnSelectorDropdown!: ElementRef;
+  @ViewChild('columnSelectorDropdown', { static: false })
+  columnSelectorDropdown!: ElementRef;
 
   @Input() permission: number = -1;
   @Input() selectionPermission: number = -1; // New input for selection permission
@@ -151,19 +155,34 @@ export class GridComponent implements OnInit, OnDestroy {
 
   pageOptions: number[] = [5, 10, 25, 50, 100];
 
+  savedFilters: SavedFilter[] = [];
+  activeFilterId?: string;
+  currentFilterState: GridFilterState = {
+    filters: {},
+    globalFilter: undefined,
+  };
+  Object = Object;
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: Event): void {
     this.contextMenuVisible = false;
-    
+
     // Close column selector if clicking outside
     if (this.isColumnSelectorVisible) {
       const target = event.target as Node;
-      const columnSelectorButton = this.gridContainer?.nativeElement.querySelector('[data-column-selector-button]');
+      const columnSelectorButton =
+        this.gridContainer?.nativeElement.querySelector(
+          '[data-column-selector-button]'
+        );
       const columnSelectorDropdown = this.columnSelectorDropdown?.nativeElement;
-      
+
       // Check if click is outside both the button and dropdown
-      if (columnSelectorButton && !columnSelectorButton.contains(target) && 
-          columnSelectorDropdown && !columnSelectorDropdown.contains(target)) {
+      if (
+        columnSelectorButton &&
+        !columnSelectorButton.contains(target) &&
+        columnSelectorDropdown &&
+        !columnSelectorDropdown.contains(target)
+      ) {
         this.isColumnSelectorVisible = false;
       }
     }
@@ -231,6 +250,8 @@ export class GridComponent implements OnInit, OnDestroy {
       );
     }
 
+    this.loadSavedFilters();
+
     // Subscribe to state changes for future updates
     this.gridService
       .getState(this.gridId)
@@ -247,6 +268,11 @@ export class GridComponent implements OnInit, OnDestroy {
             state.visibleColumns.includes(col.field)
           );
         }
+
+        this.savedFilters = state.savedFilters || [];
+        this.activeFilterId = state.activeFilterId;
+
+        this.currentFilterState = state.filters;
       });
 
     // Fetch data with reset pagination
@@ -255,6 +281,156 @@ export class GridComponent implements OnInit, OnDestroy {
     } else {
       this.processLocalData();
     }
+  }
+
+  loadSavedFilters(): void {
+    this.savedFilters = this.gridService.getSavedFilters(this.gridId);
+    const activeSavedFilter = this.gridService.getActiveSavedFilter(
+      this.gridId
+    );
+    if (activeSavedFilter) {
+      this.activeFilterId = activeSavedFilter.id;
+    }
+  }
+
+  onSavedFilterSelected(filter: SavedFilter): void {
+    this.gridService.applySavedFilter(this.gridId, filter);
+    this.filterChange.emit(filter.filterState);
+
+    // Reset pagination when applying saved filter
+    this.pagination.pageIndex = 0;
+    this.gridService.setPagination(this.gridId, { pageIndex: 0 });
+
+    if (this.endpoint) {
+      this.fetchData();
+    }
+
+    // Clear selection when applying filter
+    this.clearSelection();
+  }
+
+  onFilterSave(event: { name: string; filterState: GridFilterState }): void {
+    // Check if name already exists
+    if (this.gridService.isFilterNameExists(this.gridId, event.name)) {
+      if (
+        !confirm(
+          `A filter named "${event.name}" already exists. Do you want to overwrite it?`
+        )
+      ) {
+        return;
+      }
+
+      // Find and update existing filter
+      const existingFilter = this.savedFilters.find(
+        (f) => f.name.toLowerCase() === event.name.toLowerCase()
+      );
+
+      if (existingFilter) {
+        this.gridService.updateSavedFilter(
+          this.gridId,
+          existingFilter.id,
+          event.filterState
+        );
+      }
+    } else {
+      // Save new filter
+      const savedFilter = this.gridService.saveFilter(
+        this.gridId,
+        event.name,
+        event.filterState
+      );
+
+      // Update local state
+      this.savedFilters = [...this.savedFilters, savedFilter];
+      this.activeFilterId = savedFilter.id;
+    }
+
+    // Reload saved filters
+    this.loadSavedFilters();
+  }
+
+  onFilterUpdate(filter: SavedFilter): void {
+    this.gridService.updateSavedFilter(
+      this.gridId,
+      filter.id,
+      this.currentFilterState
+    );
+
+    // Reload saved filters
+    this.loadSavedFilters();
+  }
+
+  onFilterDelete(filterId: string): void {
+    this.gridService.deleteSavedFilter(this.gridId, filterId);
+
+    // If deleted filter was active, clear current filters
+    if (this.activeFilterId === filterId) {
+      this.clearAllFilters();
+    } else {
+      // Just reload saved filters
+      this.loadSavedFilters();
+    }
+  }
+
+  clearAllFilters(): void {
+    this.gridService.clearAllFilters(this.gridId);
+
+    // Reset filter state
+    this.currentFilterState = {
+      filters: {},
+      globalFilter: undefined,
+    };
+
+    this.filterChange.emit(this.currentFilterState);
+
+    // Reset pagination
+    this.pagination.pageIndex = 0;
+    this.gridService.setPagination(this.gridId, { pageIndex: 0 });
+
+    if (this.endpoint) {
+      this.fetchData();
+    }
+
+    // Clear selection
+    this.clearSelection();
+
+    // Clear active filter
+    this.activeFilterId = undefined;
+  }
+
+  onFilterChange(filters: GridFilterState): void {
+    this.gridService.updateState(this.gridId, { filters });
+
+    // Update current filter state
+    this.currentFilterState = filters;
+
+    // Check if current filters match any saved filter
+    const matchingFilter = this.gridService.findMatchingSavedFilter(
+      this.gridId,
+      filters
+    );
+
+    if (matchingFilter) {
+      this.activeFilterId = matchingFilter.id;
+      this.gridService.updateState(this.gridId, {
+        activeFilterId: matchingFilter.id,
+      });
+    } else {
+      // Clear active filter if no match
+      this.activeFilterId = undefined;
+      this.gridService.clearActiveSavedFilter(this.gridId);
+    }
+
+    this.filterChange.emit(filters);
+
+    if (this.endpoint) {
+      this.pagination.pageIndex = 0;
+      this.gridService.setPagination(this.gridId, { pageIndex: 0 });
+      this.fetchData();
+    }
+
+    // Clear selection when filtering
+    this.clearSelection();
   }
 
   ngOnDestroy(): void {
@@ -270,17 +446,27 @@ export class GridComponent implements OnInit, OnDestroy {
     if (!this.showActions || this.actions.length === 0) {
       return false;
     }
-    
+
     // Check if user has permission for at least one action
-    return this.actions.some(action => this.authService.hasPermission(action.permission));
+    return this.actions.some((action) =>
+      this.authService.hasPermission(action.permission)
+    );
   }
 
   get isSelectionEnabled(): boolean {
-    return this.selectable && this.authService.hasPermission(this.selectionPermission);
+    return (
+      this.selectable &&
+      this.authService.hasPermission(this.selectionPermission)
+    );
   }
 
   updateVisibleColumns(): void {
-    this.visibleColumns = this.columns.filter((col) => !col.hidden && (col.permission == null ||  this.authService.hasPermission(col.permission)));
+    this.visibleColumns = this.columns.filter(
+      (col) =>
+        !col.hidden &&
+        (col.permission == null ||
+          this.authService.hasPermission(col.permission))
+    );
   }
 
   fetchData(showLoading: boolean = true): void {
@@ -353,7 +539,9 @@ export class GridComponent implements OnInit, OnDestroy {
     }
 
     // Check if user has permission for at least one action
-    const hasAnyPermission = this.actions.some(action => this.authService.hasPermission(action.permission));
+    const hasAnyPermission = this.actions.some((action) =>
+      this.authService.hasPermission(action.permission)
+    );
     if (!hasAnyPermission) {
       return;
     }
@@ -468,10 +656,29 @@ export class GridComponent implements OnInit, OnDestroy {
   private applyGlobalFilter(value: string): void {
     this.gridService.setGlobalFilter(this.gridId, value);
 
-    const filterState: GridFilterState = {
-      filters: {},
+    // Update current filter state
+    this.currentFilterState = {
+      ...this.currentFilterState,
       globalFilter: value,
     };
+
+    const filterState: GridFilterState = this.currentFilterState;
+
+    // Check if current filters match any saved filter
+    const matchingFilter = this.gridService.findMatchingSavedFilter(
+      this.gridId,
+      filterState
+    );
+
+    if (matchingFilter) {
+      this.activeFilterId = matchingFilter.id;
+      this.gridService.updateState(this.gridId, {
+        activeFilterId: matchingFilter.id,
+      });
+    } else {
+      this.activeFilterId = undefined;
+      this.gridService.clearActiveSavedFilter(this.gridId);
+    }
 
     this.filterChange.emit(filterState);
 
@@ -488,7 +695,6 @@ export class GridComponent implements OnInit, OnDestroy {
     // Reset loading state
     this.globalFilterLoading = false;
   }
-
   onSortChange(column: GridColumn): void {
     if (!column.sortable) {
       return;
@@ -578,22 +784,6 @@ export class GridComponent implements OnInit, OnDestroy {
 
   toggleFilters(): void {
     this.isFilterVisible = !this.isFilterVisible;
-  }
-
-  onFilterChange(filters: GridFilterState): void {
-    this.gridService.updateState(this.gridId, { filters });
-
-    this.filterChange.emit(filters);
-
-    if (this.endpoint) {
-      this.pagination.pageIndex = 0;
-      this.gridService.setPagination(this.gridId, { pageIndex: 0 });
-
-      this.fetchData();
-    }
-
-    // Clear selection when filtering
-    this.clearSelection();
   }
 
   toggleColumnSelector(): void {
