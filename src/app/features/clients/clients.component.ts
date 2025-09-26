@@ -692,6 +692,16 @@ export class ClientsComponent implements OnInit {
 
   gridBulkActions: GridAction[] = [
     {
+      id: 'bulk-deactivate',
+      label: 'Unassign operator',
+      icon: 'fas fa-check-circle',
+      type: 'secondary',
+      action: (clients: Client[]) => this.unassignClientsOperators(clients),
+      visible: false,
+      disabled: false,
+      permission: 2,
+    },
+    {
       id: 'bulk-activate',
       label: 'Assign to operator',
       icon: 'fas fa-check-circle',
@@ -996,6 +1006,19 @@ export class ClientsComponent implements OnInit {
       });
   }
 
+  private unassignClientsOperators(clients: Client[]): void {
+    if (!clients || clients.length === 0) {
+      this.alertService.warning('No clients selected');
+      return;
+    }
+
+    this.clientsService
+      .unAssignOperator(clients.map((x) => x.id))
+      .subscribe((result) => {
+        this.refreshGrid();
+      });
+  }
+
   private assignClientsToOperators(clients: Client[]): void {
     if (!clients || clients.length === 0) {
       this.alertService.warning('No clients selected for assignment');
@@ -1106,6 +1129,12 @@ export class ClientsComponent implements OnInit {
       },
       () => {}
     );
+  }
+
+  unAssignOperatorModal(client: any) {
+    this.clientsService.unAssignOperator([client.id]).subscribe((result) => {
+      this.refreshGrid();
+    });
   }
 
   openOperatorDetailsModal(clientOperator: any): void {
