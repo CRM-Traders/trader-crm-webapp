@@ -81,6 +81,24 @@ export class ModalService {
     this.modals.next([]);
   }
 
+  // Close only the most recently opened modal and resolve its result
+  closeLatest(result?: any): void {
+    const currentModals = this.modals.value;
+    const lastModal = currentModals[currentModals.length - 1];
+    if (lastModal) {
+      lastModal.close(result);
+    }
+  }
+
+  // Dismiss only the most recently opened modal and resolve its dismissed promise
+  dismissLatest(reason?: any): void {
+    const currentModals = this.modals.value;
+    const lastModal = currentModals[currentModals.length - 1];
+    if (lastModal) {
+      lastModal.dismiss(reason);
+    }
+  }
+
   getModal(modalId: string): ModalRef | undefined {
     return this.modals.value.find((modal) => modal.id === modalId);
   }
