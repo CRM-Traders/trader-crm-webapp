@@ -1,4 +1,4 @@
-// src/app/shared/components/grid/grid.component.ts
+// src/app/shared/components/grid/grid.component.ts - Key changes for ngOnInit
 import {
   Component,
   OnInit,
@@ -72,12 +72,12 @@ export class GridComponent implements OnInit, OnDestroy {
   columnSelectorDropdown!: ElementRef;
 
   @Input() permission: number = -1;
-  @Input() selectionPermission: number = -1; // New input for selection permission
+  @Input() selectionPermission: number = -1;
   @Input() gridId: string = 'default-grid';
   @Input() data: any[] = [];
   @Input() columns: GridColumn[] = [];
   @Input() actions: GridAction[] = [];
-  @Input() bulkActions: GridAction[] = []; // New input for bulk actions
+  @Input() bulkActions: GridAction[] = [];
   @Input() endpoint: string = '';
   @Input() emptyMessage: string = 'No records found';
   @Input() showFilters: boolean = true;
@@ -92,7 +92,7 @@ export class GridComponent implements OnInit, OnDestroy {
   @Input() responsive: boolean = true;
   @Input() enableContextMenu: boolean = true;
   @Input() maxPrimaryActions: number = 2;
-  @Input() globalFilterDebounceTime: number = 600; // Debounce time in milliseconds
+  @Input() globalFilterDebounceTime: number = 600;
 
   @Output() rowClick = new EventEmitter<any>();
   @Output() actionExecuted = new EventEmitter<{
@@ -102,7 +102,7 @@ export class GridComponent implements OnInit, OnDestroy {
   @Output() bulkActionExecuted = new EventEmitter<{
     action: GridAction;
     items: any[];
-  }>(); // New output for bulk actions
+  }>();
   @Output() contextMenuOpened = new EventEmitter<GridContextMenuEvent>();
   @Output() selectionChange = new EventEmitter<any[]>();
   @Output() sortChange = new EventEmitter<GridSort>();
@@ -132,7 +132,6 @@ export class GridComponent implements OnInit, OnDestroy {
   loading: boolean = false;
   globalFilterLoading: boolean = false;
 
-  // Context menu properties
   contextMenuVisible: boolean = false;
   contextMenuPosition = { x: 0, y: 0 };
   contextMenuActions: GridAction[] = [];
@@ -167,7 +166,6 @@ export class GridComponent implements OnInit, OnDestroy {
   onDocumentClick(event: Event): void {
     this.contextMenuVisible = false;
 
-    // Close column selector if clicking outside
     if (this.isColumnSelectorVisible) {
       const target = event.target as Node;
       const columnSelectorButton =
@@ -176,7 +174,6 @@ export class GridComponent implements OnInit, OnDestroy {
         );
       const columnSelectorDropdown = this.columnSelectorDropdown?.nativeElement;
 
-      // Check if click is outside both the button and dropdown
       if (
         columnSelectorButton &&
         !columnSelectorButton.contains(target) &&
@@ -190,7 +187,6 @@ export class GridComponent implements OnInit, OnDestroy {
 
   @HostListener('document:contextmenu', ['$event'])
   onDocumentRightClick(event: Event): void {
-    // Only prevent default if not over our grid
     if (!this.gridContainer?.nativeElement.contains(event.target as Node)) {
       return;
     }
@@ -206,6 +202,17 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // IMPORTANT: Clear all filters when component initializes
+    // This handles both page refresh and navigation scenarios
+    this.gridService.clearAllFilters(this.gridId);
+
+    // Reset the filter state
+    this.currentFilterState = {
+      filters: {},
+      globalFilter: undefined,
+    };
+    this.activeFilterId = undefined;
+
     this.themeService.isDarkMode$
       .pipe(takeUntil(this.destroy$))
       .subscribe((isDark) => {
@@ -215,7 +222,7 @@ export class GridComponent implements OnInit, OnDestroy {
     // Setup debounced global filter
     this.globalFilterSubject
       .pipe(
-        debounceTime(this.globalFilterDebounceTime), // Configurable delay
+        debounceTime(this.globalFilterDebounceTime),
         distinctUntilChanged(),
         takeUntil(this.destroy$)
       )
@@ -270,9 +277,27 @@ export class GridComponent implements OnInit, OnDestroy {
         }
 
         this.savedFilters = state.savedFilters || [];
-        this.activeFilterId = state.activeFilterId;
 
-        this.currentFilterState = state.filters;
+        // Only update filter state if it's different from the cleared state
+        // This prevents restoring filters after we've just cleared them
+        if (
+          state.filters &&
+          (Object.keys(state.filters.filters).length > 0 ||
+            state.filters.globalFilter)
+        ) {
+          // Check if this is happening during initialization
+          // If we just cleared filters, don't restore them
+          if (
+            Object.keys(this.currentFilterState.filters).length === 0 &&
+            !this.currentFilterState.globalFilter
+          ) {
+            // We just cleared filters, don't restore them from state
+            return;
+          }
+          this.currentFilterState = state.filters;
+        }
+
+        this.activeFilterId = state.activeFilterId;
       });
 
     // Fetch data with reset pagination
@@ -285,12 +310,8 @@ export class GridComponent implements OnInit, OnDestroy {
 
   loadSavedFilters(): void {
     this.savedFilters = this.gridService.getSavedFilters(this.gridId);
-    const activeSavedFilter = this.gridService.getActiveSavedFilter(
-      this.gridId
-    );
-    if (activeSavedFilter) {
-      this.activeFilterId = activeSavedFilter.id;
-    }
+    // Don't restore active filter on component init
+    this.activeFilterId = undefined;
   }
 
   onSavedFilterSelected(filter: SavedFilter): void {
@@ -434,9 +455,14 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clear filters when component is destroyed (navigating away)
+    this.gridService.clearAllFilters(this.gridId);
+
     this.destroy$.next();
     this.destroy$.complete();
   }
+
+  // ... rest of the component methods remain the same ...
 
   get filterableColumns(): GridColumn[] {
     return this.columns.filter((col) => col.filterable !== false);
@@ -447,7 +473,6 @@ export class GridComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    // Check if user has permission for at least one action
     return this.actions.some((action) =>
       this.authService.hasPermission(action.permission)
     );
@@ -490,8 +515,6 @@ export class GridComponent implements OnInit, OnDestroy {
         next: (response) => {
           this.data = response.items || response || [];
 
-          // Preserve the current pageIndex and pageSize if the response doesn't provide them
-          // or if they don't match what was requested
           const currentState = this.gridService.getCurrentState(this.gridId);
           const newPagination = {
             pageIndex:
@@ -538,7 +561,6 @@ export class GridComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Check if user has permission for at least one action
     const hasAnyPermission = this.actions.some((action) =>
       this.authService.hasPermission(action.permission)
     );
@@ -571,12 +593,10 @@ export class GridComponent implements OnInit, OnDestroy {
 
     this.actionExecuted.emit({ action, item: targetItem });
 
-    // Execute the action
     if (action.action) {
       action.action(targetItem, action);
     }
 
-    // Close context menu if open
     this.contextMenuVisible = false;
   }
 
@@ -590,13 +610,9 @@ export class GridComponent implements OnInit, OnDestroy {
       items: [...this.selectedItems],
     });
 
-    // Execute the action
     if (action.action) {
       action.action(this.selectedItems, action);
     }
-
-    // Optionally clear selection after bulk action
-    // this.clearSelection();
   }
 
   onContextMenuActionExecuted(action: GridAction): void {
@@ -656,7 +672,6 @@ export class GridComponent implements OnInit, OnDestroy {
   private applyGlobalFilter(value: string): void {
     this.gridService.setGlobalFilter(this.gridId, value);
 
-    // Update current filter state
     this.currentFilterState = {
       ...this.currentFilterState,
       globalFilter: value,
@@ -664,7 +679,6 @@ export class GridComponent implements OnInit, OnDestroy {
 
     const filterState: GridFilterState = this.currentFilterState;
 
-    // Check if current filters match any saved filter
     const matchingFilter = this.gridService.findMatchingSavedFilter(
       this.gridId,
       filterState
@@ -689,12 +703,10 @@ export class GridComponent implements OnInit, OnDestroy {
       this.fetchData();
     }
 
-    // Clear selection when filtering
     this.clearSelection();
-
-    // Reset loading state
     this.globalFilterLoading = false;
   }
+
   onSortChange(column: GridColumn): void {
     if (!column.sortable) {
       return;
@@ -733,7 +745,6 @@ export class GridComponent implements OnInit, OnDestroy {
       this.fetchData();
     }
 
-    // Update select all state when page changes
     this.updateSelectAllState();
   }
 
@@ -756,7 +767,6 @@ export class GridComponent implements OnInit, OnDestroy {
       this.fetchData();
     }
 
-    // Update select all state when page size changes
     this.updateSelectAllState();
   }
 
@@ -778,7 +788,6 @@ export class GridComponent implements OnInit, OnDestroy {
       this.pageChange.emit(this.pagination);
     }
 
-    // Update select all state when page size changes
     this.updateSelectAllState();
   }
 
@@ -823,7 +832,6 @@ export class GridComponent implements OnInit, OnDestroy {
     this.fetchData();
     this.refresh.emit();
 
-    // Preserve the current pagination state after refresh
     if (
       this.pagination.pageSize !== currentPageSize ||
       this.pagination.pageIndex !== currentPageIndex
@@ -836,7 +844,6 @@ export class GridComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Clear selection when refreshing
     this.clearSelection();
   }
 

@@ -90,6 +90,16 @@ export class ClientsService {
     });
   }
 
+  unAssignOperator(clients: string[]) {
+    return this.httpService.post(
+      'identity/api/operatorclient/unassign-clients-from-operator',
+      {
+        clientIds: clients,
+        clientType: 1,
+      }
+    );
+  }
+
   // New method to assign clients to operator
   assignClientsToOperator(
     request: AssignClientsToOperatorRequest
@@ -99,8 +109,6 @@ export class ClientsService {
       request
     );
   }
-
-
 
   importClients(file: File): Observable<ClientImportResponse> {
     const formData = new FormData();
@@ -153,11 +161,13 @@ export class ClientsService {
   }
 
   // Fetch clients via grid endpoint to build dropdowns (all clients, not only active)
-  getClientsDropdown(params: {
-    pageIndex?: number;
-    pageSize?: number;
-    globalFilter?: string | null;
-  } = {}) {
+  getClientsDropdown(
+    params: {
+      pageIndex?: number;
+      pageSize?: number;
+      globalFilter?: string | null;
+    } = {}
+  ) {
     const request = {
       pageIndex: params.pageIndex ?? 0,
       pageSize: params.pageSize ?? 1000,

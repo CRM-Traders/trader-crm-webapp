@@ -70,8 +70,15 @@ export class GridService {
         let state: GridState;
 
         if (allStates && allStates[gridId]) {
-          // Use existing state from backend
-          state = this.mergeWithDefault(allStates[gridId]);
+          // Use existing state from backend but reset filters to default
+          // Only keep saved filters, sort, pagination, and column settings
+          state = this.mergeWithDefault({
+            ...allStates[gridId],
+            // Reset active filters to default (empty)
+            filters: this.defaultState.filters,
+            // Clear active filter ID on load
+            activeFilterId: undefined,
+          });
         } else {
           // Create new default state for this grid
           state = { ...this.defaultState };
@@ -177,6 +184,8 @@ export class GridService {
       },
       visibleColumns: state.visibleColumns || [],
       columnsInitialized: state.columnsInitialized || false,
+      savedFilters: state.savedFilters || [],
+      activeFilterId: state.activeFilterId,
     };
   }
 
@@ -184,19 +193,52 @@ export class GridService {
    * Add new grid state to the backend
    */
   private addNewGridState(gridId: string, state: GridState): void {
+    // Only save persistent state (exclude current filters)
+    const persistentState = this.getPersistentState(state);
+
     // Update local cache
-    this.allGridStates[gridId] = state;
+    this.allGridStates[gridId] = persistentState;
 
     // Save to backend (debounced)
-    this.saveStateDebounced(gridId, state);
+    this.savePersistentStateDebounced(gridId);
   }
 
   /**
-   * Save grid state to backend
+   * Get only the persistent parts of the state (exclude current filters)
    */
-  private saveGridState(gridId: string, state: GridState): Observable<any> {
+  private getPersistentState(state: GridState): GridState {
+    return {
+      // Don't persist current filters - always start fresh
+      filters: this.defaultState.filters,
+      // Keep sort preferences
+      sort: state.sort,
+      // Keep pagination settings (but reset pageIndex)
+      pagination: {
+        ...state.pagination,
+        pageIndex: 0,
+      },
+      // Keep column visibility settings
+      visibleColumns: state.visibleColumns,
+      columnsInitialized: state.columnsInitialized,
+      // Keep saved filters
+      savedFilters: state.savedFilters,
+      // Don't persist active filter ID
+      activeFilterId: undefined,
+    };
+  }
+
+  /**
+   * Save grid state to backend (only persistent parts)
+   */
+  private saveGridState(gridId: string): Observable<any> {
+    // Get current state
+    const currentState = this.getCurrentState(gridId);
+
+    // Only save persistent parts
+    const persistentState = this.getPersistentState(currentState);
+
     // Update the specific grid state in our cache
-    this.allGridStates[gridId] = state;
+    this.allGridStates[gridId] = persistentState;
 
     // Prepare the request body with stringified grid states
     const requestBody = {
@@ -217,9 +259,9 @@ export class GridService {
   }
 
   /**
-   * Debounced save to avoid too many API calls
+   * Debounced save to avoid too many API calls (only saves persistent state)
    */
-  private saveStateDebounced(gridId: string, state: GridState): void {
+  private savePersistentStateDebounced(gridId: string): void {
     // Clear existing timer
     if (this.saveDebounceTimers.has(gridId)) {
       clearTimeout(this.saveDebounceTimers.get(gridId));
@@ -227,7 +269,7 @@ export class GridService {
 
     // Set new timer
     const timer = setTimeout(() => {
-      this.saveGridState(gridId, state).subscribe({
+      this.saveGridState(gridId).subscribe({
         next: () => console.log(`Grid state saved for ${gridId}`),
         error: (error) =>
           console.error(`Failed to save grid state for ${gridId}:`, error),
@@ -236,6 +278,15 @@ export class GridService {
     }, 500); // 500ms debounce
 
     this.saveDebounceTimers.set(gridId, timer);
+  }
+
+  /**
+   * Debounced save for non-filter updates
+   */
+  private saveStateDebounced(gridId: string, state: GridState): void {
+    // Only save if it's not just a filter change
+    // Filters are only persisted when saved explicitly
+    this.savePersistentStateDebounced(gridId);
   }
 
   /**
@@ -298,11 +349,18 @@ export class GridService {
       this.gridStateMap.get(gridId)!.next(newState);
     }
 
-    // Update cache
-    this.allGridStates[gridId] = newState;
+    // Only save to backend if it's not a filter change
+    // Filters are only persisted when explicitly saved
+    const isFilterChange = state.filters !== undefined && !state.savedFilters;
 
-    // Save to backend (debounced)
-    this.saveStateDebounced(gridId, newState);
+    if (!isFilterChange) {
+      // Update cache with persistent state only
+      const persistentState = this.getPersistentState(newState);
+      this.allGridStates[gridId] = persistentState;
+
+      // Save to backend (debounced)
+      this.savePersistentStateDebounced(gridId);
+    }
   }
 
   /**
@@ -317,15 +375,16 @@ export class GridService {
       this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(resetState));
     }
 
-    // Update cache
-    this.allGridStates[gridId] = resetState;
+    // Update cache with persistent state
+    const persistentState = this.getPersistentState(resetState);
+    this.allGridStates[gridId] = persistentState;
 
     // Save reset state to backend
-    this.saveStateDebounced(gridId, resetState);
+    this.savePersistentStateDebounced(gridId);
   }
 
   /**
-   * Set filter for a field
+   * Set filter for a field (in-memory only, not persisted)
    */
   setFilter(gridId: string, filter: GridFilter): void {
     const currentState = this.getCurrentState(gridId);
@@ -334,7 +393,8 @@ export class GridService {
       [filter.field]: filter,
     };
 
-    this.updateState(gridId, {
+    // Update state without saving to backend
+    this.updateStateWithoutPersist(gridId, {
       filters: {
         ...currentState.filters,
         filters: newFilters,
@@ -343,14 +403,42 @@ export class GridService {
   }
 
   /**
-   * Remove filter for a field
+   * Update state without persisting (for temporary filter changes)
+   */
+  private updateStateWithoutPersist(
+    gridId: string,
+    state: Partial<GridState>
+  ): void {
+    const currentState = this.getCurrentState(gridId);
+    const newState = {
+      ...currentState,
+      ...state,
+      filters: state.filters
+        ? {
+            ...currentState.filters,
+            ...state.filters,
+            filters: state.filters.filters || currentState.filters.filters,
+          }
+        : currentState.filters,
+    };
+
+    // Update local state only
+    if (!this.gridStateMap.has(gridId)) {
+      this.gridStateMap.set(gridId, new BehaviorSubject<GridState>(newState));
+    } else {
+      this.gridStateMap.get(gridId)!.next(newState);
+    }
+  }
+
+  /**
+   * Remove filter for a field (in-memory only, not persisted)
    */
   removeFilter(gridId: string, field: string): void {
     const currentState = this.getCurrentState(gridId);
     const newFilters = { ...currentState.filters.filters };
     delete newFilters[field];
 
-    this.updateState(gridId, {
+    this.updateStateWithoutPersist(gridId, {
       filters: {
         ...currentState.filters,
         filters: newFilters,
@@ -359,12 +447,12 @@ export class GridService {
   }
 
   /**
-   * Set global filter
+   * Set global filter (in-memory only, not persisted)
    */
   setGlobalFilter(gridId: string, value: string): void {
     const currentState = this.getCurrentState(gridId);
 
-    this.updateState(gridId, {
+    this.updateStateWithoutPersist(gridId, {
       filters: {
         ...currentState.filters,
         globalFilter: value,
@@ -404,7 +492,7 @@ export class GridService {
   }
 
   /**
-   * Force save current state immediately (useful before navigation)
+   * Force save current state immediately (only persistent parts)
    */
   forceSaveState(gridId: string): Observable<any> {
     // Clear any pending debounced saves
@@ -413,20 +501,28 @@ export class GridService {
       this.saveDebounceTimers.delete(gridId);
     }
 
-    const currentState = this.getCurrentState(gridId);
-    return this.saveGridState(gridId, currentState);
+    return this.saveGridState(gridId);
   }
 
   /**
-   * Force save all states
+   * Force save all states (only persistent parts)
    */
   forceSaveAllStates(): Observable<any> {
     // Clear all pending debounced saves
     this.saveDebounceTimers.forEach((timer) => clearTimeout(timer));
     this.saveDebounceTimers.clear();
 
+    // Prepare all states with only persistent parts
+    const persistentStates: GridStateResponse = {};
+    Object.keys(this.allGridStates).forEach((gridId) => {
+      const currentState = this.gridStateMap.has(gridId)
+        ? this.gridStateMap.get(gridId)!.value
+        : this.allGridStates[gridId];
+      persistentStates[gridId] = this.getPersistentState(currentState);
+    });
+
     const requestBody = {
-      body: JSON.stringify(this.allGridStates),
+      body: JSON.stringify(persistentStates),
     };
 
     return this.httpService.post(this.GRID_STATE_UPDATE_ENDPOINT, requestBody);
@@ -441,7 +537,12 @@ export class GridService {
         // Initialize all loaded states
         if (states) {
           Object.entries(states).forEach(([gridId, state]) => {
-            const mergedState = this.mergeWithDefault(state);
+            // Reset filters to default when loading
+            const mergedState = this.mergeWithDefault({
+              ...state,
+              filters: this.defaultState.filters,
+              activeFilterId: undefined,
+            });
 
             if (!this.gridStateMap.has(gridId)) {
               this.gridStateMap.set(
@@ -682,12 +783,11 @@ export class GridService {
    * Cleanup method - call on service destroy or app termination
    */
   ngOnDestroy(): void {
-    // Save all pending states
+    // Save all pending states (only persistent parts)
     this.saveDebounceTimers.forEach((timer, gridId) => {
       clearTimeout(timer);
       // Force save the state
-      const state = this.getCurrentState(gridId);
-      this.saveGridState(gridId, state).subscribe();
+      this.saveGridState(gridId).subscribe();
     });
     this.saveDebounceTimers.clear();
   }
@@ -714,6 +814,7 @@ export class GridService {
 
     const updatedFilters = [...savedFilters, newFilter];
 
+    // This update includes savedFilters, so it will be persisted
     this.updateState(gridId, {
       savedFilters: updatedFilters,
       activeFilterId: newFilter.id,
@@ -741,6 +842,7 @@ export class GridService {
       return filter;
     });
 
+    // This update includes savedFilters, so it will be persisted
     this.updateState(gridId, {
       savedFilters: updatedFilters,
     });
@@ -763,20 +865,22 @@ export class GridService {
       updates.activeFilterId = undefined;
     }
 
+    // This update includes savedFilters, so it will be persisted
     this.updateState(gridId, updates);
   }
 
   applySavedFilter(gridId: string, filter: SavedFilter): void {
     const filterStateCopy = JSON.parse(JSON.stringify(filter.filterState));
 
-    this.updateState(gridId, {
+    // Update filters without persisting (they're temporary until saved)
+    this.updateStateWithoutPersist(gridId, {
       filters: filterStateCopy,
       activeFilterId: filter.id,
     });
   }
 
   clearActiveSavedFilter(gridId: string): void {
-    this.updateState(gridId, {
+    this.updateStateWithoutPersist(gridId, {
       activeFilterId: undefined,
     });
   }
@@ -794,7 +898,8 @@ export class GridService {
   clearAllFilters(gridId: string): void {
     const currentState = this.getCurrentState(gridId);
 
-    this.updateState(gridId, {
+    // Clear filters without persisting
+    this.updateStateWithoutPersist(gridId, {
       filters: {
         filters: {},
         globalFilter: undefined,
@@ -890,6 +995,7 @@ export class GridService {
         }
       });
 
+      // This update includes savedFilters, so it will be persisted
       this.updateState(gridId, {
         savedFilters: mergedFilters,
       });
