@@ -311,17 +311,23 @@ export class AffiliatesComponent implements OnInit {
       )
       .subscribe((response) => {
         if (response) {
-          const url = window.URL.createObjectURL(response);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `integration_document_${affiliateId}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          this.alertService.success(
-            'Integration document downloaded successfully!'
-          );
+          // Convert blob to text and download as HTML file
+          response.text().then((htmlContent) => {
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `integration_document_${affiliateId}.html`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            this.alertService.success(
+              'Integration document downloaded successfully!'
+            );
+          }).catch((error) => {
+            this.alertService.error('Failed to process integration document');
+          });
         }
       });
   }

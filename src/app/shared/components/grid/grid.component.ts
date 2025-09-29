@@ -810,9 +810,13 @@ export class GridComponent implements OnInit, OnDestroy {
 
       const url = window.URL.createObjectURL(blob);
 
+      // Extract the word before the last slash from the endpoint URL
+      const urlParts = this.endpoint.split('/');
+      const fileName = urlParts[urlParts.length - 2] || 'export';
+
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'clients.xlsx';
+      link.download = `${fileName}.xlsx`;
       link.click();
 
       window.URL.revokeObjectURL(url);
