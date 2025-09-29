@@ -1,0 +1,42 @@
+// Sales Status Confirmation Modal Styles
+// Using Tailwind CSS classes, so minimal custom styles needed
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Ensure proper spacing and layout
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+.space-x-3 > * + * {
+  margin-left: 0.75rem;
+}
+
+// Focus states for accessibility
+button:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+// Smooth transitions
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+// Hover effects
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+// Active state
+button:active {
+  transform: translateY(0);
+}

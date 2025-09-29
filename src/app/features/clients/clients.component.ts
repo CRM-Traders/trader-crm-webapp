@@ -45,6 +45,7 @@ import { GridComponent } from '../../shared/components/grid/grid.component';
 import { CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
+import { SalesStatusConfirmationModalComponent } from '../../shared/components/sales-status-confirmation-modal/sales-status-confirmation-modal.component';
 import {
   GridColumn,
   GridAction,
@@ -791,7 +792,58 @@ export class ClientsComponent implements OnInit {
   onSalesStatusSelect(clientId: string, value: number, clientData: any): void {
     const status = this.salesStatusOptions.find((s) => s.value === value);
     if (!status) return;
-    this.selectSalesStatus(clientId, status, clientData);
+    
+    // Show confirmation modal instead of directly changing status
+    this.showSalesStatusConfirmationModal(clientId, status, clientData);
+  }
+
+  // Show sales status confirmation modal
+  showSalesStatusConfirmationModal(
+    clientId: string,
+    status: { value: number; label: string },
+    clientData: any
+  ): void {
+    const currentStatus = this.normalizeSalesStatus(
+      clientData?.saleStatusEnum || clientData?.salesStatus
+    );
+    const currentStatusLabel = this.salesStatusOptions.find(
+      (s) => s.value === currentStatus
+    )?.label || 'Unknown';
+
+    const modalRef = this.modalService.open(
+      SalesStatusConfirmationModalComponent,
+      {
+        size: 'md',
+        closable: true,
+        backdrop: true,
+        keyboard: true,
+        centered: true,
+        animation: true,
+      },
+      {
+        clientId: clientId,
+        clientName: clientData?.firstName && clientData?.lastName 
+          ? `${clientData.firstName} ${clientData.lastName}` 
+          : clientData?.email || 'Unknown Client',
+        currentStatus: currentStatusLabel,
+        newStatus: status.label,
+        status: status,
+        clientData: clientData,
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          // User confirmed, proceed with the status change
+          this.selectSalesStatus(clientId, status, clientData);
+        }
+      },
+      (reason) => {
+        // User cancelled or modal was dismissed
+        console.log('Sales status change cancelled:', reason);
+      }
+    );
   }
 
   private reinitializeComponent(): void {

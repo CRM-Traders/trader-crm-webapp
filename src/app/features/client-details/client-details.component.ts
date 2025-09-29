@@ -1,10 +1,11 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, of } from 'rxjs';
+import { Subject, takeUntil, catchError, of, finalize } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
+import { AuthService } from '../../core/services/auth.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
-import { Client } from '../clients/models/clients.model';
+import { Client, KycStatusLabels } from '../clients/models/clients.model';
 import { ClientAccountsComponent } from './components/client-accounts/client-accounts.component';
 import { ClientCallHistoryComponent } from './components/client-call-history/client-call-history.component';
 import { ClientCallbacksComponent } from './components/client-callbacks/client-callbacks.component';
@@ -27,6 +28,8 @@ import { ClientComment } from './models/client-comment.model';
 import { ClientsService } from '../clients/services/clients.service';
 import { AssignOperatorModalComponent } from '../clients/components/assign-operator-modal/assign-operator-modal.component';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
+import { SalesStatusConfirmationModalComponent } from '../../shared/components/sales-status-confirmation-modal/sales-status-confirmation-modal.component';
 
 export enum ClientDetailSection {
   Profile = 'profile',
@@ -60,6 +63,7 @@ export enum ClientDetailSection {
     ClientFeedComponent,
     ClientReferralsComponent,
     HasPermissionDirective,
+    CustomSelectComponent,
   ],
   templateUrl: './client-details.component.html',
   styles: [
@@ -80,6 +84,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
   private alertService = inject(AlertService);
+  private authService = inject(AuthService);
   private modalService = inject(ModalService);
   private _userService = inject(UsersService);
   private notesService = inject(NotesService);
@@ -106,6 +111,10 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   phoneLoading = false;
   emailFetched = false;
   phoneFetched = false;
+
+  // Sales status properties
+  salesStatusOptions: { value: number; label: string }[] = [];
+  updatingSalesStatus = false;
 
   navigationSections = [
     { key: ClientDetailSection.Profile, label: 'Profile', permission: 17 },
@@ -150,7 +159,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
         status: result.status,
         kycStatusId: result.kycStatusId,
         salesStatus: result.salesStatus,
-        saleStatusEnum: null, // Not provided in API response
+        saleStatusEnum: result.saleStatusEnum,
         isProblematic: result.isProblematic,
         isBonusAbuser: result.isBonusAbuser,
         bonusAbuserReason: result.bonusAbuserReason,
@@ -172,6 +181,9 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
       this.loadPinnedNotes();
       this.loadClientComments();
+      
+      // Initialize sales status options
+      this.initializeSalesStatusOptions();
     });
   }
 
@@ -426,8 +438,144 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
     return this.client?.balance ? this.client.balance.toFixed(2) : '0.00';
   }
 
+  // Initialize sales status options
+  initializeSalesStatusOptions(): void {
+    this.salesStatusOptions = Object.entries(KycStatusLabels).map(
+      ([value, label]) => ({
+        value: Number(value),
+        label: label,
+      })
+    );
+  }
+
+  // Handler for sales status change
+  onSalesStatusSelect(value: number): void {
+    const status = this.salesStatusOptions.find((s) => s.value === value);
+    if (!status) return;
+    
+    // Show confirmation modal instead of directly changing status
+    this.showSalesStatusConfirmationModal(status);
+  }
+
+  // Show sales status confirmation modal
+  showSalesStatusConfirmationModal(status: { value: number; label: string }): void {
+    const currentStatus = this.normalizeSalesStatus(
+      this.client?.saleStatusEnum || this.client?.salesStatus
+    );
+    const currentStatusLabel = this.salesStatusOptions.find(
+      (s) => s.value === currentStatus
+    )?.label || 'Unknown';
+
+    const modalRef = this.modalService.open(
+      SalesStatusConfirmationModalComponent,
+      {
+        size: 'md',
+        closable: true,
+        backdrop: true,
+        keyboard: true,
+        centered: true,
+        animation: true,
+      },
+      {
+        clientId: this.client.id,
+        clientName: this.client?.firstName && this.client?.lastName 
+          ? `${this.client.firstName} ${this.client.lastName}` 
+          : this.client?.email || 'Unknown Client',
+        currentStatus: currentStatusLabel,
+        newStatus: status.label,
+        status: status,
+        clientData: this.client,
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          // User confirmed, proceed with the status change
+          this.selectSalesStatus(status);
+        }
+      },
+      (reason) => {
+        // User cancelled or modal was dismissed
+        console.log('Sales status change cancelled:', reason);
+      }
+    );
+  }
+
+  // Normalize sales status value
+  normalizeSalesStatus(status: any): number {
+    if (typeof status === 'number') return status;
+    if (typeof status === 'string') return parseInt(status, 10);
+    return 0;
+  }
+
+  // Update sales status
+  selectSalesStatus(status: { value: number; label: string }): void {
+    const newSalesStatus = status.value;
+    const currentSalesStatus = this.normalizeSalesStatus(
+      this.client?.saleStatusEnum || this.client?.salesStatus
+    );
+
+    if (newSalesStatus === currentSalesStatus) {
+      return;
+    }
+
+    // Update the client data immediately for instant UI feedback
+    if (this.client) {
+      // Update both possible field names
+      if (this.client.saleStatusEnum !== undefined) {
+        this.client.saleStatusEnum = status.value;
+      }
+      if (this.client.salesStatus !== undefined) {
+        this.client.salesStatus = status.value.toString();
+      }
+    }
+
+    this.updatingSalesStatus = true;
+
+    this.clientsService
+      .updateClientStatus(this.client.id, newSalesStatus)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to update sales status');
+
+          // Revert the client data changes on error
+          if (this.client) {
+            if (this.client.saleStatusEnum !== undefined) {
+              this.client.saleStatusEnum = currentSalesStatus;
+            }
+            if (this.client.salesStatus !== undefined) {
+              this.client.salesStatus = currentSalesStatus.toString();
+            }
+          }
+
+          this.updatingSalesStatus = false;
+          return of(null);
+        }),
+        finalize(() => {
+          this.updatingSalesStatus = false;
+        })
+      )
+      .subscribe((result) => {
+        if (result) {
+          this.alertService.success('Sales status updated successfully');
+        }
+      });
+  }
+
   getClientRegistrationIP(): string {
     return this.client?.registrationIP || 'Not available';
+  }
+
+  hasPermission(permissionIndex: number): boolean {
+    return this.authService.hasPermission(permissionIndex);
+  }
+
+  parseSalesStatus(status: string | number | null | undefined): number | null {
+    if (typeof status === 'number') return status;
+    if (typeof status === 'string') return parseInt(status, 10);
+    return null;
   }
 
   getClientSource(): string {
