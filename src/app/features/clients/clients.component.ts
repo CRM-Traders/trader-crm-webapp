@@ -160,6 +160,9 @@ export class ClientsComponent implements OnInit {
   totalCount = 0;
   activeCount = 0;
 
+  // Temporary selection state for sales status dropdowns
+  private tempSalesStatusSelections: Map<string, number> = new Map();
+
   operatorDropdownStates: Map<string, boolean> = new Map();
   salesStatusDropdownStates: Map<string, boolean> = new Map();
   operatorSearchTerms: Map<string, string> = new Map();
@@ -788,26 +791,55 @@ export class ClientsComponent implements OnInit {
     this.selectOperator(clientId, selected, clientData);
   }
 
+  // Get the selected value for sales status dropdown (considers temporary selections)
+  getSalesStatusSelectedValue(value: any, row: any): number | null {
+    const clientId = value?.id || row?.id;
+    if (!clientId) return null;
+
+    // Check if there's a temporary selection for this client
+    if (this.tempSalesStatusSelections.has(clientId)) {
+      const tempValue = this.tempSalesStatusSelections.get(clientId)!;
+      console.log('Using temporary selection for client', clientId, ':', tempValue);
+      return tempValue;
+    }
+
+    // Return the actual data value
+    const actualValue = this.normalizeSalesStatus(
+      value?.saleStatusEnum ?? value?.salesStatus ?? row?.saleStatusEnum ?? row?.salesStatus ?? null
+    );
+    console.log('Using actual value for client', clientId, ':', actualValue);
+    return actualValue;
+  }
+
   // Handler for CustomSelect change (Sales Status)
   onSalesStatusSelect(clientId: string, value: number, clientData: any): void {
+    console.log('Sales status selected:', { clientId, value, clientData });
     const status = this.salesStatusOptions.find((s) => s.value === value);
     if (!status) return;
     
+    // Store the original status before showing modal
+    const originalStatus = this.normalizeSalesStatus(
+      clientData?.saleStatusEnum || clientData?.salesStatus
+    );
+    console.log('Original status:', originalStatus);
+    
+    // Store temporary selection to show in dropdown
+    this.tempSalesStatusSelections.set(clientId, value);
+    console.log('Temporary selection set:', this.tempSalesStatusSelections);
+    
     // Show confirmation modal instead of directly changing status
-    this.showSalesStatusConfirmationModal(clientId, status, clientData);
+    this.showSalesStatusConfirmationModal(clientId, status, clientData, originalStatus);
   }
 
   // Show sales status confirmation modal
   showSalesStatusConfirmationModal(
     clientId: string,
     status: { value: number; label: string },
-    clientData: any
+    clientData: any,
+    originalStatus: number
   ): void {
-    const currentStatus = this.normalizeSalesStatus(
-      clientData?.saleStatusEnum || clientData?.salesStatus
-    );
     const currentStatusLabel = this.salesStatusOptions.find(
-      (s) => s.value === currentStatus
+      (s) => s.value === originalStatus
     )?.label || 'Unknown';
 
     const modalRef = this.modalService.open(
@@ -829,22 +861,46 @@ export class ClientsComponent implements OnInit {
         newStatus: status.label,
         status: status,
         clientData: clientData,
+        originalStatus: originalStatus,
       }
     );
 
     modalRef.result.then(
       (confirmed) => {
+        console.log('Modal confirmed:', confirmed);
         if (confirmed) {
           // User confirmed, proceed with the status change
           this.selectSalesStatus(clientId, status, clientData);
         }
+        // Clear temporary selection regardless of outcome
+        this.tempSalesStatusSelections.delete(clientId);
+        this.cdr.detectChanges();
       },
       (reason) => {
-        // User cancelled or modal was dismissed
-        console.log('Sales status change cancelled:', reason);
+        console.log('Modal cancelled/dismissed:', reason);
+        // User cancelled or modal was dismissed - clear temporary selection and force UI update
+        this.tempSalesStatusSelections.delete(clientId);
+        // Force change detection to ensure dropdown reverts to original value
+        this.cdr.detectChanges();
+        // Additional change detection cycle to ensure UI is properly updated
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 0);
       }
     );
+
+    // Handle modal dismissal (backdrop click, escape key, etc.)
+    modalRef.dismissed.then((reason) => {
+      console.log('Modal dismissed:', reason);
+      // Clear temporary selection and revert dropdown
+      this.tempSalesStatusSelections.delete(clientId);
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
+    });
   }
+
 
   private reinitializeComponent(): void {
     this.operators = [];
@@ -976,6 +1032,7 @@ export class ClientsComponent implements OnInit {
     this.destroy$.next();
     this.destroy$.complete();
     document.removeEventListener('click', this.onDocumentClick.bind(this));
+    this.tempSalesStatusSelections.clear();
   }
 
   /**
