@@ -37,7 +37,8 @@ export interface WalletTransaction {
     | 'PositionClosedWithLoss'
     | 'Liquidation'
     | 'OrderPlaced'
-    | 'CreditIn';
+    | 'CreditIn'
+    | 'CreditOut';
   paymentType: string | null;
   paymentMethod: string | null;
   paymentStatus: string | null;
@@ -62,7 +63,7 @@ export interface TradingAccountSummary {
   balance: number;
 }
 
-export type TransactionType = 'deposit' | 'withdraw' | 'credit';
+export type TransactionType = 'deposit' | 'withdraw' | 'credit' | 'debit';
 
 export interface CurrencyBreakdown {
   currency: string;
@@ -83,6 +84,7 @@ export interface ClientWalletsSummary {
   totalAvailableBalance: number;
   totalCredits: number;
   totalLockedBalance: number;
+  totalDebits: number;
   totalBalance: number;
   currencyBreakdown: CurrencyBreakdown[];
   lastUpdated: string;

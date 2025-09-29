@@ -112,7 +112,29 @@ export class WalletService {
         tap(() => {
           this._loading.set(false);
           this.alertService.success(
-            `Credit of ${this.formatCurrency(
+            `Credit In of ${this.formatCurrency(
+              request.amount,
+              request.currency
+            )} has been processed successfully!`
+          );
+        }),
+        catchError((error) => {
+          this._loading.set(false);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  debit(request: DepositRequest): Observable<void> {
+    this._loading.set(true);
+
+    return this.http
+      .post<void>(`${this.tradingBaseEndpoint}/debit`, request)
+      .pipe(
+        tap(() => {
+          this._loading.set(false);
+          this.alertService.success(
+            `Credit Out of ${this.formatCurrency(
               request.amount,
               request.currency
             )} has been processed successfully!`

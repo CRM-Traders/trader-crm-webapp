@@ -57,6 +57,7 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   showDepositModal = false;
   showWithdrawModal = false;
   showCreditModal = false;
+  showDebitModal = false;
 
   selectedTradingAccountId = '';
   tradingOrders: TradingOrder[] = [];
@@ -176,6 +177,10 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
 
   get totalCredits(): number {
     return this.walletSummary?.totalCredits || 0;
+  }
+
+  get totalDebits(): number {
+    return this.walletSummary?.totalDebits || 0;
   }
 
   get totalAvailableBalance(): number {
@@ -307,6 +312,14 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
 
   openDepositModal(): void {
     this.showDepositModal = true;
+  }
+
+  openDebitModal(): void {
+    this.showDebitModal = true;
+  }
+
+  closeDebitModal(): void {
+    this.showDebitModal = false;
   }
 
   openCreditModal(): void {
