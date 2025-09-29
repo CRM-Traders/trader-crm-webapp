@@ -50,7 +50,7 @@ export class SalesStatusConfirmationModalComponent {
   onCancel(): void {
     this.cancel.emit();
     if (this.modalRef) {
-      this.modalRef.dismiss();
+      this.modalRef.dismiss('cancelled');
     }
   }
 }

@@ -300,13 +300,7 @@
                       !hasPermission(53)
                     "
                     [options]="salesStatusOptions"
-                    [selectedValue]="
-                      value?.saleStatusEnum ??
-                      value?.salesStatus ??
-                      row?.saleStatusEnum ??
-                      row?.salesStatus ??
-                      null
-                    "
+                    [selectedValue]="getSalesStatusSelectedValue(value, row)"
                     [placeholder]="'Select status...'"
                     [dropdownWidth]="180"
                     [scrollContainers]="selectScrollContainers"
