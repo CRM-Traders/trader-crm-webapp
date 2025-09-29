@@ -29,7 +29,15 @@ export interface WalletTransaction {
   id: string;
   tradingAccountId: string;
   accountNumber: string;
-  transactionType: 'Deposit' | 'Withdrawal' | 'MarginLock' | 'PositionClosed' | 'PositionClosedWithLoss' | 'Liquidation' | 'OrderPlaced';
+  transactionType:
+    | 'Deposit'
+    | 'Withdrawal'
+    | 'MarginLock'
+    | 'PositionClosed'
+    | 'PositionClosedWithLoss'
+    | 'Liquidation'
+    | 'OrderPlaced'
+    | 'CreditIn';
   paymentType: string | null;
   paymentMethod: string | null;
   paymentStatus: string | null;
@@ -54,7 +62,7 @@ export interface TradingAccountSummary {
   balance: number;
 }
 
-export type TransactionType = 'deposit' | 'withdraw';
+export type TransactionType = 'deposit' | 'withdraw' | 'credit';
 
 export interface CurrencyBreakdown {
   currency: string;
@@ -73,6 +81,7 @@ export interface ClientWalletsSummary {
   totalTradingOrders: number;
   totalUsdEquivalent: number;
   totalAvailableBalance: number;
+  totalCredits: number;
   totalLockedBalance: number;
   totalBalance: number;
   currencyBreakdown: CurrencyBreakdown[];

@@ -12,6 +12,27 @@
       <button
         *hasPermission="46"
         type="button"
+        (click)="openCreditModal()"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+      >
+        <svg
+          class="w-4 h-4 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+          ></path>
+        </svg>
+        Credit
+      </button>
+      <button
+        *hasPermission="46"
+        type="button"
         (click)="openDepositModal()"
         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
       >
@@ -79,7 +100,7 @@
           </svg>
         </div>
         <div class="ml-4 overflow-hidden text-ellipsis">
-          <p class="text-sm font-medium text-green-800 dark:text-green-200 ">
+          <p class="text-sm font-medium text-green-800 dark:text-green-200">
             Total Deposits
           </p>
           <p class="text-2xl font-bold text-green-900 dark:text-green-100">
@@ -328,6 +349,39 @@
         </div>
       </div>
     </div>
+
+    <div
+      class="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-lg p-6"
+    >
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-orange-200 dark:bg-orange-700">
+          <svg
+            class="w-6 h-6 text-orange-600 dark:text-orange-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        </div>
+        <div class="ml-4 overflow-hidden whitespace-nowrap text-ellipsis">
+          <p class="text-sm font-medium text-orange-800 dark:text-orange-200">
+            Total Credits
+          </p>
+          <p class="text-2xl font-bold text-orange-900 dark:text-orange-100">
+            ${{ totalCredits.toLocaleString() }}
+          </p>
+          <p class="text-xs text-orange-700 dark:text-orange-300">
+            Total value in USD
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Wallet Transactions Tab -->
@@ -474,6 +528,8 @@
                   [ngClass]="{
                     'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200':
                       transaction.transactionType === 'Deposit',
+                    'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200':
+                      transaction.transactionType === 'CreditIn',
                     'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200':
                       transaction.transactionType === 'Withdrawal',
                     'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200':
@@ -669,3 +725,11 @@
   (onSuccess)="onTransactionSuccess()"
 >
 </app-wallet-transaction-modal>
+
+<app-wallet-transaction-modal
+  [isVisible]="showCreditModal"
+  [clientId]="clientId"
+  [transactionType]="'credit'"
+  (onClose)="closeCreditModal()"
+  (onSuccess)="onTransactionSuccess()"
+></app-wallet-transaction-modal>

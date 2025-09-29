@@ -51,7 +51,7 @@ export class WalletTransactionModalComponent
   private destroy$ = new Subject<void>();
 
   transactionForm!: FormGroup;
-  quickAmounts = [100, 500, 1000, 5000];
+  quickAmounts = [250, 500, 1000, 5000];
 
   availableWallets: Wallet[] = [];
   loadingWallets = false;
@@ -225,6 +225,25 @@ export class WalletTransactionModalComponent
             this.alertService.error(this.getErrorMessage(error));
           },
         });
+    } else if (this.transactionType === 'credit') {
+      const request: DepositRequest = {
+        tradingAccountId: formValue.tradingAccountId,
+        currency: formValue.currency,
+        amount: parseFloat(formValue.amount),
+      };
+
+      this.walletService
+        .credit(request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.onSuccess.emit();
+            this.onModalClose();
+          },
+          error: (error: unknown) => {
+            this.alertService.error(this.getErrorMessage(error));
+          },
+        });
     } else {
       if (selectedWallet.balance < parseFloat(formValue.amount)) {
         return;
@@ -325,5 +344,11 @@ export class WalletTransactionModalComponent
       return message;
     }
     return 'An unexpected error occurred. Please try again.';
+  }
+
+  getName(): string {
+    if (this.transactionType === 'deposit') return 'Process Deposit';
+    else if (this.transactionType === 'withdraw') return 'Process Withdrawal';
+    return 'Process Credit';
   }
 }

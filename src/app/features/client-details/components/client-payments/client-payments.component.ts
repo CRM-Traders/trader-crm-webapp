@@ -56,6 +56,7 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
 
   showDepositModal = false;
   showWithdrawModal = false;
+  showCreditModal = false;
 
   selectedTradingAccountId = '';
   tradingOrders: TradingOrder[] = [];
@@ -173,6 +174,10 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     return this.walletSummary?.totalUsdEquivalent || 0;
   }
 
+  get totalCredits(): number {
+    return this.walletSummary?.totalCredits || 0;
+  }
+
   get totalAvailableBalance(): number {
     return this.walletSummary?.totalAvailableBalance || 0;
   }
@@ -250,7 +255,7 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
       transactionType: this.transactionTypeFilter || undefined,
       currency: this.currencyFilter || undefined,
     };
-    
+
     this.walletService
       .getClientTransactionsByUserId(this.clientId, filters)
       .pipe(takeUntil(this.destroy$))
@@ -260,11 +265,11 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
           this.totalItems = response.totalCount;
           this.pageSize = response.pageSize;
           this.totalPages = Math.ceil(this.totalItems / this.pageSize);
-          
+
           // Calculate pagination state based on current page and total pages
           this.hasNextPage = this.currentPage < this.totalPages;
           this.hasPreviousPage = this.currentPage > 1;
-          
+
           this.loadingWalletTransactions = false;
         },
         error: (error) => {
@@ -304,6 +309,10 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     this.showDepositModal = true;
   }
 
+  openCreditModal(): void {
+    this.showCreditModal = true;
+  }
+
   closeDepositModal(): void {
     this.showDepositModal = false;
   }
@@ -314,6 +323,10 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
 
   closeWithdrawModal(): void {
     this.showWithdrawModal = false;
+  }
+
+  closeCreditModal(): void {
+    this.showCreditModal = false;
   }
 
   onTransactionSuccess(): void {
