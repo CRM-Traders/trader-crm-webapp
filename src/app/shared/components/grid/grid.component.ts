@@ -146,11 +146,7 @@ export class GridComponent implements OnInit, OnDestroy {
 
   currentSort?: GridSort;
 
-  exportTypes = [
-    { label: 'CSV', value: 'csv' },
-    { label: 'Excel', value: 'excel' },
-    { label: 'PDF', value: 'pdf' },
-  ];
+  exportTypes = [{ label: 'Excel', value: 'excel' }];
 
   pageOptions: number[] = [5, 10, 25, 50, 100];
 
@@ -202,11 +198,8 @@ export class GridComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // IMPORTANT: Clear all filters when component initializes
-    // This handles both page refresh and navigation scenarios
     this.gridService.clearAllFilters(this.gridId);
 
-    // Reset the filter state
     this.currentFilterState = {
       filters: {},
       globalFilter: undefined,
@@ -232,7 +225,6 @@ export class GridComponent implements OnInit, OnDestroy {
 
     this.updateVisibleColumns();
 
-    // Initialize visible columns only if they were never initialized before
     const initialState = this.gridService.getCurrentState(this.gridId);
     if (!initialState.columnsInitialized) {
       this.gridService.setVisibleColumns(
@@ -810,19 +802,21 @@ export class GridComponent implements OnInit, OnDestroy {
     this.gridService.setVisibleColumns(this.gridId, columns);
   }
 
-  exportData(type: string): void {
-    this.isExportOpen = false;
+  exportData() {
+    this.gridService.exportData(this.endpoint).subscribe((result: any) => {
+      const blob = new Blob([result], {
+        type: 'application/octet-stream',
+      });
 
-    const options: GridExportOptions = {
-      fileName: this.gridId,
-      fileType: type as 'csv' | 'excel' | 'pdf',
-      fields: this.visibleColumns
-        .filter((col) => col.exportable !== false)
-        .map((col) => col.field),
-    };
+      const url = window.URL.createObjectURL(blob);
 
-    this.export.emit(options);
-    this.gridService.exportData(this.data, options);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'clients.xlsx';
+      link.click();
+
+      window.URL.revokeObjectURL(url);
+    });
   }
 
   refreshGrid(): void {
