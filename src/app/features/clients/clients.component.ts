@@ -816,7 +816,7 @@ export class ClientsComponent implements OnInit {
     console.log('Sales status selected:', { clientId, value, clientData });
     const status = this.salesStatusOptions.find((s) => s.value === value);
     if (!status) return;
-    
+
     // Store the original status before showing modal
     const originalStatus = this.normalizeSalesStatus(
       clientData?.saleStatusEnum || clientData?.salesStatus
@@ -826,7 +826,7 @@ export class ClientsComponent implements OnInit {
     // Store temporary selection to show in dropdown
     this.tempSalesStatusSelections.set(clientId, value);
     console.log('Temporary selection set:', this.tempSalesStatusSelections);
-    
+
     // Show confirmation modal instead of directly changing status
     this.showSalesStatusConfirmationModal(clientId, status, clientData, originalStatus);
   }
@@ -838,6 +838,7 @@ export class ClientsComponent implements OnInit {
     clientData: any,
     originalStatus: number
   ): void {
+
     const currentStatusLabel = this.salesStatusOptions.find(
       (s) => s.value === originalStatus
     )?.label || 'Unknown';
@@ -854,9 +855,10 @@ export class ClientsComponent implements OnInit {
       },
       {
         clientId: clientId,
-        clientName: clientData?.firstName && clientData?.lastName 
-          ? `${clientData.firstName} ${clientData.lastName}` 
-          : clientData?.email || 'Unknown Client',
+        clientName:
+          clientData?.firstName && clientData?.lastName
+            ? `${clientData.firstName} ${clientData.lastName}`
+            : clientData?.email || 'Unknown Client',
         currentStatus: currentStatusLabel,
         newStatus: status.label,
         status: status,
@@ -877,6 +879,7 @@ export class ClientsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       (reason) => {
+
         console.log('Modal cancelled/dismissed:', reason);
         // User cancelled or modal was dismissed - clear temporary selection and force UI update
         this.tempSalesStatusSelections.delete(clientId);
@@ -886,6 +889,7 @@ export class ClientsComponent implements OnInit {
         setTimeout(() => {
           this.cdr.detectChanges();
         }, 0);
+
       }
     );
 

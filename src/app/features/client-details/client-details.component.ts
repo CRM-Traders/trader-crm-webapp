@@ -181,7 +181,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
       this.loadPinnedNotes();
       this.loadClientComments();
-      
+
       // Initialize sales status options
       this.initializeSalesStatusOptions();
     });
@@ -452,19 +452,22 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
   onSalesStatusSelect(value: number): void {
     const status = this.salesStatusOptions.find((s) => s.value === value);
     if (!status) return;
-    
+
     // Show confirmation modal instead of directly changing status
     this.showSalesStatusConfirmationModal(status);
   }
 
   // Show sales status confirmation modal
-  showSalesStatusConfirmationModal(status: { value: number; label: string }): void {
+  showSalesStatusConfirmationModal(status: {
+    value: number;
+    label: string;
+  }): void {
     const currentStatus = this.normalizeSalesStatus(
       this.client?.saleStatusEnum || this.client?.salesStatus
     );
-    const currentStatusLabel = this.salesStatusOptions.find(
-      (s) => s.value === currentStatus
-    )?.label || 'Unknown';
+    const currentStatusLabel =
+      this.salesStatusOptions.find((s) => s.value === currentStatus)?.label ||
+      'Unknown';
 
     const modalRef = this.modalService.open(
       SalesStatusConfirmationModalComponent,
@@ -478,9 +481,10 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       },
       {
         clientId: this.client.id,
-        clientName: this.client?.firstName && this.client?.lastName 
-          ? `${this.client.firstName} ${this.client.lastName}` 
-          : this.client?.email || 'Unknown Client',
+        clientName:
+          this.client?.firstName && this.client?.lastName
+            ? `${this.client.firstName} ${this.client.lastName}`
+            : this.client?.email || 'Unknown Client',
         currentStatus: currentStatusLabel,
         newStatus: status.label,
         status: status,
@@ -497,7 +501,6 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
       },
       (reason) => {
         // User cancelled or modal was dismissed
-        console.log('Sales status change cancelled:', reason);
       }
     );
   }
