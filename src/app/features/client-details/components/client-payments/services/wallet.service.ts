@@ -103,6 +103,28 @@ export class WalletService {
       );
   }
 
+  credit(request: DepositRequest): Observable<void> {
+    this._loading.set(true);
+
+    return this.http
+      .post<void>(`${this.tradingBaseEndpoint}/credit`, request)
+      .pipe(
+        tap(() => {
+          this._loading.set(false);
+          this.alertService.success(
+            `Credit of ${this.formatCurrency(
+              request.amount,
+              request.currency
+            )} has been processed successfully!`
+          );
+        }),
+        catchError((error) => {
+          this._loading.set(false);
+          return throwError(() => error);
+        })
+      );
+  }
+
   withdraw(request: WithdrawRequest): Observable<void> {
     this._loading.set(true);
 
