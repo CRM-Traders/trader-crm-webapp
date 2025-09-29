@@ -792,7 +792,7 @@ export class ClientsComponent implements OnInit {
   onSalesStatusSelect(clientId: string, value: number, clientData: any): void {
     const status = this.salesStatusOptions.find((s) => s.value === value);
     if (!status) return;
-    
+
     // Show confirmation modal instead of directly changing status
     this.showSalesStatusConfirmationModal(clientId, status, clientData);
   }
@@ -806,9 +806,9 @@ export class ClientsComponent implements OnInit {
     const currentStatus = this.normalizeSalesStatus(
       clientData?.saleStatusEnum || clientData?.salesStatus
     );
-    const currentStatusLabel = this.salesStatusOptions.find(
-      (s) => s.value === currentStatus
-    )?.label || 'Unknown';
+    const currentStatusLabel =
+      this.salesStatusOptions.find((s) => s.value === currentStatus)?.label ||
+      'Unknown';
 
     const modalRef = this.modalService.open(
       SalesStatusConfirmationModalComponent,
@@ -822,9 +822,10 @@ export class ClientsComponent implements OnInit {
       },
       {
         clientId: clientId,
-        clientName: clientData?.firstName && clientData?.lastName 
-          ? `${clientData.firstName} ${clientData.lastName}` 
-          : clientData?.email || 'Unknown Client',
+        clientName:
+          clientData?.firstName && clientData?.lastName
+            ? `${clientData.firstName} ${clientData.lastName}`
+            : clientData?.email || 'Unknown Client',
         currentStatus: currentStatusLabel,
         newStatus: status.label,
         status: status,
@@ -841,7 +842,6 @@ export class ClientsComponent implements OnInit {
       },
       (reason) => {
         // User cancelled or modal was dismissed
-        console.log('Sales status change cancelled:', reason);
       }
     );
   }
