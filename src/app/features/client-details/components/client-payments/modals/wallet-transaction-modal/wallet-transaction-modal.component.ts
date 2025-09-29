@@ -244,6 +244,25 @@ export class WalletTransactionModalComponent
             this.alertService.error(this.getErrorMessage(error));
           },
         });
+    } else if (this.transactionType === 'debit') {
+      const request: DepositRequest = {
+        tradingAccountId: formValue.tradingAccountId,
+        currency: formValue.currency,
+        amount: parseFloat(formValue.amount),
+      };
+
+      this.walletService
+        .debit(request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.onSuccess.emit();
+            this.onModalClose();
+          },
+          error: (error: unknown) => {
+            this.alertService.error(this.getErrorMessage(error));
+          },
+        });
     } else {
       if (selectedWallet.balance < parseFloat(formValue.amount)) {
         return;
@@ -349,6 +368,7 @@ export class WalletTransactionModalComponent
   getName(): string {
     if (this.transactionType === 'deposit') return 'Process Deposit';
     else if (this.transactionType === 'withdraw') return 'Process Withdrawal';
-    return 'Process Credit';
+    else if (this.transactionType === 'debit') return 'Process Credit Out';
+    return 'Process Credit In';
   }
 }
