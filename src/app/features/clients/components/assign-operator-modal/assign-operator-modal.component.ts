@@ -1,6 +1,6 @@
 // src/app/features/clients/components/assign-operator-modal/assign-operator-modal.component.ts
 
-import { Component, OnInit, inject, Input } from '@angular/core';
+import { Component, OnInit, inject, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -18,6 +18,8 @@ import {
   AssignClientsToOperatorRequest,
   ClientsService,
   ClientType,
+  ShuffleClientsRequest,
+  OperatorAssignment,
 } from '../../services/clients.service';
 
 export type UserType = 0 | 1; // 0 = lead, 1 = client
@@ -43,16 +45,19 @@ export class AssignOperatorModalComponent implements OnInit {
   operators: OperatorDropdownItem[] = [];
   loadingOperators = false;
   isSubmitting = false;
+  operatorAssignments: OperatorAssignment[] = [];
+  dropdownOpen: boolean[] = [];
+  operatorSearchTerm: string[] = [];
 
   constructor() {
     this.assignmentForm = this.fb.group({
-      operatorId: ['', [Validators.required]],
       isActive: [true],
     });
   }
 
   ngOnInit(): void {
     this.loadOperators();
+    this.addOperatorAssignment(); // Start with one operator assignment
   }
 
   ngOnDestroy(): void {
@@ -79,26 +84,98 @@ export class AssignOperatorModalComponent implements OnInit {
         this.operators = operators;
       });
   }
+
+  addOperatorAssignment(): void {
+    this.operatorAssignments.push({
+      operatorId: '',
+      percentage: 0
+    });
+    this.dropdownOpen.push(false);
+    this.operatorSearchTerm.push('');
+  }
+
+  removeOperatorAssignment(index: number): void {
+    if (this.operatorAssignments.length > 1) {
+      this.operatorAssignments.splice(index, 1);
+      this.dropdownOpen.splice(index, 1);
+      this.operatorSearchTerm.splice(index, 1);
+    }
+  }
+
+  updateOperatorAssignment(index: number, field: 'operatorId' | 'percentage', value: string | number): void {
+    if (field === 'percentage') {
+      this.operatorAssignments[index].percentage = Number(value);
+    } else {
+      this.operatorAssignments[index].operatorId = value as string;
+    }
+  }
+
+  // Dropdown helpers
+  toggleDropdown(index: number): void {
+    if (this.loadingOperators || this.isSubmitting) return;
+    // Close others
+    this.dropdownOpen = this.dropdownOpen.map((_, i) => i === index ? !this.dropdownOpen[i] : false);
+  }
+
+  closeAllDropdowns(): void {
+    this.dropdownOpen = this.dropdownOpen.map(() => false);
+  }
+
+  onSearchInput(index: number, value: string): void {
+    this.operatorSearchTerm[index] = value;
+  }
+
+  getFilteredOperators(index: number): OperatorDropdownItem[] {
+    const term = (this.operatorSearchTerm[index] || '').toLowerCase().trim();
+    if (!term) return this.operators;
+    return this.operators.filter((op) => (op.value || '').toLowerCase().includes(term));
+  }
+
+  selectOperator(index: number, operator: OperatorDropdownItem): void {
+    this.updateOperatorAssignment(index, 'operatorId', operator.id);
+    this.dropdownOpen[index] = false;
+  }
+
+  getOperatorLabelById(id: string): string {
+    const found = this.operators.find((o) => o.id === id);
+    return found ? found.value : '';
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.closeAllDropdowns();
+  }
+
+  getTotalPercentage(): number {
+    return this.operatorAssignments.reduce((total, assignment) => total + assignment.percentage, 0);
+  }
+
+  isFormValid(): boolean {
+    const hasValidAssignments = this.operatorAssignments.every(assignment => 
+      assignment.operatorId && assignment.percentage > 0
+    );
+    const totalPercentage = this.getTotalPercentage();
+    return hasValidAssignments && totalPercentage === 100;
+  }
+
   onSubmit(): void {
-    if (this.assignmentForm.invalid) {
-      this.assignmentForm.markAllAsTouched();
+    if (!this.isFormValid()) {
+      this.alertService.warning('Please ensure all operators are selected and percentages total 100%');
       return;
     }
 
-    const formValue = this.assignmentForm.value;
     const clientIds = this.selectedClients.map((client) => client.id);
 
-    const request: AssignClientsToOperatorRequest = {
-      operatorId: formValue.operatorId,
-      clientType: Number(this.userType), // Always Client type as specified
-      entityIds: clientIds,
-      isActive: formValue.isActive,
+    const request: ShuffleClientsRequest = {
+      clientIds: clientIds,
+      clientType: Number(this.userType),
+      operators: this.operatorAssignments
     };
 
     this.isSubmitting = true;
 
     this.clientsService
-      .assignClientsToOperator(request)
+      .shuffleClients(request)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -107,18 +184,13 @@ export class AssignOperatorModalComponent implements OnInit {
       )
       .subscribe({
         next: (response) => {
-          const selectedOperator = this.operators.find(
-            (op) => op.id === formValue.operatorId
-          );
-          const operatorName = selectedOperator?.value || 'Selected operator';
-
           if (response.successCount > 0) {
             // Check if this is for leads or clients based on userType
             const entityType = this.userType === 0 ? 'lead' : 'client';
             this.alertService.success(
               `Successfully assigned ${response.successCount} ${entityType}${
                 response.successCount === 1 ? '' : 's'
-              } to ${operatorName}`
+              } to operators`
             );
           }
 
@@ -152,7 +224,7 @@ export class AssignOperatorModalComponent implements OnInit {
         },
         error: (error) => {
           const entityType = this.userType === 0 ? 'leads' : 'clients';
-          this.alertService.error(`Failed to assign ${entityType} to operator`);
+          this.alertService.error(`Failed to assign ${entityType} to operators`);
         },
       });
   }

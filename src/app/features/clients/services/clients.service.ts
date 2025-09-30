@@ -35,6 +35,25 @@ export interface AssignClientsToOperatorResponse {
   errors: string[];
 }
 
+// New interfaces for shuffle clients functionality
+export interface OperatorAssignment {
+  operatorId: string;
+  percentage: number;
+}
+
+export interface ShuffleClientsRequest {
+  clientIds: string[];
+  clientType: number;
+  operators: OperatorAssignment[];
+}
+
+export interface ShuffleClientsResponse {
+  successCount: number;
+  failureCount: number;
+  createdOperatorClientIds: string[];
+  errors: string[];
+}
+
 export enum ClientType {
   Lead = 0,
   Client = 1,
@@ -106,6 +125,16 @@ export class ClientsService {
   ): Observable<AssignClientsToOperatorResponse> {
     return this.httpService.post<AssignClientsToOperatorResponse>(
       'identity/api/operatorclient/assign-clients-to-operator',
+      request
+    );
+  }
+
+  // New method to shuffle clients to multiple operators with percentages
+  shuffleClients(
+    request: ShuffleClientsRequest
+  ): Observable<ShuffleClientsResponse> {
+    return this.httpService.post<ShuffleClientsResponse>(
+      'identity/api/operatorclient/shuffle-clients',
       request
     );
   }

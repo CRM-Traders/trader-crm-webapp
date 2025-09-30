@@ -807,7 +807,6 @@ export class ClientsComponent implements OnInit {
     const actualValue = this.normalizeSalesStatus(
       value?.saleStatusEnum ?? value?.salesStatus ?? row?.saleStatusEnum ?? row?.salesStatus ?? null
     );
-    console.log('Using actual value for client', clientId, ':', actualValue);
     return actualValue;
   }
 
