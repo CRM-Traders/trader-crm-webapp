@@ -1,15 +1,15 @@
-<div class="p-6">
+<div class="p-6" (click)="closeAllDropdowns()">
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            Assign {{ userType === 0 ? 'Lead(s)' : 'Client(s)' }} to Operator
+            Distribute {{ userType === 0 ? 'Lead(s)' : 'Client(s)' }} to Operators
         </h2>
     </div>
 
     <!-- Content -->
     <div class="space-y-6">
         <!-- Selected Clients Info -->
-        <div class="bg-blue-50 dark:bg-blue-900/5 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+        <div class="bg-blue-50 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div class="flex items-center">
                 <svg class="w-5 h-5 text-blue-800 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -40,46 +40,102 @@
 
         <!-- Assignment Form -->
         <form [formGroup]="assignmentForm" (ngSubmit)="onSubmit()" class="space-y-4">
-            <!-- Operator Selection -->
+            <!-- Operator Assignments -->
             <div>
-                <label for="operatorId" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Select Operator <span class="text-red-500">*</span>
-                </label>
-                <div class="relative">
-                    <select id="operatorId" formControlName="operatorId" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
-                     bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-                     disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                        [disabled]="loadingOperators || isSubmitting">
-                        <option value="" disabled>
-                            {{
-                            loadingOperators
-                            ? 'Loading operators...'
-                            : 'Choose an operator'
-                            }}
-                        </option>
-                        <option *ngFor="let operator of operators" [value]="operator.id">
-                            {{ operator.value }}
-                        </option>
-                    </select>
-
-                    <!-- Loading indicator for operators -->
-                    <div *ngIf="loadingOperators" class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <svg class="animate-spin h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                <div class="flex items-center justify-between mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Operator Assignments <span class="text-red-500">*</span>
+                    </label>
+                    <button type="button" (click)="addOperatorAssignment()" class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 
+                               flex items-center gap-1 px-2 py-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
                             </path>
                         </svg>
+                        Add Operator
+                    </button>
+                </div>
+
+                <!-- Operator Assignment List -->
+                <div class="space-y-3">
+                    <div *ngFor="let assignment of operatorAssignments; let i = index"
+                        class="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
+
+                        <!-- Operator Selection - Custom Searchable Dropdown -->
+                        <div class="flex-1 relative" (click)="$event.stopPropagation()">
+                            <button type="button" (click)="toggleDropdown(i)" [disabled]="loadingOperators || isSubmitting"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-left bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed flex items-center justify-between">
+                                <span class="truncate" *ngIf="assignment.operatorId; else placeholder">
+                                    {{ getOperatorLabelById(assignment.operatorId) }}
+                                </span>
+                                <ng-template #placeholder>
+                                    <span class="text-gray-400">Choose an operator</span>
+                                </ng-template>
+                                <svg class="w-4 h-4 ml-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <div *ngIf="dropdownOpen[i]" class="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg">
+                                <div class="p-2">
+                                    <input type="text" [(ngModel)]="operatorSearchTerm[i]" (ngModelChange)="onSearchInput(i, $event)" [ngModelOptions]="{standalone: true}" placeholder="Search operators..."
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                                </div>
+                                <div class="max-h-56 overflow-auto">
+                                    <div *ngIf="(getFilteredOperators(i) || []).length === 0" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                        No operators found
+                                    </div>
+                                    <button type="button" *ngFor="let operator of getFilteredOperators(i)" (click)="selectOperator(i, operator)"
+                                        class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 flex items-center justify-between">
+                                        <span class="truncate">{{ operator.value }}</span>
+                                        <svg *ngIf="assignment.operatorId === operator.id" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Percentage Input -->
+                        <div class="w-24">
+                            <input type="number" [(ngModel)]="assignment.percentage"
+                                (ngModelChange)="updateOperatorAssignment(i, 'percentage', $event)"
+                                [ngModelOptions]="{standalone: true}" min="0" max="100" step="1" placeholder="%" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm 
+                                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                                          bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                          disabled:bg-gray-50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                                [disabled]="isSubmitting">
+                        </div>
+
+                        <!-- Remove Button -->
+                        <button type="button" (click)="removeOperatorAssignment(i)"
+                            [disabled]="operatorAssignments.length <= 1 || isSubmitting"
+                            class="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 
+                                       hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Validation Error -->
-                <div *ngIf="assignmentForm.get('operatorId')?.touched && assignmentForm.get('operatorId')?.errors?.['required']"
-                    class="mt-1 text-sm text-red-600 dark:text-red-400">
-                    Please select an operator
+                <hr class="my-8 border-gray-200 dark:border-gray-800">
+
+                <!-- Total Percentage Display -->
+                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-blue-800 dark:text-blue-400">
+                            Total Percentage:
+                        </span>
+                        <span class="text-sm font-bold" [class.text-green-600]="getTotalPercentage() === 100"
+                            [class.text-red-600]="getTotalPercentage() !== 100">
+                            {{ getTotalPercentage() }}%
+                        </span>
+                    </div>
+                    <div *ngIf="getTotalPercentage() !== 100" class="mt-1 text-xs text-red-600 dark:text-red-400">
+                        Total must equal 100%
+                    </div>
                 </div>
             </div>
 
@@ -104,7 +160,7 @@
         </button>
 
         <button type="submit" (click)="onSubmit()" [disabled]="
-          assignmentForm.invalid || isSubmitting || loadingOperators
+          !isFormValid() || isSubmitting || loadingOperators
         " class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent 
                rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
                focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed 
@@ -118,8 +174,8 @@
             </svg>
             {{
             isSubmitting
-            ? 'Assigning...'
-            : 'Assign ' + (userType === 0 ? 'Leads' : 'Clients')
+            ? 'Distributing...'
+            : 'Distribute ' + (userType === 0 ? 'Leads' : 'Clients')
             }}
         </button>
     </div>

@@ -321,7 +321,7 @@
                 type="checkbox"
                 [checked]="selectAll"
                 (change)="onSelectAllChange($event)"
-                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-600 cursor-pointer"
               />
             </div>
           </th>
@@ -573,7 +573,7 @@
                   type="checkbox"
                   [checked]="selectedItems.includes(item)"
                   (change)="onSelectionChange(item, $event)"
-                  class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-600 dark:border-gray-600 cursor-pointer"
                   (click)="$event.stopPropagation()"
                 />
               </div>
