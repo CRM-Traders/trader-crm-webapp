@@ -260,14 +260,14 @@ export class ClientsComponent implements OnInit {
       hidden: true,
       permission: 12,
     },
+    // aq unda chasvaa
     {
-      field: 'source',
-      header: 'Source',
-      sortable: true,
-      filterable: false,
-      selector: (row: Client) => row.source || '-',
-      hidden: true,
-      permission: 14,
+      field: 'importedSource',
+      header: 'Imported Source',
+      sortable: false,
+      filterable: true,
+      filterType: 'text',
+      hidden: false,
     },
     {
       field: 'activityStatus',
@@ -673,14 +673,14 @@ export class ClientsComponent implements OnInit {
       hidden: false,
       permission: 14,
     },
-
     {
-      field: 'importedSource',
-      header: 'Imported Source',
-      sortable: false,
-      filterable: true,
-      filterType: 'text',
-      hidden: false,
+      field: 'source',
+      header: 'Source',
+      sortable: true,
+      filterable: false,
+      selector: (row: Client) => row.source || '-',
+      hidden: true,
+      permission: 14,
     },
     {
       field: 'autoLogin',
