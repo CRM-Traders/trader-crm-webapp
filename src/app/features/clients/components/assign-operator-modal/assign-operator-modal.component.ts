@@ -86,12 +86,17 @@ export class AssignOperatorModalComponent implements OnInit {
   }
 
   addOperatorAssignment(): void {
-    this.operatorAssignments.push({
+    const newAssignment = {
       operatorId: '',
       percentage: 0
-    });
+    };
+
+    this.operatorAssignments.push(newAssignment);
     this.dropdownOpen.push(false);
     this.operatorSearchTerm.push('');
+    
+    // Automatically distribute percentages equally among all operators
+    this.distributeEqualPercentages();
   }
 
   removeOperatorAssignment(index: number): void {
@@ -99,7 +104,31 @@ export class AssignOperatorModalComponent implements OnInit {
       this.operatorAssignments.splice(index, 1);
       this.dropdownOpen.splice(index, 1);
       this.operatorSearchTerm.splice(index, 1);
+      
+      // Automatically redistribute percentages equally among remaining operators
+      this.distributeEqualPercentages();
     }
+  }
+
+  distributeEqualPercentages(): void {
+    if (this.operatorAssignments.length === 0) return;
+    
+    const equalPercentage = 100 / this.operatorAssignments.length;
+    
+    this.operatorAssignments.forEach((assignment) => {
+      assignment.percentage = Math.round(equalPercentage * 100) / 100; // Round to 2 decimal places
+    });
+    
+    // Handle any rounding differences by adjusting the last operator
+    const totalPercentage = this.operatorAssignments.reduce((sum, assignment) => sum + assignment.percentage, 0);
+    const difference = 100 - totalPercentage;
+    if (Math.abs(difference) > 0.01) { // Only adjust if difference is significant
+      this.operatorAssignments[this.operatorAssignments.length - 1].percentage += difference;
+    }
+  }
+
+  splitEqual(): void {
+    this.distributeEqualPercentages();
   }
 
   updateOperatorAssignment(index: number, field: 'operatorId' | 'percentage', value: string | number): void {
@@ -155,7 +184,7 @@ export class AssignOperatorModalComponent implements OnInit {
       assignment.operatorId && assignment.percentage > 0
     );
     const totalPercentage = this.getTotalPercentage();
-    return hasValidAssignments && totalPercentage === 100;
+    return hasValidAssignments && Math.abs(totalPercentage - 100) < 0.01; // Allow small rounding differences
   }
 
   onSubmit(): void {
