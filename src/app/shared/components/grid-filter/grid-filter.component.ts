@@ -738,4 +738,41 @@ export class GridFilterComponent implements OnInit, OnDestroy {
 
     return selectedCount > 0 && selectedCount < totalCount;
   }
+
+  applySavedFilterState(filterState: GridFilterState): void {
+    // First, clear all existing filters
+    this.selectedFilterOptions.forEach((option) => {
+      option.selected = false;
+    });
+    this.selectedFilterOptions = [];
+    this.activeFilters = [];
+    this.appliedFilters = [];
+    this.filterAvailableOptions();
+
+    // If there are filters in the saved state, apply them
+    if (filterState.filters && Object.keys(filterState.filters).length > 0) {
+      Object.values(filterState.filters).forEach((filter) => {
+        const option = this.availableFilterOptions.find(
+          (opt) => opt.id === filter.field
+        );
+        if (option) {
+          // Add the filter option to the UI
+          this.addFilterOption(option);
+          
+          // Find the active filter we just created
+          const activeFilter = this.activeFilters.find(
+            (af) => af.id === filter.field
+          );
+          
+          if (activeFilter) {
+            // Sync the values from the saved filter
+            this.syncActiveFilterWithGridFilter(activeFilter, filter);
+            
+            // Add to applied filters list (don't call applyFilter as grid service already has the filters)
+            this.appliedFilters.push(filter);
+          }
+        }
+      });
+    }
+  }
 }

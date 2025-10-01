@@ -70,6 +70,8 @@ export class GridComponent implements OnInit, OnDestroy {
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
   @ViewChild('columnSelectorDropdown', { static: false })
   columnSelectorDropdown!: ElementRef;
+  @ViewChild(GridFilterComponent, { static: false })
+  gridFilterComponent!: GridFilterComponent;
 
   @Input() permission: number = -1;
   @Input() selectionPermission: number = -1;
@@ -308,6 +310,12 @@ export class GridComponent implements OnInit, OnDestroy {
 
   onSavedFilterSelected(filter: SavedFilter): void {
     this.gridService.applySavedFilter(this.gridId, filter);
+    
+    // Apply the saved filter state to the grid-filter component UI
+    if (this.gridFilterComponent) {
+      this.gridFilterComponent.applySavedFilterState(filter.filterState);
+    }
+    
     this.filterChange.emit(filter.filterState);
 
     // Reset pagination when applying saved filter
@@ -409,6 +417,11 @@ export class GridComponent implements OnInit, OnDestroy {
 
     // Clear active filter
     this.activeFilterId = undefined;
+
+    // Reset grid-filter component UI state (keep filters visible but clear values)
+    if (this.gridFilterComponent) {
+      this.gridFilterComponent.resetAllFilters();
+    }
   }
 
   onFilterChange(filters: GridFilterState): void {
