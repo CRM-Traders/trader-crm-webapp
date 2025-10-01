@@ -35,7 +35,7 @@ import {
             Clients
             <span
               *ngIf="clientsUnreadCount > 0"
-              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
+              class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4.5 w-4.5 flex items-center justify-center"
             >
               {{ clientsUnreadCount }}
             </span>
@@ -51,7 +51,7 @@ import {
             Operators
             <span
               *ngIf="operatorsUnreadCount > 0"
-              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"
+              class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4.5 w-4.5 flex items-center justify-center"
             >
               {{ operatorsUnreadCount }}
             </span>
@@ -65,7 +65,7 @@ import {
             [(ngModel)]="searchQuery"
             (ngModelChange)="onSearchChange($event)"
             placeholder="Search by email or username..."
-            class="w-full px-3 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 !pl-10 border border-gray-300/20 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <svg
             class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
@@ -96,7 +96,7 @@ import {
         <div
           *ngFor="let user of filteredUsers"
           (click)="selectUser(user)"
-          class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+          class="flex items-center p-3 hover:bg-gray-500/20 cursor-pointer border-b border-gray-300/20 last:border-b-0"
         >
           <!-- Avatar -->
           <div class="relative">
@@ -106,17 +106,25 @@ import {
             >
               {{ getInitials(user.name) }}
             </div>
+           
+            <!-- Unread Badge -->
             <span
-              *ngIf="user.isOnline"
-              class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"
-            ></span>
+              *ngIf="user.unreadCount > 0"
+              class="absolute -top-[3px] -right-[2px] bg-green-600 text-white text-[10px] font-bold rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-sm shadow-white"
+            >
+              {{ user.unreadCount }}
+            </span>
           </div>
 
           <!-- User Info -->
           <div class="ml-3 flex-1">
             <div class="flex items-center justify-between">
-              <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+              <p class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1">
                 {{ user.name }}
+                <span
+              *ngIf="user.isOnline"
+              class="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"
+            ></span>
               </p>
               <span class="text-xs text-gray-500 dark:text-gray-400">
                 {{ formatTime(user.lastMessageTime) }}
@@ -129,26 +137,7 @@ import {
               {{ user.lastMessage }}
             </p>
           </div>
-
-          <!-- Unread Badge -->
-          <div *ngIf="user.unreadCount > 0" class="ml-2">
-            <span
-              class="bg-blue-500 text-white text-xs font-bold rounded-full px-2 py-1"
-            >
-              {{ user.unreadCount }}
-            </span>
-          </div>
         </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="p-3 border-t border-gray-200 dark:border-gray-700">
-        <button
-          (click)="startNewChat()"
-          class="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
-        >
-          Start New Conversation
-        </button>
       </div>
     </div>
   `,

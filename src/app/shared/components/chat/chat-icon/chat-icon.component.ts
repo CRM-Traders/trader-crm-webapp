@@ -13,7 +13,7 @@ import { ChatService } from '../../../services/chat/chat.service';
       <!-- Chat Icon Button -->
       <button
         (click)="toggleChatList($event)"
-        class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        class="relative p-2 rounded-full hover:bg-gray-500/20 transition-colors"
         title="Messages"
       >
         <svg
@@ -34,7 +34,7 @@ import { ChatService } from '../../../services/chat/chat.service';
         <!-- Unread Count Badge -->
         <span
           *ngIf="totalUnreadCount > 0"
-          class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center"
+          class="absolute -top-[2px] -right-1 bg-red-500 text-white text-[9px] rounded-full h-4.5 w-4.5 flex items-center justify-center"
         >
           {{ totalUnreadCount > 99 ? '99+' : totalUnreadCount }}
         </span>
@@ -45,7 +45,7 @@ import { ChatService } from '../../../services/chat/chat.service';
         *ngIf="showChatList"
         (close)="closeChatList()"
         (openChat)="handleOpenChat($event)"
-        class="absolute right-0 top-12 z-50"
+        class="absolute right-0 top-12 z-[99999]"
       ></app-chat-list>
     </div>
   `,
