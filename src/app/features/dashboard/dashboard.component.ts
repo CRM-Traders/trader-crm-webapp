@@ -1,6 +1,7 @@
 // dashboard.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { DashboardService } from './services/dashboard.services';
 import { DashboardData, OfficeDashboardStats, DepositStat, Transaction, UserTicket, PaymentType, PaymentStatus, TransactionType, DepositType, TicketType, TicketStatus } from './models/dashboard.models';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
@@ -16,6 +17,7 @@ import { AlertService } from '../../core/services/alert.service';
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   private alertService = inject(AlertService);
+  private router = inject(Router);
 
   dashboardData: DashboardData | null = null;
   officeDashboardStats: OfficeDashboardStats | null = null;
@@ -642,5 +644,12 @@ export class DashboardComponent implements OnInit {
 
   refreshData(): void {
     this.loadDashboardData();
+  }
+
+  navigateToClientDetails(clientId: string): void {
+    const url = this.router.serializeUrl(
+      this.router.createUrlTree(['/clients', clientId])
+    );
+    window.open(url, '_blank');
   }
 }
