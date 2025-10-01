@@ -10,6 +10,7 @@ import { NotificationsComponent } from '../notifications/notifications.component
 import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
 import { LocalizationService } from '../../../core/services/localization.service';
 import { environment } from '../../../../environments/environment';
+import { ChatIconComponent } from '../chat/chat-icon/chat-icon.component';
 
 @Component({
   selector: 'app-header',
@@ -18,6 +19,7 @@ import { environment } from '../../../../environments/environment';
     ThemeToggleComponent,
     UserMenuComponent,
     MiniCalendarComponent,
+    ChatIconComponent,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',

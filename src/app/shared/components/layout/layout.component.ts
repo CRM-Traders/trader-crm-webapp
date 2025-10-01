@@ -6,6 +6,7 @@ import { HeaderComponent } from '../header/header.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { AlertComponent } from '../alert/alert.component';
 import { ModalComponent } from '../modal/modal.component';
+import { ChatContainerComponent } from '../chat/chat-container/chat-container.component';
 
 @Component({
   selector: 'app-layout',
@@ -17,6 +18,7 @@ import { ModalComponent } from '../modal/modal.component';
     SidebarComponent,
     AlertComponent,
     ModalComponent,
+    ChatContainerComponent,
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
