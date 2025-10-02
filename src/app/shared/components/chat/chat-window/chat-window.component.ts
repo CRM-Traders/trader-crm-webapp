@@ -10,7 +10,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ChatUser, ChatMessage } from '../../../services/chat/chat.service';
+import { ChatUser, ChatMessage, MessageStatus } from '../../../services/chat/chat.service';
 
 @Component({
   selector: 'app-chat-window',
@@ -31,6 +31,31 @@ import { ChatUser, ChatMessage } from '../../../services/chat/chat.service';
         50% {
           transform: translateY(-4px);
         }
+      }
+
+      @keyframes pulse {
+        0%, 100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .status-sending {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      .status-sent {
+        transition: all 0.3s ease;
+      }
+
+      .status-delivered {
+        transition: all 0.3s ease;
+      }
+
+      .status-seen {
+        transition: all 0.3s ease;
       }
     `,
   ],
@@ -59,6 +84,8 @@ export class ChatWindowComponent implements OnInit {
     if (!this.isMinimized) {
       this.scrollToBottom();
     }
+    // Mark messages as seen when chat window is opened
+    this.markMessagesAsSeen();
   }
 
   loadMessages() {
@@ -70,6 +97,7 @@ export class ChatWindowComponent implements OnInit {
         timestamp: new Date(Date.now() - 3600000),
         isSender: false,
         userId: this.user?.id || 'unknown',
+        status: MessageStatus.SEEN,
       },
       {
         id: '2',
@@ -77,6 +105,7 @@ export class ChatWindowComponent implements OnInit {
         timestamp: new Date(Date.now() - 3000000),
         isSender: true,
         userId: 'current-user',
+        status: MessageStatus.SEEN,
       },
     ];
   }
@@ -90,12 +119,16 @@ export class ChatWindowComponent implements OnInit {
       timestamp: new Date(),
       isSender: true,
       userId: 'current-user',
+      status: MessageStatus.SENDING,
     };
 
     this.messages.push(message);
     this.newMessage = '';
     this.adjustTextareaHeight(); // Reset textarea height
     this.scrollToBottom();
+
+    // Simulate message status updates
+    this.simulateMessageStatusUpdates(message.id);
 
     // Simulate typing indicator
     this.simulateTyping();
@@ -124,16 +157,51 @@ export class ChatWindowComponent implements OnInit {
       this.isTyping = true;
       setTimeout(() => {
         this.isTyping = false;
-        this.messages.push({
+        const responseMessage: ChatMessage = {
           id: Date.now().toString(),
           text: "Thanks for your message! I'll look into that for you.",
           timestamp: new Date(),
           isSender: false,
           userId: this.user?.id || 'unknown',
-        });
+          status: MessageStatus.SEEN,
+        };
+        this.messages.push(responseMessage);
         this.scrollToBottom();
       }, 2000);
     }, 500);
+  }
+
+  simulateMessageStatusUpdates(messageId: string) {
+    // Simulate SENT status after 500ms
+    setTimeout(() => {
+      this.updateMessageStatus(messageId, MessageStatus.SENT);
+    }, 500);
+
+    // Simulate DELIVERED status after 1.5s
+    setTimeout(() => {
+      this.updateMessageStatus(messageId, MessageStatus.DELIVERED);
+    }, 1500);
+
+    // Simulate SEEN status after 3s
+    setTimeout(() => {
+      this.updateMessageStatus(messageId, MessageStatus.SEEN);
+    }, 3000);
+  }
+
+  updateMessageStatus(messageId: string, status: MessageStatus) {
+    const message = this.messages.find(m => m.id === messageId);
+    if (message) {
+      message.status = status;
+    }
+  }
+
+  markMessagesAsSeen() {
+    // Mark all received messages as seen
+    this.messages.forEach(message => {
+      if (!message.isSender && message.status !== MessageStatus.SEEN) {
+        message.status = MessageStatus.SEEN;
+      }
+    });
   }
 
   toggleMinimize() {
@@ -176,5 +244,65 @@ export class ChatWindowComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  getStatusIcon(status: MessageStatus): string {
+    switch (status) {
+      case MessageStatus.SENDING:
+        return 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
+      case MessageStatus.SENT:
+        return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      case MessageStatus.DELIVERED:
+        return 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z';
+      case MessageStatus.SEEN:
+        return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      default:
+        return 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z';
+    }
+  }
+
+  getStatusColor(status: MessageStatus): string {
+    switch (status) {
+      case MessageStatus.SENDING:
+        return 'text-gray-300';
+      case MessageStatus.SENT:
+        return 'text-white';
+      case MessageStatus.DELIVERED:
+        return 'text-green-300';
+      case MessageStatus.SEEN:
+        return 'text-green-400';
+      default:
+        return 'text-gray-300';
+    }
+  }
+
+  getStatusAnimationClass(status: MessageStatus): string {
+    switch (status) {
+      case MessageStatus.SENDING:
+        return 'status-sending';
+      case MessageStatus.SENT:
+        return 'status-sent';
+      case MessageStatus.DELIVERED:
+        return 'status-delivered';
+      case MessageStatus.SEEN:
+        return 'status-seen';
+      default:
+        return '';
+    }
+  }
+
+  getStatusTitle(status: MessageStatus): string {
+    switch (status) {
+      case MessageStatus.SENDING:
+        return 'Sending...';
+      case MessageStatus.SENT:
+        return 'Sent';
+      case MessageStatus.DELIVERED:
+        return 'Delivered';
+      case MessageStatus.SEEN:
+        return 'Seen';
+      default:
+        return 'Unknown';
+    }
   }
 }

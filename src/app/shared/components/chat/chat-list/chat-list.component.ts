@@ -164,6 +164,8 @@ export class ChatListComponent implements OnInit {
   operatorsUnreadCount = 0;
 
   ngOnInit() {
+    // Initialize with last active channel
+    this.activeChannel = this.chatService.getLastActiveChannel();
     this.loadUsers();
 
     this.searchSubject
@@ -183,6 +185,7 @@ export class ChatListComponent implements OnInit {
 
   setActiveChannel(channel: ChatChannel) {
     this.activeChannel = channel;
+    this.chatService.setActiveChannel(channel);
     this.loadUsers();
   }
 

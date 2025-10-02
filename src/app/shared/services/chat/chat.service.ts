@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { UiStateService } from './ui-state.service';
 
 export type ChatChannel = 'clients' | 'operators';
 
@@ -16,12 +18,20 @@ export interface ChatUser {
   avatar?: string;
 }
 
+export enum MessageStatus {
+  SENDING = 'sending',
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  SEEN = 'seen'
+}
+
 export interface ChatMessage {
   id: string;
   text: string;
   timestamp: Date;
   isSender: boolean;
   userId: string;
+  status: MessageStatus;
   attachments?: string[];
 }
 
@@ -36,11 +46,14 @@ export interface ChatWindow {
   providedIn: 'root',
 })
 export class ChatService {
+  private uiStateService = inject(UiStateService);
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
 
-  private openChatsSubject = new BehaviorSubject<ChatWindow[]>([]);
-  public openChats$ = this.openChatsSubject.asObservable();
+  public openChats$ = this.uiStateService.chatState$.pipe(
+    // Map the chat state to just the open chats array
+    map(state => state.openChats)
+  );
 
   constructor() {
     // Initialize with mock data
@@ -379,10 +392,10 @@ export class ChatService {
   }
 
   openChatWindow(chatData: any) {
-    const currentChats = this.openChatsSubject.value;
-
+    const currentState = this.uiStateService.getChatState();
+    
     // Check if chat is already open
-    if (currentChats.find((c) => c.user.id === chatData.user?.id)) {
+    if (currentState.openChats.find((c) => c.user.id === chatData.user?.id)) {
       return;
     }
 
@@ -392,20 +405,15 @@ export class ChatService {
       isMinimized: false,
     };
 
-    this.openChatsSubject.next([...currentChats, newChat]);
+    this.uiStateService.addOpenChat(newChat);
   }
 
   closeChatWindow(chatId: string) {
-    const currentChats = this.openChatsSubject.value;
-    this.openChatsSubject.next(currentChats.filter((c) => c.id !== chatId));
+    this.uiStateService.removeOpenChat(chatId);
   }
 
   updateChatMinimizedState(chatId: string, isMinimized: boolean) {
-    const currentChats = this.openChatsSubject.value;
-    const updatedChats = currentChats.map((chat) =>
-      chat.id === chatId ? { ...chat, isMinimized } : chat
-    );
-    this.openChatsSubject.next(updatedChats);
+    this.uiStateService.updateChatMinimizedState(chatId, isMinimized);
   }
 
   private updateUnreadCount() {
@@ -434,5 +442,26 @@ export class ChatService {
   sendMessage(chatId: string, message: string) {
     // Send message to backend
     console.log('Sending message:', message);
+  }
+
+  updateMessageStatus(messageId: string, status: MessageStatus) {
+    // Update message status in backend
+    console.log('Updating message status:', messageId, status);
+  }
+
+  markMessageAsSeen(messageId: string) {
+    this.updateMessageStatus(messageId, MessageStatus.SEEN);
+  }
+
+  markMessageAsDelivered(messageId: string) {
+    this.updateMessageStatus(messageId, MessageStatus.DELIVERED);
+  }
+
+  getLastActiveChannel(): 'clients' | 'operators' {
+    return this.uiStateService.getChatState().lastActiveChannel;
+  }
+
+  setActiveChannel(channel: 'clients' | 'operators') {
+    this.uiStateService.setLastActiveChannel(channel);
   }
 }

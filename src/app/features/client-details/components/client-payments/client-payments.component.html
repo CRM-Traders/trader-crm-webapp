@@ -569,7 +569,7 @@
           >
             <tr
               *ngFor="let transaction of filteredTransactions"
-              class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+              class="hover:bg-gray-50 dark:hover:bg-gray-500/20"
             >
               <td
                 class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
@@ -597,7 +597,11 @@
                     'bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-200':
                       transaction.transactionType === 'Liquidation',
                     'bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200':
-                      transaction.transactionType === 'OrderPlaced'
+                      transaction.transactionType === 'OrderPlaced',
+                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200':
+                      transaction.transactionType === 'Buy',
+                    'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200':
+                      transaction.transactionType === 'Sell'
                   }"
                 >
                   {{ transaction.transactionType | titlecase }}
