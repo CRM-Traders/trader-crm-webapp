@@ -205,7 +205,7 @@ export class ClientsComponent implements OnInit {
       filterable: true,
       filterType: 'text',
       cellClass: 'font-medium text-blue-600 hover:text-blue-800 cursor-pointer',
-      permission: 17, //
+      permission: 5, // clientId permission
     },
     {
       field: 'firstName',
@@ -267,6 +267,7 @@ export class ClientsComponent implements OnInit {
       sortable: false,
       filterable: true,
       filterType: 'text',
+      selector: (row: Client) => row.importedSource || '-',
       hidden: false,
     },
     {

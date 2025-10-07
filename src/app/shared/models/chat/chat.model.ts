@@ -14,6 +14,7 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   read: boolean;
+  isSender: boolean;
   conversationId: string;
 }
 

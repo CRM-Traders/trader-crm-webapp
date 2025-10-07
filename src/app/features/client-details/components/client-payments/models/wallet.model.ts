@@ -38,7 +38,9 @@ export interface WalletTransaction {
     | 'Liquidation'
     | 'OrderPlaced'
     | 'CreditIn'
-    | 'CreditOut';
+    | 'CreditOut'
+    | 'Buy'
+    | 'Sell';
   paymentType: string | null;
   paymentMethod: string | null;
   paymentStatus: string | null;

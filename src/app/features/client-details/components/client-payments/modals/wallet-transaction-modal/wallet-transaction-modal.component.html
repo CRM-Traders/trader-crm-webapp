@@ -5,7 +5,7 @@
   (click)="onModalClose()"
 >
   <div
-    class="modal-content bg-white dark:bg-gray-800 rounded-lg w-full max-w-md mx-4 overflow-hidden"
+    class="modal-content bg-white dark:bg-gray-800 rounded-lg w-full max-w-xl mx-4 overflow-hidden"
     (click)="$event.stopPropagation()"
   >
     <!-- Modal Header -->
@@ -273,7 +273,7 @@
           >
             Quick Amounts
           </label>
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             <button
               *ngFor="let amount of quickAmounts"
               type="button"
@@ -281,9 +281,12 @@
               [disabled]="
                 transactionType === 'withdraw' && amount > getWalletBalance()
               "
-              class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-3 py-2 text-xs sm:text-sm border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full"
             >
-              {{ getCurrencySymbol() }}{{ amount }}
+              <div class="flex flex-col items-center">
+                <div class="text-xs text-gray-500 dark:text-gray-400 truncate w-full text-center">{{ getCurrencySymbol() }}</div>
+                <div class="font-medium">{{ amount }}</div>
+              </div>
             </button>
           </div>
         </div>

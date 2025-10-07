@@ -148,7 +148,7 @@
             class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
           >
             <h3 class="text-gray-700 dark:text-gray-200 font-medium">
-              New Leads
+              New Clients
             </h3>
             <button
               (click)="refreshNewLeads()"
@@ -188,16 +188,23 @@
                   >
                     Date
                   </th>
+                  <th
+                    scope="col"
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody
                 class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
               >
-                <tr *ngFor="let lead of dashboardData?.newLeads">
+                <tr *ngFor="let lead of dashboardData?.newLeads" class="hover:bg-gray-500/20">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div
-                        class="text-sm font-medium text-primary-500 dark:text-primary-400"
+                        class="text-sm font-medium text-primary-500 dark:text-primary-400 cursor-pointer hover:underline"
+                        (click)="navigateToClientDetails(lead.clientId)"
                       >
                         {{ lead.clientName }}
                       </div>
@@ -208,10 +215,19 @@
                   >
                     {{ getRelativeDate(lead.createdAt) }}
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <button
+                      (click)="navigateToClientDetails(lead.clientId)"
+                      class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors"
+                      title="View Details"
+                    >
+                     <img src="/icons/view.svg" alt="View Details" class="w-5 h-5">
+                    </button>
+                  </td>
                 </tr>
                 <tr *ngIf="!dashboardData?.newLeads?.length">
                   <td
-                    colspan="2"
+                    colspan="3"
                     class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
                   >
                     No data available

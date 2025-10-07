@@ -36,6 +36,7 @@ export interface Client {
   clientOperator?: ClientOperator | null;
   totalBalance: number;
   externalId: string;
+  importedSource: string | null;
 }
 
 export interface LastComment {

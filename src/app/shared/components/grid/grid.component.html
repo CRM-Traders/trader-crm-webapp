@@ -327,139 +327,144 @@
           </th>
 
           <!-- Data Columns -->
-          <th
-            *ngFor="let column of visibleColumns"
-            scope="col"
-            [ngClass]="column.headerClass"
-            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-          >
+          <ng-container *ngFor="let column of visibleColumns">
             @if (column.permission){
-            <div
-              class="flex items-center space-x-1"
+            <th
               *hasPermission="column.permission"
+              scope="col"
+              [ngClass]="column.headerClass"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
             >
-              <span>{{ column.header }}</span>
+              <div class="flex items-center space-x-1">
+                <span>{{ column.header }}</span>
 
-              <!-- Sort Icon -->
-              <button
-                *ngIf="column.sortable && sortable"
-                (click)="onSortChange(column)"
-                class="focus:outline-none"
-                [ngClass]="getSortHeaderClass(column)"
-              >
-                <ng-container *ngIf="currentSort?.field === column.field">
-                  <svg
-                    *ngIf="currentSort?.direction === 'asc'"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 15l7-7 7 7"
-                    />
-                  </svg>
-                  <svg
-                    *ngIf="currentSort?.direction === 'desc'"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </ng-container>
-
-                <svg
-                  *ngIf="currentSort?.field !== column.field"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <!-- Sort Icon -->
+                <button
+                  *ngIf="column.sortable && sortable"
+                  (click)="onSortChange(column)"
+                  class="focus:outline-none"
+                  [ngClass]="getSortHeaderClass(column)"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                  />
-                </svg>
-              </button>
-            </div>
+                  <ng-container *ngIf="currentSort?.field === column.field">
+                    <svg
+                      *ngIf="currentSort?.direction === 'asc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 text-blue-600 dark:text-blue-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                    <svg
+                      *ngIf="currentSort?.direction === 'desc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 text-blue-600 dark:text-blue-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </ng-container>
+
+                  <svg
+                    *ngIf="currentSort?.field !== column.field"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </th>
             } @else{
-            <div class="flex items-center space-x-1">
-              <span>{{ column.header }}</span>
+            <th
+              scope="col"
+              [ngClass]="column.headerClass"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            >
+              <div class="flex items-center space-x-1">
+                <span>{{ column.header }}</span>
 
-              <!-- Sort Icon -->
-              <button
-                *ngIf="column.sortable && sortable"
-                (click)="onSortChange(column)"
-                class="focus:outline-none"
-                [ngClass]="getSortHeaderClass(column)"
-              >
-                <ng-container *ngIf="currentSort?.field === column.field">
-                  <svg
-                    *ngIf="currentSort?.direction === 'asc'"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 15l7-7 7 7"
-                    />
-                  </svg>
-                  <svg
-                    *ngIf="currentSort?.direction === 'desc'"
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </ng-container>
-
-                <svg
-                  *ngIf="currentSort?.field !== column.field"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                <!-- Sort Icon -->
+                <button
+                  *ngIf="column.sortable && sortable"
+                  (click)="onSortChange(column)"
+                  class="focus:outline-none"
+                  [ngClass]="getSortHeaderClass(column)"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                  />
-                </svg>
-              </button>
-            </div>
+                  <ng-container *ngIf="currentSort?.field === column.field">
+                    <svg
+                      *ngIf="currentSort?.direction === 'asc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 text-blue-600 dark:text-blue-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
+                    <svg
+                      *ngIf="currentSort?.direction === 'desc'"
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 text-blue-600 dark:text-blue-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </ng-container>
+
+                  <svg
+                    *ngIf="currentSort?.field !== column.field"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </th>
             }
-          </th>
+          </ng-container>
 
           <!-- Actions Column -->
           <th
@@ -589,61 +594,120 @@
 
             <!-- Default Row Rendering -->
             <ng-template #defaultRow>
-              <td
-                *ngFor="let column of visibleColumns"
-                class="px-6 py-4 whitespace-nowrap"
-                [ngClass]="column.cellClass"
-              >
-                <ng-container *ngIf="column.cellTemplate; else defaultCell">
-                  <ng-container
-                    [ngTemplateOutlet]="column.cellTemplate"
-                    [ngTemplateOutletContext]="{
-                      $implicit: item,
-                      column: column,
-                      value: getValue(item, column)
-                    }"
-                  ></ng-container>
-                </ng-container>
+              <ng-container *ngFor="let column of visibleColumns">
+                @if (column.permission){
+                <td
+                  *hasPermission="column.permission"
+                  class="px-6 py-4 whitespace-nowrap"
+                  [ngClass]="column.cellClass"
+                >
+                  <ng-container *ngIf="column.cellTemplate; else defaultCell">
+                    <ng-container
+                      [ngTemplateOutlet]="column.cellTemplate"
+                      [ngTemplateOutletContext]="{
+                        $implicit: item,
+                        column: column,
+                        value: getValue(item, column)
+                      }"
+                    ></ng-container>
+                  </ng-container>
 
-                <ng-template #defaultCell>
-                  <div [ngSwitch]="column.type">
-                    <!-- Text -->
-                    <div
-                      *ngSwitchDefault
-                      class="text-sm text-gray-900 dark:text-gray-100"
-                    >
-                      {{ formatValue(getValue(item, column), column) }}
-                    </div>
-
-                    <!-- Boolean -->
-                    <div
-                      *ngSwitchCase="'boolean'"
-                      class="inline-flex items-center"
-                    >
-                      <span
-                        *ngIf="getValue(item, column)"
-                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  <ng-template #defaultCell>
+                    <div [ngSwitch]="column.type">
+                      <!-- Text -->
+                      <div
+                        *ngSwitchDefault
+                        class="text-sm text-gray-900 dark:text-gray-100"
                       >
-                        Yes
-                      </span>
-                      <span
-                        *ngIf="!getValue(item, column)"
-                        class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      >
-                        No
-                      </span>
-                    </div>
+                        {{ formatValue(getValue(item, column), column) }}
+                      </div>
 
-                    <!-- Currency -->
-                    <div
-                      *ngSwitchCase="'currency'"
-                      class="text-sm text-gray-900 dark:text-gray-100"
-                    >
-                      {{ formatValue(getValue(item, column), column) }}
+                      <!-- Boolean -->
+                      <div
+                        *ngSwitchCase="'boolean'"
+                        class="inline-flex items-center"
+                      >
+                        <span
+                          *ngIf="getValue(item, column)"
+                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        >
+                          Yes
+                        </span>
+                        <span
+                          *ngIf="!getValue(item, column)"
+                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        >
+                          No
+                        </span>
+                      </div>
+
+                      <!-- Currency -->
+                      <div
+                        *ngSwitchCase="'currency'"
+                        class="text-sm text-gray-900 dark:text-gray-100"
+                      >
+                        {{ formatValue(getValue(item, column), column) }}
+                      </div>
                     </div>
-                  </div>
-                </ng-template>
-              </td>
+                  </ng-template>
+                </td>
+                } @else{
+                <td
+                  class="px-6 py-4 whitespace-nowrap"
+                  [ngClass]="column.cellClass"
+                >
+                  <ng-container *ngIf="column.cellTemplate; else defaultCell">
+                    <ng-container
+                      [ngTemplateOutlet]="column.cellTemplate"
+                      [ngTemplateOutletContext]="{
+                        $implicit: item,
+                        column: column,
+                        value: getValue(item, column)
+                      }"
+                    ></ng-container>
+                  </ng-container>
+
+                  <ng-template #defaultCell>
+                    <div [ngSwitch]="column.type">
+                      <!-- Text -->
+                      <div
+                        *ngSwitchDefault
+                        class="text-sm text-gray-900 dark:text-gray-100"
+                      >
+                        {{ formatValue(getValue(item, column), column) }}
+                      </div>
+
+                      <!-- Boolean -->
+                      <div
+                        *ngSwitchCase="'boolean'"
+                        class="inline-flex items-center"
+                      >
+                        <span
+                          *ngIf="getValue(item, column)"
+                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        >
+                          Yes
+                        </span>
+                        <span
+                          *ngIf="!getValue(item, column)"
+                          class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        >
+                          No
+                        </span>
+                      </div>
+
+                      <!-- Currency -->
+                      <div
+                        *ngSwitchCase="'currency'"
+                        class="text-sm text-gray-900 dark:text-gray-100"
+                      >
+                        {{ formatValue(getValue(item, column), column) }}
+                      </div>
+                    </div>
+                  </ng-template>
+                </td>
+                }
+              </ng-container>
             </ng-template>
 
             <!-- Actions Column -->

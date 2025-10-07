@@ -1,9 +1,12 @@
 // src/app/shared/components/grid-saved-filters/grid-saved-filters.component.ts
-import { Component, Input, Output, EventEmitter, ElementRef, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SavedFilter } from '../../models/grid/saved-filter.model';
 import { GridFilterState } from '../../models/grid/grid-filter-state.model';
+import { ModalService } from '../../services/modals/modal.service';
+import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { AlertService } from '../../../core/services/alert.service';
 
 @Component({
   selector: 'app-grid-saved-filters',
@@ -35,6 +38,9 @@ export class GridSavedFiltersComponent {
 
   isDropdownOpen = false;
   newFilterName = '';
+
+  private modalService = inject(ModalService);
+  private alertService = inject(AlertService);
 
   constructor(private elementRef: ElementRef) {}
 
@@ -95,28 +101,77 @@ export class GridSavedFiltersComponent {
   updateFilter(filter: SavedFilter): void {
     if (!this.currentFilterState) return;
 
-    const updatedFilter: SavedFilter = {
-      ...filter,
-      filterState: this.currentFilterState,
-      updatedAt: new Date(),
-    };
+    const modalRef = this.modalService.open(
+      ConfirmationDialogComponent,
+      {
+        size: 'md',
+        centered: true,
+      },
+      {
+        title: 'Update Filter',
+        message: `Are you sure you want to update the filter "${filter.name}" with the current filter settings?`,
+        type: 'info',
+        confirmText: 'Update',
+        cancelText: 'Cancel',
+        details: 'This will replace the existing filter configuration with your current filter settings.',
+      }
+    );
 
-    this.filterUpdated.emit(updatedFilter);
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          const updatedFilter: SavedFilter = {
+            ...filter,
+            filterState: this.currentFilterState!,
+            updatedAt: new Date(),
+          };
+
+          this.filterUpdated.emit(updatedFilter);
+          this.alertService.success(`Filter "${filter.name}" has been updated successfully.`);
+        }
+      },
+      () => {
+        // Dismissed - do nothing
+      }
+    );
   }
 
   deleteFilter(filter: SavedFilter, event: Event): void {
     event.stopPropagation();
 
-    if (
-      confirm(`Are you sure you want to delete the filter "${filter.name}"?`)
-    ) {
-      this.filterDeleted.emit(filter.id);
-    }
+    const modalRef = this.modalService.open(
+      ConfirmationDialogComponent,
+      {
+        size: 'md',
+        centered: true,
+      },
+      {
+        title: 'Delete Filter',
+        message: `Are you sure you want to delete the filter "${filter.name}"?`,
+        type: 'danger',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        details: 'This action cannot be undone.',
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          this.filterDeleted.emit(filter.id);
+          this.alertService.success(`Filter "${filter.name}" has been deleted successfully.`);
+        }
+      },
+      () => {
+        // Dismissed - do nothing
+      }
+    );
   }
 
   clearAllFilters(): void {
     this.filtersCleared.emit();
     this.isDropdownOpen = false;
+    
   }
 
   getFilterCount(filter: SavedFilter): number {
