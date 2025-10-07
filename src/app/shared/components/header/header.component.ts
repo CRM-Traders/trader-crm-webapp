@@ -10,7 +10,7 @@ import { NotificationsComponent } from '../notifications/notifications.component
 import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
 import { LocalizationService } from '../../../core/services/localization.service';
 import { environment } from '../../../../environments/environment';
-import { ChatIconComponent } from '../chat/chat-icon/chat-icon.component';
+// import { ChatIconComponent } from '../chat/chat-icon/chat-icon.component';
 
 @Component({
   selector: 'app-header',
@@ -19,7 +19,7 @@ import { ChatIconComponent } from '../chat/chat-icon/chat-icon.component';
     ThemeToggleComponent,
     UserMenuComponent,
     MiniCalendarComponent,
-    ChatIconComponent,
+    // ChatIconComponent,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
