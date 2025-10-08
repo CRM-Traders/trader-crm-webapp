@@ -331,7 +331,7 @@ export class ClientsComponent implements OnInit {
       hidden: true,
     },
     {
-      field: 'operatorId',
+      field: 'operatorName',
       header: 'Operator',
       sortable: true,
       filterable: true,
@@ -800,13 +800,22 @@ export class ClientsComponent implements OnInit {
     // Check if there's a temporary selection for this client
     if (this.tempSalesStatusSelections.has(clientId)) {
       const tempValue = this.tempSalesStatusSelections.get(clientId)!;
-      console.log('Using temporary selection for client', clientId, ':', tempValue);
+      console.log(
+        'Using temporary selection for client',
+        clientId,
+        ':',
+        tempValue
+      );
       return tempValue;
     }
 
     // Return the actual data value
     const actualValue = this.normalizeSalesStatus(
-      value?.saleStatusEnum ?? value?.salesStatus ?? row?.saleStatusEnum ?? row?.salesStatus ?? null
+      value?.saleStatusEnum ??
+        value?.salesStatus ??
+        row?.saleStatusEnum ??
+        row?.salesStatus ??
+        null
     );
     return actualValue;
   }
@@ -822,13 +831,18 @@ export class ClientsComponent implements OnInit {
       clientData?.saleStatusEnum || clientData?.salesStatus
     );
     console.log('Original status:', originalStatus);
-    
+
     // Store temporary selection to show in dropdown
     this.tempSalesStatusSelections.set(clientId, value);
     console.log('Temporary selection set:', this.tempSalesStatusSelections);
 
     // Show confirmation modal instead of directly changing status
-    this.showSalesStatusConfirmationModal(clientId, status, clientData, originalStatus);
+    this.showSalesStatusConfirmationModal(
+      clientId,
+      status,
+      clientData,
+      originalStatus
+    );
   }
 
   // Show sales status confirmation modal
@@ -838,10 +852,9 @@ export class ClientsComponent implements OnInit {
     clientData: any,
     originalStatus: number
   ): void {
-
-    const currentStatusLabel = this.salesStatusOptions.find(
-      (s) => s.value === originalStatus
-    )?.label || 'Unknown';
+    const currentStatusLabel =
+      this.salesStatusOptions.find((s) => s.value === originalStatus)?.label ||
+      'Unknown';
 
     const modalRef = this.modalService.open(
       SalesStatusConfirmationModalComponent,
@@ -879,7 +892,6 @@ export class ClientsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       (reason) => {
-
         console.log('Modal cancelled/dismissed:', reason);
         // User cancelled or modal was dismissed - clear temporary selection and force UI update
         this.tempSalesStatusSelections.delete(clientId);
@@ -889,7 +901,6 @@ export class ClientsComponent implements OnInit {
         setTimeout(() => {
           this.cdr.detectChanges();
         }, 0);
-
       }
     );
 
@@ -904,7 +915,6 @@ export class ClientsComponent implements OnInit {
       }, 0);
     });
   }
-
 
   private reinitializeComponent(): void {
     this.operators = [];
