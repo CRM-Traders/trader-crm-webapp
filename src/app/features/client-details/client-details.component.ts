@@ -103,6 +103,7 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
 
   clientComments: ClientComment[] = [];
   loadingClientComments = false;
+  expandedComments: { [key: string]: boolean } = {};
 
   // Visibility properties for email and phone
   showEmail = false;
@@ -654,5 +655,13 @@ export class ClientDetailsComponent implements OnInit, OnDestroy {
         }
         document.body.removeChild(textArea);
       });
+  }
+
+  toggleCommentExpanded(commentId: string): void {
+    this.expandedComments[commentId] = !this.expandedComments[commentId];
+  }
+
+  isCommentExpanded(commentId: string): boolean {
+    return !!this.expandedComments[commentId];
   }
 }

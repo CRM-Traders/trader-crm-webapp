@@ -392,9 +392,20 @@
                           {{ comment.createdAt | date : "short" }}
                         </span>
                       </div>
-                      <p class="text-blue-700 dark:text-blue-400 break-words">
-                        {{ getPreviewText(comment.note) }}
-                      </p>
+                      <div>
+                        <p [ngClass]="{
+                          'line-clamp-2': !isCommentExpanded(comment.id),
+                          'transition-all duration-300 ease-in-out': true
+                        }" class="text-blue-700 dark:text-blue-400 break-words">
+                          {{ comment.note }}
+                        </p>
+                        <button 
+                          *ngIf="comment.note.split('\n').length > 2 || comment.note.length > 150"
+                          (click)="toggleCommentExpanded(comment.id)"
+                          class="text-blue-600 underline dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-medium mt-1 transition-colors duration-200">
+                          {{ isCommentExpanded(comment.id) ? 'Show Less' : 'Read More' }}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
