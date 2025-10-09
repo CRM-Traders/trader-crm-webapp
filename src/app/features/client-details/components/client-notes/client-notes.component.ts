@@ -16,6 +16,7 @@ import { Client } from '../../../clients/models/clients.model';
 import { NotesService } from './services/notes.service';
 import { ClientNote } from './models/note.model';
 import { NoteCreationModalComponent } from './components/note-creation-modal/note-creation-modal.component';
+import { NoteDetailsModalComponent } from './components/note-details-modal/note-details-modal.component';
 import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 
 @Component({
@@ -149,7 +150,8 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
               >
                 <tr
                   *ngFor="let note of paginatedNotes"
-                  class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                  (click)="openNoteDetailsModal(note)"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-500/20 transition-colors cursor-pointer"
                 >
                   <td class="px-6 py-4 whitespace-nowrap">
                     <span
@@ -179,6 +181,13 @@ import { HasPermissionDirective } from '../../../../core/directives/has-permissi
                       <p class="max-w-xs truncate" [title]="note.note">
                         {{ note.note }}
                       </p>
+                      <button
+                        type="button"
+                        *ngIf="note.note.length > 52"
+                        class="text-blue-600 underline dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-xs font-medium mt-1 transition-colors duration-200"
+                      >
+                        Read More
+                      </button>
                     </div>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap">
@@ -503,7 +512,21 @@ export class ClientNotesComponent implements OnInit, OnDestroy {
           this.notesUpdated.emit();
         }
       },
-      () => {}
+      () => { }
+    );
+  }
+
+  openNoteDetailsModal(note: ClientNote): void {
+    this.modalService.open(
+      NoteDetailsModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        note: note,
+      }
     );
   }
 
