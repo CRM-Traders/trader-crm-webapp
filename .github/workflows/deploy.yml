@@ -6,12 +6,13 @@ on:
   workflow_dispatch:
 
 env:
-  APP_NAME: 'trader-crm-webapp' 
-  DIST_FOLDER: 'dist/trader-crm-webapp/browser' 
+  NODE_VERSION: '20.x'
+  APP_NAME: 'trader-crm-webapp'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,42 +20,40 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          
+      - name: Cache Angular build
+        uses: actions/cache@v3
+        with:
+          path: |
+            .angular
+            dist
+          key: ${{ runner.os }}-angular-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-angular-${{ hashFiles('**/package-lock.json') }}
+            ${{ runner.os }}-angular-
           
       - name: Build
         run: |
           npm ci
-          npm run build -- --configuration=production
+          npm run build --configuration=production
           
-          # Generate deploy path
-          APP_NAME_LOWER=$(echo ${{ env.APP_NAME }} | tr '[:upper:]' '[:lower:]')
-          DEPLOY_PATH="/www/wwwroot/${APP_NAME_LOWER}.crm-system.com"
-          echo "DEPLOY_PATH=${DEPLOY_PATH}" >> $GITHUB_ENV
-          
-      - name: Setup SSH
+      - name: Deploy
         run: |
+          # Setup SSH
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
           
-      - name: Deploy
-        run: | 
-            rsync -avz --delete \
-            --exclude='.user.ini' \
-            --exclude='*.log' \
-            --exclude='.htaccess' \
-            ${{ env.DIST_FOLDER }}/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
-    
-            # Set permissions only on application files (exclude system files)
-            ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
-            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type f -exec sudo chown www:www {} + 2>/dev/null || true
-            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type d -exec sudo chown www:www {} + 2>/dev/null || true
-            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type f -exec sudo chmod 644 {} + 2>/dev/null || true
-            find '${{ env.DEPLOY_PATH }}' -name '.user.ini' -prune -o -type d -exec sudo chmod 755 {} + 2>/dev/null || true
-            "
+          # Deploy with compression
+          APP_LOWER=$(echo "${{ env.APP_NAME }}" | tr '[:upper:]' '[:lower:]')
+          DEPLOY_PATH="/www/wwwroot/${APP_LOWER}.crm-system.com"
           
-      - name: Cleanup
-        if: always()
-        run: rm -rf ~/.ssh
+          rsync -avz --compress-level=9 \
+            dist/${{ env.APP_NAME }}/browser/ \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${DEPLOY_PATH}/
+          
+          # Cleanup
+          rm -rf ~/.ssh
