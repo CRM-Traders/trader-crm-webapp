@@ -1,0 +1,136 @@
+  <!-- Modal Header -->
+  <div class="modal-header border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+      Close Order Confirmation
+    </h3>
+  </div>
+
+  <!-- Modal Body -->
+  <div class="modal-body px-6 py-6">
+    <!-- Order Details -->
+    <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Order Details</h4>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div>
+          <span class="text-gray-500 dark:text-gray-400">Symbol:</span>
+          <span class="ml-2 font-medium text-gray-900 dark:text-gray-100">{{ order.tradingPairSymbol }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500 dark:text-gray-400">Side:</span>
+          <span class="ml-2 font-medium" [ngClass]="{
+            'text-green-600 dark:text-green-400': order.sideLabel === 'Buy',
+            'text-red-600 dark:text-red-400': order.sideLabel === 'Sell'
+          }">{{ order.sideLabel }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500 dark:text-gray-400">Current Price:</span>
+          <span class="ml-2 font-medium text-gray-900 dark:text-gray-100">${{ order.price | number : '1.8-8' }}</span>
+        </div>
+        <div>
+          <span class="text-gray-500 dark:text-gray-400">Quantity:</span>
+          <span class="ml-2 font-medium text-gray-900 dark:text-gray-100">{{ order.quantity | number : '1.8-8' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Price Selection -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+        Select Close Price Option
+      </label>
+
+      <!-- Current Price Option -->
+      <div class="mb-4">
+        <label class="flex items-start p-4 border rounded-lg cursor-pointer transition-all" [ngClass]="{
+          'border-blue-500 bg-blue-50 dark:bg-blue-900/20': priceOption() === 'current',
+          'border-gray-300 dark:border-gray-600 hover:border-gray-400': priceOption() !== 'current'
+        }">
+          <input
+            type="radio"
+            name="priceOption"
+            value="current"
+            [checked]="priceOption() === 'current'"
+            (change)="onPriceOptionChange('current')"
+            class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+          />
+          <div class="ml-3 flex-1">
+            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Close at Current Market Price
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              The order will be closed at the current market price (recommended)
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Custom Price Option -->
+      <div>
+        <label class="flex items-start p-4 border rounded-lg cursor-pointer transition-all" [ngClass]="{
+          'border-blue-500 bg-blue-50 dark:bg-blue-900/20': priceOption() === 'custom',
+          'border-gray-300 dark:border-gray-600 hover:border-gray-400': priceOption() !== 'custom'
+        }">
+          <input
+            type="radio"
+            name="priceOption"
+            value="custom"
+            [checked]="priceOption() === 'custom'"
+            (change)="onPriceOptionChange('custom')"
+            class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+          />
+          <div class="ml-3 flex-1">
+            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Close at Custom Price
+            </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Specify a custom price to close the order
+            </div>
+          </div>
+        </label>
+
+        <!-- Custom Price Input -->
+        <div *ngIf="priceOption() === 'custom'" class="mt-3 ml-7">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Custom Close Price
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span class="text-gray-500 dark:text-gray-400 text-sm">$</span>
+            </div>
+            <input
+              type="number"
+              [(ngModel)]="customPrice"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter custom price"
+              class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Current order price: ${{ order.price | number : '1.8-8' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Footer -->
+  <div class="modal-footer border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end space-x-3">
+    <button
+      type="button"
+      (click)="onCancel()"
+      class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      (click)="onConfirm()"
+      [disabled]="priceOption() === 'custom' && (!customPrice() || customPrice()! <= 0)"
+      class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    >
+      Close Order
+    </button>
+  </div>
+

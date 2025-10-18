@@ -10,7 +10,6 @@ import { NotificationsComponent } from '../notifications/notifications.component
 import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
 import { LocalizationService } from '../../../core/services/localization.service';
 import { environment } from '../../../../environments/environment';
-// import { ChatIconComponent } from '../chat/chat-icon/chat-icon.component';
 
 @Component({
   selector: 'app-header',
@@ -19,7 +18,6 @@ import { environment } from '../../../../environments/environment';
     ThemeToggleComponent,
     UserMenuComponent,
     MiniCalendarComponent,
-    // ChatIconComponent,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
@@ -29,17 +27,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private navService = inject(NavigationService);
   private localizationService = inject(LocalizationService);
   private router = inject(Router);
+
   public environment = environment;
   // Reference signal directly in the template
   userRole = this.authService.userRole;
   isUserMenuOpen = false;
   currentTime = '';
 
+  // Chat-related properties
+  unreadChatCount = 0;
+  isLoadingChatCount = false;
+
   private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
     this.updateTime();
-
     interval(1000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.updateTime());
@@ -92,5 +94,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   swapOfficies() {
     this.router.navigate(['/auth/brand-selection']);
+  }
+
+  openChat(): void {
+    this.router.navigate(['/chat']);
   }
 }

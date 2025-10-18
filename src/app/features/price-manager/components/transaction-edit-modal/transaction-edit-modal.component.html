@@ -1,0 +1,451 @@
+<div class="w-full">
+  <!-- Modal Header -->
+  <div
+    class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+  >
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        {{ isEditing ? 'Edit Transaction' : 'Transaction Details' }}
+      </h2>
+    </div>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      ID: {{ transaction.id }}
+    </p>
+  </div>
+
+  <!-- Modal Body -->
+  <div
+    class="px-6 py-4 bg-white dark:bg-gray-900 max-h-[70vh] overflow-y-auto"
+  >
+    <!-- Loading State -->
+    <div *ngIf="isFetching" class="flex items-center justify-center py-12">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+        <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">Loading transaction details...</p>
+      </div>
+    </div>
+
+    <!-- Transaction Information Section -->
+    <div *ngIf="!isFetching" class="space-y-6">
+      <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+          <form [formGroup]="editForm" class="space-y-4">
+          <!-- Account Number (Read-only) -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Account Number
+            </label>
+            <span class="text-sm text-gray-900 dark:text-white font-medium">
+              {{ transaction.accountNumber }}
+            </span>
+          </div>
+
+          <!-- User ID (Read-only) -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              User ID
+            </label>
+            <span class="text-sm text-gray-900 dark:text-white font-mono">
+              {{ transaction.userId }}
+            </span>
+          </div>
+
+          <!-- Two-column layout for form fields -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Transaction Type -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Transaction Type
+              </label>
+              <div *ngIf="isEditing">
+                <select
+                  formControlName="transactionType"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option [value]="0">Deposit</option>
+                  <option [value]="1">Withdrawal</option>
+                  <option [value]="2">Transfer</option>
+                  <option [value]="3">Trade</option>
+                  <option [value]="4">Fee</option>
+                  <option [value]="5">Commission</option>
+                  <option [value]="6">Bonus</option>
+                  <option [value]="7">Refund</option>
+                  <option [value]="8">Credit</option>
+                  <option [value]="9">Debit</option>
+                  <option [value]="10">Adjustment</option>
+                </select>
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ getTransactionTypeLabel(transaction.transactionType) }}
+              </span>
+            </div>
+
+            <!-- Payment Status -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Payment Status
+              </label>
+              <div *ngIf="isEditing">
+                <select
+                  formControlName="paymentStatus"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option [value]="null">-</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                  <option value="success">Success</option>
+                  <option value="failed">Failed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.paymentStatus || '-' }}
+              </span>
+            </div>
+
+            <!-- Payment Type -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Payment Type
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="text"
+                  formControlName="paymentType"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.paymentType || '-' }}
+              </span>
+            </div>
+
+            <!-- Payment Method -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Payment Method
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="text"
+                  formControlName="paymentMethod"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.paymentMethod || '-' }}
+              </span>
+            </div>
+
+            <!-- Currency -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Currency
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="text"
+                  formControlName="currency"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  [class.border-red-500]="
+                    editForm.get('currency')?.invalid &&
+                    editForm.get('currency')?.touched
+                  "
+                />
+                <p
+                  class="mt-1 text-sm text-red-600 dark:text-red-400"
+                  *ngIf="
+                    editForm.get('currency')?.invalid &&
+                    editForm.get('currency')?.touched
+                  "
+                >
+                  Currency is required
+                </p>
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.currency }}
+              </span>
+            </div>
+
+            <!-- Amount -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Amount
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="number"
+                  formControlName="amount"
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  [class.border-red-500]="
+                    editForm.get('amount')?.invalid &&
+                    editForm.get('amount')?.touched
+                  "
+                />
+                <p
+                  class="mt-1 text-sm text-red-600 dark:text-red-400"
+                  *ngIf="
+                    editForm.get('amount')?.invalid &&
+                    editForm.get('amount')?.touched
+                  "
+                >
+                  Amount is required
+                </p>
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+                [ngClass]="{
+                  'text-green-600 dark:text-green-400': transaction.amount > 0,
+                  'text-red-600 dark:text-red-400': transaction.amount < 0
+                }"
+              >
+                {{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount | number : '1.2-8' }}
+              </span>
+            </div>
+
+            <!-- Balance Before -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Balance Before
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="number"
+                  formControlName="balanceBefore"
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.balanceBefore | number : '1.2-2' }}
+              </span>
+            </div>
+
+            <!-- Balance After -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Balance After
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="number"
+                  formControlName="balanceAfter"
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.balanceAfter | number : '1.2-2' }}
+              </span>
+            </div>
+
+            <!-- Reference ID -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Reference ID
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="text"
+                  formControlName="referenceId"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.referenceId || '-' }}
+              </span>
+            </div>
+
+            <!-- Reference Type -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Reference Type
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="text"
+                  formControlName="referenceType"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ transaction.referenceType || '-' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Description (Full width) -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Description
+            </label>
+            <div *ngIf="isEditing">
+              <textarea
+                formControlName="description"
+                rows="3"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              ></textarea>
+            </div>
+            <span
+              *ngIf="!isEditing"
+              class="text-sm text-gray-900 dark:text-white"
+            >
+              {{ transaction.description || '-' }}
+            </span>
+          </div>
+
+          <!-- Metadata -->
+          <div *ngIf="transaction.metadata">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Metadata
+            </label>
+            <div class="bg-gray-100 dark:bg-gray-900 rounded p-3">
+              <pre class="text-xs text-gray-900 dark:text-white overflow-x-auto">{{ transaction.metadata | json }}</pre>
+            </div>
+          </div>
+
+          <!-- Created Information -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Created Date
+              </label>
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ transaction.createdAt | date : 'medium' }}
+              </span>
+            </div>
+            <div *ngIf="transaction.lastModifiedAt">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Last Modified
+              </label>
+              <span class="text-sm text-gray-900 dark:text-white">
+                {{ transaction.lastModifiedAt | date : 'medium' }}
+              </span>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Footer -->
+  <div
+    class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center"
+  >
+    <!-- Left side: Delete buttons (only shown when not editing) -->
+    <div class="flex items-center gap-3">
+      <button
+        *ngIf="!isEditing"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
+        (click)="deleteTransaction(false)"
+        [disabled]="loading || isFetching"
+        title="Soft delete - can be recovered"
+      >
+        {{ loading && isDeleting ? 'Deleting...' : 'Delete (Soft)' }}
+      </button>
+      <button
+        *ngIf="!isEditing"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-red-800 hover:bg-red-900 rounded-md transition-colors disabled:opacity-50"
+        (click)="deleteTransaction(true)"
+        [disabled]="loading || isFetching"
+        title="Permanent delete - cannot be recovered"
+      >
+        {{ loading && isDeleting ? 'Deleting...' : 'Delete (Permanent)' }}
+      </button>
+    </div>
+
+    <!-- Right side: Edit/Save/Close buttons -->
+    <div class="flex items-center gap-3">
+      <button
+        *ngIf="!isEditing"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50"
+        (click)="startEdit()"
+        [disabled]="isFetching"
+      >
+        Edit
+      </button>
+      
+      <button
+        *ngIf="isEditing"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50"
+        [disabled]="editForm.invalid || loading"
+        (click)="saveTransaction()"
+      >
+        {{ loading ? 'Saving...' : 'Save Changes' }}
+      </button>
+      
+      <button
+        type="button"
+        class="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        (click)="isEditing ? cancelEdit() : onClose()"
+        [disabled]="loading || isFetching"
+      >
+        {{ isEditing ? 'Cancel' : 'Close' }}
+      </button>
+    </div>
+  </div>
+</div>

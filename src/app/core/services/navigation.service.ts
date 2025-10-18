@@ -37,7 +37,7 @@ export class NavigationService {
       label: 'Payments',
       icon: 'payment',
       route: '/payments',
-      permission: 127,
+      permission: 166,
     },
     {
       label: 'Offices',
@@ -85,7 +85,7 @@ export class NavigationService {
       label: 'Trading Manager',
       icon: 'traiding-live',
       route: '/manager',
-      permission: 136,
+      permission: 178,
     },
     {
       label: 'Sales Rules',
@@ -121,7 +121,7 @@ export class NavigationService {
       label: 'Departments',
       icon: 'role',
       route: '/departments',
-      permission: 133,
+      permission: 171,
     },
   ];
 

@@ -1,0 +1,242 @@
+<!-- Modal Header -->
+<div class="modal-header border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+  <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+    Adjust Balance
+  </h3>
+  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+    for {{ data.userFullName }}
+  </p>
+</div>
+
+<!-- Modal Body -->
+<div class="modal-body px-6 py-6">
+  <form class="space-y-5">
+    <!-- Trading Account Selection -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Trading Account <span class="text-red-500">*</span>
+      </label>
+      
+      <!-- Loading State -->
+      <div *ngIf="loadingAccounts()" class="flex items-center justify-center py-3 text-sm text-gray-500 dark:text-gray-400">
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Loading trading accounts...
+      </div>
+
+      <!-- Account Dropdown (when accounts are loaded) -->
+      <div *ngIf="!loadingAccounts() && tradingAccounts().length > 0">
+        <select
+          [ngModel]="tradingAccountId()"
+          (ngModelChange)="tradingAccountId.set($event)"
+          name="tradingAccountId"
+          class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="" disabled>Select a trading account</option>
+          <option *ngFor="let account of tradingAccounts()" [value]="account.id">
+            {{ account.displayName }} ({{ account.accountNumber }}) - {{ account.accountType }} - {{ account.status }}
+          </option>
+        </select>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {{ tradingAccounts().length }} account(s) available
+        </p>
+      </div>
+
+      <!-- No Accounts Found -->
+      <div *ngIf="!loadingAccounts() && tradingAccounts().length === 0">
+        <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+          <div class="flex">
+            <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-400">
+                No Trading Accounts Found
+              </h3>
+              <p class="mt-1 text-xs text-yellow-700 dark:text-yellow-500">
+                This user does not have any trading accounts.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Currency Selection -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Currency <span class="text-red-500">*</span>
+      </label>
+      
+      <!-- Search Input -->
+      <div class="relative mb-2">
+        <input
+          type="text"
+          [ngModel]="currencySearchTerm()"
+          (ngModelChange)="onCurrencySearch($event)"
+          name="currencySearch"
+          placeholder="Search for a currency..."
+          class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loadingCurrencies()" class="flex items-center justify-center py-3 text-sm text-gray-500 dark:text-gray-400">
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Loading currencies...
+      </div>
+
+      <!-- Currency Dropdown -->
+      <div *ngIf="!loadingCurrencies()">
+        <select
+          [ngModel]="currency()"
+          (ngModelChange)="currency.set($event)"
+          name="currency"
+          class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option *ngFor="let curr of filteredCurrencies()" [value]="curr">
+            {{ curr }}
+          </option>
+        </select>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {{ filteredCurrencies().length }} currency/currencies available
+          <span *ngIf="currencySearchTerm()"> matching "{{ currencySearchTerm() }}"</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Adjustment Type Selection -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Adjustment Type <span class="text-red-500">*</span>
+      </label>
+      <div class="grid grid-cols-2 gap-3">
+        <label
+          class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all"
+          [ngClass]="{
+            'border-blue-500 bg-blue-50 dark:bg-blue-900/20': adjustmentType() === 'adjustBy',
+            'border-gray-300 dark:border-gray-600 hover:border-gray-400': adjustmentType() !== 'adjustBy'
+          }"
+        >
+          <input
+            type="radio"
+            name="adjustmentType"
+            value="adjustBy"
+            [checked]="adjustmentType() === 'adjustBy'"
+            (change)="onAdjustmentTypeChange('adjustBy')"
+            class="sr-only"
+          />
+          <span class="text-sm font-medium" [ngClass]="adjustmentType() === 'adjustBy' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'">
+            Adjust By
+          </span>
+        </label>
+        <label
+          class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all"
+          [ngClass]="{
+            'border-blue-500 bg-blue-50 dark:bg-blue-900/20': adjustmentType() === 'setTo',
+            'border-gray-300 dark:border-gray-600 hover:border-gray-400': adjustmentType() !== 'setTo'
+          }"
+        >
+          <input
+            type="radio"
+            name="adjustmentType"
+            value="setTo"
+            [checked]="adjustmentType() === 'setTo'"
+            (change)="onAdjustmentTypeChange('setTo')"
+            class="sr-only"
+          />
+          <span class="text-sm font-medium" [ngClass]="adjustmentType() === 'setTo' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'">
+            Set To
+          </span>
+        </label>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <span *ngIf="adjustmentType() === 'adjustBy'">Add or subtract from current balance (use negative for deductions)</span>
+        <span *ngIf="adjustmentType() === 'setTo'">Set balance to a specific amount</span>
+      </p>
+    </div>
+
+    <!-- Adjust By Amount -->
+    <div *ngIf="adjustmentType() === 'adjustBy'">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Adjustment Amount <span class="text-red-500">*</span>
+      </label>
+      <div class="relative">
+        <input
+          type="number"
+          [ngModel]="adjustBy()"
+          (ngModelChange)="adjustBy.set($event ? +$event : null)"
+          name="adjustBy"
+          (keydown)="preventInvalidNumberInput($event)"
+          step="0.01"
+          placeholder="Enter amount (positive to add, negative to subtract)"
+          class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Example: 100 to add, -50 to subtract
+      </p>
+    </div>
+
+    <!-- Set To Amount -->
+    <div *ngIf="adjustmentType() === 'setTo'">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Set Balance To <span class="text-red-500">*</span>
+      </label>
+      <div class="relative">
+        <input
+          type="number"
+          [ngModel]="setTo()"
+          (ngModelChange)="setTo.set($event ? +$event : null)"
+          name="setTo"
+          (keydown)="preventInvalidNumberInput($event)"
+          step="0.01"
+          min="0"
+          placeholder="Enter new balance amount"
+          class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        The balance will be set to this exact amount
+      </p>
+    </div>
+  </form>
+</div>
+
+<!-- Modal Footer -->
+<div class="modal-footer border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end space-x-3">
+  <button
+    type="button"
+    (click)="onCancel()"
+    [disabled]="submitting()"
+    class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+  >
+    Cancel
+  </button>
+  <button
+    type="button"
+    (click)="onSubmit()"
+    [disabled]="submitting() || !tradingAccountId() || !currency() || (adjustmentType() === 'setTo' && (setTo() === null || setTo() === undefined)) || (adjustmentType() === 'adjustBy' && (adjustBy() === null || adjustBy() === undefined))"
+    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+  >
+    <span *ngIf="!submitting()">Adjust Balance</span>
+    <span *ngIf="submitting()" class="flex items-center">
+      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Adjusting...
+    </span>
+  </button>
+</div>
+

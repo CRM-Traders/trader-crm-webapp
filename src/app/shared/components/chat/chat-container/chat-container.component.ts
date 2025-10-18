@@ -1,11 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ChatWindowComponent } from '../chat-window/chat-window.component';
-import {
-  ChatService,
-  ChatWindow,
-  ChatUser,
-} from '../../../services/chat/chat.service';
+import { ChatWindow } from '../../../models/chat/chat.model';
+import { ChatService } from '../../../services/chat/chat.service';
 
 @Component({
   selector: 'app-chat-container',

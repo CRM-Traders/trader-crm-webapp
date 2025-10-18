@@ -75,6 +75,7 @@ export class GridComponent implements OnInit, OnDestroy {
 
   @Input() permission: number = -1;
   @Input() selectionPermission: number = -1;
+  @Input() exportPermission: number = -1;
   @Input() gridId: string = 'default-grid';
   @Input() data: any[] = [];
   @Input() columns: GridColumn[] = [];

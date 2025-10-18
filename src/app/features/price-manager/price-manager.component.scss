@@ -1,5 +1,9 @@
 @use "tailwindcss" as *;
 
+.general-container {
+  font-family: "Nunito Sans", sans-serif;
+}
+
 // Enhanced Price Manager Component Styles
 .enhanced-price-manager {
   min-height: 100vh;

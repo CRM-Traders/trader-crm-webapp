@@ -27,7 +27,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="flex gap-4 mb-8 overflow-x-auto">
+    <div *hasPermission="170" class="flex gap-4 mb-8 overflow-x-auto">
       <!-- Total Volume Card -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-300/30 p-6 flex-1 min-w-[350px]">
         <div class="flex items-center">
@@ -146,10 +146,10 @@
     </div>
 
     <!-- Main Grid -->
-    <div class="relative">
+    <div *hasPermission="167" class="relative">
       <div class="bg-white dark:bg-gray-800 rounded-xl">
         <div class="overflow-x-auto">
-          <app-grid [gridId]="gridId" [endpoint]="'identity/api/payments/grid'" [columns]="gridColumns"
+          <app-grid [gridId]="gridId" [exportPermission]="168" [endpoint]="'identity/api/payments/grid'" [columns]="gridColumns"
             [sortable]="true" [enableContextMenu]="true" [exportable]="true" [selectable]="true"
             [showColumnSelector]="true" [showFilters]="true" emptyMessage="No payments found"
             (rowClick)="onRowClick($event)" (rowDoubleClick)="onRowDoubleClick($event)">

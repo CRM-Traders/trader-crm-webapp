@@ -1,0 +1,41 @@
+.tradingview-widget-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  .chart-container {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .tradingview-widget-copyright {
+    font-size: 13px;
+    line-height: 32px;
+    text-align: center;
+    vertical-align: middle;
+    font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;
+    color: #9db2bd;
+    margin-top: 8px;
+
+    a {
+      text-decoration: none;
+      color: #9db2bd;
+
+      .blue-text {
+        color: #2962ff;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .trademark {
+      color: #9db2bd;
+    }
+  }
+}
+

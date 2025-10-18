@@ -94,10 +94,17 @@ export class AddWalletModalComponent implements OnDestroy {
           error: (error) => {
             let errorMessage = 'Wallet already exists or an error occurred.';
 
-            if (error.error && error.error.detail) {
-              errorMessage = error.error.detail;
-            } else if (error.message) {
-              errorMessage = error.message;
+            const serverError = error?.error;
+            if (serverError) {
+              if (typeof serverError === 'string') {
+                errorMessage = serverError;
+              } else if (serverError.message) {
+                errorMessage = serverError.message;
+              } else if (serverError.error) {
+                errorMessage = serverError.error;
+              } else if (serverError.detail) {
+                errorMessage = serverError.detail;
+              }
             }
 
             this.alertService.error(errorMessage);

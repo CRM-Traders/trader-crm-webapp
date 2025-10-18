@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { ChatWindow, ChatUser } from './chat.service';
+import { ChatWindow } from '../../models/chat/chat.model';
 
 export interface ChatState {
   openChats: ChatWindow[];
@@ -17,10 +17,10 @@ export interface ProfileState {
 })
 export class UiStateService {
   private readonly CHAT_STORAGE_KEY = 'trader-crm-chat-state';
-  
+
   private chatStateSubject = new BehaviorSubject<ChatState>({
     openChats: [],
-    lastActiveChannel: 'clients'
+    lastActiveChannel: 'clients',
   });
 
   public chatState$ = this.chatStateSubject.asObservable();
@@ -43,8 +43,10 @@ export class UiStateService {
 
   addOpenChat(chat: ChatWindow): void {
     const currentState = this.chatStateSubject.value;
-    const existingChatIndex = currentState.openChats.findIndex(c => c.user.id === chat.user.id);
-    
+    const existingChatIndex = currentState.openChats.findIndex(
+      (c) => c.user.id === chat.user.id
+    );
+
     let updatedChats: ChatWindow[];
     if (existingChatIndex >= 0) {
       // Update existing chat
@@ -54,19 +56,19 @@ export class UiStateService {
       // Add new chat
       updatedChats = [...currentState.openChats, chat];
     }
-    
+
     this.updateChatState({ openChats: updatedChats });
   }
 
   removeOpenChat(chatId: string): void {
     const currentState = this.chatStateSubject.value;
-    const updatedChats = currentState.openChats.filter(c => c.id !== chatId);
+    const updatedChats = currentState.openChats.filter((c) => c.id !== chatId);
     this.updateChatState({ openChats: updatedChats });
   }
 
   updateChatMinimizedState(chatId: string, isMinimized: boolean): void {
     const currentState = this.chatStateSubject.value;
-    const updatedChats = currentState.openChats.map(chat =>
+    const updatedChats = currentState.openChats.map((chat) =>
       chat.id === chatId ? { ...chat, isMinimized } : chat
     );
     this.updateChatState({ openChats: updatedChats });
@@ -93,7 +95,7 @@ export class UiStateService {
         // Validate and sanitize the loaded state
         const validatedState: ChatState = {
           openChats: this.validateChatWindows(parsedState.openChats || []),
-          lastActiveChannel: parsedState.lastActiveChannel || 'clients'
+          lastActiveChannel: parsedState.lastActiveChannel || 'clients',
         };
         this.chatStateSubject.next(validatedState);
       }
@@ -107,22 +109,28 @@ export class UiStateService {
       return [];
     }
 
-    return chatWindows.filter(chat => {
-      return chat &&
-             typeof chat.id === 'string' &&
-             chat.user &&
-             typeof chat.user.id === 'string' &&
-             typeof chat.user.name === 'string' &&
-             typeof chat.user.email === 'string' &&
-             typeof chat.isMinimized === 'boolean';
-    }).map(chat => ({
-      ...chat,
-      // Ensure dates are properly converted back to Date objects
-      user: {
-        ...chat.user,
-        lastMessageTime: chat.user.lastMessageTime ? new Date(chat.user.lastMessageTime) : new Date()
-      }
-    }));
+    return chatWindows
+      .filter((chat) => {
+        return (
+          chat &&
+          typeof chat.id === 'string' &&
+          chat.user &&
+          typeof chat.user.id === 'string' &&
+          typeof chat.user.name === 'string' &&
+          typeof chat.user.email === 'string' &&
+          typeof chat.isMinimized === 'boolean'
+        );
+      })
+      .map((chat) => ({
+        ...chat,
+        // Ensure dates are properly converted back to Date objects
+        user: {
+          ...chat.user,
+          lastMessageTime: chat.user.lastMessageTime
+            ? new Date(chat.user.lastMessageTime)
+            : new Date(),
+        },
+      }));
   }
 
   // Utility methods
@@ -131,7 +139,7 @@ export class UiStateService {
       localStorage.removeItem(this.CHAT_STORAGE_KEY);
       this.chatStateSubject.next({
         openChats: [],
-        lastActiveChannel: 'clients'
+        lastActiveChannel: 'clients',
       });
     } catch (error) {
       console.warn('Failed to clear UI state from localStorage:', error);

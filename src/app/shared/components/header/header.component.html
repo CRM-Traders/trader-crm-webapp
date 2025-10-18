@@ -57,7 +57,61 @@
       <div class="flex items-center space-x-2">
         <!-- <app-notifications></app-notifications> -->
         <app-mini-calendar [showCurrentDate]="false"></app-mini-calendar>
-        <!-- <app-chat-icon></app-chat-icon> -->
+
+        <!-- Chat Icon with Unread Count Badge -->
+        <button
+          (click)="openChat()"
+          class="relative p-2 rounded-full hover:bg-gray-100/20 dark:hover:bg-gray-700/20 transition-colors text-gray-700 dark:text-gray-200"
+          title="Open Chat"
+          [disabled]="isLoadingChatCount"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            class="text-current"
+          >
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g
+              id="SVGRepo_tracerCarrier"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            ></g>
+            <g id="SVGRepo_iconCarrier">
+              <path
+                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 13.5997 2.37562 15.1116 3.04346 16.4525C3.22094 16.8088 3.28001 17.2161 3.17712 17.6006L2.58151 19.8267C2.32295 20.793 3.20701 21.677 4.17335 21.4185L6.39939 20.8229C6.78393 20.72 7.19121 20.7791 7.54753 20.9565C8.88837 21.6244 10.4003 22 12 22Z"
+                stroke="currentColor"
+                stroke-width="1.5"
+              ></path>
+              <path
+                d="M8 10.5H16"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              ></path>
+              <path
+                d="M8 14H13.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              ></path>
+            </g>
+          </svg>
+
+          <span
+            *ngIf="unreadChatCount > 0 && !isLoadingChatCount"
+            class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center min-w-[20px] px-1"
+          >
+            {{ unreadChatCount > 99 ? "99+" : unreadChatCount }}
+          </span>
+
+          <span
+            *ngIf="isLoadingChatCount"
+            class="absolute -top-1 -right-1 bg-gray-400 animate-pulse rounded-full h-3 w-3"
+          ></span>
+        </button>
 
         <button
           (click)="swapOfficies()"

@@ -29,7 +29,7 @@ interface DepartmentResponse {
 @Component({
   selector: 'app-department-role',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasPermissionDirective],
   templateUrl: './department-role.component.html',
   styleUrl: './department-role.component.scss',
 })

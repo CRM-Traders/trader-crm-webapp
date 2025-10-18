@@ -21,6 +21,21 @@ export class HttpService {
     });
   }
 
+  getWithBody<T>(
+    endpoint: string,
+    body: any,
+    params?: HttpParams,
+    headers?: HttpHeaders
+  ): Observable<T> {
+    const options = {
+      headers: headers,
+      params: params,
+      body: body,
+    };
+
+    return this._http.request<T>('GET', `${this._apiUrl}/${endpoint}`, options);
+  }
+
   getFile(endpoint: string): Observable<Blob> {
     return this._http.get(`${this._apiUrl}/${endpoint}`, {
       responseType: 'blob',
@@ -35,6 +50,20 @@ export class HttpService {
     return this._http.post<T>(`${this._apiUrl}/${endpoint}`, body, {
       params: params,
       headers: headers,
+    });
+  }
+
+  postText<T>(
+    endpoint: string,
+    body: any,
+    params?: HttpParams,
+    headers?: HttpHeaders
+  ): Observable<T> {
+    return this._http.post<T>(`${this._apiUrl}/${endpoint}`, body, {
+      params: params,
+      headers: headers,
+      // Coerce responseType to 'json' to satisfy typings while actually expecting text
+      responseType: 'text' as unknown as 'json',
     });
   }
 

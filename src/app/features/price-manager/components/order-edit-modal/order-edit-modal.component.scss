@@ -1,0 +1,23 @@
+// Add any custom styles here if needed
+
+.chart-section {
+    display: flex;
+    flex-direction: column;
+
+    .chart-header {
+      flex-shrink: 0;
+    }
+
+    .chart-wrapper {
+      flex: 1;
+      border: 1px solid rgb(229, 231, 235);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: white;
+
+      .dark & {
+        border-color: rgb(55, 65, 81);
+        background-color: #394d6e;
+      }
+    }
+  }

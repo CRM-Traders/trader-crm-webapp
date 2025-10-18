@@ -1,45 +1,67 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, forkJoin, throwError } from 'rxjs';
+import { map, tap, catchError, switchMap } from 'rxjs/operators';
+import { HttpParams } from '@angular/common/http';
 import { UiStateService } from './ui-state.service';
+import { SignalRService } from './signalr.service';
+import { HttpService } from '../../../core/services/http.service';
 
-export type ChatChannel = 'clients' | 'operators';
+import {
+  ChatUser,
+  CreateGroupChatRequest,
+  ChatChannel,
+  ChatWindow,
+  MessageStatus,
+  MessageType,
+  AddParticipantRequest,
+  ChatDetailsDto,
+  ChatSummaryDto,
+  ChatType,
+  CloseChatRequest,
+  CreateChatCommand,
+  EditMessageRequest,
+  MessageDto,
+  OperatorStatus,
+  PagedResult,
+  ParticipantDto,
+  ParticipantRole,
+  SendMessageRequest,
+  SendMessageWithFileRequest,
+  SetStatusRequest,
+  TransferChatRequest,
+  TypingIndicatorRequest,
+} from '../../models/chat/chat.model';
 
-export interface ChatUser {
+// Add interface for operators
+export interface OperatorItem {
   id: string;
-  name: string;
-  email: string;
-  username?: string;
-  isOnline: boolean;
-  lastMessage: string;
-  lastMessageTime: Date;
-  unreadCount: number;
-  channel: ChatChannel;
-  avatar?: string;
+  value: string;
+  fullName?: string;
+  email?: string;
+  department?: string;
+  role?: string;
+  status?: 'online' | 'away' | 'busy' | 'offline';
+  chatId?: string;
+  lastMessage?: string;
+  lastMessageTime?: Date;
+  unreadCount?: number;
 }
 
-export enum MessageStatus {
-  SENDING = 'sending',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  SEEN = 'seen'
-}
-
-export interface ChatMessage {
+// Add interface for clients
+export interface ClientItem {
   id: string;
-  text: string;
-  timestamp: Date;
-  isSender: boolean;
-  userId: string;
-  status: MessageStatus;
-  attachments?: string[];
-}
-
-export interface ChatWindow {
-  id: string;
-  user: ChatUser;
-  isMinimized: boolean;
-  position?: { x: number; y: number };
+  userId?: string;
+  value: string;
+  fullName?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  status?: 'online' | 'offline';
+  chatId?: string;
+  lastMessage?: string;
+  lastMessageTime?: Date;
+  unreadCount?: number;
 }
 
 @Injectable({
@@ -47,354 +69,448 @@ export interface ChatWindow {
 })
 export class ChatService {
   private uiStateService = inject(UiStateService);
+  private http = inject(HttpService);
+  private signalRService = inject(SignalRService);
+
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
 
+  private chatUsersSubject = new BehaviorSubject<ChatUser[]>([]);
+  public chatUsers$ = this.chatUsersSubject.asObservable();
+
+  private activeChatsSubject = new BehaviorSubject<ChatSummaryDto[]>([]);
+  public activeChats$ = this.activeChatsSubject.asObservable();
+
+  // Add operators cache
+  private operatorsCache = new BehaviorSubject<OperatorItem[]>([]);
+  public operators$ = this.operatorsCache.asObservable();
+
   public openChats$ = this.uiStateService.chatState$.pipe(
-    // Map the chat state to just the open chats array
-    map(state => state.openChats)
+    map((state) => state.openChats)
   );
 
   constructor() {
-    // Initialize with mock data
+    this.initializeSignalR();
+    this.setupSignalRListeners();
+    this.loadInitialData();
+  }
+
+  private async initializeSignalR(): Promise<void> {
+    try {
+      await this.signalRService.initializeChatHub();
+      const userRole = this.getUserRole();
+      if (userRole === 'operator' || userRole === 'admin') {
+        await this.signalRService.initializeOperatorHub();
+      }
+    } catch (error) {
+      console.error('Failed to initialize SignalR:', error);
+    }
+  }
+
+  private setupSignalRListeners(): void {
+    this.signalRService.messageReceived$.subscribe((message: any) => {
+      if (message) {
+        this.handleNewMessage(message);
+      }
+    });
+
+    this.signalRService.typingIndicator$.subscribe((data) => {
+      if (data) {
+        this.handleTypingIndicator(data);
+      }
+    });
+
+    this.signalRService.chatStatusChanged$.subscribe((data) => {
+      if (data) {
+        this.handleChatStatusChange(data);
+      }
+    });
+
+    this.signalRService.messageRead$.subscribe((data) => {
+      if (data) {
+        this.handleMessageRead(data);
+      }
+    });
+
+    this.signalRService.newChatAssigned$.subscribe((data) => {
+      if (data) {
+        this.handleNewChatAssigned(data);
+      }
+    });
+  }
+
+  private loadInitialData(): void {
+    this.getMyChats().subscribe();
     this.updateUnreadCount();
   }
 
-  getChatUsers(channel: ChatChannel): Observable<ChatUser[]> {
-    // Mock data - replace with actual API call
-    const mockUsers: ChatUser[] = [
-      // Clients with recent activity
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        username: 'johndoe',
-        isOnline: true,
-        lastMessage: 'Thanks for the update!',
-        lastMessageTime: new Date(Date.now() - 300000), // 5 min ago
-        unreadCount: 2,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=1'
-      },
-      {
-        id: '2',
-        name: 'Jane Smith',
-        email: 'jane.smith@example.com',
-        username: 'janesmith',
-        isOnline: false,
-        lastMessage: 'Can we schedule a call?',
-        lastMessageTime: new Date(Date.now() - 3600000), // 1 hour ago
-        unreadCount: 0,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=5'
-      },
-      {
-        id: '3',
-        name: 'Robert Wilson',
-        email: 'r.wilson@email.com',
-        username: 'rwilson',
-        isOnline: true,
-        lastMessage: 'When can I expect the withdrawal?',
-        lastMessageTime: new Date(Date.now() - 180000), // 3 min ago
-        unreadCount: 5,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=12'
-      },
-      {
-        id: '4',
-        name: 'Emily Brown',
-        email: 'emily.brown@mail.com',
-        username: 'emilybrown',
-        isOnline: true,
-        lastMessage: 'Perfect! Thank you so much 😊',
-        lastMessageTime: new Date(Date.now() - 600000), // 10 min ago
-        unreadCount: 0,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=9'
-      },
-      {
-        id: '5',
-        name: 'Michael Davis',
-        email: 'm.davis@example.com',
-        isOnline: false,
-        lastMessage: 'I need help with my account verification',
-        lastMessageTime: new Date(Date.now() - 7200000), // 2 hours ago
-        unreadCount: 3,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=13'
-      },
-      {
-        id: '6',
-        name: 'Sarah Martinez',
-        email: 'sarah.m@company.com',
-        username: 'sarahm',
-        isOnline: true,
-        lastMessage: 'The platform is working great now!',
-        lastMessageTime: new Date(Date.now() - 1800000), // 30 min ago
-        unreadCount: 1,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=10'
-      },
-      {
-        id: '7',
-        name: 'David Lee',
-        email: 'david.lee@test.com',
-        username: 'davidlee',
-        isOnline: false,
-        lastMessage: 'Can you check my trading history?',
-        lastMessageTime: new Date(Date.now() - 14400000), // 4 hours ago
-        unreadCount: 0,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=14'
-      },
-      {
-        id: '8',
-        name: 'Lisa Anderson',
-        email: 'l.anderson@mail.com',
-        username: 'lisaa',
-        isOnline: true,
-        lastMessage: 'I have a question about leverage',
-        lastMessageTime: new Date(Date.now() - 900000), // 15 min ago
-        unreadCount: 7,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=20'
-      },
-      {
-        id: '9',
-        name: 'James Taylor',
-        email: 'james.t@example.com',
-        isOnline: false,
-        lastMessage: 'Thank you for your help!',
-        lastMessageTime: new Date(Date.now() - 86400000), // 1 day ago
-        unreadCount: 0,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=15'
-      },
-      {
-        id: '10',
-        name: 'Anna White',
-        email: 'anna.white@email.com',
-        username: 'annawhite',
-        isOnline: true,
-        lastMessage: 'Is the bonus already credited?',
-        lastMessageTime: new Date(Date.now() - 120000), // 2 min ago
-        unreadCount: 4,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=16'
-      },
-      {
-        id: '11',
-        name: 'Christopher Harris',
-        email: 'c.harris@test.com',
-        username: 'chrisharris',
-        isOnline: false,
-        lastMessage: 'I want to close my position',
-        lastMessageTime: new Date(Date.now() - 10800000), // 3 hours ago
-        unreadCount: 2,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=17'
-      },
-      {
-        id: '12',
-        name: 'Jessica Thompson',
-        email: 'jessica.thompson@mail.com',
-        isOnline: true,
-        lastMessage: 'Great service, very satisfied!',
-        lastMessageTime: new Date(Date.now() - 2700000), // 45 min ago
-        unreadCount: 0,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=23'
-      },
-      {
-        id: '13',
-        name: 'Daniel Garcia',
-        email: 'd.garcia@example.com',
-        username: 'dangarcia',
-        isOnline: true,
-        lastMessage: 'Can I increase my deposit limit?',
-        lastMessageTime: new Date(Date.now() - 60000), // 1 min ago
-        unreadCount: 6,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=18'
-      },
-      {
-        id: '14',
-        name: 'Olivia Moore',
-        email: 'olivia.m@company.com',
-        isOnline: false,
-        lastMessage: 'I received the payment, thanks!',
-        lastMessageTime: new Date(Date.now() - 172800000), // 2 days ago
-        unreadCount: 0,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=24'
-      },
-      {
-        id: '15',
-        name: 'Matthew Clark',
-        email: 'matthew.clark@test.com',
-        username: 'mattclark',
-        isOnline: true,
-        lastMessage: 'What are the trading hours?',
-        lastMessageTime: new Date(Date.now() - 5400000), // 90 min ago
-        unreadCount: 1,
-        channel: 'clients',
-        avatar: 'https://i.pravatar.cc/150?img=19'
-      },
+  getMyChats(
+    pageIndex: number = 1,
+    pageSize: number = 20
+  ): Observable<ChatSummaryDto[]> {
+    const params = new HttpParams()
+      .set('pageIndex', pageIndex.toString())
+      .set('pageSize', pageSize.toString());
 
-      // Operators with various statuses
-      {
-        id: '101',
-        name: 'Mike Johnson',
-        email: 'mike.j@company.com',
-        username: 'mikej',
-        isOnline: true,
-        lastMessage: 'Issue resolved',
-        lastMessageTime: new Date(Date.now() - 7200000), // 2 hours ago
-        unreadCount: 1,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=33'
-      },
-      {
-        id: '102',
-        name: 'Amanda Stevens',
-        email: 'amanda.s@company.com',
-        username: 'amandas',
-        isOnline: true,
-        lastMessage: 'Just finished the client call',
-        lastMessageTime: new Date(Date.now() - 420000), // 7 min ago
-        unreadCount: 3,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=31'
-      },
-      {
-        id: '103',
-        name: 'Kevin Rodriguez',
-        email: 'k.rodriguez@company.com',
-        username: 'kevinr',
-        isOnline: false,
-        lastMessage: 'On lunch break, back at 2pm',
-        lastMessageTime: new Date(Date.now() - 1800000), // 30 min ago
-        unreadCount: 0,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=32'
-      },
-      {
-        id: '104',
-        name: 'Rachel Kim',
-        email: 'rachel.kim@company.com',
-        username: 'rachelk',
-        isOnline: true,
-        lastMessage: 'Need help with this withdrawal request',
-        lastMessageTime: new Date(Date.now() - 240000), // 4 min ago
-        unreadCount: 5,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=44'
-      },
-      {
-        id: '105',
-        name: 'Thomas Wright',
-        email: 't.wright@company.com',
-        username: 'thomasw',
-        isOnline: true,
-        lastMessage: 'All tickets cleared for today!',
-        lastMessageTime: new Date(Date.now() - 3600000), // 1 hour ago
-        unreadCount: 0,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=51'
-      },
-      {
-        id: '106',
-        name: 'Sophie Turner',
-        email: 'sophie.t@company.com',
-        username: 'sophiet',
-        isOnline: true,
-        lastMessage: 'Can someone review this KYC document?',
-        lastMessageTime: new Date(Date.now() - 840000), // 14 min ago
-        unreadCount: 2,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=47'
-      },
-      {
-        id: '107',
-        name: 'Alex Cooper',
-        email: 'alex.c@company.com',
-        username: 'alexc',
-        isOnline: false,
-        lastMessage: 'System maintenance completed',
-        lastMessageTime: new Date(Date.now() - 10800000), // 3 hours ago
-        unreadCount: 0,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=52'
-      },
-      {
-        id: '108',
-        name: 'Maria Gonzalez',
-        email: 'm.gonzalez@company.com',
-        username: 'mariag',
-        isOnline: true,
-        lastMessage: 'Client requesting bonus information',
-        lastMessageTime: new Date(Date.now() - 180000), // 3 min ago
-        unreadCount: 4,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=48'
-      },
-      {
-        id: '109',
-        name: 'Ryan Mitchell',
-        email: 'ryan.m@company.com',
-        username: 'ryanm',
-        isOnline: true,
-        lastMessage: 'Updated the trading rules document',
-        lastMessageTime: new Date(Date.now() - 5400000), // 90 min ago
-        unreadCount: 0,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=53'
-      },
-      {
-        id: '110',
-        name: 'Emma Watson',
-        email: 'emma.w@company.com',
-        username: 'emmaw',
-        isOnline: false,
-        lastMessage: 'Working from home today',
-        lastMessageTime: new Date(Date.now() - 28800000), // 8 hours ago
-        unreadCount: 1,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=45'
-      },
-      {
-        id: '111',
-        name: 'Brian Foster',
-        email: 'brian.f@company.com',
-        username: 'brianf',
-        isOnline: true,
-        lastMessage: 'Meeting starts in 10 minutes',
-        lastMessageTime: new Date(Date.now() - 600000), // 10 min ago
-        unreadCount: 8,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=54'
-      },
-      {
-        id: '112',
-        name: 'Nicole Palmer',
-        email: 'nicole.p@company.com',
-        username: 'nicolep',
-        isOnline: true,
-        lastMessage: 'Great work on the new feature!',
-        lastMessageTime: new Date(Date.now() - 1200000), // 20 min ago
-        unreadCount: 0,
-        channel: 'operators',
-        avatar: 'https://i.pravatar.cc/150?img=49'
+    return this.http
+      .get<ChatSummaryDto[]>('chats/api/chats/my-chats', params)
+      .pipe(
+        tap((chats) => {
+          this.activeChatsSubject.next(chats);
+          this.calculateTotalUnreadCount(chats);
+        }),
+        catchError((error) => {
+          console.error('Error loading chats:', error);
+          return of([]);
+        })
+      );
+  }
+
+  getChatDetails(chatId: string): Observable<ChatDetailsDto> {
+    return this.http.get<ChatDetailsDto>(`chats/api/chats/${chatId}`).pipe(
+      tap((details) => {
+        this.signalRService.joinChat(chatId);
+        // Don't automatically mark messages as read here to avoid errors
+        // this.markUnreadMessagesInChat(details);
+      })
+    );
+  }
+
+  searchChats(searchCriteria: any): Observable<PagedResult<ChatSummaryDto>> {
+    let params = new HttpParams();
+
+    Object.keys(searchCriteria).forEach((key) => {
+      if (searchCriteria[key] !== null && searchCriteria[key] !== undefined) {
+        params = params.set(key, searchCriteria[key].toString());
       }
-    ];
+    });
 
-    return of(mockUsers.filter((u) => u.channel === channel));
+    return this.http.get<PagedResult<ChatSummaryDto>>(
+      'chats/api/chats/search',
+      params
+    );
+  }
+
+  createChat(
+    title: string,
+    type: ChatType = ChatType.CustomerSupport,
+    description?: string,
+    targetOperatorId?: string
+  ): Observable<string> {
+    const request: CreateChatCommand = {
+      title,
+      type,
+      description: description || null,
+      priority: 2,
+      targetOperatorId: targetOperatorId || null,
+    };
+
+    return this.http.post<string>('chats/api/chats', request).pipe(
+      tap((chatId) => {
+        this.signalRService.joinChat(chatId);
+      })
+    );
+  }
+
+  createGroupChat(
+    title: string,
+    description: string,
+    participantIds: string[]
+  ): Observable<string> {
+    const request: CreateGroupChatRequest = {
+      title,
+      description,
+      participantIds,
+      priority: 1,
+    };
+
+    return this.http.post<string>('chats/api/chats/group', request).pipe(
+      tap((chatId) => {
+        this.signalRService.joinChat(chatId);
+      })
+    );
+  }
+
+  closeChat(chatId: string, reason?: string): Observable<void> {
+    const request: CloseChatRequest = {
+      reason: reason || 'Issue resolved',
+    };
+
+    return this.http.post<void>(`chats/api/chats/${chatId}/close`, request);
+  }
+
+  transferChat(
+    chatId: string,
+    newOperatorId: string,
+    reason: string
+  ): Observable<void> {
+    const request: TransferChatRequest = {
+      newOperatorId,
+      reason,
+    };
+
+    return this.http
+      .post<void>(`chats/api/chats/${chatId}/transfer`, request)
+      .pipe(
+        tap(() => {
+          this.signalRService.leaveChat(chatId);
+        })
+      );
+  }
+
+  sendTypingIndicator(chatId: string, isTyping: boolean): Observable<void> {
+    const request: TypingIndicatorRequest = { isTyping };
+    this.signalRService.sendTypingIndicator(chatId, isTyping);
+    return this.http.post<void>(`chats/api/chats/${chatId}/typing`, request);
+  }
+
+  getChatParticipants(chatId: string): Observable<ParticipantDto[]> {
+    return this.http.get<ParticipantDto[]>(
+      `chats/api/chats/${chatId}/participants`
+    );
+  }
+
+  addParticipant(
+    chatId: string,
+    userId: string,
+    role: ParticipantRole = ParticipantRole.Customer
+  ): Observable<void> {
+    const request: AddParticipantRequest = { userId, role };
+    return this.http.post<void>(
+      `chats/api/chats/${chatId}/participants`,
+      request
+    );
+  }
+
+  removeParticipant(chatId: string, userId: string): Observable<void> {
+    return this.http
+      .delete<void>(`chats/api/chats/${chatId}/participants/${userId}`)
+      .pipe(
+        tap(() => {
+          if (userId === this.getCurrentUserId()) {
+            this.signalRService.leaveChat(chatId);
+          }
+        })
+      );
+  }
+
+  getChatMessages(
+    chatId: string,
+    pageIndex: number = 1,
+    pageSize: number = 50
+  ): Observable<PagedResult<MessageDto>> {
+    const params = new HttpParams()
+      .set('pageIndex', pageIndex.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<PagedResult<MessageDto>>(
+      `chats/api/messages/chat/${chatId}`,
+      params
+    );
+  }
+
+  sendMessage(
+    chatId: string,
+    content: string,
+    type: MessageType = MessageType.Text
+  ): Observable<string> {
+    const request: SendMessageRequest = {
+      chatId,
+      content,
+      type,
+    };
+
+    return this.http.post<string>('chats/api/messages', request);
+  }
+
+  sendMessageWithFile(
+    chatId: string,
+    content: string,
+    fileId: string
+  ): Observable<string> {
+    const request: SendMessageWithFileRequest = {
+      chatId,
+      content: content || 'File attachment',
+      fileId,
+    };
+
+    return this.http.post<string>('chats/api/messages/with-file', request);
+  }
+
+  editMessage(messageId: string, newContent: string): Observable<void> {
+    const request: EditMessageRequest = { newContent };
+    return this.http.put<void>(`chats/api/messages/${messageId}`, request);
+  }
+
+  deleteMessage(messageId: string): Observable<void> {
+    return this.http.delete<void>(`chats/api/messages/${messageId}`);
+  }
+
+  markMessageAsRead(messageId: string): Observable<void> {
+    // Only try SignalR, skip the HTTP call that's failing
+    // this.signalRService.markMessageAsRead(messageId);
+    return of(void 0);
+  }
+
+  setOperatorStatus(status: OperatorStatus): Observable<void> {
+    const request: SetStatusRequest = { status };
+    return this.http.post<void>('chats/api/operators/status', request);
+  }
+
+  getOperatorChats(activeOnly: boolean = false): Observable<ChatSummaryDto[]> {
+    const params = new HttpParams().set('activeOnly', activeOnly.toString());
+    return this.http.get<ChatSummaryDto[]>(
+      'chats/api/operators/my-chats',
+      params
+    );
+  }
+
+  getOperatorChatsByOperatorId(
+    operatorId: string,
+    activeOnly: boolean = false
+  ): Observable<ChatSummaryDto[]> {
+    const params = new HttpParams().set('activeOnly', activeOnly.toString());
+    return this.http.get<ChatSummaryDto[]>(
+      `chats/api/operators/${operatorId}/chats`,
+      params
+    );
+  }
+
+  // Add operator search methods
+  searchOperators(
+    searchTerm: string = '',
+    pageIndex: number = 0,
+    pageSize: number = 100
+  ): Observable<OperatorItem[]> {
+    const request = {
+      pageIndex,
+      pageSize,
+      sortField: '',
+      sortDirection: 'asc',
+      globalFilter: searchTerm,
+    };
+
+    return this.http.post<any>('identity/api/operators/dropdown', request).pipe(
+      map((response) => {
+        const operators = response.items.map((item: any) => ({
+          id: item.id,
+          value: item.value || item.fullName || 'Unknown',
+          fullName: item.value || item.fullName || 'Unknown',
+          email: item.email || '',
+          department: item.department || '',
+          role: item.role || '',
+          status: 'offline' as const,
+        }));
+
+        this.operatorsCache.next(operators);
+        return operators;
+      }),
+      catchError((error) => {
+        console.error('Error fetching operators:', error);
+        return of([]);
+      })
+    );
+  }
+
+  getAvailableOperators(
+    pageIndex: number = 0,
+    pageSize: number = 100,
+    searchTerm: string = ''
+  ): Observable<OperatorItem[]> {
+    return this.searchOperators(searchTerm, pageIndex, pageSize);
+  }
+
+  // Add client search methods
+  searchClients(
+    searchTerm: string = '',
+    pageIndex: number = 0,
+    pageSize: number = 100
+  ): Observable<ClientItem[]> {
+    const request = {
+      searchTerm: searchTerm || null,
+      pageIndex,
+      pageSize,
+    };
+
+    return this.http.post<any>('identity/api/clients/clients-for-trading-manager', request).pipe(
+      map((response) => {
+        console.log('Client search response:', response);
+        const clients = response.items?.map((item: any) => ({
+          id: item.id,
+          userId: item.userId,
+          value: item.fullName || 'Unknown',
+          fullName: item.fullName || 'Unknown',
+          email: item.email || `${item.fullName?.toLowerCase().replace(/\s+/g, '.')}@client.com` || '',
+          firstName: item.firstName || '',
+          lastName: item.lastName || '',
+          phone: item.phone || '',
+          status: 'offline' as const,
+        })) || [];
+
+        return clients;
+      }),
+      catchError((error) => {
+        console.error('Error fetching clients:', error);
+        return of([]);
+      })
+    );
+  }
+
+  getAvailableClients(
+    pageIndex: number = 0,
+    pageSize: number = 100,
+    searchTerm: string = ''
+  ): Observable<ClientItem[]> {
+    return this.searchClients(searchTerm, pageIndex, pageSize);
+  }
+
+  getChatUsers(channel: ChatChannel): Observable<ChatUser[]> {
+    if (channel === 'operators') {
+      return this.getOperatorUsers();
+    } else {
+      return this.getClientUsers();
+    }
+  }
+
+  private getClientUsers(): Observable<ChatUser[]> {
+    return this.getMyChats().pipe(
+      map((chats) => this.mapChatsToUsers(chats, 'clients'))
+    );
+  }
+
+  private getOperatorUsers(): Observable<ChatUser[]> {
+    const userRole = this.getUserRole();
+    if (userRole === 'operator' || userRole === 'admin') {
+      return this.getOperatorChats().pipe(
+        map((chats) => this.mapChatsToUsers(chats, 'operators'))
+      );
+    }
+    return of([]);
+  }
+
+  private mapChatsToUsers(
+    chats: ChatSummaryDto[],
+    channel: ChatChannel
+  ): ChatUser[] {
+    return chats.map((chat) => ({
+      id: chat.initiatorId,
+      name: chat.title,
+      email: `user_${chat.initiatorId}@example.com`,
+      username: undefined,
+      isOnline: true,
+      lastMessage: chat.lastMessage || 'No messages yet',
+      lastMessageTime: chat.lastActivityAt
+        ? new Date(chat.lastActivityAt)
+        : new Date(chat.createdAt),
+      unreadCount: chat.unreadCount,
+      channel: channel,
+      avatar: undefined,
+    }));
   }
 
   openChatWindow(chatData: any) {
     const currentState = this.uiStateService.getChatState();
-    
-    // Check if chat is already open
+
     if (currentState.openChats.find((c) => c.user.id === chatData.user?.id)) {
       return;
     }
@@ -409,6 +525,12 @@ export class ChatService {
   }
 
   closeChatWindow(chatId: string) {
+    const chat = this.uiStateService
+      .getChatState()
+      .openChats.find((c) => c.id === chatId);
+    if (chat) {
+      this.signalRService.leaveChat(chat.id);
+    }
     this.uiStateService.removeOpenChat(chatId);
   }
 
@@ -416,52 +538,92 @@ export class ChatService {
     this.uiStateService.updateChatMinimizedState(chatId, isMinimized);
   }
 
-  private updateUnreadCount() {
-    // Calculate total unread count
-    this.getChatUsers('clients').subscribe((clients) => {
-      this.getChatUsers('operators').subscribe((operators) => {
-        const total = [...clients, ...operators].reduce(
-          (sum, user) => sum + user.unreadCount,
-          0
-        );
-        this.unreadCountSubject.next(total);
-      });
+  private calculateTotalUnreadCount(chats: ChatSummaryDto[]): void {
+    const total = chats.reduce((sum, chat) => sum + chat.unreadCount, 0);
+    this.unreadCountSubject.next(total);
+  }
+
+  private updateUnreadCount(): void {
+    this.getMyChats().subscribe((chats) => {
+      this.calculateTotalUnreadCount(chats);
     });
   }
 
-  searchUsers(query: string, channel?: ChatChannel): Observable<ChatUser[]> {
-    // Implement search logic
-    return this.getChatUsers(channel || 'clients');
-  }
+  private markUnreadMessagesInChat(details: ChatDetailsDto): void {}
 
-  markAsRead(userId: string) {
-    // Mark messages as read
+  private handleNewMessage(message: MessageDto): void {
     this.updateUnreadCount();
   }
 
-  sendMessage(chatId: string, message: string) {
-    // Send message to backend
-    console.log('Sending message:', message);
+  private handleTypingIndicator(data: any): void {}
+
+  private handleChatStatusChange(data: any): void {
+    this.getMyChats().subscribe();
   }
 
-  updateMessageStatus(messageId: string, status: MessageStatus) {
-    // Update message status in backend
-    console.log('Updating message status:', messageId, status);
+  private handleMessageRead(data: any): void {
+    this.updateUnreadCount();
   }
 
-  markMessageAsSeen(messageId: string) {
-    this.updateMessageStatus(messageId, MessageStatus.SEEN);
+  private handleNewChatAssigned(data: any): void {
+    this.getMyChats().subscribe();
   }
 
-  markMessageAsDelivered(messageId: string) {
-    this.updateMessageStatus(messageId, MessageStatus.DELIVERED);
-  }
-
-  getLastActiveChannel(): 'clients' | 'operators' {
+  getLastActiveChannel(): ChatChannel {
     return this.uiStateService.getChatState().lastActiveChannel;
   }
 
-  setActiveChannel(channel: 'clients' | 'operators') {
+  setActiveChannel(channel: ChatChannel) {
     this.uiStateService.setLastActiveChannel(channel);
+  }
+
+  searchUsers(query: string, channel?: ChatChannel): Observable<ChatUser[]> {
+    return this.getChatUsers(channel || 'clients').pipe(
+      map((users) => {
+        if (!query) return users;
+        const lowerQuery = query.toLowerCase();
+        return users.filter(
+          (user) =>
+            user.name.toLowerCase().includes(lowerQuery) ||
+            user.email.toLowerCase().includes(lowerQuery) ||
+            (user.username && user.username.toLowerCase().includes(lowerQuery))
+        );
+      })
+    );
+  }
+
+  markAsRead(userId: string): void {
+    this.updateUnreadCount();
+  }
+
+  updateMessageStatus(messageId: string, status: MessageStatus): void {
+    console.log('Updating message status:', messageId, status);
+  }
+
+  markMessageAsSeen(messageId: string): void {
+    this.updateMessageStatus(messageId, MessageStatus.SEEN);
+  }
+
+  markMessageAsDelivered(messageId: string): void {
+    this.updateMessageStatus(messageId, MessageStatus.DELIVERED);
+  }
+
+  getCurrentUserId(): string {
+    const userData = sessionStorage.getItem('user_data');
+
+    console.log(userData);
+    return userData ? JSON.parse(userData).id : '';
+  }
+
+  private getUserRole(): string {
+    const userData = sessionStorage.getItem('user_data');
+    return userData ? JSON.parse(userData).role : 'client';
+  }
+
+  getCurrentUserName(): string {
+    const userData = sessionStorage.getItem('user_data');
+    return userData
+      ? JSON.parse(userData).name || JSON.parse(userData).fullName || 'You'
+      : 'You';
   }
 }

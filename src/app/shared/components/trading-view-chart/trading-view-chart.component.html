@@ -1,0 +1,13 @@
+<div class="tradingview-widget-container" #chartContainer>
+  <div class="tradingview-widget-copyright">
+    <a 
+      [href]="'https://www.tradingview.com/symbols/' + symbol.split(':')[0] + '-' + symbol.split(':')[1] + '/'" 
+      rel="noopener nofollow" 
+      target="_blank"
+    >
+      <span class="blue-text">{{ symbol.split(':')[1] }} chart</span>
+    </a>
+    <span class="trademark"> by TradingView</span>
+  </div>
+</div>
+

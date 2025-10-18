@@ -130,7 +130,7 @@
         <!-- No Wallets State -->
         <div
           *ngIf="!loadingWallets && selectedAccount && !hasWallets"
-          class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg"
+          class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg"
         >
           <div class="flex items-center">
             <svg
@@ -148,11 +148,11 @@
             </svg>
             <div>
               <h4
-                class="text-sm font-medium text-yellow-800 dark:text-yellow-200"
+                class="text-sm font-medium text-yellow-800"
               >
                 No wallets found
               </h4>
-              <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+              <p class="text-sm text-yellow-700 mt-1">
                 This trading account has no wallets. Please create a wallet
                 first.
               </p>

@@ -3,424 +3,259 @@
   <div class="mb-8">
     <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Advanced Price Manager
-        </h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Price Manager</h1>
         <p class="text-gray-600 dark:text-gray-400">
-          Monitor market data and manage client-specific price feeds
+          Manage client orders and transactions
         </p>
       </div>
 
-      <div class="flex items-center space-x-4" *hasPermission="155">
+      <div class="flex items-center space-x-4" *hasPermission="179">
+        <!-- Bulk Order Button -->
+        <button
+          (click)="openBulkOrderModal()"
+          [disabled]="loading() || activeClients().length === 0"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+          Bulk Order
+        </button>
+
         <!-- Refresh Button -->
-        <button (click)="refreshData()" [disabled]="loading()"
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-          <svg class="w-4 h-4 mr-2" [class.animate-spin]="loading()" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        <button
+          (click)="refreshData()"
+          [disabled]="loading()"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            [class.animate-spin]="loading()"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
           Refresh Data
         </button>
-
-        <!-- Fullscreen Toggle -->
-        <button (click)="toggleFullscreen()"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
-          </svg>
-        </button>
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="loading()" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <span class="ml-3 text-gray-600 dark:text-gray-400">Loading market data...</span>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="error() && !loading()"
-      class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 mb-6">
-      <div class="flex items-center" *hasPermission="155">
-        <svg class="w-5 h-5 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd" />
-        </svg>
-        <div>
-          <p class="text-red-800 dark:text-red-200 font-medium">
-            {{ error() }}
-          </p>
-          <button (click)="refreshData()" class="mt-2 text-sm text-red-600 hover:text-red-800 underline">
-            Try again
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- Control Panel -->
-  <div class="grid grid-cols-1 gap-6 mb-8" *hasPermission="155">
-    <!-- Client Selection -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-      <div class="space-y-4">
-        <div class="client-dropdown-container relative">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Select Client
-          </label>
-
-          <!-- Custom Dropdown Button -->
-          <button type="button"
-            class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
-            (click)="toggleClientDropdown()" (keydown)="onClientButtonKeydown($event)">
-            <span class="truncate">{{ getSelectedClientName() }}</span>
-            <svg class="w-4 h-4 ml-2 transition-transform" [class.rotate-180]="clientDropdownOpen()" fill="none"
-              stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-            </svg>
-          </button>
-
-          <!-- Dropdown Panel -->
-          <div *ngIf="clientDropdownOpen()"
-            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden">
-            <!-- Search Input -->
-            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
-              <input #clientSearchInput type="text" placeholder="Search clients..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                (input)="onClientSearch($event)" [value]="clientSearchTerm()" />
-            </div>
-
-            <!-- Clients List -->
-            <div class="max-h-48 overflow-y-auto">
-              <div *ngFor="let client of filteredClients(); let i = index"
-                class="px-3 py-2 hover:bg-gray-100/10 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
-                [class.bg-blue-100]="isClientFocused(i)" [class.dark:bg-blue-400]="isClientFocused(i)" [tabindex]="0"
-                (click)="selectClient(client)" (keydown)="onClientKeydown($event, client, i)"
-                (mouseenter)="setFocusedClientIndex(i)">
-                <div class="font-medium">
-                  {{ client.firstName }} {{ client.lastName }}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400" *hasPermission="9">
-                  {{ client.email }}
-                </div>
-              </div>
-
-              <!-- No results -->
-              <div *ngIf="filteredClients().length === 0"
-                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400">
-                No clients found
-              </div>
+  <!-- Clients Table -->
+  <div *hasPermission="179" >
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <!-- Table Header -->
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Active Clients
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Click on a client to view their orders and transactions
+            </p>
+          </div>
+          
+          <!-- Search Input -->
+          <div class="flex items-center">
+            <div class="relative">
+              <input
+                type="text"
+                [(ngModel)]="searchInput"
+                (input)="onSearchInput()"
+                placeholder="Search clients... (live search)"
+                class="!pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm w-80"
+              >
+              <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
             </div>
           </div>
         </div>
 
-        <!-- Selected Client Info -->
-        <div *ngIf="selectedClient()" class="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-md">
-          <div class="text-sm text-blue-800 dark:text-blue-500">
-            <strong>{{ selectedClient()?.firstName }}
-              {{ selectedClient()?.lastName }}</strong>
+        <!-- Pagination Info and Page Size Selector -->
+        <div class="flex justify-between items-center mt-4">
+          <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              Showing {{ (currentPage() * pageSize()) + 1 }} to {{ getEndItem() }} of {{ totalCount() }} clients
+            </span>
           </div>
-          <div class="text-xs text-blue-600 dark:text-blue-400">
-            {{ selectedClient()?.email }}
+          
+          <div class="flex items-center space-x-2">
+            <label for="pageSize" class="text-sm text-gray-600 dark:text-gray-400">Items per page:</label>
+            <select
+              id="pageSize"
+              [(ngModel)]="pageSize"
+              (change)="onPageSizeChange(pageSize())"
+              class="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm py-1 px-2"
+            >
+              <option [ngValue]="10">10</option>
+              <option [ngValue]="20">20</option>
+              <option [ngValue]="50">50</option>
+              <option [ngValue]="100">100</option>
+            </select>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- --------------- ------------------------------------->
-  <div *hasPermission="155">
-    <!-- Empty State - No Client Selected -->
-    <div *ngIf="!selectedClient()"
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 mb-8 text-center">
-      <div class="max-w-md mx-auto">
-        <div
-          class="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-          <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-          Select a Client to View Orders
-        </h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-6">
-          Choose a client from the dropdown above to view and manage their open
-          trading orders.
-        </p>
-        <div class="flex items-center justify-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Orders will appear here once a client is selected</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-  <div *hasPermission="155">
-    <!-- Orders Grid Section -->
-    <div *ngIf="selectedClient()"
-      class="bg-white bg-gray-50 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Open Orders - {{ selectedClient()?.firstName }}
-          {{ selectedClient()?.lastName }}
-        </h3>
-        <div class="flex items-center space-x-3">
-          <span class="text-sm text-gray-500 dark:text-gray-400">
-            Total Orders: {{ openOrders().length }}
-          </span>
-          <button (click)="refreshOrders()" [disabled]="ordersLoading()"
-            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-100/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
-            <svg class="w-4 h-4 mr-2" [class.animate-spin]="ordersLoading()" xmlns="http://www.w3.org/2000/svg"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh Orders
-          </button>
-        </div>
-      </div>
-
-      <!-- Loading State for Orders -->
-      <div *ngIf="ordersLoading()" class="flex justify-center items-center py-8">
-        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-        <span class="ml-3 text-gray-600 dark:text-gray-400">Loading orders...</span>
-      </div>
-
-      <!-- Orders Table -->
-      <div *ngIf="!ordersLoading()" class="overflow-x-auto">
+      <!-- Clients Table -->
+      <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Symbol
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
+                Client Name
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Type/Side
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
+                User ID
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Current Price
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                New Price
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Quantity
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
                 Status
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                P&L
-              </th>
-              <th *ngIf="hasAnyActionPermission()"
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30">
-            <!-- Orders -->
-            <tr *ngFor="let order of openOrders(); trackBy: trackByOrderId"
-              class="hover:bg-gray-50/10 transition-colors">
-              <!-- Symbol -->
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-400/30">
+            <!-- Skeleton Loading Rows -->
+            <ng-container *ngIf="loading()">
+              <tr *ngFor="let skeleton of [1,2,3,4,5]">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <div class="h-10 w-10 rounded-full bg-gray-400/50 animate-pulse"></div>
+                    </div>
+                    <div class="ml-4">
+                      <div class="h-4 bg-gray-400/50 rounded w-32 animate-pulse"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-4 bg-gray-400/50 rounded w-20 animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-6 bg-gray-400/50 rounded-full w-16 animate-pulse"></div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right">
+                  <div class="h-4 bg-gray-400/50 rounded w-24 ml-auto animate-pulse"></div>
+                </td>
+              </tr>
+            </ng-container>
+
+            <!-- Actual Data Rows -->
+            <ng-container *ngIf="!loading()">
+              <tr
+                *ngFor="let client of activeClients()"
+                class="hover:bg-gray-500/20 transition-colors cursor-pointer"
+                (click)="viewClientDetails(client)"
+              >
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {{ order.tradingPairSymbol }}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  ID: {{ order.id.substring(0, 8) }}...
-                </div>
-              </td>
-
-              <!-- Type/Side -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center space-x-2">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="{
-                    'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
-                      order.side === 'Buy',
-                    'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100':
-                      order.side === 'Sell'
-                  }">
-                    {{ order.side }}
-                  </span>
-                  <span class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ order.orderType }}
-                  </span>
-                </div>
-                <div *ngIf="order.leverage > 1" class="text-xs text-purple-600 dark:text-purple-400">
-                  {{ order.leverage }}x Leverage
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10">
+                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span class="text-lg font-medium text-blue-600">
+                        {{ client.fullName.charAt(0).toUpperCase() }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {{ client.fullName }}
+                    </div>
+                  </div>
                 </div>
               </td>
-
-              <!-- Current Price -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-mono text-gray-900 dark:text-gray-100">
-                  ${{ order.price | number : "1.8-8" }}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  Market: ${{ order.currentPrice | number : "1.2-2" }}
-                </div>
-              </td>
-
-              <!-- New Price Input -->
-              <td class="px-6 py-4 whitespace-nowrap" *hasPermission="156">
-                <div class="flex items-center space-x-2">
-                  <input type="number" [(ngModel)]="orderPriceUpdates[order.id]" step="1"
-                    placeholder="{{ order.price }}"
-                    (keydown)="preventInvalidNumberInput($event)"
-                    (blur)="formatOrderPrice(order.id)"
-                    min="0"
-                    class="block w-24 px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" />
-                  <button (click)="
-                    updateOrderPrice(order.id, orderPriceUpdates[order.id])
-                  " [disabled]="
-                    !orderPriceUpdates[order.id] ||
-                    updatingOrderIds().has(order.id)
-                  "
-                    class="inline-flex items-center px-2 py-1 border border-transparent rounded text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                    <svg *ngIf="updatingOrderIds().has(order.id)" class="w-3 h-3 animate-spin" fill="none"
-                      viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                      </path>
-                    </svg>
-                    <span *ngIf="!updatingOrderIds().has(order.id)">Update</span>
-                    <span *ngIf="updatingOrderIds().has(order.id)">...</span>
-                  </button>
-                </div>
-              </td>
-
-              <!-- Quantity -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ order.quantity | number : "1.8-8" }}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  Filled: {{ order.filledQuantity | number : "1.8-8" }}
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  Remaining: {{ order.remainingQuantity | number : "1.8-8" }}
+                  {{ client.userId }}
                 </div>
               </td>
-
-              <!-- Status -->
               <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="{
-                  'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
-                    order.status === 'Active',
-                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100':
-                    order.status === 'Partial',
-                  'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
-                    order.status === 'Filled',
-                  'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100':
-                    order.status === 'Cancelled'
-                }">
-                  {{ order.status }}
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                >
+                  Active
                 </span>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {{ formatDate(order.createdAt) }}
-                </div>
               </td>
-
-              <!-- P&L -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium" [ngClass]="{
-                  'text-green-600 dark:text-green-400': order.unrealizedPnL > 0,
-                  'text-red-600 dark:text-red-400': order.unrealizedPnL < 0,
-                  'text-gray-600 dark:text-gray-400': order.unrealizedPnL === 0
-                }">
-                  {{ order.unrealizedPnL > 0 ? "+" : ""
-                  }}{{ order.unrealizedPnL | number : "1.4-4" }}
-                </div>
-                <div class="text-xs" [ngClass]="{
-                  'text-green-600 dark:text-green-400':
-                    order.unrealizedPnLPercent > 0,
-                  'text-red-600 dark:text-red-400':
-                    order.unrealizedPnLPercent < 0,
-                  'text-gray-600 dark:text-gray-400':
-                    order.unrealizedPnLPercent === 0
-                }">
-                  {{ order.unrealizedPnLPercent > 0 ? "+" : ""
-                  }}{{ order.unrealizedPnLPercent | number : "1.2-2" }}%
-                </div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">
-                  Margin: {{ order.requiredMargin | number : "1.4-4" }}
-                </div>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  (click)="viewClientDetails(client); $event.stopPropagation()"
+                  class="inline-flex items-center text-blue-400 hover:text-blue-900"
+                >
+                  View Details
+                  <svg
+                    class="ml-2 w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
               </td>
+              </tr>
+            </ng-container>
 
-              <!-- Actions -->
-              <td *ngIf="hasAnyActionPermission()" class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div class="flex items-center space-x-2">
-                  <button (click)="quickPriceUpdate(order.id, order.price * 1.01)"
-                    [disabled]="updatingOrderIds().has(order.id)"
-                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 disabled:opacity-50"
-                    title="Increase by 1%" *hasPermission="157">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                    </svg>
-                  </button>
-                  <button (click)="quickPriceUpdate(order.id, order.price * 0.99)"
-                    [disabled]="updatingOrderIds().has(order.id)"
-                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                    title="Decrease by 1%" *hasPermission="158">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </button>
-                  <button (click)="quickPriceUpdate(order.id, order.currentPrice)"
-                    [disabled]="updatingOrderIds().has(order.id)"
-                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 disabled:opacity-50"
-                    title="Set to market price" *hasPermission="159">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                  </button>
-                  <button (click)="cancaleOrder(order.id)" [disabled]="updatingOrderIds().has(order.id)"
-                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                    title="Close Order" *hasPermission="160">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                      </path>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Empty State Row -->
-            <tr *ngIf="openOrders().length === 0">
-              <td [attr.colspan]="hasAnyActionPermission() ? 8 : 7" class="px-6 py-12 text-center">
+            <!-- Empty State -->
+            <tr *ngIf="!loading() && activeClients().length === 0">
+              <td colspan="5" class="px-6 py-12 text-center">
                 <div class="flex flex-col items-center">
                   <div
-                    class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                    <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
+                  >
+                    <svg
+                      class="w-6 h-6 text-gray-400 dark:text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
                     </svg>
                   </div>
                   <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                    No Orders Found
+                    No Clients Found
                   </h3>
                   <p class="text-gray-500 dark:text-gray-400">
-                    {{ selectedClient()?.firstName }}
-                    {{ selectedClient()?.lastName }} has no open orders at the
-                    moment.
+                    There are no active clients at the moment.
                   </p>
                 </div>
               </td>
@@ -428,36 +263,78 @@
           </tbody>
         </table>
       </div>
-    </div>
 
-  </div>
-  <!-- ---------------------------------------------   ----->
-
-  <!-- Recent Activity Log -->
-  <div *ngIf="recentActivity().length > 0"
-    class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-      Recent Price Manipulations
-    </h3>
-    <div class="space-y-3">
-      <div *ngFor="let activity of recentActivity().slice(0, 5)"
-        class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-        <div class="flex items-center space-x-3">
-          <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-          <div>
-            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ activity.symbol }} price set to ${{
-              activity.price.toFixed(8)
-              }}
+      <!-- Pagination Controls -->
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between">
+          <div class="flex-1 flex justify-between sm:hidden">
+            <button
+              (click)="previousPage()"
+              [disabled]="currentPage() === 0"
+              class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              (click)="nextPage()"
+              [disabled]="currentPage() >= getTotalPages() - 1"
+              class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm text-gray-700 dark:text-gray-300">
+                Page <span class="font-medium">{{ currentPage() + 1 }}</span> of
+                <span class="font-medium">{{ getTotalPages() }}</span>
+              </p>
             </div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">
-              Client: {{ activity.clientName }} •
-              {{ formatDate(activity.timestamp.toString()) }}
+            <div>
+              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button
+                  (click)="previousPage()"
+                  [disabled]="currentPage() === 0"
+                  class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span class="sr-only">Previous</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                
+                <ng-container *ngFor="let page of getPageNumbers()">
+                  <button
+                    *ngIf="page !== -1"
+                    (click)="goToPage(page)"
+                    [class.bg-blue-50]="currentPage() === page"
+                    [class.border-blue-500]="currentPage() === page"
+                    [class.text-blue-600]="currentPage() === page"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  >
+                    {{ page + 1 }}
+                  </button>
+                  <span
+                    *ngIf="page === -1"
+                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    ...
+                  </span>
+                </ng-container>
+                
+                <button
+                  (click)="nextPage()"
+                  [disabled]="currentPage() >= getTotalPages() - 1"
+                  class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span class="sr-only">Next</span>
+                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </nav>
             </div>
           </div>
-        </div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">
-          {{ activity.force ? "FORCED" : "NORMAL" }}
         </div>
       </div>
     </div>

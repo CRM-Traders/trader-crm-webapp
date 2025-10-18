@@ -1,0 +1,29 @@
+// Client Detail Component Styles
+.general-container {
+  max-width: 100%;
+}
+
+// Tab styles
+.border-b-2 {
+  border-bottom-width: 2px;
+}
+
+// Table styles
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .general-container {
+    padding: 1rem;
+  }
+}
+

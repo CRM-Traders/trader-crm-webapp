@@ -4,13 +4,25 @@ import {
   Output,
   EventEmitter,
   OnInit,
+  OnDestroy,
   ViewChild,
   ElementRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ChatUser, ChatMessage, MessageStatus } from '../../../services/chat/chat.service';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+
+import {
+  ChatUser,
+  ChatMessage,
+  MessageStatus,
+  MessageDto,
+  PagedResult,
+} from '../../../models/chat/chat.model';
+import { ChatService } from '../../../services/chat/chat.service';
+import { SignalRService } from '../../../services/chat/signalr.service';
 
 @Component({
   selector: 'app-chat-window',
@@ -34,7 +46,8 @@ import { ChatUser, ChatMessage, MessageStatus } from '../../../services/chat/cha
       }
 
       @keyframes pulse {
-        0%, 100% {
+        0%,
+        100% {
           opacity: 1;
         }
         50% {
@@ -60,7 +73,7 @@ import { ChatUser, ChatMessage, MessageStatus } from '../../../services/chat/cha
     `,
   ],
 })
-export class ChatWindowComponent implements OnInit {
+export class ChatWindowComponent implements OnInit, OnDestroy {
   @Input() user!: ChatUser;
   @Input() chatId!: string;
   @Input() index: number = 0;
@@ -74,64 +87,209 @@ export class ChatWindowComponent implements OnInit {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @ViewChild('messageInput') messageInput!: ElementRef;
 
+  private chatService = inject(ChatService);
+  private signalRService = inject(SignalRService);
+  private destroy$ = new Subject<void>();
+  private typingSubject = new Subject<string>();
+
   messages: ChatMessage[] = [];
   newMessage = '';
   isTyping = false;
   isMinimized = false;
+  isLoading = false;
+  hasMoreMessages = true;
+  currentPage = 1;
+  typingUsers: Map<string, boolean> = new Map();
+  private typingTimer: any;
+  private isCurrentlyTyping = false;
 
   ngOnInit() {
-    this.loadMessages();
+    this.loadChatDetails();
+    this.setupTypingDetection();
+    this.setupSignalRListeners();
     if (!this.isMinimized) {
       this.scrollToBottom();
     }
-    // Mark messages as seen when chat window is opened
-    this.markMessagesAsSeen();
   }
 
-  loadMessages() {
-    // Load messages from service
-    this.messages = [
-      {
-        id: '1',
-        text: 'Hello! How can I help you today?',
-        timestamp: new Date(Date.now() - 3600000),
-        isSender: false,
-        userId: this.user?.id || 'unknown',
-        status: MessageStatus.SEEN,
-      },
-      {
-        id: '2',
-        text: 'I have a question about my order',
-        timestamp: new Date(Date.now() - 3000000),
-        isSender: true,
-        userId: 'current-user',
-        status: MessageStatus.SEEN,
-      },
-    ];
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.typingTimer) {
+      clearTimeout(this.typingTimer);
+    }
+  }
+
+  private loadChatDetails() {
+    this.isLoading = true;
+    this.chatService
+      .getChatDetails(this.chatId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (details) => {
+          this.mapMessagesToChat(details.messages);
+          this.isLoading = false;
+          this.scrollToBottom();
+          this.markMessagesAsSeen();
+        },
+        error: (error) => {
+          console.error('Error loading chat details:', error);
+          this.isLoading = false;
+        },
+      });
+  }
+
+  private mapMessagesToChat(messages: any[]) {
+    const currentUserId = this.getCurrentUserId();
+    this.messages = messages.map((msg) => ({
+      id: msg.id,
+      text: msg.content,
+      timestamp: new Date(msg.createdAt),
+      isSender: msg.senderId === currentUserId,
+      userId: msg.senderId,
+      status: msg.isRead ? MessageStatus.SEEN : MessageStatus.DELIVERED,
+      attachments: msg.fileId ? [msg.fileId] : undefined,
+    }));
+  }
+
+  private setupTypingDetection() {
+    this.typingSubject
+      .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe((text) => {
+        if (text && !this.isCurrentlyTyping) {
+          this.isCurrentlyTyping = true;
+          this.chatService.sendTypingIndicator(this.chatId, true).subscribe();
+        }
+
+        if (this.typingTimer) {
+          clearTimeout(this.typingTimer);
+        }
+
+        this.typingTimer = setTimeout(() => {
+          if (this.isCurrentlyTyping) {
+            this.isCurrentlyTyping = false;
+            this.chatService
+              .sendTypingIndicator(this.chatId, false)
+              .subscribe();
+          }
+        }, 3000);
+      });
+  }
+
+  private setupSignalRListeners() {
+    this.signalRService.messageReceived$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((message: any) => {
+        if (message && message.chatId === this.chatId) {
+          this.handleIncomingMessage(message);
+        }
+      });
+
+    this.signalRService.typingIndicator$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        if (
+          data &&
+          data.chatId === this.chatId &&
+          data.userId !== this.getCurrentUserId()
+        ) {
+          this.typingUsers.set(data.userId, data.isTyping);
+          this.isTyping = Array.from(this.typingUsers.values()).some(
+            (typing) => typing
+          );
+        }
+      });
+
+    this.signalRService.messageRead$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        if (data) {
+          const message = this.messages.find((m) => m.id === data.messageId);
+          if (message) {
+            message.status = MessageStatus.SEEN;
+          }
+        }
+      });
+
+    this.signalRService.messageEdited$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        if (data) {
+          const message = this.messages.find((m) => m.id === data.messageId);
+          if (message) {
+            message.text = data.newContent;
+          }
+        }
+      });
+
+    this.signalRService.messageDeleted$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        if (data && data.chatId === this.chatId) {
+          this.messages = this.messages.filter((m) => m.id !== data.messageId);
+        }
+      });
+  }
+
+  private handleIncomingMessage(messageDto: MessageDto) {
+    const currentUserId = this.getCurrentUserId();
+    const message: ChatMessage = {
+      id: messageDto.id,
+      text: messageDto.content,
+      timestamp: new Date(messageDto.createdAt),
+      isSender: messageDto.senderId === currentUserId,
+      userId: messageDto.senderId,
+      status: MessageStatus.DELIVERED,
+      attachments: messageDto.fileId ? [messageDto.fileId] : undefined,
+    };
+
+    this.messages.push(message);
+    this.scrollToBottom();
+
+    if (!message.isSender) {
+      this.chatService.markMessageAsRead(message.id).subscribe();
+    }
   }
 
   sendMessage() {
     if (!this.newMessage.trim()) return;
 
-    const message: ChatMessage = {
-      id: Date.now().toString(),
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage: ChatMessage = {
+      id: tempId,
       text: this.newMessage,
       timestamp: new Date(),
       isSender: true,
-      userId: 'current-user',
+      userId: this.getCurrentUserId(),
       status: MessageStatus.SENDING,
     };
 
-    this.messages.push(message);
+    this.messages.push(optimisticMessage);
+    const messageText = this.newMessage;
     this.newMessage = '';
-    this.adjustTextareaHeight(); // Reset textarea height
+    this.adjustTextareaHeight();
     this.scrollToBottom();
 
-    // Simulate message status updates
-    this.simulateMessageStatusUpdates(message.id);
-
-    // Simulate typing indicator
-    this.simulateTyping();
+    this.chatService
+      .sendMessage(this.chatId, messageText)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (messageId) => {
+          const index = this.messages.findIndex((m) => m.id === tempId);
+          if (index !== -1) {
+            this.messages[index].id = messageId;
+            this.messages[index].status = MessageStatus.SENT;
+          }
+          this.simulateMessageStatusUpdates(messageId);
+        },
+        error: (error) => {
+          const index = this.messages.findIndex((m) => m.id === tempId);
+          if (index !== -1) {
+            this.messages[index].status = MessageStatus.SENT;
+          }
+          console.error('Failed to send message:', error);
+        },
+      });
   }
 
   onEnterKey(event: Event) {
@@ -147,59 +305,71 @@ export class ChatWindowComponent implements OnInit {
       const textarea = this.messageInput.nativeElement;
       textarea.style.height = 'auto';
       const scrollHeight = textarea.scrollHeight;
-      const maxHeight = 128; // 32 * 4 = 128px (max-h-32)
+      const maxHeight = 128;
       textarea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
     }
   }
 
-  simulateTyping() {
-    setTimeout(() => {
-      this.isTyping = true;
-      setTimeout(() => {
-        this.isTyping = false;
-        const responseMessage: ChatMessage = {
-          id: Date.now().toString(),
-          text: "Thanks for your message! I'll look into that for you.",
-          timestamp: new Date(),
-          isSender: false,
-          userId: this.user?.id || 'unknown',
-          status: MessageStatus.SEEN,
-        };
-        this.messages.push(responseMessage);
-        this.scrollToBottom();
-      }, 2000);
-    }, 500);
+  onMessageInput() {
+    this.typingSubject.next(this.newMessage);
+    this.adjustTextareaHeight();
   }
 
-  simulateMessageStatusUpdates(messageId: string) {
-    // Simulate SENT status after 500ms
-    setTimeout(() => {
-      this.updateMessageStatus(messageId, MessageStatus.SENT);
-    }, 500);
+  loadMoreMessages() {
+    if (!this.hasMoreMessages || this.isLoading) return;
 
-    // Simulate DELIVERED status after 1.5s
+    this.isLoading = true;
+    this.currentPage++;
+
+    this.chatService
+      .getChatMessages(this.chatId, this.currentPage)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result: PagedResult<MessageDto>) => {
+          const currentUserId = this.getCurrentUserId();
+          const olderMessages = result.items.map((msg: any) => ({
+            id: msg.id,
+            text: msg.content,
+            timestamp: new Date(msg.createdAt),
+            isSender: msg.senderId === currentUserId,
+            userId: msg.senderId,
+            status: msg.isRead ? MessageStatus.SEEN : MessageStatus.DELIVERED,
+            attachments: msg.fileId ? [msg.fileId] : undefined,
+          }));
+
+          this.messages.unshift(...olderMessages.reverse());
+          this.hasMoreMessages = result.hasNextPage;
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading more messages:', error);
+          this.isLoading = false;
+        },
+      });
+  }
+
+  private simulateMessageStatusUpdates(messageId: string) {
     setTimeout(() => {
       this.updateMessageStatus(messageId, MessageStatus.DELIVERED);
     }, 1500);
 
-    // Simulate SEEN status after 3s
     setTimeout(() => {
       this.updateMessageStatus(messageId, MessageStatus.SEEN);
     }, 3000);
   }
 
-  updateMessageStatus(messageId: string, status: MessageStatus) {
-    const message = this.messages.find(m => m.id === messageId);
+  private updateMessageStatus(messageId: string, status: MessageStatus) {
+    const message = this.messages.find((m) => m.id === messageId);
     if (message) {
       message.status = status;
     }
   }
 
-  markMessagesAsSeen() {
-    // Mark all received messages as seen
-    this.messages.forEach(message => {
+  private markMessagesAsSeen() {
+    this.messages.forEach((message) => {
       if (!message.isSender && message.status !== MessageStatus.SEEN) {
         message.status = MessageStatus.SEEN;
+        this.chatService.markMessageAsRead(message.id).subscribe();
       }
     });
   }
@@ -210,14 +380,11 @@ export class ChatWindowComponent implements OnInit {
   }
 
   getPosition(): string {
-    // Open chats: position them to the left of minimized circles
-    // If there are minimized chats, add offset for their space (48px width + 16px padding)
     const minimizedOffset = this.minimizedCount > 0 ? 64 : 0;
     return `${16 + minimizedOffset + this.index * 420}px`;
   }
 
   getMinimizedPosition(): string {
-    // Minimized chats: 56px spacing (48px height + 8px gap), stacked vertically from bottom
     return `${16 + this.index * 56}px`;
   }
 
@@ -244,6 +411,11 @@ export class ChatWindowComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  private getCurrentUserId(): string {
+    const userData = sessionStorage.getItem('user_data');
+    return userData ? JSON.parse(userData).id : '';
   }
 
   getStatusIcon(status: MessageStatus): string {

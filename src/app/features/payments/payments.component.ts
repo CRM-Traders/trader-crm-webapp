@@ -20,11 +20,13 @@ import { Payment, TransactionType } from './models/payment.model';
 import { PaymentsService } from './services/payments.service';
 import { CountryService } from '../../core/services/country.service';
 import { ClientsService } from '../clients/services/clients.service';
+import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, GridComponent, HasPermissionDirective],
   templateUrl: './payments.component.html',
   styleUrls: ['./payments.component.scss'],
 })
@@ -34,6 +36,7 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private countryService = inject(CountryService);
   private clientsService = inject(ClientsService);
+  private authService = inject(AuthService);
 
   private destroy$ = new Subject<void>();
   gridId = 'payments-grid';
@@ -318,6 +321,12 @@ export class PaymentsComponent implements OnInit, OnDestroy {
   }
 
   onRowDoubleClick(payment: any): void {
+    // Check permission 169 - Payment view details
+    if (!this.authService.hasPermission(169)) {
+      this.alertService.error('You do not have permission to view payment details');
+      return;
+    }
+    
     // Navigate to detailed transaction view if needed
     const url = this.router.serializeUrl(
       this.router.createUrlTree(['/payments', payment.transactionId])

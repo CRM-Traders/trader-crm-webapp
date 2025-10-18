@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, OnDestroy } from '@angular/core';
+import { Injectable, inject, signal, OnDestroy, Injector } from '@angular/core';
 import { HttpService } from './http.service';
 import { Router } from '@angular/router';
 import { AuthResponse } from '../models/auth-response.model';
@@ -22,6 +22,7 @@ import {
 export class AuthService implements OnDestroy {
   private _http = inject(HttpService);
   private _router = inject(Router);
+  private _injector = inject(Injector);
 
   private readonly ACCESS_TOKEN_KEY = 'iFC03fkUWhcdYGciaclPyeqySdQE6qCd';
   private readonly REFRESH_TOKEN_KEY = 'LXP6usaZ340gDciGr69MQpPwpEdvPj9M';
@@ -134,6 +135,7 @@ export class AuthService implements OnDestroy {
     this.clearAuthData();
     this._isAuthenticated.set(false);
     this._userRole.set('');
+
     this._router.navigate(['/auth/login']);
   }
 
@@ -211,6 +213,18 @@ export class AuthService implements OnDestroy {
 
   getName(): string {
     return this.getCookie(this.NAME_KEY) || '';
+  }
+
+  getUserId(): string {
+    const token = this.getAccessToken();
+    if (!token) return '';
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.sub || payload.userId || payload.id || '';
+    } catch {
+      return '';
+    }
   }
 
   getTokenExpiration(): number {
