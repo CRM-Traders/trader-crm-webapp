@@ -1,220 +1,145 @@
-export interface ChatSummaryDto {
-  id: string;
-  title: string;
-  type: string;
-  status: string;
-  initiatorId: string;
-  assignedOperatorId: string | null;
-  createdAt: string;
-  lastActivityAt: string | null;
-  unreadCount: number;
-  lastMessage: string | null;
+// Enums matching backend
+export enum ChatType {
+  ClientToOperator = 1,
+  OperatorToOperator = 2,
+  OperatorGroup = 3,
 }
 
-export interface ChatDetailsDto {
+export enum UserType {
+  Client = 1,
+  Operator = 2,
+}
+
+export enum MessageType {
+  Text = 1,
+  File = 2,
+}
+
+// DTOs matching backend
+export interface ChatDto {
   id: string;
-  title: string;
-  description: string | null;
-  type: string;
-  status: string;
-  initiatorId: string;
-  assignedOperatorId: string | null;
+  chatType: ChatType;
+  groupName?: string;
   createdAt: string;
-  lastActivityAt: string | null;
-  closedAt: string | null;
-  closeReason: string | null;
-  priority: number;
   participants: ChatParticipantDto[];
-  messages: ChatMessageDto[];
+  lastMessage?: MessageDto;
+  unreadCount: number;
 }
 
 export interface ChatParticipantDto {
-  userId: string;
-  username: string;
-  role: string;
-  joinedAt: string;
-  leftAt: string | null;
-  isActive: boolean;
-}
-
-export interface ChatMessageDto {
   id: string;
-  senderId: string;
-  content: string;
-  type: string;
-  isRead: boolean;
-  readAt: string | null;
-  readBy: string | null;
-  isEdited: boolean;
-  createdAt: string;
+  userId: string;
+  userType: UserType;
+  joinedAt: string;
+  isActive: boolean;
 }
 
 export interface MessageDto {
   id: string;
   chatId: string;
-  senderName: string;
   senderId: string;
   content: string;
-  type: string;
-  fileId: string | null;
-  isRead: boolean;
-  readAt: string | null;
-  readBy: string | null;
+  messageType: MessageType;
+  sentAt: string;
+  updatedAt?: string;
   isEdited: boolean;
-  editedAt: string | null;
-  createdAt: string;
+  isDeleted: boolean;
+  files: MessageFileDto[];
+  senderName?: string; // We'll add this locally
 }
 
-export interface ParticipantDto {
-  userId: string;
-  role: string;
-  joinedAt: string;
-  leftAt: string | null;
-  isActive: boolean;
-  lastSeenAt: string | null;
-  unreadCount: number;
+export interface MessageFileDto {
+  id: string;
+  fileId: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
 }
 
-export interface PagedResult<T> {
-  items: T[];
-  pageIndex: number;
-  pageSize: number;
+export interface ChatMessagesResponse {
+  messages: MessageDto[];
   totalCount: number;
-  totalPages: number;
-  hasPreviousPage: boolean;
-  hasNextPage: boolean;
+  pageSize: number;
+  pageNumber: number;
 }
 
-export interface CreateChatCommand {
-  title: string;
-  type: ChatType;
-  description?: string | null;
-  priority?: number;
-  targetOperatorId?: string | null;
+// Request DTOs
+export interface CreateClientToOperatorChatRequest {
+  initialMessage: string;
 }
 
-export interface CreateGroupChatRequest {
-  title: string;
-  description: string | null;
-  participantIds: string[];
-  priority?: number;
+export interface CreateOperatorToOperatorChatRequest {
+  targetOperatorId: string;
+  initialMessage?: string;
+}
+
+export interface CreateOperatorGroupChatRequest {
+  groupName: string;
+  operatorIds: string[];
 }
 
 export interface SendMessageRequest {
   chatId: string;
   content: string;
-  type?: MessageType;
-}
-
-export interface SendMessageWithFileRequest {
-  chatId: string;
-  content: string;
-  fileId: string;
+  messageType: MessageType;
+  fileIds?: string[];
 }
 
 export interface EditMessageRequest {
-  newContent: string;
+  content: string;
 }
 
-export interface CloseChatRequest {
-  reason: string | null;
+export interface AddParticipantsRequest {
+  operatorIds: string[];
 }
 
-export interface TransferChatRequest {
-  newOperatorId: string;
-  reason: string;
+// SignalR Events
+export interface MessageReceivedEvent {
+  chatId: string;
+  message: MessageDto;
 }
 
-export interface TypingIndicatorRequest {
+export interface MessageEditedEvent {
+  chatId: string;
+  messageId: string;
+  content: string;
+  updatedAt: string;
+}
+
+export interface MessageDeletedEvent {
+  chatId: string;
+  messageId: string;
+  deletedAt: string;
+}
+
+export interface UserTypingEvent {
+  chatId: string;
+  userId: string;
   isTyping: boolean;
 }
 
-export interface AddParticipantRequest {
+export interface ChatReadEvent {
+  chatId: string;
   userId: string;
-  role?: ParticipantRole;
+  readAt: string;
 }
 
-export interface SetStatusRequest {
-  status: OperatorStatus;
-}
-
-export enum ChatType {
-  CustomerSupport = 1,
-  PersonToPerson = 2,
-  GroupChat = 3,
-}
-
-export enum MessageType {
-  Text = 1,
-  Image = 2,
-  File = 3,
-  System = 4,
-  Typing = 5,
-}
-
-export enum MessageStatus {
-  SENDING = 'sending',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  SEEN = 'seen',
-}
-
-export enum ParticipantRole {
-  Customer = 1,
-  Operator = 2,
-  Admin = 3,
-  Observer = 4,
-}
-
-export enum OperatorStatus {
-  Offline = 1,
-  Available = 2,
-  Busy = 3,
-  Away = 4,
-}
-
+// Local interfaces for UI
 export interface OperatorItem {
-  id: string;
-  value: string;
-  fullName?: string;
-  email?: string;
-  department?: string;
-  role?: string;
-  status?: OperatorStatus;
-  chatId?: string;
-  lastMessage?: string;
-  lastMessageTime?: Date;
-  unreadCount?: number;
-}
-
-export type ChatChannel = 'clients' | 'operators';
-
-export interface ChatUser {
   id: string;
   name: string;
   email: string;
-  username?: string;
-  isOnline: boolean;
-  lastMessage: string;
-  lastMessageTime: Date;
-  unreadCount: number;
-  channel: ChatChannel;
-  avatar?: string;
+  department?: string;
+  role?: string;
+  status?: 'online' | 'away' | 'busy' | 'offline';
+  chatId?: string;
 }
 
-export interface ChatMessage {
+export interface ClientItem {
   id: string;
-  text: string;
-  timestamp: Date;
-  isSender: boolean;
-  userId: string;
-  status: MessageStatus;
-  attachments?: string[];
-}
-
-export interface ChatWindow {
-  id: string;
-  user: ChatUser;
-  isMinimized: boolean;
-  position?: { x: number; y: number };
+  userId?: string;
+  name: string;
+  email: string;
+  status?: 'online' | 'offline';
+  chatId?: string;
 }

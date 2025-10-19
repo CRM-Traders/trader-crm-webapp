@@ -1,34 +1,41 @@
 import { inject, Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject } from 'rxjs';
-import { MessageDto } from '../../models/chat/chat.model';
+import {
+  MessageReceivedEvent,
+  MessageEditedEvent,
+  MessageDeletedEvent,
+  UserTypingEvent,
+  ChatReadEvent,
+} from '../../models/chat/chat.model';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class SignalRService {
   private chatHubConnection!: signalR.HubConnection;
-  private operatorHubConnection!: signalR.HubConnection;
   private authService = inject(AuthService);
 
-  public messageReceived$ = new BehaviorSubject<MessageDto | null>(null);
-  public typingIndicator$ = new BehaviorSubject<any>(null);
-  public chatStatusChanged$ = new BehaviorSubject<any>(null);
+  public messageReceived$ = new BehaviorSubject<MessageReceivedEvent | null>(
+    null
+  );
+  public typingIndicator$ = new BehaviorSubject<UserTypingEvent | null>(null);
   public connectionStatus$ = new BehaviorSubject<string>('disconnected');
-  public messageRead$ = new BehaviorSubject<any>(null);
-  public messageEdited$ = new BehaviorSubject<any>(null);
-  public messageDeleted$ = new BehaviorSubject<any>(null);
-  public userJoinedChat$ = new BehaviorSubject<any>(null);
-  public userLeftChat$ = new BehaviorSubject<any>(null);
-  public newChatAssigned$ = new BehaviorSubject<any>(null);
-  public workloadUpdate$ = new BehaviorSubject<any>(null);
-  public operatorStatusChanged$ = new BehaviorSubject<any>(null);
+  public messageRead$ = new BehaviorSubject<ChatReadEvent | null>(null);
+  public messageEdited$ = new BehaviorSubject<MessageEditedEvent | null>(null);
+  public messageDeleted$ = new BehaviorSubject<MessageDeletedEvent | null>(
+    null
+  );
+  public onlineStatusChanged$ = new BehaviorSubject<{
+    userId: string;
+    isOnline: boolean;
+  } | null>(null);
 
   async initializeChatHub(): Promise<void> {
     const token = this.authService.getAccessToken();
 
     this.chatHubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.hubBaseUrl}/chat`, {
+      .withUrl(`${environment.hubBaseUrl}/hubs/chat`, {
         accessTokenFactory: () => token || '',
       })
       .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
@@ -40,6 +47,7 @@ export class SignalRService {
     try {
       await this.chatHubConnection.start();
       this.connectionStatus$.next('connected');
+      console.log('SignalR Connected');
     } catch (err) {
       console.error('ChatHub connection failed:', err);
       this.connectionStatus$.next('error');
@@ -47,78 +55,41 @@ export class SignalRService {
     }
   }
 
-  async initializeOperatorHub(): Promise<void> {
-    const token = this.authService.getAccessToken();
-
-    this.operatorHubConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`${environment.hubBaseUrl}/operators`, {
-        accessTokenFactory: () => token || '',
-      })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
-
-    this.setupOperatorHubEventHandlers();
-
-    try {
-      await this.operatorHubConnection.start();
-    } catch (err) {
-      console.error('OperatorHub connection failed:', err);
-      throw err;
-    }
-  }
-
   private setupChatHubEventHandlers(): void {
-    this.chatHubConnection.on('ReceiveMessage', (message: MessageDto) => {
-      this.messageReceived$.next(message);
+    // Server -> Client events matching backend
+    this.chatHubConnection.on(
+      'ReceiveMessage',
+      (event: MessageReceivedEvent) => {
+        console.log('Message received:', event);
+        this.messageReceived$.next(event);
+      }
+    );
+
+    this.chatHubConnection.on('MessageEdited', (event: MessageEditedEvent) => {
+      console.log('Message edited:', event);
+      this.messageEdited$.next(event);
     });
 
     this.chatHubConnection.on(
-      'TypingIndicator',
-      (data: { chatId: string; userId: string; isTyping: boolean }) => {
-        this.typingIndicator$.next(data);
-      }
-    );
-
-    this.chatHubConnection.on(
-      'MessageRead',
-      (data: { messageId: string; readBy: string; readAt: string }) => {
-        this.messageRead$.next(data);
-      }
-    );
-
-    this.chatHubConnection.on(
-      'MessageEdited',
-      (data: { messageId: string; newContent: string; editedAt: string }) => {
-        this.messageEdited$.next(data);
-      }
-    );
-
-    this.chatHubConnection.on(
       'MessageDeleted',
-      (data: { messageId: string; chatId: string }) => {
-        this.messageDeleted$.next(data);
+      (event: MessageDeletedEvent) => {
+        console.log('Message deleted:', event);
+        this.messageDeleted$.next(event);
       }
     );
 
-    this.chatHubConnection.on(
-      'ChatStatusChanged',
-      (data: { chatId: string; newStatus: string }) => {
-        this.chatStatusChanged$.next(data);
-      }
-    );
+    this.chatHubConnection.on('UserTyping', (event: UserTypingEvent) => {
+      this.typingIndicator$.next(event);
+    });
+
+    this.chatHubConnection.on('ChatMarkedAsRead', (event: ChatReadEvent) => {
+      this.messageRead$.next(event);
+    });
 
     this.chatHubConnection.on(
-      'UserJoinedChat',
-      (data: { chatId: string; userId: string; userName: string }) => {
-        this.userJoinedChat$.next(data);
-      }
-    );
-
-    this.chatHubConnection.on(
-      'UserLeftChat',
-      (data: { chatId: string; userId: string; userName: string }) => {
-        this.userLeftChat$.next(data);
+      'OnlineStatusChanged',
+      (userId: string, isOnline: boolean) => {
+        this.onlineStatusChanged$.next({ userId, isOnline });
       }
     );
 
@@ -135,51 +106,19 @@ export class SignalRService {
     });
   }
 
-  private setupOperatorHubEventHandlers(): void {
-    this.operatorHubConnection.on(
-      'NewChatAssigned',
-      (data: { chatId: string; title: string; customerId: string }) => {
-        this.newChatAssigned$.next(data);
-      }
-    );
-
-    this.operatorHubConnection.on(
-      'WorkloadUpdate',
-      (data: { activeChats: number; queuedChats: number }) => {
-        this.workloadUpdate$.next(data);
-      }
-    );
-
-    this.operatorHubConnection.on(
-      'StatusChanged',
-      (data: { operatorId: string; newStatus: string }) => {
-        this.operatorStatusChanged$.next(data);
-      }
-    );
-
-    this.operatorHubConnection.on(
-      'ChatTransferred',
-      (data: {
-        chatId: string;
-        fromOperatorId: string;
-        toOperatorId: string;
-      }) => {
-        if (data.toOperatorId === this.getCurrentUserId()) {
-          this.newChatAssigned$.next({
-            chatId: data.chatId,
-            title: 'Transferred Chat',
-            customerId: '',
-          });
-        }
-      }
-    );
-  }
-
+  // Client -> Server methods matching backend
   async joinChat(chatId: string): Promise<void> {
     if (
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
     ) {
-      await this.chatHubConnection.invoke('JoinChat', chatId);
+      try {
+        console.log(chatId);
+
+        await this.chatHubConnection.invoke('JoinChat', chatId);
+        console.log(`Joined chat: ${chatId}`);
+      } catch (error) {
+        console.error('Error joining chat:', error);
+      }
     }
   }
 
@@ -187,7 +126,12 @@ export class SignalRService {
     if (
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
     ) {
-      await this.chatHubConnection.invoke('LeaveChat', chatId);
+      try {
+        await this.chatHubConnection.invoke('LeaveChat', chatId);
+        console.log(`Left chat: ${chatId}`);
+      } catch (error) {
+        console.error('Error leaving chat:', error);
+      }
     }
   }
 
@@ -195,15 +139,25 @@ export class SignalRService {
     if (
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
     ) {
-      await this.chatHubConnection.invoke('SendTyping', chatId, isTyping);
+      try {
+        console.log(chatId);
+        await this.chatHubConnection.invoke('NotifyTyping', chatId, isTyping);
+      } catch (error) {
+        console.error('Error sending typing indicator:', error);
+      }
     }
   }
 
-  async markMessageAsRead(messageId: string): Promise<void> {
+  async markChatAsRead(chatId: string): Promise<void> {
     if (
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
     ) {
-      await this.chatHubConnection.invoke('MarkAsRead', messageId);
+      try {
+        console.log(this.chatHubConnection.baseUrl);
+        await this.chatHubConnection.invoke('MarkChatAsRead', chatId);
+      } catch (error) {
+        console.error('Error marking chat as read:', error);
+      }
     }
   }
 
@@ -211,25 +165,11 @@ export class SignalRService {
     if (this.chatHubConnection) {
       await this.chatHubConnection.stop();
     }
-    if (this.operatorHubConnection) {
-      await this.operatorHubConnection.stop();
-    }
-  }
-
-  private getCurrentUserId(): string {
-    const userData = sessionStorage.getItem('user_data');
-    return userData ? JSON.parse(userData).id : '';
   }
 
   isConnected(): boolean {
     return (
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
-    );
-  }
-
-  isOperatorHubConnected(): boolean {
-    return (
-      this.operatorHubConnection?.state === signalR.HubConnectionState.Connected
     );
   }
 }

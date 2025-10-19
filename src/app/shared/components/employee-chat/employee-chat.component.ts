@@ -19,14 +19,15 @@ import {
 } from 'rxjs/operators';
 import { ChatService } from '../../services/chat/chat.service';
 import { SignalRService } from '../../services/chat/signalr.service';
-import { AuthService } from '../../../core/services/auth.service';
 import { AlertService } from '../../../core/services/alert.service';
 import {
-  ChatSummaryDto,
-  ChatDetailsDto,
+  ChatDto,
   MessageDto,
   ChatType,
   MessageType,
+  UserType,
+  OperatorItem,
+  ClientItem,
 } from '../../models/chat/chat.model';
 
 interface Client {
@@ -68,7 +69,6 @@ export class EmployeeChatComponent
 {
   private chatService = inject(ChatService);
   private signalRService = inject(SignalRService);
-  private authService = inject(AuthService);
   private changeDetector = inject(ChangeDetectorRef);
   private alertService = inject(AlertService);
 
@@ -81,9 +81,9 @@ export class EmployeeChatComponent
   private searchSubject = new Subject<string>();
   private shouldScrollToBottom = true;
   private typingTimer: any;
+  private currentChatId: string | null = null;
 
-  activeChats: ChatSummaryDto[] = [];
-  selectedChat: ChatDetailsDto | null = null;
+  selectedChat: ChatDto | null = null;
   currentMessages: MessageDto[] = [];
   typingUsers: Map<string, boolean> = new Map();
   loading = false;
@@ -101,21 +101,15 @@ export class EmployeeChatComponent
   selectedUser: Client | Operator | null = null;
   isSendingMessage = false;
   isCurrentUserTyping = false;
-  isLoadingOperators = false;
 
   showOperatorSearchDropdown = false;
-  allOperators: Operator[] = [];
-  operatorChats: Operator[] = [];
   searchDropdownOperators: Operator[] = [];
 
   showClientSearchDropdown = false;
-  allClients: Client[] = [];
-  clientChats: Client[] = [];
   searchDropdownClients: Client[] = [];
 
   selectedFile: File | null = null;
   isUploadingFile = false;
-  uploadProgress = 0;
   MAX_FILE_SIZE = 10 * 1024 * 1024;
   ALLOWED_FILE_TYPES = [
     'image/jpeg',
@@ -124,21 +118,20 @@ export class EmployeeChatComponent
     'image/gif',
     'image/bmp',
   ];
-  ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
 
-  // Store current user info
   currentUserId: string = '';
   currentUserName: string = '';
+  currentUserType: number = 1;
 
   ngOnInit(): void {
     this.currentUserId = this.chatService.getCurrentUserId();
     this.currentUserName = this.chatService.getCurrentUserName();
+    this.currentUserType = this.chatService.getCurrentUserType();
     this.initializeServices();
     this.setupSubscriptions();
     this.setupTypingIndicator();
     this.setupSearch();
     this.loadInitialData();
-    this.loadClients()
   }
 
   ngAfterViewChecked(): void {
@@ -148,6 +141,16 @@ export class EmployeeChatComponent
   }
 
   ngOnDestroy(): void {
+    // Clean up current chat
+    if (this.currentChatId) {
+      this.signalRService.leaveChat(this.currentChatId);
+    }
+
+    // Stop typing indicator if active
+    if (this.isCurrentUserTyping) {
+      this.typingSubject.next(false);
+    }
+
     this.destroy$.next();
     this.destroy$.complete();
     if (this.typingTimer) {
@@ -158,22 +161,17 @@ export class EmployeeChatComponent
   private async initializeServices(): Promise<void> {
     try {
       await this.signalRService.initializeChatHub();
-
-      const userRole = this.getUserRole();
-      if (userRole === 'operator' || userRole === 'admin') {
-        await this.signalRService.initializeOperatorHub();
-      }
-
       this.setupSignalRListeners();
     } catch (error) {
       console.error('Failed to initialize SignalR:', error);
-      // this.alertService.error(
-      //   'Failed to connect to chat server. Please refresh the page.'
-      // );
+      this.alertService.error(
+        'Failed to connect to chat server. Please refresh the page.'
+      );
     }
   }
 
   private setupSignalRListeners(): void {
+    // Connection status
     this.signalRService.connectionStatus$
       .pipe(takeUntil(this.destroy$))
       .subscribe((status) => {
@@ -181,22 +179,28 @@ export class EmployeeChatComponent
         this.changeDetector.markForCheck();
       });
 
+    // Message received - handle for ANY chat to update lists
     this.signalRService.messageReceived$
       .pipe(
         takeUntil(this.destroy$),
-        filter((msg) => msg !== null)
+        filter((event) => event !== null)
       )
-      .subscribe((message) => {
-        if (
-          message &&
-          this.selectedChat &&
-          message.chatId === this.selectedChat.id
-        ) {
-          this.handleIncomingMessage(message);
+      .subscribe((event) => {
+        if (event) {
+          // Update message in current chat if it matches
+          if (this.selectedChat && event.chatId === this.selectedChat.id) {
+            this.handleIncomingMessage(event.message);
+          }
+
+          // Always update the chat lists to reflect new messages/unread counts
+          this.updateChatListWithNewMessage(event.chatId, event.message);
+
+          // Refresh chat lists to get updated unread counts
+          this.loadChatsAndUpdateCounts();
         }
-        this.updateUnreadCounts();
       });
 
+    // Typing indicator
     this.signalRService.typingIndicator$
       .pipe(
         takeUntil(this.destroy$),
@@ -204,49 +208,38 @@ export class EmployeeChatComponent
       )
       .subscribe((data) => {
         if (data && this.selectedChat && data.chatId === this.selectedChat.id) {
-          this.typingUsers.set(data.userId, data.isTyping);
-          if (!data.isTyping) {
-            this.typingUsers.delete(data.userId);
+          if (data.userId !== this.currentUserId) {
+            if (data.isTyping) {
+              this.typingUsers.set(data.userId, true);
+            } else {
+              this.typingUsers.delete(data.userId);
+            }
+            this.changeDetector.markForCheck();
           }
-          this.changeDetector.markForCheck();
         }
       });
 
-    this.signalRService.messageRead$
-      .pipe(
-        takeUntil(this.destroy$),
-        filter((data) => data !== null)
-      )
-      .subscribe((data) => {
-        if (data && this.currentMessages.length > 0) {
-          const message = this.currentMessages.find(
-            (m) => m.id === data.messageId
-          );
-          if (message) {
-            message.isRead = true;
-          }
-          this.changeDetector.markForCheck();
-        }
-      });
-
+    // Message edited
     this.signalRService.messageEdited$
       .pipe(
         takeUntil(this.destroy$),
         filter((data) => data !== null)
       )
       .subscribe((data) => {
-        if (data && this.currentMessages.length > 0) {
+        if (data && this.selectedChat && data.chatId === this.selectedChat.id) {
           const message = this.currentMessages.find(
             (m) => m.id === data.messageId
           );
           if (message) {
-            message.content = data.newContent;
+            message.content = data.content;
             message.isEdited = true;
+            message.updatedAt = data.updatedAt;
+            this.changeDetector.markForCheck();
           }
-          this.changeDetector.markForCheck();
         }
       });
 
+    // Message deleted
     this.signalRService.messageDeleted$
       .pipe(
         takeUntil(this.destroy$),
@@ -254,10 +247,38 @@ export class EmployeeChatComponent
       )
       .subscribe((data) => {
         if (data && this.selectedChat && data.chatId === this.selectedChat.id) {
-          this.currentMessages = this.currentMessages.filter(
-            (m) => m.id !== data.messageId
+          const message = this.currentMessages.find(
+            (m) => m.id === data.messageId
           );
-          this.changeDetector.markForCheck();
+          if (message) {
+            message.isDeleted = true;
+            message.content = 'This message has been deleted';
+            this.changeDetector.markForCheck();
+          }
+        }
+      });
+
+    // Online status changed
+    this.signalRService.onlineStatusChanged$
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((data) => data !== null)
+      )
+      .subscribe((data) => {
+        if (data) {
+          this.updateUserOnlineStatus(data.userId, data.isOnline);
+        }
+      });
+
+    // Chat marked as read - update unread counts
+    this.signalRService.messageRead$
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((data) => data !== null)
+      )
+      .subscribe((data) => {
+        if (data) {
+          this.updateChatReadStatus(data.chatId, data.userId);
         }
       });
   }
@@ -276,9 +297,10 @@ export class EmployeeChatComponent
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
       .subscribe((isTyping) => {
         if (this.selectedChat) {
-          this.chatService
-            .sendTypingIndicator(this.selectedChat.id, isTyping)
-            .subscribe();
+          this.signalRService.sendTypingIndicator(
+            this.selectedChat.id,
+            isTyping
+          );
         }
       });
   }
@@ -286,156 +308,201 @@ export class EmployeeChatComponent
   private setupSearch(): void {
     this.searchSubject
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe((query) => {
+      .subscribe(() => {
         this.filterCurrentTab();
       });
   }
 
   private loadInitialData(): void {
-    this.loadClients();
-    this.loadOperators();
-    this.loadAllOperatorsForSearch();
+    this.loadChatsAndUpdateCounts();
   }
 
-  private loadClients(): void {
+  private loadChatsAndUpdateCounts(): void {
     this.chatService
       .getMyChats()
       .pipe(takeUntil(this.destroy$))
       .subscribe((chats) => {
-        const clientChats = chats.filter(
-          (chat) => chat.type === 'CustomerSupport'
-        );
-        this.clients = clientChats.map((chat) => this.mapChatToClient(chat));
-        this.clientChats = [...this.clients];
-        this.filteredClients = [...this.clients];
+        this.processChats(chats);
         this.changeDetector.markForCheck();
       });
   }
 
-  private mapChatToClient(chat: ChatSummaryDto): Client {
+  private processChats(chats: ChatDto[]): void {
+    // Process client chats
+    const clientChats = chats.filter(
+      (chat) => chat.chatType === ChatType.ClientToOperator
+    );
+    this.clients = clientChats.map((chat) => this.mapChatToClient(chat));
+    this.filteredClients = [...this.clients];
+
+    // Process operator chats
+    const operatorChats = chats.filter(
+      (chat) =>
+        chat.chatType === ChatType.OperatorToOperator ||
+        chat.chatType === ChatType.OperatorGroup
+    );
+    this.operators = operatorChats.map((chat) => this.mapChatToOperator(chat));
+    this.filteredOperators = [...this.operators];
+  }
+
+  private mapChatToClient(chat: ChatDto): Client {
+    const clientParticipant = chat.participants.find(
+      (p) => p.userType === UserType.Client
+    );
     return {
-      id: chat.id,
+      id: clientParticipant?.userId || chat.id,
       chatId: chat.id,
-      name: chat.title,
+      name: this.extractNameFromParticipants(chat, UserType.Client),
       email: `client_${chat.id}@chat.com`,
-      status: chat.status === 'Active' ? 'online' : 'offline',
-      lastMessage: chat.lastMessage || 'No messages yet',
-      lastMessageTime: chat.lastActivityAt
-        ? new Date(chat.lastActivityAt)
+      status: 'online',
+      lastMessage: chat.lastMessage?.content || 'No messages yet',
+      lastMessageTime: chat.lastMessage
+        ? new Date(chat.lastMessage.sentAt)
         : new Date(chat.createdAt),
       unreadCount: chat.unreadCount || 0,
     };
   }
 
-  private loadOperators(): void {
-    this.isLoadingOperators = true;
-
-    this.chatService
-      .getMyChats()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (chats) => {
-          const operatorChats = chats.filter(
-            (chat) => chat.type === 'PersonToPerson'
-          );
-          const mappedOperators = operatorChats.map((chat) =>
-            this.mapChatToOperator(chat)
-          );
-          this.operatorChats = [...mappedOperators];
-          this.operators = [...this.operatorChats];
-          this.filteredOperators = [...this.operatorChats];
-          this.isLoadingOperators = false;
-          this.changeDetector.markForCheck();
-        },
-        error: (error) => {
-          console.error('Error loading operator chats:', error);
-          this.isLoadingOperators = false;
-          this.changeDetector.markForCheck();
-        },
-      });
-  }
-
-  private mapChatToOperator(chat: ChatSummaryDto): Operator {
-    const operatorName = this.extractOperatorNameFromTitle(chat.title);
-
+  private mapChatToOperator(chat: ChatDto): Operator {
+    const operatorParticipant = chat.participants.find(
+      (p) => p.userType === UserType.Operator && p.userId !== this.currentUserId
+    );
     return {
-      id: chat.initiatorId,
+      id: operatorParticipant?.userId || chat.id,
       chatId: chat.id,
-      name: operatorName,
-      email: `${operatorName.toLowerCase().replace(/\s+/g, '.')}@company.com`,
+      name:
+        chat.groupName ||
+        this.extractNameFromParticipants(chat, UserType.Operator),
+      email: `operator_${chat.id}@company.com`,
       department: '',
       role: '',
-      status: 'online' as any,
-      lastMessage: chat.lastMessage || '',
-      lastMessageTime: chat.lastActivityAt
-        ? new Date(chat.lastActivityAt)
+      status: 'online',
+      lastMessage: chat.lastMessage?.content || 'No messages yet',
+      lastMessageTime: chat.lastMessage
+        ? new Date(chat.lastMessage.sentAt)
         : new Date(chat.createdAt),
       unreadCount: chat.unreadCount || 0,
     };
   }
 
-  private extractOperatorNameFromTitle(title: string): string {
-    const match = title.match(/^Chat with (.+)$/i);
-    if (match) {
-      return match[1];
-    }
-    return title;
-  }
-
-  private loadAllOperatorsForSearch(): void {
-    this.chatService
-      .searchOperators('', 0, 100)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (operators) => {
-          this.allOperators = operators.map((op) => ({
-            id: op.id,
-            name: op.fullName || op.value || 'Unknown',
-            email: op.email || '',
-            department: op.department || '',
-            role: op.role || '',
-            status: op.status || 'offline',
-            lastMessage: '',
-            lastMessageTime: new Date(),
-            unreadCount: 0,
-            chatId: op.chatId,
-          }));
-          this.changeDetector.markForCheck();
-        },
-        error: (error) => {
-          console.error('Error loading operators for search:', error);
-        },
-      });
+  private extractNameFromParticipants(
+    chat: ChatDto,
+    userType: UserType
+  ): string {
+    const participant = chat.participants.find(
+      (p) => p.userType === userType && p.userId !== this.currentUserId
+    );
+    return participant
+      ? `User ${participant.userId.substring(0, 8)}`
+      : 'Unknown';
   }
 
   private handleIncomingMessage(message: MessageDto): void {
-    const existingMessage = this.currentMessages.find(
-      (m) => m.id === message.id
-    );
-    if (!existingMessage) {
-      this.currentMessages.push(message);
-      this.shouldScrollToBottom = true;
+    // Don't add our own messages we already added optimistically
+    if (message.senderId === this.currentUserId) {
+      const tempMsgIndex = this.currentMessages.findIndex((m) =>
+        m.id.startsWith('temp-')
+      );
+      if (tempMsgIndex !== -1) {
+        this.currentMessages[tempMsgIndex] = message;
+      }
+      return;
+    }
+    // Add new messages and clear typing indicator
+    this.currentMessages.push(message);
+    this.typingUsers.delete(message.senderId);
+  }
 
-      // Don't try to mark as read since the endpoint returns 400
-      // if (message.senderId !== this.currentUserId && !message.isRead) {
-      //   this.chatService.markMessageAsRead(message.id).subscribe();
-      // }
+  private updateChatListWithNewMessage(
+    chatId: string,
+    message: MessageDto
+  ): void {
+    // Update client list
+    const client = this.clients.find((c) => c.chatId === chatId);
+    if (client) {
+      client.lastMessage = message.content;
+      client.lastMessageTime = new Date(message.sentAt);
+
+      // Increment unread count if this is not the current chat or not from current user
+      if (
+        message.senderId !== this.currentUserId &&
+        (!this.selectedChat || this.selectedChat.id !== chatId)
+      ) {
+        client.unreadCount++;
+      }
+    }
+
+    // Update operator list
+    const operator = this.operators.find((o) => o.chatId === chatId);
+    if (operator) {
+      operator.lastMessage = message.content;
+      operator.lastMessageTime = new Date(message.sentAt);
+
+      // Increment unread count if this is not the current chat or not from current user
+      if (
+        message.senderId !== this.currentUserId &&
+        (!this.selectedChat || this.selectedChat.id !== chatId)
+      ) {
+        operator.unreadCount++;
+      }
+    }
+
+    this.changeDetector.markForCheck();
+  }
+
+  private updateChatReadStatus(chatId: string, userId: string): void {
+    // Only update if it's not the current user marking as read
+    if (userId === this.currentUserId && this.selectedChat?.id === chatId) {
+      // Reset unread count for the current chat
+      const client = this.clients.find((c) => c.chatId === chatId);
+      if (client) {
+        client.unreadCount = 0;
+      }
+
+      const operator = this.operators.find((o) => o.chatId === chatId);
+      if (operator) {
+        operator.unreadCount = 0;
+      }
 
       this.changeDetector.markForCheck();
     }
   }
 
-  private updateUnreadCounts(): void {
-    this.loadClients();
-    this.loadOperators();
+  private updateUserOnlineStatus(userId: string, isOnline: boolean): void {
+    const client = this.clients.find(
+      (c) => c.id === userId || c.userId === userId
+    );
+    if (client) {
+      client.status = isOnline ? 'online' : 'offline';
+    }
+
+    const operator = this.operators.find((o) => o.id === userId);
+    if (operator) {
+      operator.status = isOnline ? 'online' : 'offline';
+    }
+
+    this.changeDetector.markForCheck();
   }
 
   setActiveTab(tab: ActiveTab): void {
+    // Clean up current chat before switching
+    if (this.currentChatId) {
+      this.signalRService.leaveChat(this.currentChatId);
+      this.currentChatId = null;
+    }
+
+    // Stop typing if switching tabs
+    if (this.isCurrentUserTyping) {
+      this.typingSubject.next(false);
+      this.isCurrentUserTyping = false;
+    }
+
     this.activeTab = tab;
     this.searchQuery = '';
     this.selectedUser = null;
     this.selectedChat = null;
     this.currentMessages = [];
+    this.typingUsers.clear();
     this.showOperatorSearchDropdown = false;
     this.searchDropdownOperators = [];
     this.showClientSearchDropdown = false;
@@ -452,73 +519,14 @@ export class EmployeeChatComponent
       this.filterOperatorsForSearch(this.searchQuery);
     } else if (this.activeTab === 'clients') {
       this.filterClientsForSearch(this.searchQuery);
-    } else {
-      this.filterCurrentTab();
     }
   }
 
   onSearchFocus(): void {
     if (this.activeTab === 'operators') {
-      if (this.searchQuery.trim()) {
-        this.filterOperatorsForSearch(this.searchQuery);
-      } else {
-        // Load operators from API when focusing on empty search
-        this.chatService
-          .searchOperators('', 0, 100)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (operators) => {
-              this.searchDropdownOperators = operators.map((op) => ({
-                id: op.id,
-                name: op.fullName || op.value || 'Unknown',
-                email: op.email || '',
-                department: op.department || '',
-                role: op.role || '',
-                status: (op.status || 'offline') as 'online' | 'away' | 'busy' | 'offline',
-                lastMessage: '',
-                lastMessageTime: new Date(),
-                unreadCount: 0,
-                chatId: op.chatId,
-              }));
-              this.showOperatorSearchDropdown =
-                this.searchDropdownOperators.length > 0;
-              this.changeDetector.markForCheck();
-            },
-            error: (error) => {
-              console.error('Error searching operators:', error);
-            },
-          });
-      }
+      this.loadOperatorsForDropdown(this.searchQuery);
     } else if (this.activeTab === 'clients') {
-      if (this.searchQuery.trim()) {
-        this.filterClientsForSearch(this.searchQuery);
-      } else {
-        // Load clients from API when focusing on empty search
-        this.chatService
-          .searchClients('', 0, 100)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (clients) => {
-              this.searchDropdownClients = clients.map((client) => ({
-                id: client.id,
-                userId: client.userId,
-                name: client.fullName || client.value || 'Unknown',
-                email: client.email || '',
-                status: client.status || 'offline',
-                lastMessage: '',
-                lastMessageTime: new Date(),
-                unreadCount: 0,
-                chatId: client.chatId,
-              }));
-              this.showClientSearchDropdown =
-                this.searchDropdownClients.length > 0;
-              this.changeDetector.markForCheck();
-            },
-            error: (error) => {
-              console.error('Error searching clients:', error);
-            },
-          });
-      }
+      this.loadClientsForDropdown(this.searchQuery);
     }
   }
 
@@ -526,11 +534,10 @@ export class EmployeeChatComponent
     setTimeout(() => {
       if (this.activeTab === 'operators' && !this.searchQuery.trim()) {
         this.showOperatorSearchDropdown = false;
-        this.changeDetector.markForCheck();
       } else if (this.activeTab === 'clients' && !this.searchQuery.trim()) {
         this.showClientSearchDropdown = false;
-        this.changeDetector.markForCheck();
       }
+      this.changeDetector.markForCheck();
     }, 200);
   }
 
@@ -550,40 +557,27 @@ export class EmployeeChatComponent
     } else {
       if (!query) {
         this.filteredOperators = [...this.operators];
+      } else {
+        this.filteredOperators = this.operators.filter(
+          (op) =>
+            op.name.toLowerCase().includes(query) ||
+            (op.email && op.email.toLowerCase().includes(query))
+        );
       }
     }
   }
 
   private filterOperatorsForSearch(searchTerm: string): void {
-    if (!searchTerm.trim()) {
-      // Load all operators from API
-      this.chatService
-        .searchOperators('', 0, 100)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (operators) => {
-            this.searchDropdownOperators = operators.map((op) => ({
-              id: op.id,
-              name: op.fullName || op.value || 'Unknown',
-              email: op.email || '',
-              department: op.department || '',
-              role: op.role || '',
-              status: (op.status || 'offline') as 'online' | 'away' | 'busy' | 'offline',
-              lastMessage: '',
-              lastMessageTime: new Date(),
-              unreadCount: 0,
-              chatId: op.chatId,
-            }));
-            this.showOperatorSearchDropdown =
-              this.searchDropdownOperators.length > 0;
-            this.changeDetector.markForCheck();
-          },
-        });
-      this.filteredOperators = [...this.operatorChats];
-      return;
-    }
+    this.loadOperatorsForDropdown(searchTerm);
+    this.filterCurrentTab();
+  }
 
-    // Search operators from API with search term
+  private filterClientsForSearch(searchTerm: string): void {
+    this.loadClientsForDropdown(searchTerm);
+    this.filterCurrentTab();
+  }
+
+  private loadOperatorsForDropdown(searchTerm: string): void {
     this.chatService
       .searchOperators(searchTerm, 0, 100)
       .pipe(takeUntil(this.destroy$))
@@ -591,60 +585,27 @@ export class EmployeeChatComponent
         next: (operators) => {
           this.searchDropdownOperators = operators.map((op) => ({
             id: op.id,
-            name: op.fullName || op.value || 'Unknown',
-            email: op.email || '',
-            department: op.department || '',
-            role: op.role || '',
-            status: (op.status || 'offline') as 'online' | 'away' | 'busy' | 'offline',
+            name: op.name,
+            email: op.email,
+            department: op.department,
+            role: op.role,
+            status: op.status || 'offline',
             lastMessage: '',
             lastMessageTime: new Date(),
             unreadCount: 0,
-            chatId: op.chatId,
+            chatId: this.findChatIdForOperator(op.id),
           }));
           this.showOperatorSearchDropdown =
             this.searchDropdownOperators.length > 0;
           this.changeDetector.markForCheck();
         },
+        error: (error) => {
+          console.error('Error searching operators:', error);
+        },
       });
-
-    // Filter existing chats locally
-    const query = searchTerm.toLowerCase();
-    this.filteredOperators = this.operatorChats.filter(
-      (op) =>
-        op.name.toLowerCase().includes(query) ||
-        (op.email && op.email.toLowerCase().includes(query))
-    );
   }
 
-  private filterClientsForSearch(searchTerm: string): void {
-    if (!searchTerm.trim()) {
-      // Load all clients from API
-      this.chatService
-        .searchClients('', 0, 100)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (clients) => {
-            this.searchDropdownClients = clients.map((client) => ({
-              id: client.id,
-              userId: client.userId,
-              name: client.fullName || client.value || 'Unknown',
-              email: client.email || '',
-              status: client.status || 'offline',
-              lastMessage: '',
-              lastMessageTime: new Date(),
-              unreadCount: 0,
-              chatId: client.chatId,
-            }));
-            this.showClientSearchDropdown =
-              this.searchDropdownClients.length > 0;
-            this.changeDetector.markForCheck();
-          },
-        });
-      this.filteredClients = [...this.clientChats];
-      return;
-    }
-
-    // Search clients from API with search term
+  private loadClientsForDropdown(searchTerm: string): void {
     this.chatService
       .searchClients(searchTerm, 0, 100)
       .pipe(takeUntil(this.destroy$))
@@ -653,33 +614,46 @@ export class EmployeeChatComponent
           this.searchDropdownClients = clients.map((client) => ({
             id: client.id,
             userId: client.userId,
-            name: client.fullName || client.value || 'Unknown',
-            email: client.email || '',
+            name: client.name,
+            email: client.email,
             status: client.status || 'offline',
             lastMessage: '',
             lastMessageTime: new Date(),
             unreadCount: 0,
-            chatId: client.chatId,
+            chatId: this.findChatIdForClient(client.userId || client.id),
           }));
-          this.showClientSearchDropdown =
-            this.searchDropdownClients.length > 0;
+          this.showClientSearchDropdown = this.searchDropdownClients.length > 0;
           this.changeDetector.markForCheck();
         },
+        error: (error) => {
+          console.error('Error searching clients:', error);
+        },
       });
+  }
 
-    // Filter existing chats locally
-    const query = searchTerm.toLowerCase();
-    this.filteredClients = this.clientChats.filter(
-      (client) =>
-        client.name.toLowerCase().includes(query) ||
-        (client.email && client.email.toLowerCase().includes(query))
-    );
+  private findChatIdForOperator(operatorId: string): string | undefined {
+    return this.operators.find((op) => op.id === operatorId)?.chatId;
+  }
+
+  private findChatIdForClient(clientId: string): string | undefined {
+    return this.clients.find((c) => c.id === clientId || c.userId === clientId)
+      ?.chatId;
   }
 
   selectClient(client: Client): void {
+    // Leave previous chat if any
+    if (this.currentChatId) {
+      this.signalRService.leaveChat(this.currentChatId);
+    }
+
+    // Stop typing indicator
+    if (this.isCurrentUserTyping) {
+      this.typingSubject.next(false);
+      this.isCurrentUserTyping = false;
+    }
+
     this.selectedUser = client;
     this.typingUsers.clear();
-    this.isCurrentUserTyping = false;
     this.isSendingMessage = false;
     this.messageText = '';
     this.removeSelectedFile();
@@ -690,14 +664,24 @@ export class EmployeeChatComponent
     if (client.chatId) {
       this.loadChatDetails(client.chatId);
     } else {
-      this.createOrSelectClientChat(client);
+      this.createClientChat(client);
     }
   }
 
   selectOperator(operator: Operator): void {
+    // Leave previous chat if any
+    if (this.currentChatId) {
+      this.signalRService.leaveChat(this.currentChatId);
+    }
+
+    // Stop typing indicator
+    if (this.isCurrentUserTyping) {
+      this.typingSubject.next(false);
+      this.isCurrentUserTyping = false;
+    }
+
     this.selectedUser = operator;
     this.typingUsers.clear();
-    this.isCurrentUserTyping = false;
     this.isSendingMessage = false;
     this.messageText = '';
     this.removeSelectedFile();
@@ -708,7 +692,7 @@ export class EmployeeChatComponent
     if (operator.chatId) {
       this.loadChatDetails(operator.chatId);
     } else {
-      this.createOrSelectOperatorChat(operator);
+      this.createOperatorChat(operator);
     }
   }
 
@@ -724,128 +708,123 @@ export class EmployeeChatComponent
     this.selectClient(client);
   }
 
-  private loadChatDetails(chatId: string): void {
+  private async loadChatDetails(chatId: string): Promise<void> {
     this.loading = true;
+    this.currentChatId = chatId;
 
-    this.chatService
-      .getChatDetails(chatId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (details) => {
-          this.selectedChat = details;
-          this.currentMessages = details.messages.map(
-            (msg) =>
-              ({
-                id: msg.id,
-                chatId: details.id,
-                senderId: msg.senderId,
-                senderName: this.resolveSenderName(details, msg.senderId),
-                content: msg.content,
-                type: msg.type,
-                isRead: msg.isRead,
-                readAt: msg.readAt,
-                readBy: msg.readBy,
-                createdAt: msg.createdAt,
-                updatedAt: msg.createdAt,
-                isEdited: msg.isEdited,
-                fileId: null,
-                editedAt: null,
-              } as MessageDto)
-          );
+    try {
+      // Get chat details
+      const chat = await this.chatService.getChatById(chatId).toPromise();
 
-          this.signalRService.joinChat(chatId);
+      if (chat) {
+        this.selectedChat = chat;
 
+        // Join the chat room
+        await this.signalRService.joinChat(chatId);
+
+        // Load messages
+        const response = await this.chatService
+          .getChatMessages(chatId)
+          .toPromise();
+
+        if (response) {
+          this.currentMessages = response.messages.reverse();
           this.shouldScrollToBottom = true;
-          this.loading = false;
 
+          // Mark chat as read
+          await this.markChatAsRead(chatId);
+
+          // Focus input
           setTimeout(() => {
             this.messageInput?.nativeElement?.focus();
           }, 100);
-
-          this.changeDetector.markForCheck();
-        },
-        error: (error) => {
-          console.error('Error loading chat details:', error);
-          this.loading = false;
-          // this.alertService.error('Failed to load chat details');
-          this.changeDetector.markForCheck();
-        },
-      });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading chat details:', error);
+      this.alertService.error('Failed to load chat. Please try again.');
+    } finally {
+      this.loading = false;
+      this.changeDetector.markForCheck();
+    }
   }
 
-  private createOrSelectOperatorChat(operator: Operator): void {
-    this.loading = true;
+  private async markChatAsRead(chatId: string): Promise<void> {
+    // Call both service and SignalR
+    await this.chatService.markChatAsRead(chatId).toPromise();
+    await this.signalRService.markChatAsRead(chatId);
 
-    this.chatService
-      .createChat(
-        `Chat with ${operator.name}`,
-        ChatType.PersonToPerson,
-        `Direct chat with ${operator.name}`,
-        operator.id
-      )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (chatId) => {
-          operator.chatId = chatId;
-          this.loadChatDetails(chatId);
-
-          const existingIndex = this.operatorChats.findIndex(
-            (op) => op.id === operator.id
-          );
-          if (existingIndex === -1) {
-            this.operatorChats.unshift(operator);
-            this.filteredOperators = [...this.operatorChats];
-          }
-
-          this.loading = false;
-          this.changeDetector.markForCheck();
-        },
-        error: (error) => {
-          console.error('Error creating operator chat:', error);
-          this.loading = false;
-          // this.alertService.error('Failed to create chat');
-          this.changeDetector.markForCheck();
-        },
-      });
+    // Update local counts immediately
+    const client = this.clients.find((c) => c.chatId === chatId);
+    if (client) client.unreadCount = 0;
   }
 
-  private createOrSelectClientChat(client: Client): void {
+  private async createClientChat(client: Client): Promise<void> {
     this.loading = true;
 
-    // Use userId if available, otherwise use id
-    const targetUserId = (client as any).userId || client.id;
+    try {
+      const chat = await this.chatService
+        .createClientToOperatorChat('Hello, I need assistance')
+        .toPromise();
 
-    this.chatService
-      .createChat(
-        `Chat with ${client.name}`,
-        ChatType.CustomerSupport,
-        `Support chat with ${client.name}`,
-        targetUserId
-      )
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (chatId) => {
-          client.chatId = chatId;
-          this.loadChatDetails(chatId);
+      if (chat) {
+        client.chatId = chat.id;
+        this.currentChatId = chat.id;
+        this.selectedChat = chat;
+        this.currentMessages = [];
 
-          const existingIndex = this.clientChats.findIndex(
-            (c) => c.id === client.id
-          );
-          if (existingIndex === -1) {
-            this.clientChats.unshift(client);
-            this.filteredClients = [...this.clientChats];
-          }
+        // Join the new chat room
+        await this.signalRService.joinChat(chat.id);
 
-          this.loading = false;
-          this.changeDetector.markForCheck();
-        },
-        error: (error) => {
-          console.error('Error creating client chat:', error);
-          this.loading = false;
-          //  this.alertService.error('Failed to create chat');
-          this.changeDetector.markForCheck();
-        },
-      });
+        // Update clients list
+        const existingIndex = this.clients.findIndex((c) => c.id === client.id);
+        if (existingIndex === -1) {
+          this.clients.unshift(client);
+          this.filteredClients = [...this.clients];
+        }
+      }
+    } catch (error) {
+      console.error('Error creating client chat:', error);
+      this.alertService.error('Failed to create chat. Please try again.');
+    } finally {
+      this.loading = false;
+      this.changeDetector.markForCheck();
+    }
+  }
+
+  private async createOperatorChat(operator: Operator): Promise<void> {
+    this.loading = true;
+
+    try {
+      const chat = await this.chatService
+        .createOperatorToOperatorChat(operator.id, 'Hi there!')
+        .toPromise();
+
+      if (chat) {
+        operator.chatId = chat.id;
+        this.currentChatId = chat.id;
+        this.selectedChat = chat;
+        this.currentMessages = [];
+
+        // Join the new chat room
+        await this.signalRService.joinChat(chat.id);
+
+        // Update operators list
+        const existingIndex = this.operators.findIndex(
+          (op) => op.id === operator.id
+        );
+        if (existingIndex === -1) {
+          this.operators.unshift(operator);
+          this.filteredOperators = [...this.operators];
+        }
+      }
+    } catch (error) {
+      console.error('Error creating operator chat:', error);
+      this.alertService.error('Failed to create chat. Please try again.');
+    } finally {
+      this.loading = false;
+      this.changeDetector.markForCheck();
+    }
   }
 
   sendMessage(): void {
@@ -856,24 +835,20 @@ export class EmployeeChatComponent
     this.isCurrentUserTyping = false;
     const messageContent = this.messageText.trim();
 
-    // Create a temporary message to show immediately
+    // Optimistically add message to UI
     const tempMessage: MessageDto = {
       id: 'temp-' + Date.now(),
       chatId: this.selectedChat.id,
       senderId: this.currentUserId,
-      senderName: this.currentUserName,
       content: messageContent,
-      type: 'text',
-      isRead: false,
-      readAt: null,
-      readBy: null,
-      createdAt: new Date().toISOString(),
+      messageType: MessageType.Text,
+      sentAt: new Date().toISOString(),
       isEdited: false,
-      fileId: null,
-      editedAt: null,
+      isDeleted: false,
+      files: [],
+      senderName: this.currentUserName,
     };
 
-    // Add message immediately to UI
     this.currentMessages.push(tempMessage);
     this.shouldScrollToBottom = true;
     this.messageText = '';
@@ -881,18 +856,22 @@ export class EmployeeChatComponent
     this.changeDetector.markForCheck();
 
     this.chatService
-      .sendMessage(this.selectedChat.id, messageContent, MessageType.Text)
+      .sendMessage(this.selectedChat.id, messageContent)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (messageId) => {
-          // Update temp message with real ID
+        next: (message) => {
+          // Replace temp message with real message
           const tempMsgIndex = this.currentMessages.findIndex(
             (m) => m.id === tempMessage.id
           );
           if (tempMsgIndex !== -1) {
-            this.currentMessages[tempMsgIndex].id = messageId;
+            this.currentMessages[tempMsgIndex] = message;
           }
           this.isSendingMessage = false;
+
+          // Update last message in chat list
+          this.updateChatListWithNewMessage(this.selectedChat!.id, message);
+
           this.changeDetector.markForCheck();
         },
         error: (error) => {
@@ -903,15 +882,33 @@ export class EmployeeChatComponent
           );
           this.isSendingMessage = false;
           this.messageText = messageContent;
-          // this.alertService.error('Failed to send message');
+          this.alertService.error('Failed to send message. Please try again.');
           this.changeDetector.markForCheck();
         },
       });
   }
 
   onMessageInput(): void {
+    const wasTyping = this.isCurrentUserTyping;
     this.isCurrentUserTyping = this.messageText.length > 0;
-    this.typingSubject.next(this.isCurrentUserTyping);
+
+    // Only send typing indicator if state changed
+    if (wasTyping !== this.isCurrentUserTyping) {
+      this.typingSubject.next(this.isCurrentUserTyping);
+    }
+
+    // Reset typing timer
+    if (this.typingTimer) {
+      clearTimeout(this.typingTimer);
+    }
+
+    // Set timer to stop typing after 3 seconds of inactivity
+    if (this.isCurrentUserTyping) {
+      this.typingTimer = setTimeout(() => {
+        this.isCurrentUserTyping = false;
+        this.typingSubject.next(false);
+      }, 3000);
+    }
   }
 
   async uploadAndSendFile(): Promise<void> {
@@ -919,34 +916,25 @@ export class EmployeeChatComponent
 
     this.isUploadingFile = true;
     this.isSendingMessage = true;
-    this.uploadProgress = 0;
 
     try {
-      const formData = new FormData();
-      formData.append('file', this.selectedFile);
+      // Upload file first
+      const fileId = await this.chatService.uploadFile(this.selectedFile);
 
-      const fileUploadResponse = await fetch(
-        `${this.chatService['http']['_apiUrl']}/api/files/upload`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.authService.getAccessToken()}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!fileUploadResponse.ok) {
-        throw new Error('File upload failed');
-      }
-
-      const fileId = await fileUploadResponse.text();
-
+      // Send message with file
       const messageContent = this.messageText.trim() || this.selectedFile.name;
-
-      await this.chatService
-        .sendMessageWithFile(this.selectedChat.id, messageContent, fileId)
+      const message = await this.chatService
+        .sendMessage(this.selectedChat.id, messageContent, [fileId])
         .toPromise();
+
+      if (message) {
+        // Add message to current chat
+        this.currentMessages.push(message);
+        this.shouldScrollToBottom = true;
+
+        // Update chat list
+        this.updateChatListWithNewMessage(this.selectedChat.id, message);
+      }
 
       this.messageText = '';
       this.selectedFile = null;
@@ -954,15 +942,13 @@ export class EmployeeChatComponent
         this.fileInput.nativeElement.value = '';
       }
 
-      // this.alertService.success('File sent successfully');
-      this.shouldScrollToBottom = true;
+      this.alertService.success('File sent successfully');
     } catch (error) {
       console.error('Error uploading and sending file:', error);
-      // this.alertService.error('Failed to send file. Please try again.');
+      this.alertService.error('Failed to send file. Please try again.');
     } finally {
       this.isUploadingFile = false;
       this.isSendingMessage = false;
-      this.uploadProgress = 0;
       this.changeDetector.markForCheck();
     }
   }
@@ -1008,13 +994,7 @@ export class EmployeeChatComponent
   }
 
   private isValidFileType(file: File): boolean {
-    const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-    const mimeType = file.type.toLowerCase();
-
-    return (
-      this.ALLOWED_FILE_TYPES.includes(mimeType) ||
-      this.ALLOWED_EXTENSIONS.includes(fileExtension)
-    );
+    return this.ALLOWED_FILE_TYPES.includes(file.type.toLowerCase());
   }
 
   removeSelectedFile(): void {
@@ -1037,6 +1017,7 @@ export class EmployeeChatComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
+          // The update will come through SignalR
           this.alertService.success('Message deleted');
         },
         error: (error) => {
@@ -1054,6 +1035,7 @@ export class EmployeeChatComponent
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
+            // The update will come through SignalR
             this.alertService.success('Message updated');
           },
           error: (error) => {
@@ -1165,65 +1147,16 @@ export class EmployeeChatComponent
   }
 
   getSenderName(message: MessageDto): string {
-    // First check if message has a senderName property
     if (message.senderName) {
       return message.senderName;
     }
 
-    // Check if it's the current user
     if (message.senderId === this.currentUserId) {
       return this.currentUserName || 'You';
     }
 
-    // Try to get name from selectedUser (current chat partner)
     if (this.selectedUser) {
-      if (
-        this.activeTab === 'operators' &&
-        message.senderId === this.selectedUser.id
-      ) {
-        return this.selectedUser.name;
-      }
-      if (this.activeTab === 'clients') {
-        return this.selectedUser.name;
-      }
-    }
-
-    // Try to find in chat participants
-    if (this.selectedChat) {
-      const participant = this.selectedChat.participants.find(
-        (p) => p.userId === message.senderId
-      );
-      if (participant && participant.username) {
-        return participant.username;
-      }
-    }
-
-    // Default fallback
-    return this.activeTab === 'clients' ? 'Client' : 'Operator';
-  }
-
-  private resolveSenderName(
-    details: ChatDetailsDto,
-    senderId: string
-  ): string {
-    if (senderId === this.currentUserId) {
-      return this.currentUserName || 'You';
-    }
-
-    const participant = details.participants?.find(
-      (p) => p.userId === senderId
-    );
-    if (participant && participant.username) {
-      return participant.username;
-    }
-
-    if (this.selectedUser) {
-      if (this.activeTab === 'operators' && senderId === (this.selectedUser as any).id) {
-        return this.selectedUser.name;
-      }
-      if (this.activeTab === 'clients') {
-        return this.selectedUser.name;
-      }
+      return this.selectedUser.name;
     }
 
     return this.activeTab === 'clients' ? 'Client' : 'Operator';
@@ -1242,6 +1175,10 @@ export class EmployeeChatComponent
       (sum, operator) => sum + operator.unreadCount,
       0
     );
+  }
+
+  get typingUsersArray(): string[] {
+    return Array.from(this.typingUsers.keys());
   }
 
   trackByClientId(index: number, client: Client): string {
@@ -1263,27 +1200,5 @@ export class EmployeeChatComponent
           this.messagesContainer.nativeElement.scrollHeight;
       }
     } catch (err) {}
-  }
-
-  private getCurrentUserId(): string {
-    const userData =
-      sessionStorage.getItem('user_data') || localStorage.getItem('user');
-    return userData ? JSON.parse(userData).id : '';
-  }
-
-  private getUserRole(): string {
-    const userData =
-      sessionStorage.getItem('user_data') || localStorage.getItem('user');
-    return userData ? JSON.parse(userData).role : 'client';
-  }
-
-  private getCurrentUserName(): string {
-    const userData =
-      sessionStorage.getItem('user_data') || localStorage.getItem('user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      return user.name || user.fullName || user.username || 'You';
-    }
-    return 'You';
   }
 }

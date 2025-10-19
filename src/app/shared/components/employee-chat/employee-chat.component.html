@@ -246,9 +246,7 @@
                 class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700"
               >
                 {{
-                  searchQuery
-                    ? "Search Results"
-                    : "All Clients - Start a Chat"
+                  searchQuery ? "Search Results" : "All Clients - Start a Chat"
                 }}
               </div>
               <div
@@ -657,7 +655,10 @@
                   : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-lg rounded-bl-md'
               "
             >
-              <p *ngIf="!isMessageFromCurrentUser(message)" class="text-xs font-semibold mb-2 opacity-90">
+              <p
+                *ngIf="!isMessageFromCurrentUser(message)"
+                class="text-xs font-semibold mb-2 opacity-90"
+              >
                 {{ getSenderName(message) }}
               </p>
               <p class="text-base leading-relaxed whitespace-pre-wrap">
@@ -666,7 +667,7 @@
 
               <!-- File Attachment Display -->
               <div
-                *ngIf="message.fileId"
+                *ngIf="message.files.length > 0"
                 class="mt-3 p-3 rounded-lg border"
                 [ngClass]="
                   isMessageFromCurrentUser(message)
@@ -731,7 +732,7 @@
                     : 'text-gray-500 dark:text-gray-400'
                 "
               >
-                {{ formatMessageTime(message.createdAt) }}
+                {{ formatMessageTime(message.sentAt) }}
                 <span
                   *ngIf="message.isEdited"
                   class="ml-1 px-2 py-0.5 bg-black/10 rounded text-[10px]"
@@ -906,7 +907,6 @@
           <input
             #fileInput
             type="file"
-            (change)="onFileSelected($event)"
             class="hidden"
             accept="image/jpeg,image/jpg,image/png,image/gif,image/bmp,.jpg,.jpeg,.png,.gif,.bmp"
           />
@@ -984,7 +984,6 @@
                 #messageInput
                 type="text"
                 [(ngModel)]="messageText"
-                (input)="onMessageInput()"
                 name="message"
                 [placeholder]="
                   activeTab === 'clients'
