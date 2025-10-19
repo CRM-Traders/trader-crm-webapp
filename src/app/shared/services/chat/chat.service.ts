@@ -66,10 +66,13 @@ export class ChatService {
     );
   }
 
-  createClientToOperatorChat(initialMessage: string): Observable<ChatDto> {
+  createClientToOperatorChat(
+    initialMessage: string,
+    clientId: string
+  ): Observable<ChatDto> {
     const request: CreateClientToOperatorChatRequest = { initialMessage };
     return this.http.post<ChatDto>(
-      'chats/api/chats/client-to-operator',
+      `chats/api/chats/client-to-operator-by-op/${clientId}`,
       request
     );
   }
@@ -157,6 +160,7 @@ export class ChatService {
       map((response) => {
         return response.items.map((item: any) => ({
           id: item.userId,
+          userId: item.userId,
           name: item.value || item.fullName || 'Unknown',
           email: item.email || '',
           department: item.department || '',
@@ -189,7 +193,7 @@ export class ChatService {
         map((response) => {
           return (
             response.items?.map((item: any) => ({
-              id: item.id,
+              id: item.userId,
               userId: item.userId,
               name: item.fullName || 'Unknown',
               email:

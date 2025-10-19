@@ -364,7 +364,7 @@ export class EmployeeChatComponent
       (p) => p.userType === UserType.Client
     );
     return {
-      id: clientParticipant?.userId || chat.id,
+      id: clientParticipant!.userId,
       chatId: chat.id,
       name: this.extractNameFromParticipants(chat, UserType.Client),
       email: `client_${chat.id}@chat.com`,
@@ -382,12 +382,12 @@ export class EmployeeChatComponent
       (p) => p.userType === UserType.Operator && p.userId !== this.currentUserId
     );
     return {
-      id: operatorParticipant?.userId || chat.id,
+      id: operatorParticipant!.userId,
       chatId: chat.id,
       name:
         chat.groupName ||
         this.extractNameFromParticipants(chat, UserType.Operator),
-      email: `operator_${chat.id}@company.com`,
+      email: ``,
       department: '',
       role: '',
       status: 'online',
@@ -625,7 +625,7 @@ export class EmployeeChatComponent
             lastMessage: '',
             lastMessageTime: new Date(),
             unreadCount: 0,
-            chatId: this.findChatIdForClient(client.userId || client.id),
+            chatId: this.findChatIdForClient(client.userId!),
           }));
           this.showClientSearchDropdown = this.searchDropdownClients.length > 0;
           this.changeDetector.markForCheck();
@@ -757,7 +757,7 @@ export class EmployeeChatComponent
 
     try {
       const chat = await this.chatService
-        .createClientToOperatorChat('Hello, I need assistance')
+        .createClientToOperatorChat('Hello, I need assistance', client.userId!)
         .toPromise();
 
       if (chat) {
