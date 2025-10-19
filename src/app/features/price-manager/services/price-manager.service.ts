@@ -55,6 +55,10 @@ export class PriceManagerService {
     return this.http.put(`traiding/api/admin/trading/order/${orderId}`, data);
   }
 
+  cancelOrder(orderId: string) {
+    return this.http.post(`traiding/api/admin/trading/order/${orderId}/cancel`, {});
+  }
+
   reopenOrder(orderId: string, data: ReopenOrderRequest) {
     return this.http.post(`traiding/api/admin/trading/order/${orderId}/reopen`, data);
   }
@@ -82,11 +86,15 @@ export class PriceManagerService {
   }
 
   createQuickOrder(data: QuickOrderRequest) {
-    return this.http.post(`traiding/api/admin/trading/quick-order`, data);
+    return this.http.post(`api/admin/trading/order/create-with-smart-pl`, data);
+  }
+
+  updatePrice(data: UpdatePriceRequest) {
+    return this.http.post(`api/admin/trading/update-price`, data);
   }
 
   createOrderWithSmartPL(data: SmartPLOrderRequest) {
-    return this.http.post(`traiding/api/admin/trading/order/create-with-smart-pl`, data);
+    return this.http.post(`api/admin/trading/order/create-with-smart-pl`, data);
   }
 
   getClientTradingAccounts(clientUserId: string) {
@@ -184,6 +192,20 @@ export interface Order {
   requiredMargin: number;
   totalValue: number;
   isFillable?: boolean;
+  // New fields
+  volume?: number;
+  openPrice?: number;
+  openTime?: string;
+  stopLoss?: number;
+  takeProfit?: number;
+  closePrice?: number;
+  closeTime?: string;
+  commission?: number;
+  swaps?: number;
+  floatingPL?: number;
+  netFloatingPL?: number;
+  margin?: number;
+  comment?: string;
   // Computed fields
   currentPrice?: number;
   unrealizedPnL?: number;
@@ -232,19 +254,18 @@ export interface TransactionsResponse {
 }
 
 export interface OrderUpdateRequest {
-  price?: number | null;
-  quantity?: number | null;
-  filledQuantity?: number | null;
-  status?: number | null;
   side?: number | null;
-  orderType?: number | null;
-  leverage?: number | null;
-  stopPrice?: number | null;
-  clientOrderId?: string | null;
-  positionEntryPrice?: number | null;
-  positionQuantity?: number | null;
-  positionMargin?: number | null;
-  metadata?: any | null;
+  volume?: number | null;
+  openPrice?: number | null;
+  openTime?: string | null;
+  stopLoss?: number | null;
+  takeProfit?: number | null;
+  closePrice?: number | null;
+  closeTime?: string | null;
+  commission?: number | null;
+  swaps?: number | null;
+  margin?: number | null;
+  comment?: string | null;
 }
 
 export interface TransactionUpdateRequest {
@@ -286,10 +307,32 @@ export interface QuickOrderRequest {
   tradingAccountId: string;
   symbol: string;
   side: number;
-  quantity: number;
-  price: number;
+  volume: number;
+  openPrice: number;
   leverage: number;
   userId: string | null;
+  stopLoss?: number | null;
+  takeProfit?: number | null;
+  autoPrice?: boolean;
+  sellPL?: number | null;
+  buyPL?: number | null;
+  sellRequiredMargin?: number | null;
+  buyRequiredMargin?: number | null;
+  comment?: string | null;
+  // Required fields for SmartPLOrderRequest compatibility
+  sellOpenPrice?: number;
+  sellClosePrice?: number;
+  buyOpenPrice?: number;
+  buyClosePrice?: number;
+  commission?: number;
+  swap?: number;
+}
+
+export interface UpdatePriceRequest {
+  symbol: string;
+  newPrice: number;
+  userId: string | null;
+  updateGlobal: boolean;
 }
 
 export interface TradingAccount {
@@ -331,20 +374,38 @@ export interface BulkLiquidateRequest {
 }
 
 export interface SmartPLOrderRequest {
+  tradingAccountId?: string;
   userId: string;
   symbol: string;
   side: number;
-  targetProfit: number;
+  openTime?: string;
+  closeTime?: number;
+  closeInterval?: boolean;
   volume: number;
-  accountBalance: number;
-  buyOpenPrice: number;
-  buyClosePrice: number;
-  sellOpenPrice: number;
-  sellClosePrice: number;
-  leverage: number;
-  commission: number;
-  swap: number;
-  closeImmediately: boolean;
+  expectedPL?: number;
+  sellOpenPrice?: number;
+  sellClosePrice?: number;
+  buyOpenPrice?: number;
+  buyClosePrice?: number;
+  commission?: number;
+  swap?: number;
+  sellRequiredMargin?: number | null;
+  buyRequiredMargin?: number | null;
+  autoSellPrice?: boolean;
+  autoBuyPrice?: boolean;
+  // New Order fields
+  openPrice?: number;
+  stopLoss?: number | null;
+  takeProfit?: number | null;
+  autoPrice?: boolean;
+  sellPL?: number | null;
+  buyPL?: number | null;
+  comment?: string | null;
+  leverage?: number;
+  // Legacy fields for backward compatibility
+  targetProfit?: number;
+  accountBalance?: number;
+  closeImmediately?: boolean;
 }
 
 export interface BulkOrderRequest {

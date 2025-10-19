@@ -23,6 +23,34 @@
           Select a symbol to view live market data
         </p>
       </div>
+      
+      <!-- Client ID Search -->
+      <div class="mb-4">
+        <div class="flex gap-2">
+          <input
+            type="text"
+            [(ngModel)]="clientIdSearch"
+            placeholder="Enter Client ID"
+            class="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <button
+            type="button"
+            (click)="searchClient()"
+            [disabled]="loadingClients()"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
+          >
+            <span *ngIf="!loadingClients()">Search</span>
+            <span *ngIf="loadingClients()" class="flex items-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Searching...
+            </span>
+          </button>
+        </div>
+      </div>
+      
       <div class="chart-wrapper">
         <app-trading-view-chart
           [symbol]="'BTCUSDT'"
@@ -307,127 +335,304 @@
           </p>
         </div>
 
-        <!-- Side (Buy/Sell) -->
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Side <span class="text-red-500">*</span>
-          </label>
-          <div class="grid grid-cols-2 gap-3">
-            <label
-              *ngFor="let option of sideOptions"
-              class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all"
-              [ngClass]="{
-                'border-blue-500 bg-blue-50 dark:bg-blue-900/20':
-                  side() === option.value,
-                'border-gray-300 dark:border-gray-600 hover:border-gray-400':
-                  side() !== option.value
-              }"
-            >
-              <input
-                type="radio"
-                name="side"
-                [value]="option.value"
-                [checked]="side() === option.value"
-                (change)="side.set(option.value)"
-                class="sr-only"
-              />
-              <span
-                class="text-sm font-medium"
-                [ngClass]="
-                  side() === option.value
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : option.class
-                "
-              >
-                {{ option.label }}
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Quantity -->
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Quantity <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            [ngModel]="quantity()"
-            (ngModelChange)="quantity.set($event ? +$event : null)"
-            name="quantity"
-            (keydown)="preventInvalidNumberInput($event)"
-            step="0.00000001"
-            min="0"
-            placeholder="Enter quantity"
-            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <!-- Price -->
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Price <span class="text-red-500">*</span>
-          </label>
-          <div class="relative">
-            <div
-              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-            >
-              <span class="text-gray-500 dark:text-gray-400 text-sm">$</span>
-            </div>
-            <input
-              type="number"
-              [ngModel]="price()"
-              (ngModelChange)="price.set($event ? +$event : null)"
-              name="price"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter price"
-              class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <!-- Leverage - Hidden, using default value of 1 -->
-      </form>
-
-      <!-- Smart P/L Form -->
-      <form *ngIf="activeTab() === 'smartPL'" class="space-y-4">
-        <!-- Symbol and Side -->
-        <div class="grid grid-cols-1 gap-4">
-          <!-- Symbol -->
+        <!-- Row 1: Symbol and Volume -->
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Symbol <span class="text-red-500">*</span>
             </label>
-
-            <!-- Custom Searchable Dropdown -->
-            <div class="custom-dropdown" #smartPLSymbolDropdownRoot>
-              <div
-                class="dropdown-trigger cursor-pointer"
-                (click)="toggleSmartPLSymbolDropdown()"
-              >
             <input
-                  type="text"
-                  [ngModel]="smartPLSymbol()"
-                  (ngModelChange)="smartPLSymbol.set($event)"
-                  name="smartPLSymbol"
-                  [placeholder]="smartPLSymbol() ? '' : 'Select a symbol...'"
-                  class="dropdown-input block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  autocomplete="off"
-                  readonly
-                />
+              type="text"
+              [ngModel]="symbol()"
+              (ngModelChange)="symbol.set($event)"
+              name="symbol"
+              placeholder="Enter symbol"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              readonly
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Volume <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              [ngModel]="volume()"
+              (ngModelChange)="volume.set($event ? +$event : null)"
+              name="volume"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter volume"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <!-- Row 2: Stop Loss and Take Profit -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Stop Loss
+            </label>
+            <input
+              type="number"
+              [ngModel]="stopLoss()"
+              (ngModelChange)="stopLoss.set($event ? +$event : null)"
+              name="stopLoss"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter stop loss"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Take Profit
+            </label>
+            <input
+              type="number"
+              [ngModel]="takeProfit()"
+              (ngModelChange)="takeProfit.set($event ? +$event : null)"
+              name="takeProfit"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter take profit"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <!-- Row 3: Open Price, Update Button, and Auto Checkbox -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Open Price <span class="text-red-500">*</span>
+          </label>
+          <div class="flex gap-2 items-start">
+            <div class="flex-1 relative">
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <span class="text-gray-500 dark:text-gray-400 text-sm">$</span>
+              </div>
+              <input
+                type="number"
+                [ngModel]="openPrice()"
+                (ngModelChange)="openPrice.set($event ? +$event : null)"
+                name="openPrice"
+                (keydown)="preventInvalidNumberInput($event)"
+                step="0.00000001"
+                min="0"
+                placeholder="Enter open price"
+                class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <button
+              type="button"
+              (click)="updatePrice()"
+              [disabled]="updatingPrice() || !symbol() || !openPrice()"
+              class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+            >
+              <span *ngIf="!updatingPrice()">Update</span>
+              <span *ngIf="updatingPrice()" class="flex items-center">
                 <svg
-                  class="dropdown-icon"
-                  [class.rotated]="showSmartPLSymbolDropdown()"
+                  class="animate-spin h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </span>
+            </button>
+            <div class="flex items-center pt-2">
+              <input
+                type="checkbox"
+                [ngModel]="autoPrice()"
+                (ngModelChange)="autoPrice.set($event)"
+                name="autoPrice"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                Auto
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 4: Sell P/L and Buy P/L -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Sell P/L
+            </label>
+            <input
+              type="number"
+              [ngModel]="sellPL()"
+              (ngModelChange)="sellPL.set($event ? +$event : null)"
+              name="sellPL"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Sell P/L"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              readonly
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Buy P/L
+            </label>
+            <input
+              type="number"
+              [ngModel]="buyPL()"
+              (ngModelChange)="buyPL.set($event ? +$event : null)"
+              name="buyPL"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Buy P/L"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              readonly
+            />
+          </div>
+        </div>
+
+        <!-- Row 5: Sell Required Margin and Buy Required Margin -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Sell Required Margin
+            </label>
+            <input
+              type="number"
+              [ngModel]="sellRequiredMargin()"
+              (ngModelChange)="sellRequiredMargin.set($event ? +$event : null)"
+              name="sellRequiredMargin"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Sell required margin"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              readonly
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Buy Required Margin
+            </label>
+            <input
+              type="number"
+              [ngModel]="buyRequiredMargin()"
+              (ngModelChange)="buyRequiredMargin.set($event ? +$event : null)"
+              name="buyRequiredMargin"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Buy required margin"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              readonly
+            />
+          </div>
+        </div>
+
+        <!-- Comment -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Comment
+          </label>
+          <textarea
+            [ngModel]="comment()"
+            (ngModelChange)="comment.set($event)"
+            name="comment"
+            rows="3"
+            placeholder="Enter comment (optional)"
+            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Hidden fields: Side, Leverage -->
+      </form>
+
+      <!-- Smart P/L Form -->
+      <form *ngIf="activeTab() === 'smartPL'" class="space-y-4">
+        <!-- Row 1: Symbol -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Symbol <span class="text-red-500">*</span>
+          </label>
+
+          <!-- Custom Searchable Dropdown -->
+          <div class="custom-dropdown" #smartPLSymbolDropdownRoot>
+            <div
+              class="dropdown-trigger cursor-pointer"
+              (click)="toggleSmartPLSymbolDropdown()"
+            >
+              <input
+                type="text"
+                [ngModel]="smartPLSymbol()"
+                (ngModelChange)="smartPLSymbol.set($event)"
+                name="smartPLSymbol"
+                [placeholder]="smartPLSymbol() ? '' : 'Select a symbol...'"
+                class="dropdown-input block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                autocomplete="off"
+                readonly
+              />
+              <svg
+                class="dropdown-icon"
+                [class.rotated]="showSmartPLSymbolDropdown()"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
+
+            <div class="dropdown-menu mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50" *ngIf="showSmartPLSymbolDropdown()">
+              <div class="dropdown-search p-2 border-b border-gray-200 dark:border-gray-700">
+                <svg
+                  class="search-icon"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -436,129 +641,137 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M19 9l-7 7-7-7"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
-              </div>
-
-              <div class="dropdown-menu mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50" *ngIf="showSmartPLSymbolDropdown()">
-                <div class="dropdown-search p-2 border-b border-gray-200 dark:border-gray-700">
-                  <svg
-                    class="search-icon"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                  <input
-                    type="text"
-                    [ngModel]="smartPLSymbolSearchTerm()"
-                    (ngModelChange)="onSmartPLSymbolSearch($event)"
-                    [ngModelOptions]="{ standalone: true }"
-                    name="smartPLSymbolSearch"
-                    placeholder="Search symbols..."
-                    class="search-input w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    autocomplete="off"
-                  />
-                </div>
-
-                <div class="dropdown-list max-h-64 overflow-y-auto">
-                  <div
-                    *ngFor="let sym of filteredSmartPLSymbols()"
-                    class="dropdown-item px-3 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-600 hover:bg-gray-400/20 transition-colors"
-                    [class.selected]="smartPLSymbol() === sym.symbol"
-                    [ngClass]="{ 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400': smartPLSymbol() === sym.symbol }"
-                    (mousedown)="selectSmartPLSymbol(sym)"
-                  >
-                    <span class="symbol-name">{{ sym.symbol }}</span>
-                    <span class="symbol-pair"
-                      >{{ sym.baseAsset }}/{{ sym.quoteAsset }}</span
-                    >
-                  </div>
-
-                  <div
-                    *ngIf="filteredSmartPLSymbols().length === 0"
-                    class="dropdown-empty p-4 text-center text-gray-500 dark:text-gray-400 text-sm"
-                  >
-                    No symbols found
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {{ filteredSmartPLSymbols().length }} symbol(s) available
-            </p>
-          </div>
-
-          <!-- Side (Buy/Sell) -->
-            <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Side <span class="text-red-500">*</span>
-            </label>
-            <div class="grid grid-cols-2 gap-3">
-              <label
-                *ngFor="let option of sideOptions"
-                class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all"
-                [ngClass]="{
-                  'border-blue-500 bg-blue-50 dark:bg-blue-900/20':
-                    smartPLSide() === option.value,
-                  'border-gray-300 dark:border-gray-600 hover:border-gray-400':
-                    smartPLSide() !== option.value
-                }"
-              >
                 <input
-                  type="radio"
-                  name="smartPLSide"
-                  [value]="option.value"
-                  [checked]="smartPLSide() === option.value"
-                    (change)="onSmartPLSideChange(option.value)"
-                  class="sr-only"
+                  type="text"
+                  [ngModel]="smartPLSymbolSearchTerm()"
+                  (ngModelChange)="onSmartPLSymbolSearch($event)"
+                  [ngModelOptions]="{ standalone: true }"
+                  name="smartPLSymbolSearch"
+                  placeholder="Search symbols..."
+                  class="search-input w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autocomplete="off"
                 />
-                <span
-                  class="text-sm font-medium"
-                  [ngClass]="
-                    smartPLSide() === option.value
-                      ? 'text-blue-600 dark:text-blue-400'
-                      : option.class
-                  "
+              </div>
+
+              <div class="dropdown-list max-h-64 overflow-y-auto">
+                <div
+                  *ngFor="let sym of filteredSmartPLSymbols()"
+                  class="dropdown-item px-3 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-600 hover:bg-gray-400/20 transition-colors"
+                  [class.selected]="smartPLSymbol() === sym.symbol"
+                  [ngClass]="{ 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400': smartPLSymbol() === sym.symbol }"
+                  (mousedown)="selectSmartPLSymbol(sym)"
                 >
-                  {{ option.label }}
-                </span>
-              </label>
+                  <span class="symbol-name">{{ sym.symbol }}</span>
+                  <span class="symbol-pair"
+                    >{{ sym.baseAsset }}/{{ sym.quoteAsset }}</span
+                  >
+                </div>
+
+                <div
+                  *ngIf="filteredSmartPLSymbols().length === 0"
+                  class="dropdown-empty p-4 text-center text-gray-500 dark:text-gray-400 text-sm"
+                >
+                  No symbols found
+                </div>
+              </div>
             </div>
           </div>
+
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {{ filteredSmartPLSymbols().length }} symbol(s) available
+          </p>
         </div>
 
-        <!-- Target Profit and Volume -->
-        <div class="grid grid-cols-2 gap-4">
+        <!-- Row 2: Open Time -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Open Time <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="datetime-local"
+            [ngModel]="openTime()"
+            (ngModelChange)="openTime.set($event)"
+            name="openTime"
+            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        <!-- Row 3: Hour, Minute, Second and Close Interval Checkbox -->
+        <div class="grid grid-cols-4 gap-3">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Target Profit <span class="text-red-500">*</span>
+              Hours
             </label>
             <input
               type="number"
-              [ngModel]="targetProfit()"
-              (ngModelChange)="onTargetProfitInput($event)"
-              name="targetProfit"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
+              [ngModel]="closeHours()"
+              (ngModelChange)="closeHours.set($event ? +$event : null)"
+              name="closeHours"
               min="0"
-              placeholder="Enter target profit"
+              max="23"
+              placeholder="HH"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Minutes
+            </label>
+            <input
+              type="number"
+              [ngModel]="closeMinutes()"
+              (ngModelChange)="closeMinutes.set($event ? +$event : null)"
+              name="closeMinutes"
+              min="0"
+              max="59"
+              placeholder="MM"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Seconds
+            </label>
+            <input
+              type="number"
+              [ngModel]="closeSeconds()"
+              (ngModelChange)="closeSeconds.set($event ? +$event : null)"
+              name="closeSeconds"
+              min="0"
+              max="59"
+              placeholder="SS"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div class="flex items-end pb-2">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                [ngModel]="closeInterval()"
+                (ngModelChange)="closeInterval.set($event)"
+                name="closeInterval"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                Close Interval
+              </span>
+            </label>
+          </div>
+        </div>
 
+        <!-- Row 4: Volume and Expected P/L -->
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -577,70 +790,28 @@
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-        </div>
-
-        <!-- Account Balance -->
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Account Balance <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="number"
-            [ngModel]="accountBalance()"
-            (ngModelChange)="onAccountBalanceInput($event)"
-            name="accountBalance"
-            (keydown)="preventInvalidNumberInput($event)"
-            step="0.00000001"
-            min="0"
-            placeholder="Enter account balance"
-            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <!-- Buy Open Price and Buy Close Price -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Buy Open Price <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              [ngModel]="buyOpenPrice()"
-              (ngModelChange)="onBuyOpenPriceInput($event)"
-              name="buyOpenPrice"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter buy open price"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
 
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Buy Close Price <span class="text-red-500">*</span>
+              Expected P/L <span class="text-red-500">*</span>
             </label>
             <input
               type="number"
-              [ngModel]="buyClosePrice()"
-              (ngModelChange)="onBuyClosePriceInput($event)"
-              name="buyClosePrice"
+              [ngModel]="expectedPL()"
+              (ngModelChange)="expectedPL.set($event ? +$event : null)"
+              name="expectedPL"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
               min="0"
-              placeholder="Enter buy close price"
+              placeholder="Enter expected P/L"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
 
-        <!-- Sell Open Price and Sell Close Price -->
+        <!-- Row 5: Sell Open Price with Update Button, Auto Checkbox, and Sell Close Price -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -648,19 +819,69 @@
             >
               Sell Open Price <span class="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              [ngModel]="sellOpenPrice()"
-              (ngModelChange)="onSellOpenPriceInput($event)"
-              name="sellOpenPrice"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter sell open price"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div class="flex gap-2 items-start">
+              <div class="flex-1 relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <span class="text-gray-500 dark:text-gray-400 text-sm">$</span>
+                </div>
+                <input
+                  type="number"
+                  [ngModel]="sellOpenPrice()"
+                  (ngModelChange)="onSellOpenPriceInput($event)"
+                  name="sellOpenPrice"
+                  (keydown)="preventInvalidNumberInput($event)"
+                  step="0.00000001"
+                  min="0"
+                  placeholder="Enter sell open price"
+                  class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <button
+                type="button"
+                (click)="updateSellOpenPrice()"
+                [disabled]="updatingSellPrice() || !smartPLSymbol() || !sellOpenPrice()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                <span *ngIf="!updatingSellPrice()">Update</span>
+                <span *ngIf="updatingSellPrice()" class="flex items-center">
+                  <svg
+                    class="animate-spin h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </span>
+              </button>
+              <div class="flex items-center pt-2">
+                <input
+                  type="checkbox"
+                  [ngModel]="autoSellPrice()"
+                  (ngModelChange)="autoSellPrice.set($event)"
+                  name="autoSellPrice"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                  Auto
+                </label>
+              </div>
+            </div>
           </div>
-
+  
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -681,7 +902,98 @@
           </div>
         </div>
 
-        <!-- Commission and Swap (Leverage hidden, using default value of 1) -->
+        <!-- Row 6: Buy Open Price with Update Button, Auto Checkbox, and Buy Close Price -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Buy Open Price <span class="text-red-500">*</span>
+            </label>
+            <div class="flex gap-2 items-start">
+              <div class="flex-1 relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <span class="text-gray-500 dark:text-gray-400 text-sm">$</span>
+                </div>
+                <input
+                  type="number"
+                  [ngModel]="buyOpenPrice()"
+                  (ngModelChange)="onBuyOpenPriceInput($event)"
+                  name="buyOpenPrice"
+                  (keydown)="preventInvalidNumberInput($event)"
+                  step="0.00000001"
+                  min="0"
+                  placeholder="Enter buy open price"
+                  class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <button
+                type="button"
+                (click)="updateBuyOpenPrice()"
+                [disabled]="updatingBuyPrice() || !smartPLSymbol() || !buyOpenPrice()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                <span *ngIf="!updatingBuyPrice()">Update</span>
+                <span *ngIf="updatingBuyPrice()" class="flex items-center">
+                  <svg
+                    class="animate-spin h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </span>
+              </button>
+              <div class="flex items-center pt-2">
+                <input
+                  type="checkbox"
+                  [ngModel]="autoBuyPrice()"
+                  (ngModelChange)="autoBuyPrice.set($event)"
+                  name="autoBuyPrice"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                  Auto
+                </label>
+              </div>
+            </div>
+          </div>
+  
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Buy Close Price <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              [ngModel]="buyClosePrice()"
+              (ngModelChange)="onBuyClosePriceInput($event)"
+              name="buyClosePrice"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter buy close price"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <!-- Row 7: Commission and Swaps -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -706,7 +1018,7 @@
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Swap <span class="text-red-500">*</span>
+              Swaps <span class="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -716,26 +1028,91 @@
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
               min="0"
-              placeholder="Swap"
+              placeholder="Swaps"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
 
-        <!-- Close Immediately -->
-        <div>
-          <label class="flex items-center">
+        <!-- Row 8: Sell Required Margin and Buy Required Margin -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Sell Required Margin
+            </label>
             <input
-              type="checkbox"
-              [ngModel]="closeImmediately()"
-              (ngModelChange)="closeImmediately.set($event)"
-              name="closeImmediately"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              type="number"
+              [ngModel]="sellRequiredMargin()"
+              (ngModelChange)="sellRequiredMargin.set($event ? +$event : null)"
+              name="sellRequiredMargin"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Sell required margin"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              readonly
             />
-            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-              Close Immediately
-            </span>
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Buy Required Margin
+            </label>
+            <input
+              type="number"
+              [ngModel]="buyRequiredMargin()"
+              (ngModelChange)="buyRequiredMargin.set($event ? +$event : null)"
+              name="buyRequiredMargin"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Buy required margin"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              readonly
+            />
+          </div>
+        </div>
+
+        <!-- Row 9: Side (Sell/Buy) -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Side <span class="text-red-500">*</span>
           </label>
+          <div class="grid grid-cols-2 gap-3">
+            <label
+              *ngFor="let option of sideOptions"
+              class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all"
+              [ngClass]="{
+                'border-blue-500 bg-blue-50 dark:bg-blue-900/20':
+                  smartPLSide() === option.value,
+                'border-gray-300 dark:border-gray-600 hover:border-gray-400':
+                  smartPLSide() !== option.value
+              }"
+            >
+              <input
+                type="radio"
+                name="smartPLSide"
+                [value]="option.value"
+                [checked]="smartPLSide() === option.value"
+                (change)="onSmartPLSideChange(option.value)"
+                class="sr-only"
+              />
+              <span
+                class="text-sm font-medium"
+                [ngClass]="
+                  smartPLSide() === option.value
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : option.class
+                "
+              >
+                {{ option.label }}
+              </span>
+            </label>
+          </div>
         </div>
       </form>
     </div>
@@ -762,26 +1139,26 @@
       (activeTab() === 'newOrder' &&
         (!tradingAccountId() ||
           !symbol() ||
-          !quantity() ||
-          !price() ||
-          quantity()! <= 0 ||
-          price()! <= 0)) ||
-      (activeTab() === 'smartPL' &&
-        (!smartPLSymbol() ||
-          !targetProfit() ||
           !volume() ||
-          !accountBalance() ||
-          !buyOpenPrice() ||
-          !buyClosePrice() ||
+          !openPrice() ||
+          volume()! <= 0 ||
+          openPrice()! <= 0)) ||
+      (activeTab() === 'smartPL' &&
+        (!tradingAccountId() ||
+          !smartPLSymbol() ||
+          !openTime() ||
+          !volume() ||
+          !expectedPL() ||
           !sellOpenPrice() ||
           !sellClosePrice() ||
-          targetProfit()! <= 0 ||
+          !buyOpenPrice() ||
+          !buyClosePrice() ||
           volume()! <= 0 ||
-          accountBalance()! <= 0 ||
-          buyOpenPrice()! <= 0 ||
-          buyClosePrice()! <= 0 ||
+          expectedPL()! <= 0 ||
           sellOpenPrice()! <= 0 ||
           sellClosePrice()! <= 0 ||
+          buyOpenPrice()! <= 0 ||
+          buyClosePrice()! <= 0 ||
           commission() === null ||
           swap() === null))
     "

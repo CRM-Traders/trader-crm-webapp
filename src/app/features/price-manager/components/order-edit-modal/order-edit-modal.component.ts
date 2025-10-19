@@ -56,19 +56,18 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.editForm = this.fb.group({
-      price: [null, [Validators.required, Validators.min(0)]],
-      quantity: [null, [Validators.required, Validators.min(0)]],
-      filledQuantity: [null, [Validators.min(0)]],
-      status: [null],
       side: [null],
-      orderType: [null],
-      leverage: [null, [Validators.min(1)]],
-      stopPrice: [null, [Validators.min(0)]],
-      clientOrderId: [null],
-      positionEntryPrice: [null, [Validators.min(0)]],
-      positionQuantity: [null],
-      positionMargin: [null, [Validators.min(0)]],
-      metadata: [null],
+      volume: [null, [Validators.required, Validators.min(0)]],
+      openPrice: [null, [Validators.required, Validators.min(0)]],
+      openTime: [null],
+      stopLoss: [null, [Validators.min(0)]],
+      takeProfit: [null, [Validators.min(0)]],
+      closePrice: [null, [Validators.min(0)]],
+      closeTime: [null],
+      commission: [null],
+      swaps: [null],
+      margin: [null],
+      comment: [null],
     });
 
     this.reopenForm = this.fb.group({
@@ -126,19 +125,18 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     if (!this.orderData) return;
 
     this.editForm.patchValue({
-      price: this.orderData.price,
-      quantity: this.orderData.quantity,
-      filledQuantity: this.orderData.filledQuantity,
-      status: this.orderData.status,
       side: this.orderData.side,
-      orderType: this.orderData.orderType,
-      leverage: this.orderData.leverage,
-      stopPrice: this.orderData.stopPrice || null,
-      clientOrderId: this.orderData.clientOrderId || null,
-      positionEntryPrice: null,
-      positionQuantity: null,
-      positionMargin: null,
-      metadata: this.orderData.metadata || null,
+      volume: this.orderData.volume || this.orderData.quantity,
+      openPrice: this.orderData.openPrice || this.orderData.price,
+      openTime: this.orderData.openTime || this.orderData.createdAt,
+      stopLoss: this.orderData.stopLoss || this.orderData.stopPrice || null,
+      takeProfit: this.orderData.takeProfit || null,
+      closePrice: this.orderData.closePrice || null,
+      closeTime: this.orderData.closeTime || null,
+      commission: this.orderData.commission || null,
+      swaps: this.orderData.swaps || null,
+      margin: this.orderData.margin || this.orderData.requiredMargin,
+      comment: this.orderData.comment || null,
     });
     // Default to edit mode on open
     this.editForm.enable();
@@ -222,6 +220,50 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
           
           // Extract error message from response
           let errorMessage = 'Failed to update order';
+          if (error?.error?.error) {
+            errorMessage = error.error.error;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          }
+          
+          this.alertService.error(errorMessage);
+          this.loading = false;
+        },
+      });
+  }
+
+  cancelOrder(): void {
+    if (this.loading || !this.orderData) {
+      return;
+    }
+
+    if (!confirm('Are you sure you want to cancel this order?')) {
+      return;
+    }
+
+    this.loading = true;
+
+    this.service
+      .cancelOrder(this.orderData.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          this.alertService.success('Order cancelled successfully');
+          this.loading = false;
+          
+          // Update local order object with response
+          if (response && this.orderData) {
+            Object.assign(this.orderData, response);
+          }
+          
+          // Notify parent component to refresh data
+          this.modalRef.close(true);
+        },
+        error: (error) => {
+          console.error('Error cancelling order:', error);
+          
+          // Extract error message from response
+          let errorMessage = 'Failed to cancel order';
           if (error?.error?.error) {
             errorMessage = error.error.error;
           } else if (error?.message) {

@@ -47,49 +47,8 @@
         <!-- Right Side: Order Edit Form -->
         <div class="form-section">
           <form [formGroup]="editForm" class="space-y-5">
-          <!-- Trading Symbol (Read-only) -->
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Trading Pair Symbol
-            </label>
-            <span class="text-sm text-gray-900 dark:text-white font-medium">
-              {{ orderData.tradingPairSymbol }}
-            </span>
-          </div>
-
           <!-- Two-column layout for form fields -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Order Type -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Order Type
-              </label>
-              <div *ngIf="isEditing">
-                <select
-                  formControlName="orderType"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option [value]="1">Market</option>
-                  <option [value]="2">Limit</option>
-                  <option [value]="3">Stop</option>
-                  <option [value]="4">Stop Limit</option>
-                  <option [value]="5">Trailing Stop</option>
-                  <option [value]="6">Take Profit</option>
-                  <option [value]="7">Take Profit Limit</option>
-                </select>
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ getOrderType(orderData.orderType) }}
-              </span>
-            </div>
-
             <!-- Side -->
             <div>
               <label
@@ -118,125 +77,125 @@
               </span>
             </div>
 
-            <!-- Status -->
+            <!-- Volume -->
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Status
-              </label>
-              <div *ngIf="isEditing">
-                <select
-                  formControlName="status"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option [value]="1">Active</option>
-                  <option [value]="2">Partially Filled</option>
-                  <option [value]="3">Filled</option>
-                  <option [value]="4">Cancelled</option>
-                  <option [value]="5">Rejected</option>
-                  <option [value]="6">Liquidated</option>
-                </select>
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                [ngClass]="{
-                  'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100': orderData.status === 1,
-                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100': orderData.status === 2,
-                  'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100': orderData.status === 3,
-                  'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100': orderData.status === 4 || orderData.status === 5 || orderData.status === 6
-                }"
-              >
-                {{ getOrderStatus(orderData.status) }}
-              </span>
-            </div>
-
-            <!-- Leverage -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Leverage
+                Volume
               </label>
               <div *ngIf="isEditing">
                 <input
                   type="number"
-                  formControlName="leverage"
-                  min="1"
-                  step="1"
+                  formControlName="volume"
+                  step="0.00000001"
+                  min="0"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   [class.border-red-500]="
-                    editForm.get('leverage')?.invalid &&
-                    editForm.get('leverage')?.touched
+                    editForm.get('volume')?.invalid &&
+                    editForm.get('volume')?.touched
                   "
                 />
                 <p
                   class="mt-1 text-sm text-red-600 dark:text-red-400"
                   *ngIf="
-                    editForm.get('leverage')?.invalid &&
-                    editForm.get('leverage')?.touched
+                    editForm.get('volume')?.invalid &&
+                    editForm.get('volume')?.touched
                   "
                 >
-                  Leverage must be at least 1
+                  Volume is required and must be positive
                 </p>
               </div>
               <span
                 *ngIf="!isEditing"
                 class="text-sm text-gray-900 dark:text-white"
               >
-                {{ orderData.leverage }}x
+                {{ orderData.volume | number : '1.8-8' }}
               </span>
             </div>
 
-            <!-- Price -->
+            <!-- Symbol -->
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Price
+                Symbol
+              </label>
+              <span class="text-sm text-gray-900 dark:text-white font-medium">
+                {{ orderData.tradingPairSymbol }}
+              </span>
+            </div>
+
+            <!-- Open Price -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Open Price
               </label>
               <div *ngIf="isEditing">
                 <input
                   type="number"
-                  formControlName="price"
+                  formControlName="openPrice"
                   step="0.00000001"
                   min="0"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   [class.border-red-500]="
-                    editForm.get('price')?.invalid &&
-                    editForm.get('price')?.touched
+                    editForm.get('openPrice')?.invalid &&
+                    editForm.get('openPrice')?.touched
                   "
                 />
                 <p
                   class="mt-1 text-sm text-red-600 dark:text-red-400"
                   *ngIf="
-                    editForm.get('price')?.invalid &&
-                    editForm.get('price')?.touched
+                    editForm.get('openPrice')?.invalid &&
+                    editForm.get('openPrice')?.touched
                   "
                 >
-                  Price is required and must be positive
+                  Open Price is required and must be positive
                 </p>
               </div>
               <span
                 *ngIf="!isEditing"
                 class="text-sm text-gray-900 dark:text-white font-mono"
               >
-                ${{ orderData.price | number : '1.8-8' }}
+                ${{ orderData.openPrice | number : '1.8-8' }}
               </span>
             </div>
 
-            <!-- Stop Price -->
+            <!-- Open Time -->
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Stop Price
+                Open Time
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="datetime-local"
+                  formControlName="openTime"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ orderData.openTime | date:'short' }}
+              </span>
+            </div>
+
+            <!-- Stop Loss -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Stop Loss
               </label>
               <div *ngIf="isEditing">
                 <input
                   type="number"
-                  formControlName="stopPrice"
+                  formControlName="stopLoss"
                   step="0.00000001"
                   min="0"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -246,58 +205,21 @@
                 *ngIf="!isEditing"
                 class="text-sm text-gray-900 dark:text-white"
               >
-                -
+                {{ orderData.stopLoss ? ('$' + (orderData.stopLoss | number:'1.8-8')) : '-' }}
               </span>
             </div>
 
-            <!-- Quantity -->
+            <!-- Take Profit -->
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Quantity
+                Take Profit
               </label>
               <div *ngIf="isEditing">
                 <input
                   type="number"
-                  formControlName="quantity"
-                  step="0.00000001"
-                  min="0"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  [class.border-red-500]="
-                    editForm.get('quantity')?.invalid &&
-                    editForm.get('quantity')?.touched
-                  "
-                />
-                <p
-                  class="mt-1 text-sm text-red-600 dark:text-red-400"
-                  *ngIf="
-                    editForm.get('quantity')?.invalid &&
-                    editForm.get('quantity')?.touched
-                  "
-                >
-                  Quantity is required and must be positive
-                </p>
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ orderData.quantity | number : '1.8-8' }}
-              </span>
-            </div>
-
-            <!-- Filled Quantity -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Filled Quantity
-              </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="number"
-                  formControlName="filledQuantity"
+                  formControlName="takeProfit"
                   step="0.00000001"
                   min="0"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -307,143 +229,172 @@
                 *ngIf="!isEditing"
                 class="text-sm text-gray-900 dark:text-white"
               >
-                {{ orderData.filledQuantity | number : '1.8-8' }}
+                {{ orderData.takeProfit ? ('$' + (orderData.takeProfit | number:'1.8-8')) : '-' }}
               </span>
             </div>
 
-            <!-- Required Margin -->
+            <!-- Close Price -->
             <div>
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Required Margin
+                Close Price
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="number"
+                  formControlName="closePrice"
+                  step="0.00000001"
+                  min="0"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ orderData.closePrice ? ('$' + (orderData.closePrice | number:'1.8-8')) : '-' }}
+              </span>
+            </div>
+
+            <!-- Close Time -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Close Time
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="datetime-local"
+                  formControlName="closeTime"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ orderData.closeTime ? (orderData.closeTime | date:'short') : '-' }}
+              </span>
+            </div>
+
+            <!-- Commission -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Commission
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="number"
+                  formControlName="commission"
+                  step="0.00000001"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ orderData.commission ? ('$' + (orderData.commission | number:'1.8-8')) : '-' }}
+              </span>
+            </div>
+
+            <!-- Swaps -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Swaps
+              </label>
+              <div *ngIf="isEditing">
+                <input
+                  type="number"
+                  formControlName="swaps"
+                  step="0.00000001"
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <span
+                *ngIf="!isEditing"
+                class="text-sm text-gray-900 dark:text-white"
+              >
+                {{ orderData.swaps ? ('$' + (orderData.swaps | number:'1.8-8')) : '-' }}
+              </span>
+            </div>
+
+            <!-- Floating P/L -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Floating P/L
+              </label>
+              <span 
+                class="text-sm font-mono"
+                [ngClass]="{
+                  'text-green-600 dark:text-green-400': orderData.floatingPL && orderData.floatingPL > 0,
+                  'text-red-600 dark:text-red-400': orderData.floatingPL && orderData.floatingPL < 0,
+                  'text-gray-900 dark:text-white': !orderData.floatingPL || orderData.floatingPL === 0
+                }"
+              >
+                {{ orderData.floatingPL ? ('$' + (orderData.floatingPL | number:'1.8-8')) : '-' }}
+              </span>
+            </div>
+
+            <!-- Net Floating P/L -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Net Floating P/L
+              </label>
+              <span 
+                class="text-sm font-mono"
+                [ngClass]="{
+                  'text-green-600 dark:text-green-400': orderData.netFloatingPL && orderData.netFloatingPL > 0,
+                  'text-red-600 dark:text-red-400': orderData.netFloatingPL && orderData.netFloatingPL < 0,
+                  'text-gray-900 dark:text-white': !orderData.netFloatingPL || orderData.netFloatingPL === 0
+                }"
+              >
+                {{ orderData.netFloatingPL ? ('$' + (orderData.netFloatingPL | number:'1.8-8')) : '-' }}
+              </span>
+            </div>
+
+            <!-- Margin -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Margin
               </label>
               <span class="text-sm text-gray-900 dark:text-white">
-                {{ orderData.requiredMargin | number : '1.4-4' }}
+                ${{ orderData.margin | number : '1.4-4' }}
               </span>
             </div>
 
-            <!-- Total Value -->
-            <div>
+            <!-- Comment -->
+            <div class="md:col-span-2">
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
               >
-                Total Value
-              </label>
-              <span class="text-sm text-gray-900 dark:text-white">
-                ${{ orderData.totalValue | number : '1.4-4' }}
-              </span>
-            </div>
-
-            <!-- Client Order ID -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Client Order ID
+                Comment
               </label>
               <div *ngIf="isEditing">
-                <input
-                  type="text"
-                  formControlName="clientOrderId"
+                <textarea
+                  formControlName="comment"
+                  rows="3"
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
+                ></textarea>
               </div>
               <span
                 *ngIf="!isEditing"
                 class="text-sm text-gray-900 dark:text-white"
               >
-                -
+                {{ orderData.comment || '-' }}
               </span>
-            </div>
-          </div>
-
-          <!-- Position Information (if available) -->
-          <div *ngIf="orderData.positionId" class="pt-4 border-t border-gray-200 dark:border-gray-700">
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Position Information</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <!-- Position ID -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Position ID
-                </label>
-                <span class="text-sm text-gray-900 dark:text-white">
-                  {{ orderData.positionId }}
-                </span>
-              </div>
-
-              <!-- Position Entry Price -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Entry Price
-                </label>
-                <div *ngIf="isEditing">
-                  <input
-                    type="number"
-                    formControlName="positionEntryPrice"
-                    step="0.00000001"
-                    min="0"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <span
-                  *ngIf="!isEditing"
-                  class="text-sm text-gray-900 dark:text-white"
-                >
-                  -
-                </span>
-              </div>
-
-              <!-- Position Quantity -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Position Quantity
-                </label>
-                <div *ngIf="isEditing">
-                  <input
-                    type="number"
-                    formControlName="positionQuantity"
-                    step="0.00000001"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <span
-                  *ngIf="!isEditing"
-                  class="text-sm text-gray-900 dark:text-white"
-                >
-                  -
-                </span>
-              </div>
-
-              <!-- Position Margin -->
-              <div>
-                <label
-                  class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                >
-                  Position Margin
-                </label>
-                <div *ngIf="isEditing">
-                  <input
-                    type="number"
-                    formControlName="positionMargin"
-                    step="0.01"
-                    min="0"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <span
-                  *ngIf="!isEditing"
-                  class="text-sm text-gray-900 dark:text-white"
-                >
-                  -
-                </span>
-              </div>
             </div>
           </div>
           </form>
@@ -455,8 +406,17 @@
     <div
       class="modal-footer border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
     >
-    <!-- Left side: Reopen button (only for closed orders) -->
+    <!-- Left side: Cancel Order button -->
     <div class="flex items-center gap-3">
+      <button
+        *ngIf="!isOrderClosed() && !isEditing"
+        type="button"
+        class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+        (click)="cancelOrder()"
+        [disabled]="loading"
+      >
+        {{ loading ? 'Cancelling...' : 'Cancel Order' }}
+      </button>
       <button
         *ngIf="isOrderClosed() && !isEditing"
         type="button"
