@@ -6,10 +6,10 @@ import { CommonModule } from '@angular/common';
 import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { UserMenuComponent } from '../user-menu/user-menu.component';
-import { NotificationsComponent } from '../notifications/notifications.component';
 import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
 import { LocalizationService } from '../../../core/services/localization.service';
 import { environment } from '../../../../environments/environment';
+import { ChatService } from '../../services/chat/chat.service';
 
 @Component({
   selector: 'app-header',
@@ -27,9 +27,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private navService = inject(NavigationService);
   private localizationService = inject(LocalizationService);
   private router = inject(Router);
+  private chatService = inject(ChatService);
 
   public environment = environment;
-  // Reference signal directly in the template
   userRole = this.authService.userRole;
   isUserMenuOpen = false;
   currentTime = '';
@@ -46,6 +46,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.updateTime());
 
+    // Subscribe to unread chat count
+    this.subscribeToUnreadCount();
+
     document.addEventListener('click', this.closeMenuOnClickOutside.bind(this));
   }
 
@@ -56,6 +59,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
     );
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private subscribeToUnreadCount(): void {
+    this.isLoadingChatCount = true;
+
+    this.chatService.unreadCount$.pipe(takeUntil(this.destroy$)).subscribe({
+      next: (count) => {
+        this.unreadChatCount = count;
+        this.isLoadingChatCount = false;
+      },
+      error: (error) => {
+        console.error('Error loading unread count:', error);
+        this.isLoadingChatCount = false;
+      },
+    });
   }
 
   toggleSidebar(): void {

@@ -29,6 +29,7 @@ import {
   OperatorItem,
   ClientItem,
 } from '../../models/chat/chat.model';
+import { SoundNotificationService } from '../../services/chat/sound-notification.service';
 
 interface Client {
   id: string;
@@ -69,6 +70,7 @@ export class EmployeeChatComponent
 {
   private chatService = inject(ChatService);
   private signalRService = inject(SignalRService);
+  private soundService = inject(SoundNotificationService);
   private changeDetector = inject(ChangeDetectorRef);
   private alertService = inject(AlertService);
 
@@ -82,6 +84,8 @@ export class EmployeeChatComponent
   private shouldScrollToBottom = true;
   private typingTimer: any;
   private currentChatId: string | null = null;
+  private lastTypingSoundTime = 0;
+  private typingSoundThrottle = 200; // ms between typing sounds
 
   selectedChat: ChatDto | null = null;
   currentMessages: MessageDto[] = [];
@@ -123,10 +127,19 @@ export class EmployeeChatComponent
   currentUserName: string = '';
   currentUserType: number = 1;
 
+  // Sound settings
+  isSoundMuted = false;
+  soundVolume = 0.5;
+
   ngOnInit(): void {
     this.currentUserId = this.chatService.getCurrentUserId();
     this.currentUserName = this.chatService.getCurrentUserName();
     this.currentUserType = this.chatService.getCurrentUserType();
+
+    // Load sound preferences
+    this.isSoundMuted = this.soundService.isSoundMuted();
+    this.soundVolume = this.soundService.getVolume();
+
     this.initializeServices();
     this.setupSubscriptions();
     this.setupTypingIndicator();
@@ -141,12 +154,10 @@ export class EmployeeChatComponent
   }
 
   ngOnDestroy(): void {
-    // Clean up current chat
     if (this.currentChatId) {
       this.signalRService.leaveChat(this.currentChatId);
     }
 
-    // Stop typing indicator if active
     if (this.isCurrentUserTyping) {
       this.typingSubject.next(false);
     }
@@ -161,6 +172,8 @@ export class EmployeeChatComponent
   private async initializeServices(): Promise<void> {
     try {
       await this.signalRService.initializeChatHub();
+      // Resume audio context on user interaction
+      await this.soundService.resumeAudioContext();
       this.setupSignalRListeners();
     } catch (error) {
       console.error('Failed to initialize SignalR:', error);
@@ -179,7 +192,7 @@ export class EmployeeChatComponent
         this.changeDetector.markForCheck();
       });
 
-    // Message received - handle for ANY chat to update lists
+    // Message received
     this.signalRService.messageReceived$
       .pipe(
         takeUntil(this.destroy$),
@@ -187,15 +200,16 @@ export class EmployeeChatComponent
       )
       .subscribe((event) => {
         if (event) {
-          // Update message in current chat if it matches
+          // Play sound for incoming messages from others
+          if (event.message.senderId !== this.currentUserId) {
+            this.soundService.playMessageReceived();
+          }
+
           if (this.selectedChat && event.chatId === this.selectedChat.id) {
             this.handleIncomingMessage(event.message);
           }
 
-          // Always update the chat lists to reflect new messages/unread counts
           this.updateChatListWithNewMessage(event.chatId, event.message);
-
-          // Refresh chat lists to get updated unread counts
           this.loadChatsAndUpdateCounts();
         }
       });
@@ -211,6 +225,8 @@ export class EmployeeChatComponent
           if (data.userId !== this.currentUserId) {
             if (data.isTyping) {
               this.typingUsers.set(data.userId, true);
+              // Play typing sound when someone starts typing
+              this.soundService.playTyping();
             } else {
               this.typingUsers.delete(data.userId);
             }
@@ -270,7 +286,7 @@ export class EmployeeChatComponent
         }
       });
 
-    // Chat marked as read - update unread counts
+    // Chat marked as read
     this.signalRService.messageRead$
       .pipe(
         takeUntil(this.destroy$),
@@ -328,14 +344,12 @@ export class EmployeeChatComponent
   }
 
   private processChats(chats: ChatDto[]): void {
-    // Process client chats
     const clientChats = chats.filter(
       (chat) => chat.chatType === ChatType.ClientToOperator
     );
     this.clients = clientChats.map((chat) => this.mapChatToClient(chat));
     this.filteredClients = [...this.clients];
 
-    // Process operator chats
     const operatorChats = chats.filter(
       (chat) =>
         chat.chatType === ChatType.OperatorToOperator ||
@@ -398,7 +412,6 @@ export class EmployeeChatComponent
   }
 
   private handleIncomingMessage(message: MessageDto): void {
-    // Don't add our own messages we already added optimistically
     if (message.senderId === this.currentUserId) {
       const tempMsgIndex = this.currentMessages.findIndex((m) =>
         m.id.startsWith('temp-')
@@ -408,7 +421,7 @@ export class EmployeeChatComponent
       }
       return;
     }
-    // Add new messages and clear typing indicator
+
     this.currentMessages.push(message);
     this.typingUsers.delete(message.senderId);
   }
@@ -417,13 +430,11 @@ export class EmployeeChatComponent
     chatId: string,
     message: MessageDto
   ): void {
-    // Update client list
     const client = this.clients.find((c) => c.chatId === chatId);
     if (client) {
       client.lastMessage = message.content;
       client.lastMessageTime = new Date(message.sentAt);
 
-      // Increment unread count if this is not the current chat or not from current user
       if (
         message.senderId !== this.currentUserId &&
         (!this.selectedChat || this.selectedChat.id !== chatId)
@@ -432,13 +443,11 @@ export class EmployeeChatComponent
       }
     }
 
-    // Update operator list
     const operator = this.operators.find((o) => o.chatId === chatId);
     if (operator) {
       operator.lastMessage = message.content;
       operator.lastMessageTime = new Date(message.sentAt);
 
-      // Increment unread count if this is not the current chat or not from current user
       if (
         message.senderId !== this.currentUserId &&
         (!this.selectedChat || this.selectedChat.id !== chatId)
@@ -451,9 +460,7 @@ export class EmployeeChatComponent
   }
 
   private updateChatReadStatus(chatId: string, userId: string): void {
-    // Only update if it's not the current user marking as read
     if (userId === this.currentUserId && this.selectedChat?.id === chatId) {
-      // Reset unread count for the current chat
       const client = this.clients.find((c) => c.chatId === chatId);
       if (client) {
         client.unreadCount = 0;
@@ -485,13 +492,11 @@ export class EmployeeChatComponent
   }
 
   setActiveTab(tab: ActiveTab): void {
-    // Clean up current chat before switching
     if (this.currentChatId) {
       this.signalRService.leaveChat(this.currentChatId);
       this.currentChatId = null;
     }
 
-    // Stop typing if switching tabs
     if (this.isCurrentUserTyping) {
       this.typingSubject.next(false);
       this.isCurrentUserTyping = false;
@@ -641,12 +646,10 @@ export class EmployeeChatComponent
   }
 
   selectClient(client: Client): void {
-    // Leave previous chat if any
     if (this.currentChatId) {
       this.signalRService.leaveChat(this.currentChatId);
     }
 
-    // Stop typing indicator
     if (this.isCurrentUserTyping) {
       this.typingSubject.next(false);
       this.isCurrentUserTyping = false;
@@ -669,12 +672,10 @@ export class EmployeeChatComponent
   }
 
   selectOperator(operator: Operator): void {
-    // Leave previous chat if any
     if (this.currentChatId) {
       this.signalRService.leaveChat(this.currentChatId);
     }
 
-    // Stop typing indicator
     if (this.isCurrentUserTyping) {
       this.typingSubject.next(false);
       this.isCurrentUserTyping = false;
@@ -713,16 +714,12 @@ export class EmployeeChatComponent
     this.currentChatId = chatId;
 
     try {
-      // Get chat details
       const chat = await this.chatService.getChatById(chatId).toPromise();
 
       if (chat) {
         this.selectedChat = chat;
-
-        // Join the chat room
         await this.signalRService.joinChat(chatId);
 
-        // Load messages
         const response = await this.chatService
           .getChatMessages(chatId)
           .toPromise();
@@ -731,10 +728,8 @@ export class EmployeeChatComponent
           this.currentMessages = response.messages.reverse();
           this.shouldScrollToBottom = true;
 
-          // Mark chat as read
           await this.markChatAsRead(chatId);
 
-          // Focus input
           setTimeout(() => {
             this.messageInput?.nativeElement?.focus();
           }, 100);
@@ -750,11 +745,9 @@ export class EmployeeChatComponent
   }
 
   private async markChatAsRead(chatId: string): Promise<void> {
-    // Call both service and SignalR
     await this.chatService.markChatAsRead(chatId).toPromise();
     await this.signalRService.markChatAsRead(chatId);
 
-    // Update local counts immediately
     const client = this.clients.find((c) => c.chatId === chatId);
     if (client) client.unreadCount = 0;
   }
@@ -773,10 +766,8 @@ export class EmployeeChatComponent
         this.selectedChat = chat;
         this.currentMessages = [];
 
-        // Join the new chat room
         await this.signalRService.joinChat(chat.id);
 
-        // Update clients list
         const existingIndex = this.clients.findIndex((c) => c.id === client.id);
         if (existingIndex === -1) {
           this.clients.unshift(client);
@@ -806,10 +797,8 @@ export class EmployeeChatComponent
         this.selectedChat = chat;
         this.currentMessages = [];
 
-        // Join the new chat room
         await this.signalRService.joinChat(chat.id);
 
-        // Update operators list
         const existingIndex = this.operators.findIndex(
           (op) => op.id === operator.id
         );
@@ -835,7 +824,6 @@ export class EmployeeChatComponent
     this.isCurrentUserTyping = false;
     const messageContent = this.messageText.trim();
 
-    // Optimistically add message to UI
     const tempMessage: MessageDto = {
       id: 'temp-' + Date.now(),
       chatId: this.selectedChat.id,
@@ -860,7 +848,9 @@ export class EmployeeChatComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (message) => {
-          // Replace temp message with real message
+          // Play sent sound
+          this.soundService.playMessageSent();
+
           const tempMsgIndex = this.currentMessages.findIndex(
             (m) => m.id === tempMessage.id
           );
@@ -869,14 +859,11 @@ export class EmployeeChatComponent
           }
           this.isSendingMessage = false;
 
-          // Update last message in chat list
           this.updateChatListWithNewMessage(this.selectedChat!.id, message);
-
           this.changeDetector.markForCheck();
         },
         error: (error) => {
           console.error('Error sending message:', error);
-          // Remove temp message on error
           this.currentMessages = this.currentMessages.filter(
             (m) => m.id !== tempMessage.id
           );
@@ -892,17 +879,24 @@ export class EmployeeChatComponent
     const wasTyping = this.isCurrentUserTyping;
     this.isCurrentUserTyping = this.messageText.length > 0;
 
-    // Only send typing indicator if state changed
+    // Play typing sound (throttled)
+    const now = Date.now();
+    if (
+      this.isCurrentUserTyping &&
+      now - this.lastTypingSoundTime > this.typingSoundThrottle
+    ) {
+      this.soundService.playTyping();
+      this.lastTypingSoundTime = now;
+    }
+
     if (wasTyping !== this.isCurrentUserTyping) {
       this.typingSubject.next(this.isCurrentUserTyping);
     }
 
-    // Reset typing timer
     if (this.typingTimer) {
       clearTimeout(this.typingTimer);
     }
 
-    // Set timer to stop typing after 3 seconds of inactivity
     if (this.isCurrentUserTyping) {
       this.typingTimer = setTimeout(() => {
         this.isCurrentUserTyping = false;
@@ -918,21 +912,16 @@ export class EmployeeChatComponent
     this.isSendingMessage = true;
 
     try {
-      // Upload file first
       const fileId = await this.chatService.uploadFile(this.selectedFile);
-
-      // Send message with file
       const messageContent = this.messageText.trim() || this.selectedFile.name;
       const message = await this.chatService
         .sendMessage(this.selectedChat.id, messageContent, [fileId])
         .toPromise();
 
       if (message) {
-        // Add message to current chat
+        this.soundService.playMessageSent();
         this.currentMessages.push(message);
         this.shouldScrollToBottom = true;
-
-        // Update chat list
         this.updateChatListWithNewMessage(this.selectedChat.id, message);
       }
 
@@ -1017,7 +1006,6 @@ export class EmployeeChatComponent
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          // The update will come through SignalR
           this.alertService.success('Message deleted');
         },
         error: (error) => {
@@ -1035,7 +1023,6 @@ export class EmployeeChatComponent
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: () => {
-            // The update will come through SignalR
             this.alertService.success('Message updated');
           },
           error: (error) => {
@@ -1044,6 +1031,16 @@ export class EmployeeChatComponent
           },
         });
     }
+  }
+
+  toggleSoundMute(): void {
+    this.soundService.toggleMute();
+    this.isSoundMuted = this.soundService.isSoundMuted();
+  }
+
+  setSoundVolume(volume: number): void {
+    this.soundService.setVolume(volume);
+    this.soundVolume = volume;
   }
 
   formatMessageTime(date: Date | string): string {
