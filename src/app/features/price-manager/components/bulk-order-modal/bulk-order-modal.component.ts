@@ -28,7 +28,6 @@ export interface BulkOrderData {
   imports: [CommonModule, FormsModule, TradingViewChartComponent],
   templateUrl: './bulk-order-modal.component.html',
   styleUrls: ['./bulk-order-modal.component.scss'],
-  providers: [TradingViewChartComponent],
 })
 export class BulkOrderModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;

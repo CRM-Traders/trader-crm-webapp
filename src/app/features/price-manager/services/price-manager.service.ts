@@ -125,15 +125,21 @@ export class PriceManagerService {
   }
 
   createQuickOrder(data: QuickOrderRequest) {
-    return this.http.post(`api/admin/trading/order/create-with-smart-pl`, data);
+    return this.http.post(
+      `traiding/api/admin/trading/order/create-with-smart-pl`,
+      data
+    );
   }
 
   updatePrice(data: UpdatePriceRequest) {
-    return this.http.post(`api/admin/trading/update-price`, data);
+    return this.http.post(`traiding/api/admin/trading/update-price`, data);
   }
 
   createOrderWithSmartPL(data: SmartPLOrderRequest) {
-    return this.http.post(`api/admin/trading/order/create-with-smart-pl`, data);
+    return this.http.post(
+      `traiding/api/admin/trading/order/create-with-smart-pl`,
+      data
+    );
   }
 
   getClientTradingAccounts(clientUserId: string) {

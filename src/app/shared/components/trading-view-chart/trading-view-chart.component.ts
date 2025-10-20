@@ -10,6 +10,7 @@ import {
   ViewChild,
   inject,
   signal,
+  NgZone,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
@@ -40,6 +41,9 @@ export interface TradingViewConfig {
 export class TradingViewChartComponent
   implements OnInit, OnDestroy, AfterViewInit
 {
+  private ngZone = inject(NgZone);
+  private boundMessageHandler!: (event: MessageEvent) => void;
+
   @ViewChild('chartContainer', { static: false })
   chartContainer!: ElementRef<HTMLDivElement>;
 
@@ -77,12 +81,17 @@ export class TradingViewChartComponent
   }
 
   ngAfterViewInit(): void {
-    // Use requestAnimationFrame to ensure DOM is fully ready
+    // Run outside Angular zone for better performance
+    this.ngZone.runOutsideAngular(() => {
+      this.boundMessageHandler = (event: MessageEvent) => {
+        this.onWindowMessage(event);
+      };
+      window.addEventListener('message', this.boundMessageHandler, false);
+    });
+
     this.initializationTimeout = requestAnimationFrame(() => {
       this.initializeChart();
     });
-
-    window.addEventListener('message', this.onWindowMessage);
   }
 
   ngOnDestroy(): void {
@@ -193,11 +202,11 @@ export class TradingViewChartComponent
   }
 
   // Parses TradingView window messages
-  private onWindowMessage = (event: MessageEvent): void => {
+
+  private onWindowMessage(event: MessageEvent): void {
     try {
       const origin = event.origin || '';
 
-      // Only process messages from TradingView
       if (
         !origin.includes('tradingview.com') &&
         !origin.includes('tradingview')
@@ -205,18 +214,16 @@ export class TradingViewChartComponent
         return;
       }
 
-      console.log('From Back', event.data);
       const data = event.data;
 
-      // console.log(data);
-
-      // Emit the event data to parent component
-      if (data) {
-        this.parseEventData.emit(data);
-      }
+      // Run inside Angular zone to trigger change detection
+      this.ngZone.run(() => {
+        if (data) {
+          this.parseEventData.emit(data);
+        }
+      });
     } catch (error) {
-      // Silently ignore parsing errors
       console.debug('[TradingView] Message parse error:', error);
     }
-  };
+  }
 }
