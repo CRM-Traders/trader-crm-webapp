@@ -1,15 +1,6 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  OnDestroy,
-  signal,
-} from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  Client,
-  PriceManagerService,
-} from './services/price-manager.service';
+import { Client, PriceManagerService } from './services/price-manager.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, finalize, tap } from 'rxjs';
@@ -36,7 +27,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   loading = signal(false);
   error = signal<string | null>(null);
   searching = signal(false);
-  
+
   // Pagination properties
   currentPage = signal(0);
   pageSize = signal(20);
@@ -46,7 +37,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   viewClientDetails(client: Client): void {
     this.router.navigate(['/manager', client.userId], {
-      queryParams: { name: client.fullName }
+      queryParams: { name: client.fullName },
     });
   }
 
@@ -75,44 +66,47 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   }
 
   private loadActiveClients() {
-    return this.service.getActiveClients(
-      this.searchTerm() || null,
-      this.currentPage(),
-      this.pageSize()
-    ).pipe(
-      tap((response: any) => {
-        // Handle different response formats
-        let clients: Client[] = [];
-        if (response?.items && Array.isArray(response.items)) {
-          clients = response.items;
-          this.totalCount.set(response.totalCount || clients.length);
-        } else if (response?.clients && Array.isArray(response.clients)) {
-          clients = response.clients;
-          this.totalCount.set(response.totalCount || clients.length);
-        } else if (response?.data && Array.isArray(response.data)) {
-          clients = response.data;
-          this.totalCount.set(response.totalCount || clients.length);
-        } else if (Array.isArray(response)) {
-          clients = response;
-          this.totalCount.set(clients.length);
-        } else {
-          throw new Error('Invalid response format for active clients');
-        }
-        
-        this.activeClients.set(clients);
-      }),
-      catchError((err: any) => {
-        console.error('Error loading active clients:', err);
-        let errorMessage = 'Failed to load clients. Please check your connection and try again.';
-        if (err?.error?.error) {
-          errorMessage = err.error.error;
-        } else if (err?.message) {
-          errorMessage = err.message;
-        }
-        this.alertService.error(errorMessage);
-        return [];
-      })
-    );
+    return this.service
+      .getActiveClients(
+        this.searchTerm() || null,
+        this.currentPage(),
+        this.pageSize()
+      )
+      .pipe(
+        tap((response: any) => {
+          // Handle different response formats
+          let clients: Client[] = [];
+          if (response?.items && Array.isArray(response.items)) {
+            clients = response.items;
+            this.totalCount.set(response.totalCount || clients.length);
+          } else if (response?.clients && Array.isArray(response.clients)) {
+            clients = response.clients;
+            this.totalCount.set(response.totalCount || clients.length);
+          } else if (response?.data && Array.isArray(response.data)) {
+            clients = response.data;
+            this.totalCount.set(response.totalCount || clients.length);
+          } else if (Array.isArray(response)) {
+            clients = response;
+            this.totalCount.set(clients.length);
+          } else {
+            throw new Error('Invalid response format for active clients');
+          }
+
+          this.activeClients.set(clients);
+        }),
+        catchError((err: any) => {
+          console.error('Error loading active clients:', err);
+          let errorMessage =
+            'Failed to load clients. Please check your connection and try again.';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return [];
+        })
+      );
   }
 
   refreshData(): void {
@@ -201,7 +195,10 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   }
 
   getEndItem(): number {
-    return Math.min((this.currentPage() + 1) * this.pageSize(), this.totalCount());
+    return Math.min(
+      (this.currentPage() + 1) * this.pageSize(),
+      this.totalCount()
+    );
   }
 
   openBulkOrderModal(): void {

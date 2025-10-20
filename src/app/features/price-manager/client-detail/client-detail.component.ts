@@ -18,7 +18,16 @@ import {
 } from '../services/price-manager.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, interval, catchError, finalize, tap, Observable, of } from 'rxjs';
+import {
+  Subject,
+  takeUntil,
+  interval,
+  catchError,
+  finalize,
+  tap,
+  Observable,
+  of,
+} from 'rxjs';
 import { HasPermissionDirective } from '../../../core/directives/has-permission.directive';
 import { AuthService } from '../../../core/services/auth.service';
 import { AlertService } from '../../../core/services/alert.service';
@@ -64,7 +73,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   hasAnyActionPermission = computed(() => {
     return (
       this.authService.hasPermission(181) || // Trading order edit
-      this.authService.hasPermission(183)    // Trading order close
+      this.authService.hasPermission(183) // Trading order close
     );
   });
 
@@ -84,7 +93,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private loadClientData(): void {
     const clientId = this.route.snapshot.paramMap.get('id');
-    const fullNameFromQuery = this.route.snapshot.queryParamMap.get('name') || '';
+    const fullNameFromQuery =
+      this.route.snapshot.queryParamMap.get('name') || '';
     if (!clientId) {
       this.alertService.error('Client ID not found');
       this.router.navigate(['/manager']);
@@ -92,8 +102,13 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     this.loading.set(true);
-    this.client.set({ id: clientId, userId: clientId, fullName: fullNameFromQuery });
-    
+    this.client.set({
+      id: clientId,
+      userId: clientId,
+      fullName: fullNameFromQuery,
+      externalId: clientId,
+    });
+
     this.loadCurrentDataType()
       .pipe(
         finalize(() => this.loading.set(false)),
@@ -114,9 +129,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onTabChange(tab: 'orders' | 'transactions'): void {
     this.selectedTab.set(tab);
-    this.loadCurrentDataType()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe();
+    this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   private loadCurrentDataType(silent: boolean = false): Observable<void> {
@@ -141,9 +154,11 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       tap((response: any) => {
         if (response?.orders && Array.isArray(response.orders)) {
           const currentPriceUpdates = { ...this.orderPriceUpdates };
-          const processedOrders = response.orders.map((order: Order) => this.processOrder(order));
+          const processedOrders = response.orders.map((order: Order) =>
+            this.processOrder(order)
+          );
           this.openOrders.set(processedOrders);
-          
+
           this.orderPriceUpdates = {};
           processedOrders.forEach((order: Order) => {
             if (currentPriceUpdates[order.id] !== undefined) {
@@ -180,18 +195,20 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   private processOrder(order: Order): Order {
     order.remainingQuantity = order.quantity - order.filledQuantity;
     order.currentPrice = order.price;
-    
+
     const priceDiff = order.currentPrice - order.price;
     const side = this.getOrderSide(order.side);
     const multiplier = side === 'Buy' ? 1 : -1;
-    
-    order.unrealizedPnL = priceDiff * order.filledQuantity * multiplier * order.leverage;
-    order.unrealizedPnLPercent = order.price > 0 ? (priceDiff / order.price) * 100 * multiplier : 0;
-    
+
+    order.unrealizedPnL =
+      priceDiff * order.filledQuantity * multiplier * order.leverage;
+    order.unrealizedPnLPercent =
+      order.price > 0 ? (priceDiff / order.price) * 100 * multiplier : 0;
+
     order.orderTypeLabel = this.getOrderType(order.orderType);
     order.sideLabel = side;
     order.statusLabel = this.getOrderStatus(order.status);
-    
+
     return order;
   }
 
@@ -203,7 +220,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       4: 'Stop Limit',
       5: 'Trailing Stop',
       6: 'Take Profit',
-      7: 'Take Profit Limit'
+      7: 'Take Profit Limit',
     };
     return types[type] || `Type ${type}`;
   }
@@ -219,7 +236,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       3: 'Filled',
       4: 'Cancelled',
       5: 'Rejected',
-      6: 'Liquidated'
+      6: 'Liquidated',
     };
     return statuses[status] || `Status ${status}`;
   }
@@ -271,9 +288,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   refreshCurrentData(): void {
-    this.loadCurrentDataType()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe();
+    this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   updateOrderPrice(orderId: string, newPrice: number): void {
@@ -285,31 +300,34 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     currentUpdating.add(orderId);
     this.updatingOrderIds.set(currentUpdating);
 
-    this.service.updateOrderPrice(orderId, newPrice).pipe(
-      takeUntil(this.destroy$),
-      catchError((err: any) => {
-        console.error('Error updating order price:', err);
-        let errorMessage = 'Failed to update order price. Please try again.';
-        if (err?.error?.error) {
-          errorMessage = err.error.error;
-        } else if (err?.message) {
-          errorMessage = err.message;
-        }
-        this.alertService.error(errorMessage);
-        return of(void 0);
-      }),
-      finalize(() => {
-        const updatedUpdating = new Set(this.updatingOrderIds());
-        updatedUpdating.delete(orderId);
-        this.updatingOrderIds.set(updatedUpdating);
-      })
-    ).subscribe(() => {
-      this.loadOpenOrders()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(() => {
-          delete this.orderPriceUpdates[orderId];
-        });
-    });
+    this.service
+      .updateOrderPrice(orderId, newPrice)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err: any) => {
+          console.error('Error updating order price:', err);
+          let errorMessage = 'Failed to update order price. Please try again.';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return of(void 0);
+        }),
+        finalize(() => {
+          const updatedUpdating = new Set(this.updatingOrderIds());
+          updatedUpdating.delete(orderId);
+          this.updatingOrderIds.set(updatedUpdating);
+        })
+      )
+      .subscribe(() => {
+        this.loadOpenOrders()
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(() => {
+            delete this.orderPriceUpdates[orderId];
+          });
+      });
   }
 
   cancaleOrder(orderId: string): void {
@@ -348,30 +366,31 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     currentUpdating.add(orderId);
     this.updatingOrderIds.set(currentUpdating);
 
-    this.service.closeOrder(orderId, price).pipe(
-      takeUntil(this.destroy$),
-      catchError((err: any) => {
-        console.error('Error closing order:', err);
-        let errorMessage = 'Failed to close order. Please try again.';
-        if (err?.error?.error) {
-          errorMessage = err.error.error;
-        } else if (err?.message) {
-          errorMessage = err.message;
-        }
-        this.alertService.error(errorMessage);
-        return of(void 0);
-      }),
-      finalize(() => {
-        const updatedUpdating = new Set(this.updatingOrderIds());
-        updatedUpdating.delete(orderId);
-        this.updatingOrderIds.set(updatedUpdating);
-      })
-    ).subscribe(() => {
-      this.alertService.success('Order closed successfully');
-      this.loadOpenOrders()
-        .pipe(takeUntil(this.destroy$))
-        .subscribe();
-    });
+    this.service
+      .closeOrder(orderId, price)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err: any) => {
+          console.error('Error closing order:', err);
+          let errorMessage = 'Failed to close order. Please try again.';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return of(void 0);
+        }),
+        finalize(() => {
+          const updatedUpdating = new Set(this.updatingOrderIds());
+          updatedUpdating.delete(orderId);
+          this.updatingOrderIds.set(updatedUpdating);
+        })
+      )
+      .subscribe(() => {
+        this.alertService.success('Order closed successfully');
+        this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+      });
   }
 
   trackByOrderId(index: number, order: Order): string {
@@ -394,7 +413,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       7: 'Refund',
       8: 'Credit',
       9: 'Debit',
-      10: 'Adjustment'
+      10: 'Adjustment',
     };
     return types[type] || `Type ${type}`;
   }
@@ -472,9 +491,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.loadTransactions()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
+          this.loadTransactions().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
@@ -499,9 +516,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.loadOpenOrders()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
+          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
@@ -534,9 +549,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.loadOpenOrders()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
+          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
@@ -569,9 +582,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.loadCurrentDataType()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
+          this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
@@ -604,9 +615,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.loadCurrentDataType()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
+          this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
@@ -639,9 +648,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     modalRef.result.then(
       (result) => {
         if (result) {
-          this.loadCurrentDataType()
-            .pipe(takeUntil(this.destroy$))
-            .subscribe();
+          this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
@@ -658,10 +665,13 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     interval(4000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        if (this.client() && !this.ordersLoading() && !this.transactionsLoading()) {
+        if (
+          this.client() &&
+          !this.ordersLoading() &&
+          !this.transactionsLoading()
+        ) {
           this.loadCurrentDataType(true);
         }
       });
   }
 }
-

@@ -647,7 +647,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     this.submitting.set(true);
 
     const requestBody: any = {
-      loginIds: loginIds,
+      loginIds: this.fetchedClients().map((x) => x.userId),
       symbol: this.currentSymbol(),
       side: this.side(),
       volume: this.volume()!,
@@ -840,6 +840,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
         tap((response: any) => {
           const clients = response?.data || response?.items || [];
           this.fetchedClients.set(clients);
+
+          console.log(this.fetchedClients());
 
           if (clients.length === 0) {
             this.alertService.warning(

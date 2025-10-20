@@ -3,7 +3,9 @@
   <div class="mb-8">
     <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Price Manager</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          Price Manager
+        </h1>
         <p class="text-gray-600 dark:text-gray-400">
           Manage client orders and transactions
         </p>
@@ -58,12 +60,13 @@
         </button>
       </div>
     </div>
-
   </div>
 
   <!-- Clients Table -->
-  <div *hasPermission="179" >
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+  <div *hasPermission="179">
+    <div
+      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+    >
       <!-- Table Header -->
       <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex justify-between items-start mb-4">
@@ -75,7 +78,7 @@
               Click on a client to view their orders and transactions
             </p>
           </div>
-          
+
           <!-- Search Input -->
           <div class="flex items-center">
             <div class="relative">
@@ -85,9 +88,19 @@
                 (input)="onSearchInput()"
                 placeholder="Search clients... (live search)"
                 class="!pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm w-80"
+              />
+              <svg
+                class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-              <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                ></path>
               </svg>
             </div>
           </div>
@@ -97,12 +110,17 @@
         <div class="flex justify-between items-center mt-4">
           <div class="flex items-center space-x-4">
             <span class="text-sm text-gray-600 dark:text-gray-400">
-              Showing {{ (currentPage() * pageSize()) + 1 }} to {{ getEndItem() }} of {{ totalCount() }} clients
+              Showing {{ currentPage() * pageSize() + 1 }} to
+              {{ getEndItem() }} of {{ totalCount() }} clients
             </span>
           </div>
-          
+
           <div class="flex items-center space-x-2">
-            <label for="pageSize" class="text-sm text-gray-600 dark:text-gray-400">Items per page:</label>
+            <label
+              for="pageSize"
+              class="text-sm text-gray-600 dark:text-gray-400"
+              >Items per page:</label
+            >
             <select
               id="pageSize"
               [(ngModel)]="pageSize"
@@ -148,25 +166,35 @@
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-400/30">
             <!-- Skeleton Loading Rows -->
             <ng-container *ngIf="loading()">
-              <tr *ngFor="let skeleton of [1,2,3,4,5]">
+              <tr *ngFor="let skeleton of [1, 2, 3, 4, 5]">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-gray-400/50 animate-pulse"></div>
+                      <div
+                        class="h-10 w-10 rounded-full bg-gray-400/50 animate-pulse"
+                      ></div>
                     </div>
                     <div class="ml-4">
-                      <div class="h-4 bg-gray-400/50 rounded w-32 animate-pulse"></div>
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-32 animate-pulse"
+                      ></div>
                     </div>
                   </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-4 bg-gray-400/50 rounded w-20 animate-pulse"></div>
+                  <div
+                    class="h-4 bg-gray-400/50 rounded w-20 animate-pulse"
+                  ></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="h-6 bg-gray-400/50 rounded-full w-16 animate-pulse"></div>
+                  <div
+                    class="h-6 bg-gray-400/50 rounded-full w-16 animate-pulse"
+                  ></div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div class="h-4 bg-gray-400/50 rounded w-24 ml-auto animate-pulse"></div>
+                  <div
+                    class="h-4 bg-gray-400/50 rounded w-24 ml-auto animate-pulse"
+                  ></div>
                 </td>
               </tr>
             </ng-container>
@@ -178,55 +206,63 @@
                 class="hover:bg-gray-500/20 transition-colors cursor-pointer"
                 (click)="viewClientDetails(client)"
               >
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0 h-10 w-10">
-                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                      <span class="text-lg font-medium text-blue-600">
-                        {{ client.fullName.charAt(0).toUpperCase() }}
-                      </span>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                      <div
+                        class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center"
+                      >
+                        <span class="text-lg font-medium text-blue-600">
+                          {{ client.fullName.charAt(0).toUpperCase() }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="ml-4">
+                      <div
+                        class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                      >
+                        {{ client.fullName }}
+                      </div>
                     </div>
                   </div>
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {{ client.fullName }}
-                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900 dark:text-gray-100">
+                    {{ client.externalId }}
                   </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ client.userId }}
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                >
-                  Active
-                </span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button
-                  (click)="viewClientDetails(client); $event.stopPropagation()"
-                  class="inline-flex items-center text-blue-400 hover:text-blue-900"
-                >
-                  View Details
-                  <svg
-                    class="ml-2 w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span
+                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </td>
+                    Active
+                  </span>
+                </td>
+                <td
+                  class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                >
+                  <button
+                    (click)="
+                      viewClientDetails(client); $event.stopPropagation()
+                    "
+                    class="inline-flex items-center text-blue-400 hover:text-blue-900"
+                  >
+                    View Details
+                    <svg
+                      class="ml-2 w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                </td>
               </tr>
             </ng-container>
 
@@ -251,7 +287,9 @@
                       />
                     </svg>
                   </div>
-                  <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  <h3
+                    class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
+                  >
                     No Clients Found
                   </h3>
                   <p class="text-gray-500 dark:text-gray-400">
@@ -283,7 +321,9 @@
               Next
             </button>
           </div>
-          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div
+            class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+          >
             <div>
               <p class="text-sm text-gray-700 dark:text-gray-300">
                 Page <span class="font-medium">{{ currentPage() + 1 }}</span> of
@@ -291,18 +331,30 @@
               </p>
             </div>
             <div>
-              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <nav
+                class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                aria-label="Pagination"
+              >
                 <button
                   (click)="previousPage()"
                   [disabled]="currentPage() === 0"
                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span class="sr-only">Previous</span>
-                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                  <svg
+                    class="h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                      clip-rule="evenodd"
+                    />
                   </svg>
                 </button>
-                
+
                 <ng-container *ngFor="let page of getPageNumbers()">
                   <button
                     *ngIf="page !== -1"
@@ -321,15 +373,24 @@
                     ...
                   </span>
                 </ng-container>
-                
+
                 <button
                   (click)="nextPage()"
                   [disabled]="currentPage() >= getTotalPages() - 1"
                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span class="sr-only">Next</span>
-                  <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                  <svg
+                    class="h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clip-rule="evenodd"
+                    />
                   </svg>
                 </button>
               </nav>

@@ -349,6 +349,7 @@ export interface Client {
   id: string;
   userId: string;
   fullName: string;
+  externalId: string;
 }
 
 export interface TradingPair {
