@@ -2,459 +2,443 @@
   <!-- Loading State -->
   <div *ngIf="loadingData" class="flex items-center justify-center h-[400px]">
     <div class="text-center">
-      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+      <div
+        class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"
+      ></div>
       <p class="text-gray-600 dark:text-gray-400">Loading order details...</p>
     </div>
   </div>
 
   <!-- Order Details -->
   <div *ngIf="!loadingData && orderData">
-    <!-- Modal Header (match quick-order style) -->
-    <div class="modal-header border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <!-- Modal Header -->
+    <div
+      class="modal-header border-b border-gray-200 dark:border-gray-700 px-6 py-4"
+    >
       <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-        Edit Order
+        {{ isEditing ? "Edit Order" : "Order Details" }}
       </h3>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">ID: {{ orderData.id }}</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Order ID: {{ orderData.id }}
+        <span
+          class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+          [ngClass]="{
+            'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
+              orderData.status === 1 || orderData.status === 2,
+            'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
+              orderData.status === 3,
+            'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100':
+              orderData.status === 4 ||
+              orderData.status === 5 ||
+              orderData.status === 6
+          }"
+        >
+          {{ getOrderStatus(orderData.status) }}
+        </span>
+      </p>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        {{ orderData.tradingPairSymbol }}
+      </p>
     </div>
 
-    <!-- Modal Body: two-column layout with chart + form (no tabs) -->
-    <div class="modal-body px-6 py-6 max-h-[calc(100vh-1rem)] overflow-y-auto">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Left Side: TradingView Chart -->
-        <div class="chart-section">
-          <div class="chart-header mb-3">
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-              Live Chart
-            </h4>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {{ orderData.tradingPairSymbol || 'BTCUSDT' }}
-            </p>
-          </div>
-          <div class="chart-wrapper !h-[calc(100vh-20rem)]">
-            <app-trading-view-chart
-              [symbol]="orderData.tradingPairSymbol || 'BTCUSDT'"
-              [interval]="'5'"
-              [hideTopToolbar]="false"
-              [hideSideToolbar]="true"
-              [hideLegend]="false"
-              [hideVolume]="false"
-              [allowSymbolChange]="true"
-              [autosize]="true"
-            ></app-trading-view-chart>
-          </div>
-        </div>
-
-        <!-- Right Side: Order Edit Form -->
-        <div class="form-section">
-          <form [formGroup]="editForm" class="space-y-5">
-          <!-- Two-column layout for form fields -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Side -->
+    <!-- Modal Body -->
+    <div class="modal-body px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+      <form [formGroup]="editForm" class="max-w-4xl mx-auto">
+        <!-- Basic Order Information -->
+        <div class="mb-6">
+          <h4
+            class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700"
+          >
+            Order Information
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Side (Buy/Sell) -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Side
+                Side <span class="text-red-500">*</span>
               </label>
-              <div *ngIf="isEditing">
-                <select
-                  formControlName="side"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              <div *ngIf="isEditing" class="grid grid-cols-2 gap-3">
+                <label
+                  *ngFor="let option of sideOptions"
+                  class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all"
+                  [ngClass]="{
+                    'border-blue-500 bg-blue-50 dark:bg-blue-900/20':
+                      editForm.get('side')?.value === option.value,
+                    'border-gray-300 dark:border-gray-600 hover:border-gray-400':
+                      editForm.get('side')?.value !== option.value
+                  }"
                 >
-                  <option [value]="1">Buy</option>
-                  <option [value]="2">Sell</option>
-                </select>
+                  <input
+                    type="radio"
+                    formControlName="side"
+                    [value]="option.value"
+                    class="sr-only"
+                  />
+                  <span
+                    class="text-sm font-medium"
+                    [ngClass]="
+                      editForm.get('side')?.value === option.value
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : option.class
+                    "
+                  >
+                    {{ option.label }}
+                  </span>
+                </label>
               </div>
               <span
                 *ngIf="!isEditing"
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium"
                 [ngClass]="{
-                  'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100': orderData.side === 1,
-                  'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100': orderData.side === 2
+                  'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
+                    orderData.side === 1,
+                  'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100':
+                    orderData.side === 2
                 }"
               >
                 {{ getOrderSide(orderData.side) }}
               </span>
             </div>
 
-            <!-- Volume -->
+            <!-- Leverage -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Volume
+                Leverage
               </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="number"
-                  formControlName="volume"
-                  step="0.00000001"
-                  min="0"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  [class.border-red-500]="
-                    editForm.get('volume')?.invalid &&
-                    editForm.get('volume')?.touched
-                  "
-                />
-                <p
-                  class="mt-1 text-sm text-red-600 dark:text-red-400"
-                  *ngIf="
-                    editForm.get('volume')?.invalid &&
-                    editForm.get('volume')?.touched
-                  "
-                >
-                  Volume is required and must be positive
-                </p>
-              </div>
+              <input
+                *ngIf="isEditing"
+                type="number"
+                formControlName="leverage"
+                min="1"
+                placeholder="Enter leverage"
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
               <span
                 *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
+                class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
               >
-                {{ orderData.volume | number : '1.8-8' }}
+                {{ orderData.leverage || 1 }}x
               </span>
             </div>
+          </div>
+        </div>
 
-            <!-- Symbol -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Symbol
-              </label>
-              <span class="text-sm text-gray-900 dark:text-white font-medium">
-                {{ orderData.tradingPairSymbol }}
-              </span>
-            </div>
-
+        <!-- Price and Volume -->
+        <div class="mb-6">
+          <h4
+            class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700"
+          >
+            Price & Volume
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Open Price -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Open Price
+                Open Price <span class="text-red-500">*</span>
               </label>
-              <div *ngIf="isEditing">
+              <div *ngIf="isEditing" class="relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <span class="text-gray-500 dark:text-gray-400 text-sm"
+                    >$</span
+                  >
+                </div>
                 <input
                   type="number"
                   formControlName="openPrice"
+                  (keydown)="preventInvalidNumberInput($event)"
                   step="0.00000001"
                   min="0"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Enter open price"
+                  class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   [class.border-red-500]="
                     editForm.get('openPrice')?.invalid &&
                     editForm.get('openPrice')?.touched
                   "
                 />
-                <p
-                  class="mt-1 text-sm text-red-600 dark:text-red-400"
-                  *ngIf="
-                    editForm.get('openPrice')?.invalid &&
-                    editForm.get('openPrice')?.touched
-                  "
-                >
-                  Open Price is required and must be positive
-                </p>
               </div>
               <span
                 *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white font-mono"
+                class="block px-3 py-2 text-sm text-gray-900 dark:text-white font-mono"
               >
-                ${{ orderData.openPrice | number : '1.8-8' }}
+                ${{ orderData.price | number : "1.8-8" }}
               </span>
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  isEditing &&
+                  editForm.get('openPrice')?.invalid &&
+                  editForm.get('openPrice')?.touched
+                "
+              >
+                Open Price is required and must be positive
+              </p>
             </div>
 
-            <!-- Open Time -->
+            <!-- Volume -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Open Time
+                Volume <span class="text-red-500">*</span>
               </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="datetime-local"
-                  formControlName="openTime"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
+              <input
+                *ngIf="isEditing"
+                type="number"
+                formControlName="volume"
+                (keydown)="preventInvalidNumberInput($event)"
+                step="0.00000001"
+                min="0"
+                placeholder="Enter volume"
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                [class.border-red-500]="
+                  editForm.get('volume')?.invalid &&
+                  editForm.get('volume')?.touched
+                "
+              />
               <span
                 *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
+                class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
               >
-                {{ orderData.openTime | date:'short' }}
+                {{ orderData.quantity | number : "1.8-8" }}
               </span>
+              <p
+                class="mt-1 text-sm text-red-600 dark:text-red-400"
+                *ngIf="
+                  isEditing &&
+                  editForm.get('volume')?.invalid &&
+                  editForm.get('volume')?.touched
+                "
+              >
+                Volume is required and must be positive
+              </p>
             </div>
+          </div>
+        </div>
 
+        <!-- Risk Management -->
+        <div class="mb-6">
+          <h4
+            class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700"
+          >
+            Risk Management
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <!-- Stop Loss -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Stop Loss
               </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="number"
-                  formControlName="stopLoss"
-                  step="0.00000001"
-                  min="0"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
+              <input
+                *ngIf="isEditing"
+                type="number"
+                formControlName="stopLoss"
+                (keydown)="preventInvalidNumberInput($event)"
+                step="0.00000001"
+                min="0"
+                placeholder="Enter stop loss"
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
               <span
                 *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
+                class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
               >
-                {{ orderData.stopLoss ? ('$' + (orderData.stopLoss | number:'1.8-8')) : '-' }}
+                {{
+                  orderData.stopPrice
+                    ? "$" + (orderData.stopPrice | number : "1.8-8")
+                    : "-"
+                }}
               </span>
             </div>
 
             <!-- Take Profit -->
             <div>
               <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Take Profit
               </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="number"
-                  formControlName="takeProfit"
-                  step="0.00000001"
-                  min="0"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
+              <input
+                *ngIf="isEditing"
+                type="number"
+                formControlName="takeProfit"
+                (keydown)="preventInvalidNumberInput($event)"
+                step="0.00000001"
+                min="0"
+                placeholder="Enter take profit"
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
               <span
                 *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
+                class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
               >
-                {{ orderData.takeProfit ? ('$' + (orderData.takeProfit | number:'1.8-8')) : '-' }}
-              </span>
-            </div>
-
-            <!-- Close Price -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Close Price
-              </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="number"
-                  formControlName="closePrice"
-                  step="0.00000001"
-                  min="0"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ orderData.closePrice ? ('$' + (orderData.closePrice | number:'1.8-8')) : '-' }}
-              </span>
-            </div>
-
-            <!-- Close Time -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Close Time
-              </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="datetime-local"
-                  formControlName="closeTime"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ orderData.closeTime ? (orderData.closeTime | date:'short') : '-' }}
-              </span>
-            </div>
-
-            <!-- Commission -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Commission
-              </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="number"
-                  formControlName="commission"
-                  step="0.00000001"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ orderData.commission ? ('$' + (orderData.commission | number:'1.8-8')) : '-' }}
-              </span>
-            </div>
-
-            <!-- Swaps -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Swaps
-              </label>
-              <div *ngIf="isEditing">
-                <input
-                  type="number"
-                  formControlName="swaps"
-                  step="0.00000001"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ orderData.swaps ? ('$' + (orderData.swaps | number:'1.8-8')) : '-' }}
-              </span>
-            </div>
-
-            <!-- Floating P/L -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Floating P/L
-              </label>
-              <span 
-                class="text-sm font-mono"
-                [ngClass]="{
-                  'text-green-600 dark:text-green-400': orderData.floatingPL && orderData.floatingPL > 0,
-                  'text-red-600 dark:text-red-400': orderData.floatingPL && orderData.floatingPL < 0,
-                  'text-gray-900 dark:text-white': !orderData.floatingPL || orderData.floatingPL === 0
-                }"
-              >
-                {{ orderData.floatingPL ? ('$' + (orderData.floatingPL | number:'1.8-8')) : '-' }}
-              </span>
-            </div>
-
-            <!-- Net Floating P/L -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Net Floating P/L
-              </label>
-              <span 
-                class="text-sm font-mono"
-                [ngClass]="{
-                  'text-green-600 dark:text-green-400': orderData.netFloatingPL && orderData.netFloatingPL > 0,
-                  'text-red-600 dark:text-red-400': orderData.netFloatingPL && orderData.netFloatingPL < 0,
-                  'text-gray-900 dark:text-white': !orderData.netFloatingPL || orderData.netFloatingPL === 0
-                }"
-              >
-                {{ orderData.netFloatingPL ? ('$' + (orderData.netFloatingPL | number:'1.8-8')) : '-' }}
-              </span>
-            </div>
-
-            <!-- Margin -->
-            <div>
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Margin
-              </label>
-              <span class="text-sm text-gray-900 dark:text-white">
-                ${{ orderData.margin | number : '1.4-4' }}
-              </span>
-            </div>
-
-            <!-- Comment -->
-            <div class="md:col-span-2">
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-              >
-                Comment
-              </label>
-              <div *ngIf="isEditing">
-                <textarea
-                  formControlName="comment"
-                  rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                ></textarea>
-              </div>
-              <span
-                *ngIf="!isEditing"
-                class="text-sm text-gray-900 dark:text-white"
-              >
-                {{ orderData.comment || '-' }}
+                {{
+                  editForm.get("takeProfit")?.value
+                    ? "$" +
+                      (editForm.get("takeProfit")?.value | number : "1.8-8")
+                    : "-"
+                }}
               </span>
             </div>
           </div>
-          </form>
         </div>
-      </div>
+
+        <!-- Financial Metrics -->
+        <div class="mb-6">
+          <h4
+            class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700"
+          >
+            Financial Metrics
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Sell P/L -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Sell P/L
+              </label>
+              <input
+                type="text"
+                [value]="
+                  getSellPL() ? '$' + (getSellPL() | number : '1.8-8') : '-'
+                "
+                readonly
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
+              />
+            </div>
+
+            <!-- Buy P/L -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Buy P/L
+              </label>
+              <input
+                type="text"
+                [value]="
+                  getBuyPL() ? '$' + (getBuyPL() | number : '1.8-8') : '-'
+                "
+                readonly
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
+              />
+            </div>
+
+            <!-- Required Margin -->
+            <div>
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                Required Margin
+              </label>
+              <input
+                type="text"
+                [value]="
+                  getRequiredMargin()
+                    ? '$' + (getRequiredMargin() | number : '1.4-4')
+                    : '-'
+                "
+                readonly
+                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="mb-6">
+          <h4
+            class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 pb-2 border-b border-gray-200 dark:border-gray-700"
+          >
+            Additional Information
+          </h4>
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Comment
+            </label>
+            <textarea
+              *ngIf="isEditing"
+              formControlName="comment"
+              rows="3"
+              placeholder="Enter comment (optional)"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+            ></textarea>
+            <span
+              *ngIf="!isEditing"
+              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
+            >
+              {{ editForm.get("comment")?.value || "-" }}
+            </span>
+          </div>
+        </div>
+      </form>
     </div>
 
     <!-- Modal Footer -->
     <div
       class="modal-footer border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
     >
-    <!-- Left side: Cancel Order button -->
-    <div class="flex items-center gap-3">
-      <button
-        *ngIf="!isOrderClosed() && !isEditing"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-        (click)="cancelOrder()"
-        [disabled]="loading"
-      >
-        {{ loading ? 'Cancelling...' : 'Cancel Order' }}
-      </button>
-      <button
-        *ngIf="isOrderClosed() && !isEditing"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
-        (click)="openReopenModal()"
-      >
-        Reopen Order
-      </button>
-    </div>
+      <!-- Left side: Cancel/Reopen Order button -->
+      <div class="flex items-center gap-3">
+        <button
+          *ngIf="!isOrderClosed() && !isEditing"
+          type="button"
+          class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
+          (click)="cancelOrder()"
+          [disabled]="loading"
+        >
+          {{ loading ? "Cancelling..." : "Cancel Order" }}
+        </button>
+        <!-- <button
+          *ngIf="isOrderClosed() && !isEditing"
+          type="button"
+          class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+          (click)="openReopenModal()"
+        >
+          Reopen Order
+        </button> -->
+      </div>
 
-    <!-- Right side: Edit/Save/Close buttons -->
-    <div class="flex items-center gap-3">
-      <button
-        *ngIf="!isEditing"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-        (click)="startEdit()"
-      >
-        Edit
-      </button>
-      
-      <button
-        *ngIf="isEditing"
-        type="button"
-        class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50"
-        [disabled]="editForm.invalid || loading"
-        (click)="saveOrder()"
-      >
-        {{ loading ? 'Saving...' : 'Save Changes' }}
-      </button>
-      
-      <button
-        type="button"
-        class="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-        (click)="isEditing ? cancelEdit() : onClose()"
-        [disabled]="loading"
-      >
-        {{ isEditing ? 'Cancel' : 'Close' }}
+      <!-- Right side: Edit/Save/Close buttons -->
+      <div class="flex items-center gap-3">
+        <button
+          *ngIf="!isEditing"
+          type="button"
+          class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+          (click)="startEdit()"
+        >
+          Edit
+        </button>
+
+        <button
+          *ngIf="isEditing"
+          type="button"
+          class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors disabled:opacity-50"
+          [disabled]="editForm.invalid || loading"
+          (click)="saveOrder()"
+        >
+          {{ loading ? "Saving..." : "Save Changes" }}
+        </button>
+
+        <button
+          type="button"
+          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          (click)="isEditing ? cancelEdit() : onClose()"
+          [disabled]="loading"
+        >
+          {{ isEditing ? "Cancel" : "Close" }}
         </button>
       </div>
     </div>
@@ -504,7 +488,7 @@
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              New Desired PnL *
+              New Desired PnL <span class="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -532,7 +516,7 @@
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              New Close Price *
+              New Close Price <span class="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -561,12 +545,13 @@
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
-              Reason *
+              Reason <span class="text-red-500">*</span>
             </label>
             <textarea
               formControlName="reason"
               rows="3"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              placeholder="Enter reason for reopening"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
               [class.border-red-500]="
                 reopenForm.get('reason')?.invalid &&
                 reopenForm.get('reason')?.touched
@@ -586,7 +571,9 @@
       </div>
 
       <!-- Modal Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+      <div
+        class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3"
+      >
         <button
           type="button"
           class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -601,7 +588,7 @@
           [disabled]="reopenForm.invalid || loading"
           (click)="reopenOrder()"
         >
-          {{ loading ? 'Reopening...' : 'Reopen Order' }}
+          {{ loading ? "Reopening..." : "Reopen Order" }}
         </button>
       </div>
     </div>

@@ -1,10 +1,4 @@
-import {
-  Component,
-  inject,
-  Input,
-  OnInit,
-  OnDestroy,
-} from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -16,13 +10,17 @@ import { Subject, takeUntil } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
-import { PriceManagerService, Order, OrderUpdateRequest, ReopenOrderRequest } from '../../services/price-manager.service';
-import { TradingViewChartComponent } from '../../../../shared/components/trading-view-chart/trading-view-chart.component';
+import {
+  PriceManagerService,
+  Order,
+  OrderUpdateRequest,
+  ReopenOrderRequest,
+} from '../../services/price-manager.service';
 
 @Component({
   selector: 'app-order-edit-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TradingViewChartComponent],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './order-edit-modal.component.html',
   styles: [
     `
@@ -36,8 +34,8 @@ import { TradingViewChartComponent } from '../../../../shared/components/trading
 })
 export class OrderEditModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
-  @Input() orderId!: string; // Changed from order to orderId
-  @Input() order?: Order; // Optional, can be passed for immediate display
+  @Input() orderId!: string;
+  @Input() order?: Order;
 
   private service = inject(PriceManagerService);
   private alertService = inject(AlertService);
@@ -47,26 +45,26 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   editForm!: FormGroup;
   reopenForm!: FormGroup;
-  isEditing = true;
+  isEditing = false;
   loading = false;
-  loadingData = false; // New loading state for fetching order data
+  loadingData = false;
   originalValues: any = {};
-  orderData: Order | null = null; // Store fetched order data
+  orderData: any | null = null;
   showReopenModal = false;
+
+  sideOptions = [
+    { value: 1, label: 'Buy', class: 'text-green-600 dark:text-green-400' },
+    { value: 2, label: 'Sell', class: 'text-red-600 dark:text-red-400' },
+  ];
 
   constructor() {
     this.editForm = this.fb.group({
       side: [null],
-      volume: [null, [Validators.required, Validators.min(0)]],
-      openPrice: [null, [Validators.required, Validators.min(0)]],
-      openTime: [null],
+      volume: [null, [Validators.required, Validators.min(0.00000001)]],
+      leverage: [1, [Validators.min(1)]],
       stopLoss: [null, [Validators.min(0)]],
       takeProfit: [null, [Validators.min(0)]],
-      closePrice: [null, [Validators.min(0)]],
-      closeTime: [null],
-      commission: [null],
-      swaps: [null],
-      margin: [null],
+      openPrice: [null, [Validators.required, Validators.min(0)]],
       comment: [null],
     });
 
@@ -79,43 +77,38 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // If order is passed directly, use it immediately
     if (this.order) {
       this.orderData = this.order;
       this.populateForm();
-    }
-    // If orderId is provided, fetch the order from API
-    else if (this.orderId) {
+    } else if (this.orderId) {
       this.fetchOrderData();
     }
   }
 
   fetchOrderData(): void {
     this.loadingData = true;
-    
+
     this.service
       .getOrder(this.orderId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          // Extract order from nested response structure
           this.orderData = response.order || response;
           this.populateForm();
           this.loadingData = false;
         },
         error: (error) => {
           console.error('Error fetching order:', error);
-          
+
           let errorMessage = 'Failed to load order details';
           if (error?.error?.error) {
             errorMessage = error.error.error;
           } else if (error?.message) {
             errorMessage = error.message;
           }
-          
+
           this.alertService.error(errorMessage);
           this.loadingData = false;
-          // Close modal on error
           this.modalRef.dismiss();
         },
       });
@@ -124,41 +117,25 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   populateForm(): void {
     if (!this.orderData) return;
 
+    const metadata = this.orderData.metadata || {};
+
     this.editForm.patchValue({
       side: this.orderData.side,
-      volume: this.orderData.volume || this.orderData.quantity,
-      openPrice: this.orderData.openPrice || this.orderData.price,
-      openTime: this.orderData.openTime || this.orderData.createdAt,
-      stopLoss: this.orderData.stopLoss || this.orderData.stopPrice || null,
-      takeProfit: this.orderData.takeProfit || null,
-      closePrice: this.orderData.closePrice || null,
-      closeTime: this.orderData.closeTime || null,
-      commission: this.orderData.commission || null,
-      swaps: this.orderData.swaps || null,
-      margin: this.orderData.margin || this.orderData.requiredMargin,
-      comment: this.orderData.comment || null,
+      volume: this.orderData.quantity || this.orderData.volume,
+      leverage: this.orderData.leverage || 1,
+      openPrice: this.orderData.price || this.orderData.openPrice,
+      stopLoss: this.orderData.stopPrice || null,
+      takeProfit: metadata.TargetProfit || metadata.ExpectedProfit || null,
+      comment: this.orderData.comment || metadata.Comment || null,
     });
-    // Default to edit mode on open
-    this.editForm.enable();
+
+    this.editForm.disable();
     this.originalValues = this.editForm.value;
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  getOrderType(type: number): string {
-    const types: { [key: number]: string } = {
-      1: 'Market',
-      2: 'Limit',
-      3: 'Stop',
-      4: 'Stop Limit',
-      5: 'Trailing Stop',
-      6: 'Take Profit',
-      7: 'Take Profit Limit'
-    };
-    return types[type] || `Type ${type}`;
   }
 
   getOrderSide(side: number): string {
@@ -172,9 +149,30 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       3: 'Filled',
       4: 'Cancelled',
       5: 'Rejected',
-      6: 'Liquidated'
+      6: 'Liquidated',
     };
     return statuses[status] || `Status ${status}`;
+  }
+
+  getBuyPL(): number | null {
+    const metadata = this.orderData?.metadata || {};
+    if (this.orderData?.side === 1) {
+      return metadata.ExpectedProfit || metadata.TargetProfit || null;
+    }
+    return null;
+  }
+
+  getSellPL(): number | null {
+    const metadata = this.orderData?.metadata || {};
+    if (this.orderData?.side === 2) {
+      return metadata.ExpectedProfit || metadata.TargetProfit || null;
+    }
+    return null;
+  }
+
+  getRequiredMargin(): number | null {
+    const metadata = this.orderData?.metadata || {};
+    return this.orderData?.requiredMargin || metadata.RequiredMargin || null;
   }
 
   startEdit(): void {
@@ -195,7 +193,17 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
-    const updateData: OrderUpdateRequest = this.editForm.value;
+    const formValue = this.editForm.value;
+
+    const updateData: OrderUpdateRequest = {
+      side: formValue.side,
+      volume: formValue.volume,
+      leverage: formValue.leverage,
+      openPrice: formValue.openPrice,
+      stopLoss: formValue.stopLoss,
+      takeProfit: formValue.takeProfit,
+      comment: formValue.comment,
+    };
 
     this.service
       .updateOrder(this.orderData.id, updateData)
@@ -206,26 +214,23 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.isEditing = false;
           this.editForm.disable();
-          
-          // Update local order object with response
+
           if (response && this.orderData) {
             Object.assign(this.orderData, response);
           }
-          
-          // Notify parent component to refresh data
+
           this.modalRef.close(true);
         },
         error: (error) => {
           console.error('Error updating order:', error);
-          
-          // Extract error message from response
+
           let errorMessage = 'Failed to update order';
           if (error?.error?.error) {
             errorMessage = error.error.error;
           } else if (error?.message) {
             errorMessage = error.message;
           }
-          
+
           this.alertService.error(errorMessage);
           this.loading = false;
         },
@@ -250,26 +255,23 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           this.alertService.success('Order cancelled successfully');
           this.loading = false;
-          
-          // Update local order object with response
+
           if (response && this.orderData) {
             Object.assign(this.orderData, response);
           }
-          
-          // Notify parent component to refresh data
+
           this.modalRef.close(true);
         },
         error: (error) => {
           console.error('Error cancelling order:', error);
-          
-          // Extract error message from response
+
           let errorMessage = 'Failed to cancel order';
           if (error?.error?.error) {
             errorMessage = error.error.error;
           } else if (error?.message) {
             errorMessage = error.message;
           }
-          
+
           this.alertService.error(errorMessage);
           this.loading = false;
         },
@@ -277,7 +279,10 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   }
 
   onClose(): void {
-    if (this.isEditing && !confirm('You have unsaved changes. Are you sure you want to close?')) {
+    if (
+      this.isEditing &&
+      !confirm('You have unsaved changes. Are you sure you want to close?')
+    ) {
       return;
     }
     this.modalRef.dismiss();
@@ -285,16 +290,21 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   isOrderClosed(): boolean {
     if (!this.orderData) return false;
-    // Status 4 = Cancelled, 5 = Rejected, 6 = Liquidated
-    return this.orderData.status === 4 || this.orderData.status === 5 || this.orderData.status === 6;
+    // Status 3 = Filled, 4 = Cancelled, 5 = Rejected, 6 = Liquidated
+    return (
+      this.orderData.status === 3 ||
+      this.orderData.status === 4 ||
+      this.orderData.status === 5 ||
+      this.orderData.status === 6
+    );
   }
 
   openReopenModal(): void {
     this.showReopenModal = true;
-    // Pre-populate with current values if available
     if (this.orderData) {
+      const metadata = this.orderData.metadata || {};
       this.reopenForm.patchValue({
-        newDesiredPnL: this.orderData.unrealizedPnL || 0,
+        newDesiredPnL: metadata.ExpectedProfit || metadata.TargetProfit || 0,
         newClosePrice: this.orderData.price || 0,
       });
     }
@@ -302,7 +312,9 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   closeReopenModal(): void {
     this.showReopenModal = false;
-    this.reopenForm.reset();
+    this.reopenForm.reset({
+      applyNewOutcome: true,
+    });
   }
 
   reopenOrder(): void {
@@ -312,7 +324,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     const adminId = this.authService.getUserId();
-    
+
     if (!adminId) {
       this.alertService.error('Unable to get admin ID. Please log in again.');
       this.loading = false;
@@ -332,31 +344,44 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
           this.alertService.success('Order reopened successfully');
           this.loading = false;
           this.showReopenModal = false;
-          this.reopenForm.reset();
-          
-          // Update local order object with response
+          this.reopenForm.reset({
+            applyNewOutcome: true,
+          });
+
           if (response && this.orderData) {
             Object.assign(this.orderData, response);
           }
-          
-          // Notify parent component to refresh data
+
           this.modalRef.close(true);
         },
         error: (error) => {
           console.error('Error reopening order:', error);
-          
-          // Extract error message from response
+
           let errorMessage = 'Failed to reopen order';
           if (error?.error?.error) {
             errorMessage = error.error.error;
           } else if (error?.message) {
             errorMessage = error.message;
           }
-          
+
           this.alertService.error(errorMessage);
           this.loading = false;
         },
       });
   }
-}
 
+  preventInvalidNumberInput(event: KeyboardEvent): void {
+    const invalidKeys = ['e', 'E', '+'];
+    if (invalidKeys.includes(event.key)) {
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key === '.') {
+      const target = event.target as HTMLInputElement;
+      if (target && target.value.includes('.')) {
+        event.preventDefault();
+      }
+    }
+  }
+}

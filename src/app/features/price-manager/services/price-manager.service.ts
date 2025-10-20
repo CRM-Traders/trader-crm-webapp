@@ -73,7 +73,7 @@ export class PriceManagerService {
 
   cancelOrder(orderId: string) {
     return this.http.post(
-      `traiding/api/admin/trading/order/${orderId}/cancel`,
+      `traiding/api/admin/trading/close-order/${orderId}`,
       {}
     );
   }
@@ -330,6 +330,7 @@ export interface OrderUpdateRequest {
   openPrice?: number | null;
   openTime?: string | null;
   stopLoss?: number | null;
+  leverage?: number | null;
   takeProfit?: number | null;
   closePrice?: number | null;
   closeTime?: string | null;

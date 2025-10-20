@@ -87,12 +87,12 @@ export class NavigationService {
       route: '/manager',
       permission: 178,
     },
-    {
-      label: 'Sales Rules',
-      icon: 'salerule',
-      route: '/salerules',
-      permission: 126,
-    },
+    // {
+    //   label: 'Sales Rules',
+    //   icon: 'salerule',
+    //   route: '/salerules',
+    //   permission: 126,
+    // },
     {
       label: 'Permission Templates',
       icon: 'permission',
