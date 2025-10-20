@@ -1,3 +1,4 @@
+// quick-order-modal.component.ts
 import {
   Component,
   inject,
@@ -9,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, finalize, tap, of } from 'rxjs';
+import { Subject, takeUntil, catchError, finalize, tap } from 'rxjs';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
 import {
   PriceManagerService,
@@ -40,18 +41,14 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private destroy$ = new Subject<void>();
 
-  // Tab state
   activeTab = signal<'newOrder' | 'smartPL'>('newOrder');
 
-  // Form fields - New Order
   tradingAccountId = signal<string>('');
   symbol = signal<string>('');
-  side = signal<number>(1); // Default to Buy
-  quantity = signal<number | null>(null);
-  price = signal<number | null>(null);
+  side = signal<number>(1);
+  volume = signal<number | null>(null);
   leverage = signal<number>(1);
 
-  // New fields for updated order form
   stopLoss = signal<number | null>(null);
   takeProfit = signal<number | null>(null);
   openPrice = signal<number | null>(null);
@@ -62,11 +59,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   buyRequiredMargin = signal<number | null>(null);
   comment = signal<string>('');
   updatingPrice = signal<boolean>(false);
+  calculatingFromProfit = signal<boolean>(false);
 
-  // Form fields - Smart P/L (volume is shared with New Order form)
   smartPLSide = signal<number>(1);
   targetProfit = signal<number | null>(null);
-  volume = signal<number | null>(null);
   accountBalance = signal<number | null>(null);
   buyOpenPrice = signal<number | null>(null);
   buyClosePrice = signal<number | null>(null);
@@ -76,8 +72,8 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   commission = signal<number | null>(null);
   swap = signal<number | null>(null);
   closeImmediately = signal<boolean>(false);
+  calculatingFromVolume = signal<boolean>(false);
 
-  // New Smart P/L fields
   openTime = signal<string>('');
   closeHours = signal<number | null>(null);
   closeMinutes = signal<number | null>(null);
@@ -92,36 +88,22 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   loadingAccounts = signal<boolean>(false);
   tradingAccounts = signal<TradingAccount[]>([]);
 
-  // Live prices from TradingView
   lastPrice = signal<number | null>(null);
   bidPrice = signal<number | null>(null);
   askPrice = signal<number | null>(null);
 
-  // Current symbol from chart
   currentSymbol = signal<string>('');
 
-  // Loading states for calculations
-  calculatingFromProfit = signal<boolean>(false);
-  calculatingFromVolume = signal<boolean>(false);
-
-  // Client search
-  clientIdSearch = signal<string>('');
-  loadingClients = signal<boolean>(false);
-  clientSearchResults = signal<any>(null);
-
-  // Available options
   sideOptions = [
     { value: 1, label: 'Buy', class: 'text-green-600 dark:text-green-400' },
     { value: 2, label: 'Sell', class: 'text-red-600 dark:text-red-400' },
   ];
 
-  // Internal control to prevent feedback loops and throttle requests
   private suppressCalc = false;
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
 
   ngOnInit(): void {
-    // Fetch trading accounts for the user
     this.loadTradingAccounts();
   }
 
@@ -136,7 +118,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .getClientTradingAccounts(this.data.userId)
       .pipe(
         tap((response: any) => {
-          // Handle different response formats (API returns array directly)
           let accounts: TradingAccount[] = [];
           if (Array.isArray(response)) {
             accounts = response;
@@ -150,9 +131,12 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
           this.tradingAccounts.set(accounts);
 
-          // Set default trading account if available
           if (accounts.length > 0) {
             this.tradingAccountId.set(accounts[0].id);
+            // Set account balance from first account if available
+            if (accounts[0].initialBalance) {
+              this.accountBalance.set(accounts[0].initialBalance);
+            }
           }
         }),
         catchError((err: any) => {
@@ -174,57 +158,17 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  searchClient(): void {
-    const searchTerm = this.clientIdSearch();
-
-    if (!searchTerm || searchTerm.trim() === '') {
-      this.alertService.warning('Please enter a client ID to search');
-      return;
-    }
-
-    this.loadingClients.set(true);
-
-    this.priceManagerService
-      .getActiveClients(searchTerm.trim(), 0, 1000)
-      .pipe(
-        tap((response: any) => {
-          console.log('Client search response:', response);
-          this.clientSearchResults.set(response);
-
-          this.alertService.success('Client search completed successfully');
-        }),
-        catchError((err: any) => {
-          console.error('Error searching for clients:', err);
-          let errorMessage = 'Failed to search for clients';
-          if (err?.error?.error) {
-            errorMessage = err.error.error;
-          } else if (err?.error?.message) {
-            errorMessage = err.error.message;
-          } else if (err?.message) {
-            errorMessage = err.message;
-          }
-          this.alertService.error(errorMessage);
-          return of(null);
-        }),
-        finalize(() => this.loadingClients.set(false)),
-        takeUntil(this.destroy$)
-      )
-      .subscribe();
-  }
-
   switchTab(tab: 'newOrder' | 'smartPL'): void {
     this.activeTab.set(tab);
   }
 
-  // Handle events emitted by the TradingView chart
   onChartEvent(event: any): void {
     try {
       if (!event) return;
-      // We only care about quote updates
-      if (event.name === 'quoteUpdate' && event.data) {
-        const data = event.data as any;
-
-        // Set current symbol from chart
+      const json = JSON.parse(event);
+      if (json.name === 'quoteUpdate' && json.data) {
+        const data = json.data as any;
+        console.log(data);
         if (data.original_name) {
           this.currentSymbol.set(data.original_name);
 
@@ -233,21 +177,8 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           }
         }
 
-        // Optional: ensure the event corresponds to the currently selected symbol
-        const currentShort = this.symbol() || this.currentSymbol();
-        const matchesSymbol =
-          !currentShort ||
-          data?.short_name === currentShort ||
-          data?.original_name?.includes(currentShort);
-
-        if (!matchesSymbol) {
-          return;
-        }
-
-        // Set last/bid/ask if present; some feeds may not include bid/ask
         if (typeof data.last_price === 'number') {
           this.lastPrice.set(data.last_price);
-          // Auto-fill the New Order price if it's empty or not set yet
           if (
             this.activeTab() === 'newOrder' &&
             (!this.openPrice() ||
@@ -263,62 +194,22 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           this.askPrice.set(data.ask);
         }
       }
-    } catch {
-      // ignore parse/shape errors
-    }
+    } catch {}
   }
 
   private formatSymbolForTradingView(symbol: string): string {
-    // Check if it's a crypto pair (e.g., BTCUSDT, ETHUSDT)
     if (symbol.length >= 6 && symbol.endsWith('USDT')) {
       return `BINANCE:${symbol}`;
     }
-    // Check if it's a forex pair (e.g., EURUSD)
     if (symbol.length === 6 && /^[A-Z]{6}$/.test(symbol)) {
       return `FX:${symbol}`;
     }
-    // Default: try to find the symbol in common exchanges
     return `NASDAQ:${symbol}`;
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  onSubmit(): void {
-    if (this.activeTab() === 'newOrder') {
-      this.submitNewOrder();
-    } else {
-      this.submitSmartPL();
-    }
-  }
-
-  // ================= New Order Auto-Calculations =================
   onTakeProfitInput(value: any): void {
     this.takeProfit.set(value ? +value : null);
     this.triggerProfitBasedCalcNewOrder();
-  }
-
-  onAccountBalanceInput(value: any): void {
-    this.accountBalance.set(value ? +value : null);
-    if (this.activeTab() === 'newOrder') {
-      this.triggerProfitBasedCalcNewOrder();
-    } else {
-      this.recalculateSmartPL('accountBalance');
-    }
-  }
-
-  onLeverageChange(value: any): void {
-    this.leverage.set(value ? +value : 1);
-    if (this.activeTab() === 'newOrder') {
-      this.triggerProfitBasedCalcNewOrder();
-    }
-  }
-
-  onSmartPLLeverageChange(value: any): void {
-    this.smartPLLeverage.set(value ? +value : 1);
-    this.recalculateSmartPL('leverage');
   }
 
   private triggerProfitBasedCalcNewOrder(): void {
@@ -345,6 +236,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
         .calculateFromProfit(requestBody)
         .pipe(
           tap((resp: any) => {
+            console.log('Calculate from profit response:', resp);
             this.applyNewOrderCalculationResponse(resp);
           }),
           catchError((err) => {
@@ -363,19 +255,15 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
     this.suppressCalc = true;
     try {
-      // Apply volume
       if (typeof resp.volume === 'number') {
         this.volume.set(resp.volume);
       }
 
-      // Apply entry price (open price)
       if (typeof resp.entryPrice === 'number') {
         this.openPrice.set(resp.entryPrice);
       }
 
-      // Apply side-specific prices
       if (this.side() === 1) {
-        // Buy
         if (typeof resp.buyOpenPrice === 'number') {
           this.openPrice.set(resp.buyOpenPrice);
         }
@@ -386,7 +274,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           this.buyPL.set(resp.expectedProfit);
         }
       } else {
-        // Sell
         if (typeof resp.sellOpenPrice === 'number') {
           this.openPrice.set(resp.sellOpenPrice);
         }
@@ -400,12 +287,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     } finally {
       setTimeout(() => (this.suppressCalc = false), 0);
     }
-  }
-
-  // ================= Smart P/L Live Calculations =================
-  onExpectedPLInput(value: any): void {
-    this.targetProfit.set(value ? +value : null);
-    this.triggerProfitBasedCalc();
   }
 
   onVolumeInput(value: any): void {
@@ -430,6 +311,25 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     this.triggerVolumeBasedCalc();
   }
 
+  onAccountBalanceInput(value: any): void {
+    this.accountBalance.set(value ? +value : null);
+    if (this.activeTab() === 'newOrder') {
+      this.triggerProfitBasedCalcNewOrder();
+    } else {
+      this.recalculateSmartPL('accountBalance');
+    }
+  }
+
+  onLeverageChange(value: any): void {
+    this.leverage.set(value ? +value : 1);
+    this.triggerProfitBasedCalcNewOrder();
+  }
+
+  onSmartPLLeverageChange(value: any): void {
+    this.smartPLLeverage.set(value ? +value : 1);
+    this.recalculateSmartPL('leverage');
+  }
+
   onSellClosePriceInput(value: any): void {
     this.sellClosePrice.set(value ? +value : null);
     this.triggerVolumeBasedCalc();
@@ -440,10 +340,14 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     this.recalculateSmartPL('side');
   }
 
+  onExpectedPLInput(value: any): void {
+    this.targetProfit.set(value ? +value : null);
+    this.triggerProfitBasedCalc();
+  }
+
   private recalculateSmartPL(
     source: 'symbol' | 'side' | 'accountBalance' | 'leverage'
   ): void {
-    // Choose which calculation to run based on which core driver we currently have filled
     if (this.volume() && this.hasEntryExitPrices()) {
       this.triggerVolumeBasedCalc();
     } else if (this.targetProfit()) {
@@ -481,10 +385,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           tap((resp: any) => {
             this.applySmartPLCalculationResponse(resp, 'profit');
           }),
-          catchError((err) => {
-            console.error('Error calculating from profit:', err);
-            return [];
-          }),
+          catchError(() => []),
           finalize(() => this.calculatingFromProfit.set(false))
         )
         .subscribe();
@@ -508,8 +409,8 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       volume: this.volume()!,
       accountBalance: this.accountBalance()!,
       side: this.smartPLSide(),
-      entryPrice: entryPrice!,
-      exitPrice: exitPrice!,
+      entryPrice: entryPrice,
+      exitPrice: exitPrice,
       leverage: this.smartPLLeverage(),
       tradingAccountId: this.tradingAccountId() || null,
     };
@@ -522,10 +423,12 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
         .calculateFromVolume(requestBody)
         .pipe(
           tap((resp: any) => {
+            console.log('Calculate from volume response:', resp);
             this.applySmartPLCalculationResponse(resp, 'volume');
           }),
           catchError((err) => {
             console.error('Error calculating from volume:', err);
+            this.alertService.error('Failed to calculate from volume');
             return [];
           }),
           finalize(() => this.calculatingFromVolume.set(false))
@@ -737,8 +640,20 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  onSubmit(): void {
+    if (this.activeTab() === 'newOrder') {
+      this.submitNewOrder();
+    } else {
+      this.submitSmartPL();
+    }
+  }
+
   submitNewOrder(): void {
-    // Validate required fields
     if (!this.tradingAccountId()) {
       this.alertService.error('Please select a trading account');
       return;
@@ -762,7 +677,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
     this.submitting.set(true);
 
-    const requestBody = {
+    const requestBody: any = {
       tradingAccountId: this.tradingAccountId(),
       symbol: this.currentSymbol(),
       side: this.side(),
@@ -785,7 +700,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .pipe(
         tap(() => {
           this.alertService.success('Order created successfully');
-          this.modalRef.close(true); // Return true to indicate success
+          this.modalRef.close(true);
         }),
         catchError((err: any) => {
           console.error('Error creating order:', err);
@@ -807,7 +722,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   submitSmartPL(): void {
-    // Validate required fields
     if (!this.tradingAccountId()) {
       this.alertService.error('Please select a trading account');
       return;
@@ -844,24 +758,23 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       this.alertService.error('Please enter a valid buy close price');
       return;
     }
-    if (!this.commission() || this.commission()! < 0) {
+    if (this.commission() === null || this.commission()! < 0) {
       this.alertService.error('Please enter a valid commission');
       return;
     }
-    if (!this.swap() || this.swap()! < 0) {
-      this.alertService.error('Please enter a valid swaps');
+    if (this.swap() === null || this.swap()! < 0) {
+      this.alertService.error('Please enter valid swaps');
       return;
     }
 
     this.submitting.set(true);
 
-    // Calculate close time based on hours, minutes, seconds
     const closeTimeInSeconds =
       (this.closeHours() || 0) * 3600 +
       (this.closeMinutes() || 0) * 60 +
       (this.closeSeconds() || 0);
 
-    const requestBody = {
+    const requestBody: any = {
       tradingAccountId: this.tradingAccountId(),
       userId: this.data.userId,
       symbol: this.currentSymbol(),
@@ -887,8 +800,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .createOrderWithSmartPL(requestBody)
       .pipe(
         tap(() => {
-          this.alertService.success('Order created successfully');
-          this.modalRef.close(true); // Return true to indicate success
+          this.alertService.success(
+            'Order with Smart P/L created successfully'
+          );
+          this.modalRef.close(true);
         }),
         catchError((err: any) => {
           console.error('Error creating order:', err);
@@ -913,7 +828,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     this.modalRef.dismiss();
   }
 
-  // Prevent invalid characters in number input
   preventInvalidNumberInput(event: KeyboardEvent): void {
     const invalidKeys = ['e', 'E', '+'];
     if (invalidKeys.includes(event.key)) {
@@ -921,7 +835,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Only allow a single decimal separator
     if (event.key === '.') {
       const target = event.target as HTMLInputElement;
       if (target && target.value.includes('.')) {
