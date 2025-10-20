@@ -7,11 +7,15 @@ import { HttpService } from '../../../core/services/http.service';
 export class PriceManagerService {
   http = inject(HttpService);
 
-  getActiveClients(searchTerm: string | null = null, pageIndex: number = 0, pageSize: number = 1000) {
+  getActiveClients(
+    searchTerm: string | null = null,
+    pageIndex: number = 0,
+    pageSize: number = 1000
+  ) {
     return this.http.post('identity/api/clients/clients-for-trading-manager', {
       searchTerm,
       pageIndex,
-      pageSize
+      pageSize,
     });
   }
 
@@ -31,20 +35,32 @@ export class PriceManagerService {
     );
   }
 
-  getOpenOrders(clientUserId: string, pageIndex = 0, pageSize = 50, status = '', includePositions = true) {
+  getOpenOrders(
+    clientUserId: string,
+    pageIndex = 0,
+    pageSize = 50,
+    status = '',
+    includePositions = true
+  ) {
     let params = `page=${pageIndex}&size=${pageSize}`;
     if (status) params += `&status=${status}`;
     params += `&includePositions=${includePositions}`;
-    
-    return this.http.get(`traiding/api/admin/trading/orders/user/${clientUserId}?${params}`);
+
+    return this.http.get(
+      `traiding/api/admin/trading/orders/user/${clientUserId}?${params}`
+    );
   }
 
   updateOrderPrice(orderId: string, newPrice: number) {
-    return this.http.put(`traiding/api/admin/trading/update-price`, { newPrice });
+    return this.http.put(`traiding/api/admin/trading/update-price`, {
+      newPrice,
+    });
   }
 
   closeOrder(orderId: string, price: number | null) {
-    return this.http.post(`traiding/api/admin/trading/close-order/${orderId}`, { price });
+    return this.http.post(`traiding/api/admin/trading/close-order/${orderId}`, {
+      price,
+    });
   }
 
   getOrder(orderId: string) {
@@ -56,33 +72,56 @@ export class PriceManagerService {
   }
 
   cancelOrder(orderId: string) {
-    return this.http.post(`traiding/api/admin/trading/order/${orderId}/cancel`, {});
+    return this.http.post(
+      `traiding/api/admin/trading/order/${orderId}/cancel`,
+      {}
+    );
   }
 
   reopenOrder(orderId: string, data: ReopenOrderRequest) {
-    return this.http.post(`traiding/api/admin/trading/order/${orderId}/reopen`, data);
+    return this.http.post(
+      `traiding/api/admin/trading/order/${orderId}/reopen`,
+      data
+    );
   }
 
-  getTransactions(clientUserId: string, pageIndex = 0, pageSize = 50, type = '', status = '', startDate = '', endDate = '') {
+  getTransactions(
+    clientUserId: string,
+    pageIndex = 0,
+    pageSize = 50,
+    type = '',
+    status = '',
+    startDate = '',
+    endDate = ''
+  ) {
     let params = `page=${pageIndex}&size=${pageSize}`;
     if (type) params += `&type=${type}`;
     if (status) params += `&status=${status}`;
     if (startDate) params += `&startDate=${startDate}`;
     if (endDate) params += `&endDate=${endDate}`;
-    
-    return this.http.get(`traiding/api/admin/trading/transactions/user/${clientUserId}?${params}`);
+
+    return this.http.get(
+      `traiding/api/admin/trading/transactions/user/${clientUserId}?${params}`
+    );
   }
 
   getTransaction(transactionId: string) {
-    return this.http.get(`traiding/api/admin/trading/transaction/${transactionId}`);
+    return this.http.get(
+      `traiding/api/admin/trading/transaction/${transactionId}`
+    );
   }
 
   updateTransaction(transactionId: string, data: TransactionUpdateRequest) {
-    return this.http.put(`traiding/api/admin/trading/transaction/${transactionId}`, data);
+    return this.http.put(
+      `traiding/api/admin/trading/transaction/${transactionId}`,
+      data
+    );
   }
 
   deleteTransaction(transactionId: string, permanent: boolean = false) {
-    return this.http.delete(`traiding/api/admin/trading/transaction/${transactionId}?permanent=${permanent}`);
+    return this.http.delete(
+      `traiding/api/admin/trading/transaction/${transactionId}?permanent=${permanent}`
+    );
   }
 
   createQuickOrder(data: QuickOrderRequest) {
@@ -98,7 +137,9 @@ export class PriceManagerService {
   }
 
   getClientTradingAccounts(clientUserId: string) {
-    return this.http.get(`traiding/api/TradingAccounts/client-accounts-for-admin?clientUserId=${clientUserId}`);
+    return this.http.get(
+      `traiding/api/TradingAccounts/client-accounts-for-admin?clientUserId=${clientUserId}`
+    );
   }
 
   adjustBalance(data: AdjustBalanceRequest) {
@@ -107,11 +148,16 @@ export class PriceManagerService {
 
   hiddenWithdrawal(data: HiddenWithdrawalRequest) {
     // Use text response to surface plain-text backend errors without JSON parse issues
-    return this.http.postText(`traiding/api/admin/trading/hidden-withdrawal`, data);
+    return this.http.postText(
+      `traiding/api/admin/trading/hidden-withdrawal`,
+      data
+    );
   }
 
   getUserBalance(userId: string, currency: string) {
-    return this.http.get(`traiding/api/admin/trading/balance/user/${userId}?currency=${currency}`);
+    return this.http.get(
+      `traiding/api/admin/trading/balance/user/${userId}?currency=${currency}`
+    );
   }
 
   bulkLiquidate(data: BulkLiquidateRequest) {
@@ -119,7 +165,10 @@ export class PriceManagerService {
   }
 
   createBulkOrder(data: BulkOrderRequest) {
-    return this.http.post(`traiding/api/admin/trading/orders/bulk-create`, data);
+    return this.http.post(
+      `traiding/api/admin/trading/orders/bulk-create`,
+      data
+    );
   }
 
   // Smart P/L calculation endpoints
@@ -129,10 +178,10 @@ export class PriceManagerService {
     accountBalance: number;
     side: number;
     leverage: number;
-    tradingAccountId: string;
+    tradingAccountId: string | null;
   }) {
     return this.http.post(
-      `api/admin/trading/smart-pl/calculate-from-profit`,
+      `traiding/api/admin/trading/smart-pl/calculate-from-profit`,
       data
     );
   }
@@ -145,10 +194,10 @@ export class PriceManagerService {
     entryPrice: number;
     exitPrice: number;
     leverage: number;
-    tradingAccountId: string;
+    tradingAccountId: string | null;
   }) {
     return this.http.post(
-      `api/admin/trading/smart-pl/calculate-from-volume`,
+      `traiding/api/admin/trading/smart-pl/calculate-from-volume`,
       data
     );
   }
@@ -164,7 +213,7 @@ export class PriceManagerService {
     leverage: number;
   }) {
     return this.http.post(
-      `api/admin/trading/smart-pl/auto-calculate`,
+      `traiding/api/admin/trading/smart-pl/auto-calculate`,
       data
     );
   }

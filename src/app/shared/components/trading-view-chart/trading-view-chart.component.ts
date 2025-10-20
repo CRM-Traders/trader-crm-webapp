@@ -205,9 +205,10 @@ export class TradingViewChartComponent
         return;
       }
 
+      console.log('From Back', event.data);
       const data = event.data;
 
-      console.log(data);
+      // console.log(data);
 
       // Emit the event data to parent component
       if (data) {

@@ -20,10 +20,16 @@
           Live Chart
         </h4>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Select a symbol to view live market data
+          Change symbol in the chart to update order form
+        </p>
+        <p
+          *ngIf="currentSymbol()"
+          class="text-xs text-green-600 dark:text-green-400 mt-1 font-medium"
+        >
+          Current Symbol: {{ currentSymbol() }}
         </p>
       </div>
-      
+
       <div class="chart-wrapper">
         <app-trading-view-chart
           [symbol]="'BTCUSDT'"
@@ -128,133 +134,32 @@
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Enter multiple login IDs separated by commas
           </p>
-          <p *ngIf="fetchedClients().length > 0" class="mt-1 text-xs text-green-600 dark:text-green-400 font-medium">
+          <p
+            *ngIf="fetchedClients().length > 0"
+            class="mt-1 text-xs text-green-600 dark:text-green-400 font-medium"
+          >
             ✓ {{ fetchedClients().length }} client(s) found and ready
           </p>
         </div>
 
-        <!-- Symbol -->
+        <!-- Account Balance for calculations -->
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
-            Symbol <span class="text-red-500">*</span>
+            Account Balance (for calculations)
           </label>
-
-          <!-- Loading State -->
-          <div
-            *ngIf="loadingSymbols()"
-            class="flex items-center justify-center py-3 text-sm text-gray-500 dark:text-gray-400"
-          >
-            <svg
-              class="animate-spin -ml-1 mr-2 h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            Loading symbols...
-          </div>
-
-          <!-- Custom Searchable Dropdown -->
-          <div
-            *ngIf="!loadingSymbols()"
-            class="custom-dropdown"
-            #symbolDropdownRoot
-          >
-            <div class="dropdown-trigger cursor-pointer" (click)="toggleSymbolDropdown()">
-              <input
-                type="text"
-                [ngModel]="symbol()"
-                (ngModelChange)="symbol.set($event)"
-                name="symbol"
-                [placeholder]="symbol() ? '' : 'Select a symbol...'"
-                class="dropdown-input block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                autocomplete="off"
-                readonly
-              />
-              <svg
-                class="dropdown-icon"
-                [class.rotated]="showSymbolDropdown()"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-
-            <div class="dropdown-menu mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50" *ngIf="showSymbolDropdown()">
-              <div class="dropdown-search p-2 border-b border-gray-200 dark:border-gray-700">
-                <svg
-                  class="search-icon"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <input
-                  type="text"
-                  [ngModel]="symbolSearchTerm()"
-                  (ngModelChange)="onSymbolSearch($event)"
-                  [ngModelOptions]="{ standalone: true }"
-                  name="symbolSearch"
-                  placeholder="Search symbols..."
-                  class="search-input w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="off"
-                />
-              </div>
-
-              <div class="dropdown-list max-h-64 overflow-y-auto">
-                <div
-                  *ngFor="let sym of filteredSymbols()"
-                  class="dropdown-item px-3 py-2 cursor-pointer border-b border-gray-400 hover:bg-gray-400/20 transition-colors"
-                  [class.selected]="symbol() === sym.symbol"
-                  [ngClass]="{ 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400': symbol() === sym.symbol }"
-                  (mousedown)="selectSymbol(sym)"
-                >
-                  <span class="symbol-name">{{ sym.symbol }}</span>
-                  <span class="symbol-pair"
-                    >{{ sym.baseAsset }}/{{ sym.quoteAsset }}</span
-                  >
-                </div>
-
-                <div
-                  *ngIf="filteredSymbols().length === 0"
-                  class="dropdown-empty p-4 text-center text-gray-500 dark:text-gray-400 text-sm"
-                >
-                  No symbols found
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {{ filteredSymbols().length }} symbol(s) available
-          </p>
+          <input
+            type="number"
+            [ngModel]="accountBalance()"
+            (ngModelChange)="accountBalance.set($event ? +$event : null)"
+            name="accountBalance"
+            (keydown)="preventInvalidNumberInput($event)"
+            step="0.01"
+            min="0"
+            placeholder="Enter account balance"
+            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
         </div>
 
         <!-- Volume -->
@@ -274,10 +179,75 @@
             min="0"
             placeholder="Enter volume"
             class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            [readonly]="calculatingFromProfit()"
+          />
+          <p
+            *ngIf="calculatingFromProfit()"
+            class="mt-1 text-xs text-blue-600 dark:text-blue-400"
+          >
+            Auto-calculated from Take Profit
+          </p>
+        </div>
+
+        <!-- Side (Buy/Sell) -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Side <span class="text-red-500">*</span>
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <label
+              *ngFor="let option of sideOptions"
+              class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all"
+              [ngClass]="{
+                'border-blue-500 bg-blue-50 dark:bg-blue-900/20':
+                  side() === option.value,
+                'border-gray-300 dark:border-gray-600 hover:border-gray-400':
+                  side() !== option.value
+              }"
+            >
+              <input
+                type="radio"
+                name="side"
+                [value]="option.value"
+                [checked]="side() === option.value"
+                (change)="side.set(option.value)"
+                class="sr-only"
+              />
+              <span
+                class="text-sm font-medium"
+                [ngClass]="
+                  side() === option.value
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : option.class
+                "
+              >
+                {{ option.label }}
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Leverage -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Leverage
+          </label>
+          <input
+            type="number"
+            [ngModel]="leverage()"
+            (ngModelChange)="onLeverageChange($event)"
+            name="leverage"
+            min="1"
+            placeholder="Enter leverage"
+            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
-        <!-- Row 2: Stop Loss and Take Profit -->
+        <!-- Row: Stop Loss and Take Profit -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -303,11 +273,16 @@
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Take Profit
+              <span
+                *ngIf="calculatingFromProfit()"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
             </label>
             <input
               type="number"
               [ngModel]="takeProfit()"
-              (ngModelChange)="takeProfit.set($event ? +$event : null)"
+              (ngModelChange)="onTakeProfitInput($event)"
               name="takeProfit"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -315,10 +290,13 @@
               placeholder="Enter take profit"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Will auto-calculate volume and prices
+            </p>
           </div>
         </div>
 
-        <!-- Row 3: Open Price, Update Button, and Auto Checkbox -->
+        <!-- Row: Open Price, Update Button, and Auto Checkbox -->
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -347,7 +325,7 @@
             <button
               type="button"
               (click)="updatePrice()"
-              [disabled]="updatingPrice() || !symbol() || !openPrice()"
+              [disabled]="updatingPrice() || !currentSymbol() || !openPrice()"
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
               <span *ngIf="!updatingPrice()">Update</span>
@@ -388,7 +366,7 @@
           </div>
         </div>
 
-        <!-- Row 4: Sell P/L and Buy P/L -->
+        <!-- Row: Sell P/L and Buy P/L -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -429,7 +407,7 @@
           </div>
         </div>
 
-        <!-- Row 5: Sell Required Margin and Buy Required Margin -->
+        <!-- Row: Sell Required Margin and Buy Required Margin -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -541,108 +519,35 @@
           <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Enter multiple login IDs separated by commas
           </p>
-          <p *ngIf="fetchedClients().length > 0" class="mt-1 text-xs text-green-600 dark:text-green-400 font-medium">
+          <p
+            *ngIf="fetchedClients().length > 0"
+            class="mt-1 text-xs text-green-600 dark:text-green-400 font-medium"
+          >
             ✓ {{ fetchedClients().length }} client(s) found and ready
           </p>
         </div>
 
-        <!-- Row 1: Symbol -->
+        <!-- Account Balance for calculations -->
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
-            Symbol <span class="text-red-500">*</span>
+            Account Balance (for calculations)
           </label>
-
-          <!-- Custom Searchable Dropdown -->
-          <div class="custom-dropdown" #smartPLSymbolDropdownRoot>
-            <div
-              class="dropdown-trigger cursor-pointer"
-              (click)="toggleSmartPLSymbolDropdown()"
-            >
-              <input
-                type="text"
-                [ngModel]="smartPLSymbol()"
-                (ngModelChange)="smartPLSymbol.set($event)"
-                name="smartPLSymbol"
-                [placeholder]="smartPLSymbol() ? '' : 'Select a symbol...'"
-                class="dropdown-input block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                autocomplete="off"
-                readonly
-              />
-              <svg
-                class="dropdown-icon"
-                [class.rotated]="showSmartPLSymbolDropdown()"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-
-            <div class="dropdown-menu mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-50" *ngIf="showSmartPLSymbolDropdown()">
-              <div class="dropdown-search p-2 border-b border-gray-200 dark:border-gray-700">
-                <svg
-                  class="search-icon"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <input
-                  type="text"
-                  [ngModel]="smartPLSymbolSearchTerm()"
-                  (ngModelChange)="onSmartPLSymbolSearch($event)"
-                  [ngModelOptions]="{ standalone: true }"
-                  name="smartPLSymbolSearch"
-                  placeholder="Search symbols..."
-                  class="search-input w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  autocomplete="off"
-                />
-              </div>
-
-              <div class="dropdown-list max-h-64 overflow-y-auto">
-                <div
-                  *ngFor="let sym of filteredSmartPLSymbols()"
-                  class="dropdown-item px-3 py-2 cursor-pointer border-b border-gray-100 dark:border-gray-600 hover:bg-gray-400/20 transition-colors"
-                  [class.selected]="smartPLSymbol() === sym.symbol"
-                  [ngClass]="{ 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400': smartPLSymbol() === sym.symbol }"
-                  (mousedown)="selectSmartPLSymbol(sym)"
-                >
-                  <span class="symbol-name">{{ sym.symbol }}</span>
-                  <span class="symbol-pair"
-                    >{{ sym.baseAsset }}/{{ sym.quoteAsset }}</span
-                  >
-                </div>
-
-                <div
-                  *ngIf="filteredSmartPLSymbols().length === 0"
-                  class="dropdown-empty p-4 text-center text-gray-500 dark:text-gray-400 text-sm"
-                >
-                  No symbols found
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {{ filteredSmartPLSymbols().length }} symbol(s) available
-          </p>
+          <input
+            type="number"
+            [ngModel]="accountBalance()"
+            (ngModelChange)="onAccountBalanceInput($event)"
+            name="accountBalance"
+            (keydown)="preventInvalidNumberInput($event)"
+            step="0.01"
+            min="0"
+            placeholder="Enter account balance"
+            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
         </div>
 
-        <!-- Row 2: Open Time -->
+        <!-- Row: Open Time -->
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -658,7 +563,7 @@
           />
         </div>
 
-        <!-- Row 3: Hour, Minute, Second and Close Interval Checkbox -->
+        <!-- Row: Hour, Minute, Second and Close Interval Checkbox -->
         <div class="grid grid-cols-4 gap-3">
           <div>
             <label
@@ -727,13 +632,18 @@
           </div>
         </div>
 
-        <!-- Row 4: Volume and Expected P/L -->
+        <!-- Row: Volume and Expected P/L -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Volume <span class="text-red-500">*</span>
+              <span
+                *ngIf="calculatingFromVolume()"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
             </label>
             <input
               type="number"
@@ -746,6 +656,9 @@
               placeholder="Enter volume"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Auto-calculates expected P/L
+            </p>
           </div>
 
           <div>
@@ -753,11 +666,16 @@
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Expected P/L <span class="text-red-500">*</span>
+              <span
+                *ngIf="calculatingFromProfit()"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
             </label>
             <input
               type="number"
-              [ngModel]="expectedPL()"
-              (ngModelChange)="expectedPL.set($event ? +$event : null)"
+              [ngModel]="targetProfit()"
+              (ngModelChange)="onExpectedPLInput($event)"
               name="expectedPL"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -765,10 +683,31 @@
               placeholder="Enter expected P/L"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Auto-calculates volume and prices
+            </p>
           </div>
         </div>
 
-        <!-- Row 5: Sell Open Price with Update Button, Auto Checkbox, and Sell Close Price -->
+        <!-- Leverage -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Leverage
+          </label>
+          <input
+            type="number"
+            [ngModel]="smartPLLeverage()"
+            (ngModelChange)="onSmartPLLeverageChange($event)"
+            name="smartPLLeverage"
+            min="1"
+            placeholder="Enter leverage"
+            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        <!-- Row: Sell Open Price with Update Button, Auto Checkbox, and Sell Close Price -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -781,7 +720,9 @@
                 <div
                   class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                 >
-                  <span class="text-gray-500 dark:text-gray-400 text-sm">$</span>
+                  <span class="text-gray-500 dark:text-gray-400 text-sm"
+                    >$</span
+                  >
                 </div>
                 <input
                   type="number"
@@ -798,7 +739,9 @@
               <button
                 type="button"
                 (click)="updateSellOpenPrice()"
-                [disabled]="updatingSellPrice() || !smartPLSymbol() || !sellOpenPrice()"
+                [disabled]="
+                  updatingSellPrice() || !currentSymbol() || !sellOpenPrice()
+                "
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
                 <span *ngIf="!updatingSellPrice()">Update</span>
@@ -838,7 +781,7 @@
               </div>
             </div>
           </div>
-  
+
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -859,7 +802,7 @@
           </div>
         </div>
 
-        <!-- Row 6: Buy Open Price with Update Button, Auto Checkbox, and Buy Close Price -->
+        <!-- Row: Buy Open Price with Update Button, Auto Checkbox, and Buy Close Price -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -872,7 +815,9 @@
                 <div
                   class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
                 >
-                  <span class="text-gray-500 dark:text-gray-400 text-sm">$</span>
+                  <span class="text-gray-500 dark:text-gray-400 text-sm"
+                    >$</span
+                  >
                 </div>
                 <input
                   type="number"
@@ -889,7 +834,9 @@
               <button
                 type="button"
                 (click)="updateBuyOpenPrice()"
-                [disabled]="updatingBuyPrice() || !smartPLSymbol() || !buyOpenPrice()"
+                [disabled]="
+                  updatingBuyPrice() || !currentSymbol() || !buyOpenPrice()
+                "
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
                 <span *ngIf="!updatingBuyPrice()">Update</span>
@@ -929,7 +876,7 @@
               </div>
             </div>
           </div>
-  
+
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -950,7 +897,7 @@
           </div>
         </div>
 
-        <!-- Row 7: Commission and Swaps -->
+        <!-- Row: Commission and Swaps -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -991,7 +938,7 @@
           </div>
         </div>
 
-        <!-- Row 8: Sell Required Margin and Buy Required Margin -->
+        <!-- Row: Sell Required Margin and Buy Required Margin -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -1032,7 +979,7 @@
           </div>
         </div>
 
-        <!-- Row 9: Side (Sell/Buy) -->
+        <!-- Row: Side (Sell/Buy) -->
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -1095,23 +1042,23 @@
       submitting() ||
       (activeTab() === 'newOrder' &&
         (!loginIdsInput() ||
-          !symbol() ||
+          !currentSymbol() ||
           !volume() ||
           !openPrice() ||
           volume()! <= 0 ||
           openPrice()! <= 0)) ||
       (activeTab() === 'smartPL' &&
         (!loginIdsInput() ||
-          !smartPLSymbol() ||
+          !currentSymbol() ||
           !openTime() ||
           !volume() ||
-          !expectedPL() ||
+          !targetProfit() ||
           !sellOpenPrice() ||
           !sellClosePrice() ||
           !buyOpenPrice() ||
           !buyClosePrice() ||
           volume()! <= 0 ||
-          expectedPL()! <= 0 ||
+          targetProfit()! <= 0 ||
           sellOpenPrice()! <= 0 ||
           sellClosePrice()! <= 0 ||
           buyOpenPrice()! <= 0 ||
@@ -1150,4 +1097,3 @@
     </span>
   </button>
 </div>
-
