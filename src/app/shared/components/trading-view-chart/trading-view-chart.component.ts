@@ -81,7 +81,6 @@ export class TradingViewChartComponent
   }
 
   ngAfterViewInit(): void {
-    // Run outside Angular zone for better performance
     this.ngZone.runOutsideAngular(() => {
       this.boundMessageHandler = (event: MessageEvent) => {
         this.onWindowMessage(event);
@@ -171,18 +170,13 @@ export class TradingViewChartComponent
 
     // Mark as loaded
     this.scriptLoaded.set(true);
-
-    console.log('[TradingView] Chart initialized with symbol:', this.symbol);
   }
 
   private updateChartTheme(): void {
     if (!this.chartContainer?.nativeElement) {
       return;
     }
-    console.log(
-      '[TradingView] Updating theme to:',
-      this.isDarkMode() ? 'dark' : 'light'
-    );
+
     this.initializeChart();
   }
 
@@ -191,12 +185,7 @@ export class TradingViewChartComponent
     if (!newSymbol || newSymbol === this.symbol) {
       return;
     }
-    console.log(
-      '[TradingView] Updating symbol from',
-      this.symbol,
-      'to',
-      newSymbol
-    );
+
     this.symbol = newSymbol;
     this.initializeChart();
   }
@@ -204,26 +193,6 @@ export class TradingViewChartComponent
   // Parses TradingView window messages
 
   private onWindowMessage(event: MessageEvent): void {
-    try {
-      const origin = event.origin || '';
-
-      if (
-        !origin.includes('tradingview.com') &&
-        !origin.includes('tradingview')
-      ) {
-        return;
-      }
-
-      const data = event.data;
-
-      // Run inside Angular zone to trigger change detection
-      this.ngZone.run(() => {
-        if (data) {
-          this.parseEventData.emit(data);
-        }
-      });
-    } catch (error) {
-      console.debug('[TradingView] Message parse error:', error);
-    }
+    this.parseEventData.emit(event.data);
   }
 }

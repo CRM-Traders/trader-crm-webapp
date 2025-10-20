@@ -800,12 +800,7 @@ export class ClientsComponent implements OnInit {
     // Check if there's a temporary selection for this client
     if (this.tempSalesStatusSelections.has(clientId)) {
       const tempValue = this.tempSalesStatusSelections.get(clientId)!;
-      console.log(
-        'Using temporary selection for client',
-        clientId,
-        ':',
-        tempValue
-      );
+
       return tempValue;
     }
 
@@ -822,7 +817,6 @@ export class ClientsComponent implements OnInit {
 
   // Handler for CustomSelect change (Sales Status)
   onSalesStatusSelect(clientId: string, value: number, clientData: any): void {
-    console.log('Sales status selected:', { clientId, value, clientData });
     const status = this.salesStatusOptions.find((s) => s.value === value);
     if (!status) return;
 
@@ -830,11 +824,9 @@ export class ClientsComponent implements OnInit {
     const originalStatus = this.normalizeSalesStatus(
       clientData?.saleStatusEnum || clientData?.salesStatus
     );
-    console.log('Original status:', originalStatus);
 
     // Store temporary selection to show in dropdown
     this.tempSalesStatusSelections.set(clientId, value);
-    console.log('Temporary selection set:', this.tempSalesStatusSelections);
 
     // Show confirmation modal instead of directly changing status
     this.showSalesStatusConfirmationModal(
@@ -882,7 +874,6 @@ export class ClientsComponent implements OnInit {
 
     modalRef.result.then(
       (confirmed) => {
-        console.log('Modal confirmed:', confirmed);
         if (confirmed) {
           // User confirmed, proceed with the status change
           this.selectSalesStatus(clientId, status, clientData);
@@ -892,7 +883,6 @@ export class ClientsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       (reason) => {
-        console.log('Modal cancelled/dismissed:', reason);
         // User cancelled or modal was dismissed - clear temporary selection and force UI update
         this.tempSalesStatusSelections.delete(clientId);
         // Force change detection to ensure dropdown reverts to original value
@@ -906,7 +896,6 @@ export class ClientsComponent implements OnInit {
 
     // Handle modal dismissal (backdrop click, escape key, etc.)
     modalRef.dismissed.then((reason) => {
-      console.log('Modal dismissed:', reason);
       // Clear temporary selection and revert dropdown
       this.tempSalesStatusSelections.delete(clientId);
       this.cdr.detectChanges();

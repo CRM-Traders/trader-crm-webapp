@@ -8,6 +8,7 @@ import { HasPermissionDirective } from '../../core/directives/has-permission.dir
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
 import { BulkOrderModalComponent } from './components/bulk-order-modal/bulk-order-modal.component';
+import { TradingViewChartComponent } from '../../shared/components/trading-view-chart/trading-view-chart.component';
 
 @Component({
   selector: 'app-price-manager',
@@ -214,10 +215,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
     );
 
     modalRef.result.then((result: any) => {
-      if (result) {
-        // Refresh the clients list after successful bulk order creation
-        this.refreshData();
-      }
+      window.location.reload();
     });
   }
 }

@@ -28,6 +28,7 @@ export interface BulkOrderData {
   imports: [CommonModule, FormsModule, TradingViewChartComponent],
   templateUrl: './bulk-order-modal.component.html',
   styleUrls: ['./bulk-order-modal.component.scss'],
+  providers: [TradingViewChartComponent],
 })
 export class BulkOrderModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
@@ -113,7 +114,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       const json = JSON.parse(event);
       if (json.name === 'quoteUpdate' && json.data) {
         const data = json.data as any;
-        console.log(data);
         if (data.original_name) {
           this.currentSymbol.set(data.original_name);
 
@@ -158,11 +158,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   }
 
   private triggerProfitBasedCalcNewOrder(): void {
-    console.log(1);
     if (this.suppressCalc) return;
-    console.log(2);
     // Check if we have all required fields
-    console.log(this.currentSymbol());
     if (!this.currentSymbol() || !this.takeProfit() || !this.accountBalance()) {
       return;
     }
@@ -184,7 +181,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
         .calculateFromProfit(requestBody)
         .pipe(
           tap((resp: any) => {
-            console.log('Calculate from profit response:', resp); // Debug log
             this.applyNewOrderCalculationResponse(resp);
           }),
           catchError((err) => {
@@ -375,7 +371,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
         .calculateFromVolume(requestBody)
         .pipe(
           tap((resp: any) => {
-            console.log('Calculate from volume response:', resp); // Debug log
             this.applySmartPLCalculationResponse(resp, 'volume');
           }),
           catchError((err) => {
@@ -598,6 +593,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.modalRef.close(true);
+
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -840,8 +837,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
         tap((response: any) => {
           const clients = response?.data || response?.items || [];
           this.fetchedClients.set(clients);
-
-          console.log(this.fetchedClients());
 
           if (clients.length === 0) {
             this.alertService.warning(

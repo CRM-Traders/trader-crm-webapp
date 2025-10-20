@@ -47,9 +47,7 @@ export class SignalRService {
     try {
       await this.chatHubConnection.start();
       this.connectionStatus$.next('connected');
-      console.log('SignalR Connected');
     } catch (err) {
-      console.error('ChatHub connection failed:', err);
       this.connectionStatus$.next('error');
       throw err;
     }
@@ -60,20 +58,17 @@ export class SignalRService {
     this.chatHubConnection.on(
       'ReceiveMessage',
       (event: MessageReceivedEvent) => {
-        console.log('Message received:', event);
         this.messageReceived$.next(event);
       }
     );
 
     this.chatHubConnection.on('MessageEdited', (event: MessageEditedEvent) => {
-      console.log('Message edited:', event);
       this.messageEdited$.next(event);
     });
 
     this.chatHubConnection.on(
       'MessageDeleted',
       (event: MessageDeletedEvent) => {
-        console.log('Message deleted:', event);
         this.messageDeleted$.next(event);
       }
     );
@@ -112,13 +107,8 @@ export class SignalRService {
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
     ) {
       try {
-        console.log(chatId);
-
         await this.chatHubConnection.invoke('JoinChat', chatId);
-        console.log(`Joined chat: ${chatId}`);
-      } catch (error) {
-        console.error('Error joining chat:', error);
-      }
+      } catch (error) {}
     }
   }
 
@@ -128,7 +118,6 @@ export class SignalRService {
     ) {
       try {
         await this.chatHubConnection.invoke('LeaveChat', chatId);
-        console.log(`Left chat: ${chatId}`);
       } catch (error) {
         console.error('Error leaving chat:', error);
       }
@@ -140,11 +129,8 @@ export class SignalRService {
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
     ) {
       try {
-        console.log(chatId);
         await this.chatHubConnection.invoke('NotifyTyping', chatId, isTyping);
-      } catch (error) {
-        console.error('Error sending typing indicator:', error);
-      }
+      } catch (error) {}
     }
   }
 
@@ -153,11 +139,8 @@ export class SignalRService {
       this.chatHubConnection?.state === signalR.HubConnectionState.Connected
     ) {
       try {
-        console.log(this.chatHubConnection.baseUrl);
         await this.chatHubConnection.invoke('MarkChatAsRead', chatId);
-      } catch (error) {
-        console.error('Error marking chat as read:', error);
-      }
+      } catch (error) {}
     }
   }
 

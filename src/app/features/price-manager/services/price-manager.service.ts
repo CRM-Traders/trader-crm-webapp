@@ -181,7 +181,6 @@ export class PriceManagerService {
   calculateFromProfit(data: {
     symbol: string;
     targetProfit: number;
-    accountBalance: number;
     side: number;
     leverage: number;
     tradingAccountId: string | null;
@@ -195,7 +194,6 @@ export class PriceManagerService {
   calculateFromVolume(data: {
     symbol: string;
     volume: number;
-    accountBalance: number;
     side: number;
     entryPrice: number;
     exitPrice: number;
@@ -212,7 +210,6 @@ export class PriceManagerService {
     symbol: string;
     targetProfit: number;
     volume: number;
-    accountBalance: number;
     side: number;
     entryPrice: number;
     exitPrice: number;

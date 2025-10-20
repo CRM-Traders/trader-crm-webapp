@@ -1,4 +1,3 @@
-// quick-order-modal.component.ts
 import {
   Component,
   inject,
@@ -168,7 +167,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       const json = JSON.parse(event);
       if (json.name === 'quoteUpdate' && json.data) {
         const data = json.data as any;
-        console.log(data);
         if (data.original_name) {
           this.currentSymbol.set(data.original_name);
 
@@ -236,7 +234,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
         .calculateFromProfit(requestBody)
         .pipe(
           tap((resp: any) => {
-            console.log('Calculate from profit response:', resp);
             this.applyNewOrderCalculationResponse(resp);
           }),
           catchError((err) => {
@@ -423,7 +420,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
         .calculateFromVolume(requestBody)
         .pipe(
           tap((resp: any) => {
-            console.log('Calculate from volume response:', resp);
             this.applySmartPLCalculationResponse(resp, 'volume');
           }),
           catchError((err) => {
