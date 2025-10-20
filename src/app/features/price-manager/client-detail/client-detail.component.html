@@ -130,9 +130,7 @@
       <!-- Tab Content -->
       <div class="flex justify-between items-center mb-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {{
-            selectedTab() === "orders" ? "Open Orders" : "Transaction History"
-          }}
+          {{ selectedTab() === "orders" ? "Orders" : "Transaction History" }}
         </h3>
         <div class="flex items-center space-x-3">
           <!-- Quick Order Button (only for orders) -->
@@ -199,7 +197,7 @@
             Hidden Withdrawal
           </button>
           <!-- Bulk Liquidate Button (only for orders) -->
-          <button
+          <!-- <button
             *ngIf="selectedTab() === 'orders'"
             (click)="openBulkLiquidateModal()"
             class="inline-flex items-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
@@ -218,7 +216,7 @@
               />
             </svg>
             Bulk Liquidate
-          </button>
+          </button> -->
         </div>
       </div>
 
@@ -245,74 +243,64 @@
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 Symbol
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
-                Order Type
+                Type / Side
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Side
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 Price
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 Quantity
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
-                Filled Quantity
+                Filled
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 Status
               </th>
-              <!-- <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Leverage
-              </th> -->
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
-                Position ID
+                Margin
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
-                Required Margin
+                Target Profit
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
-                Total Value
+                Fees
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Created At
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Last Modified At
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 P&L
+              </th>
+              <th
+                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
+                Created
+              </th>
+              <th
+                class="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              >
+                Actions
               </th>
             </tr>
           </thead>
@@ -322,171 +310,229 @@
             <!-- Orders -->
             <tr
               *ngFor="let order of openOrders(); trackBy: trackByOrderId"
-              (click)="openOrderEditModal(order)"
-              class="hover:bg-gray-50/10 transition-colors cursor-pointer"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
             >
               <!-- Symbol -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div
-                  class="text-sm font-medium text-gray-900 dark:text-gray-100"
-                >
-                  {{ order.tradingPairSymbol }}
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div class="flex flex-col">
+                  <span
+                    class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                  >
+                    {{
+                      order.tradingPairSymbol!.split(":")[1] ||
+                        order.tradingPairSymbol
+                    }}
+                  </span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ order.tradingPairSymbol!.split(":")[0] || "BINANCE" }}
+                  </span>
                 </div>
               </td>
 
-              <!-- Order Type -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ order.orderTypeLabel }}
-                </span>
-              </td>
-
-              <!-- Side -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  [ngClass]="{
-                    'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
-                      order.sideLabel === 'Buy',
-                    'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100':
-                      order.sideLabel === 'Sell'
-                  }"
-                >
-                  {{ order.sideLabel }}
-                </span>
+              <!-- Type / Side -->
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div class="flex flex-col gap-1">
+                  <span class="text-xs text-gray-600 dark:text-gray-400">
+                    {{ order.orderTypeLabel }}
+                  </span>
+                  <span
+                    class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium w-fit"
+                    [ngClass]="{
+                      'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400':
+                        order.side === 1,
+                      'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400':
+                        order.side === 0
+                    }"
+                  >
+                    {{ order.sideLabel }}
+                  </span>
+                </div>
               </td>
 
               <!-- Price -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-4 py-3 whitespace-nowrap text-right">
                 <div class="text-sm font-mono text-gray-900 dark:text-gray-100">
-                  {{ order.price | number : "1.8-8" }}
+                  ${{ order.price | number : "1.2-2" }}
                 </div>
               </td>
 
               <!-- Quantity -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ order.quantity | number : "1.8-8" }}
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div class="text-sm font-mono text-gray-900 dark:text-gray-100">
+                  {{ order.quantity | number : "1.2-8" }}
                 </div>
               </td>
 
               <!-- Filled Quantity -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ order.filledQuantity | number : "1.8-8" }}
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div class="flex flex-col items-end">
+                  <span
+                    class="text-sm font-mono text-gray-900 dark:text-gray-100"
+                  >
+                    {{ order.filledQuantity | number : "1.2-8" }}
+                  </span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    {{
+                      (order.filledQuantity / order.quantity) * 100
+                        | number : "1.0-0"
+                    }}%
+                  </span>
                 </div>
               </td>
 
               <!-- Status -->
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td class="px-4 py-3 whitespace-nowrap text-center">
                 <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
                   [ngClass]="{
-                    'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100':
-                      order.statusLabel === 'Active',
-                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100':
-                      order.statusLabel === 'Partially Filled',
-                    'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100':
-                      order.statusLabel === 'Filled',
-                    'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100':
-                      order.statusLabel === 'Cancelled' ||
-                      order.statusLabel === 'Rejected',
-                    'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100':
-                      order.statusLabel === 'Liquidated'
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400':
+                      order.status === 1,
+                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400':
+                      order.status === 2,
+                    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400':
+                      order.status === 3,
+                    'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400':
+                      order.status === 4 || order.status === 5,
+                    'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400':
+                      order.status === 6
                   }"
                 >
                   {{ order.statusLabel }}
                 </span>
               </td>
 
-              <!-- Leverage -->
-              <!-- <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ order.leverage }}x
-                </div>
-              </td> -->
-
-              <!-- Position ID -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-500 dark:text-gray-400">
-                  {{ order.positionId || "-" }}
-                </div>
-              </td>
-
-              <!-- Required Margin -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ order.requiredMargin | number : "1.4-4" }}
+              <!-- Margin -->
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div class="flex flex-col items-end">
+                  <span
+                    class="text-sm font-medium text-gray-900 dark:text-gray-100"
+                  >
+                    ${{ order.requiredMargin | number : "1.2-2" }}
+                  </span>
+                  <span class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ order.leverage }}x
+                  </span>
                 </div>
               </td>
 
-              <!-- Total Value -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ order.totalValue | number : "1.4-4" }}
+              <!-- Target Profit -->
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div
+                  class="text-sm font-medium text-green-600 dark:text-green-400"
+                >
+                  <span *ngIf="order.metadata?.TargetProfit">
+                    +${{ order.metadata!.TargetProfit | number : "1.2-2" }}
+                  </span>
+                  <span
+                    *ngIf="!order.metadata?.TargetProfit"
+                    class="text-gray-400"
+                  >
+                    -
+                  </span>
                 </div>
               </td>
 
-              <!-- Created At -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900 dark:text-gray-100">
-                  {{ formatDate(order.createdAt) }}
-                </div>
-              </td>
-
-              <!-- Last Modified At -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-500 dark:text-gray-400">
-                  {{
-                    order.lastModifiedAt
-                      ? formatDate(order.lastModifiedAt)
-                      : "-"
-                  }}
+              <!-- Fees (Commission + Swap) -->
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div class="flex flex-col items-end">
+                  <span class="text-sm text-gray-900 dark:text-gray-100">
+                    ${{
+                      (order.metadata?.Commission || 0) +
+                        (order.metadata?.Swap || 0) | number : "1.2-2"
+                    }}
+                  </span>
+                  <span
+                    class="text-xs text-gray-500 dark:text-gray-400"
+                    *ngIf="order.metadata?.PaymentCurrency"
+                  >
+                    {{ order.metadata!.PaymentCurrency }}
+                  </span>
                 </div>
               </td>
 
               <!-- P&L -->
-              <td class="px-6 py-4 whitespace-nowrap">
-                <div
-                  class="text-sm font-medium"
-                  [ngClass]="{
-                    'text-green-600 dark:text-green-400':
-                      (order.unrealizedPnL || 0) > 0,
-                    'text-red-600 dark:text-red-400':
-                      (order.unrealizedPnL || 0) < 0,
-                    'text-gray-600 dark:text-gray-400':
-                      (order.unrealizedPnL || 0) === 0
-                  }"
-                >
-                  {{ (order.unrealizedPnL || 0) > 0 ? "+" : ""
-                  }}{{ order.unrealizedPnL || 0 | number : "1.4-4" }}
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div class="flex flex-col items-end">
+                  <span
+                    class="text-sm font-semibold"
+                    [ngClass]="{
+                      'text-green-600 dark:text-green-400':
+                        (order.unrealizedPnL || 0) > 0,
+                      'text-red-600 dark:text-red-400':
+                        (order.unrealizedPnL || 0) < 0,
+                      'text-gray-600 dark:text-gray-400':
+                        (order.unrealizedPnL || 0) === 0
+                    }"
+                  >
+                    {{ (order.unrealizedPnL || 0) >= 0 ? "+" : "" }}${{
+                      order.unrealizedPnL || 0 | number : "1.2-2"
+                    }}
+                  </span>
+                  <span
+                    class="text-xs font-medium"
+                    [ngClass]="{
+                      'text-green-600 dark:text-green-400':
+                        (order.unrealizedPnLPercent || 0) > 0,
+                      'text-red-600 dark:text-red-400':
+                        (order.unrealizedPnLPercent || 0) < 0,
+                      'text-gray-600 dark:text-gray-400':
+                        (order.unrealizedPnLPercent || 0) === 0
+                    }"
+                  >
+                    {{ (order.unrealizedPnLPercent || 0) >= 0 ? "+" : ""
+                    }}{{ order.unrealizedPnLPercent || 0 | number : "1.2-2" }}%
+                  </span>
                 </div>
-                <div
-                  class="text-xs"
-                  [ngClass]="{
-                    'text-green-600 dark:text-green-400':
-                      (order.unrealizedPnLPercent || 0) > 0,
-                    'text-red-600 dark:text-red-400':
-                      (order.unrealizedPnLPercent || 0) < 0,
-                    'text-gray-600 dark:text-gray-400':
-                      (order.unrealizedPnLPercent || 0) === 0
-                  }"
-                >
-                  {{ (order.unrealizedPnLPercent || 0) > 0 ? "+" : ""
-                  }}{{ order.unrealizedPnLPercent || 0 | number : "1.2-2" }}%
+              </td>
+
+              <!-- Created -->
+              <td class="px-4 py-3 whitespace-nowrap">
+                <div class="flex flex-col">
+                  <span class="text-sm text-gray-900 dark:text-gray-100">
+                    {{ formatDate(order.createdAt) }}
+                  </span>
+                  <span
+                    class="text-xs text-gray-500 dark:text-gray-400"
+                    *ngIf="order.metadata?.BulkOrderId"
+                  >
+                    Bulk Order
+                  </span>
                 </div>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-4 py-3 whitespace-nowrap text-center">
+                <button
+                  (click)="openOrderEditModal(order); $event.stopPropagation()"
+                  class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Edit
+                </button>
               </td>
             </tr>
 
             <!-- Empty State Row -->
             <tr *ngIf="openOrders().length === 0">
-              <td colspan="16" class="px-6 py-12 text-center">
+              <td colspan="12" class="px-6 py-16 text-center">
                 <div class="flex flex-col items-center">
                   <div
-                    class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
+                    class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
                   >
                     <svg
-                      class="w-6 h-6 text-gray-400 dark:text-gray-500"
+                      class="w-8 h-8 text-gray-400 dark:text-gray-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -495,17 +541,18 @@
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
                       />
                     </svg>
                   </div>
                   <h3
-                    class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
+                    class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1"
                   >
-                    No Orders Found
+                    No Orders
                   </h3>
-                  <p class="text-gray-500 dark:text-gray-400">
-                    {{ client()?.fullName }} has no open orders at the moment.
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ client()?.fullName || "This account" }} has no orders at
+                    the moment.
                   </p>
                 </div>
               </td>

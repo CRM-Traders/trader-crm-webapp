@@ -10,7 +10,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, finalize, tap } from 'rxjs';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
-import { PriceManagerService, TradingAccount } from '../../services/price-manager.service';
+import {
+  PriceManagerService,
+  TradingAccount,
+} from '../../services/price-manager.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { TradingSymbolsService } from '../../services/trading-symbols.service';
 
@@ -114,35 +117,55 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
   loadCurrencies(): void {
     this.loadingCurrencies.set(true);
 
-    this.symbolsService.getAvailableCurrencies()
+    this.symbolsService
+      .getAvailableCurrencies()
       .pipe(
         tap((currenciesList: string[]) => {
           this.currencies.set(currenciesList || []);
           this.filteredCurrencies.set(currenciesList || []);
-          
+
           // Set default currency if not already set and currencies are available
           if (currenciesList && currenciesList.length > 0 && !this.currency()) {
             // Try to find USD, if not available use the first one
-            const defaultCurrency = currenciesList.includes('USD') ? 'USD' : currenciesList[0];
+            const defaultCurrency = currenciesList.includes('USD')
+              ? 'USD'
+              : currenciesList[0];
             this.currency.set(defaultCurrency);
             // Load balance for default currency
-            this.loadUserBalance();
           }
         }),
         catchError((err: any) => {
           console.error('Error loading currencies:', err);
           this.alertService.error('Failed to load currencies');
           // Set default currencies on error
-          const fallbackCurrencies = ['USD', 'EUR', 'GBP', 'BTC', 'ETH', 'USDT'];
+          const fallbackCurrencies = [
+            'USD',
+            'EUR',
+            'GBP',
+            'BTC',
+            'ETH',
+            'USDT',
+          ];
           this.currencies.set(fallbackCurrencies);
           this.filteredCurrencies.set(fallbackCurrencies);
           return [];
         }),
-        finalize(() => this.loadingCurrencies.set(false)),
+        finalize(() => {
+          this.loadingCurrencies.set(false);
+          this.loadUserBalance();
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe();
   }
+
+  formatAmount = (value: number | string): string => {
+    return value?.toLocaleString('en-US', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
   loadUserBalance(): void {
     if (!this.data?.userId || !this.currency()) {
@@ -175,14 +198,14 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
 
   onCurrencySearch(searchTerm: string): void {
     this.currencySearchTerm.set(searchTerm);
-    
+
     if (!searchTerm || searchTerm.trim().length === 0) {
       this.filteredCurrencies.set(this.currencies());
       return;
     }
 
     const normalizedSearch = searchTerm.toUpperCase().trim();
-    const filtered = this.currencies().filter(currency =>
+    const filtered = this.currencies().filter((currency) =>
       currency.toUpperCase().includes(normalizedSearch)
     );
 
@@ -217,8 +240,12 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
 
     // Check user balance before processing withdrawal
     const balanceData = this.userBalance();
-    
-    if (!balanceData || !balanceData.balances || balanceData.balances.length === 0) {
+
+    if (
+      !balanceData ||
+      !balanceData.balances ||
+      balanceData.balances.length === 0
+    ) {
       this.alertService.error('Unable to verify balance. Please try again.');
       this.submitting.set(false);
       return;
@@ -230,7 +257,11 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
 
     if (availableBalance < withdrawalAmount) {
       this.alertService.error(
-        `Insufficient balance. Available: ${availableBalance.toFixed(8)} ${this.currency()}, Requested: ${withdrawalAmount.toFixed(8)} ${this.currency()}`
+        `Insufficient balance. Available: ${availableBalance.toFixed(
+          8
+        )} ${this.currency()}, Requested: ${withdrawalAmount.toFixed(
+          8
+        )} ${this.currency()}`
       );
       this.submitting.set(false);
       return;
@@ -244,7 +275,8 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
       userId: this.data.userId,
     };
 
-    this.priceManagerService.hiddenWithdrawal(requestBody)
+    this.priceManagerService
+      .hiddenWithdrawal(requestBody)
       .pipe(
         tap(() => {
           this.alertService.success('Hidden withdrawal processed successfully');
@@ -252,8 +284,9 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
         }),
         catchError((err: any) => {
           console.error('Error processing hidden withdrawal:', err);
-          let errorMessage = 'Failed to process hidden withdrawal. Please try again.';
-          
+          let errorMessage =
+            'Failed to process hidden withdrawal. Please try again.';
+
           // Prefer plain-text error responses from backend (e.g., "Insufficient balance...")
           if (typeof err?.error === 'string') {
             errorMessage = err.error;
@@ -264,7 +297,7 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
           } else if (err?.message) {
             errorMessage = err.message;
           }
-          
+
           this.alertService.error(errorMessage);
           return [];
         }),
@@ -295,4 +328,3 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
     }
   }
 }
-

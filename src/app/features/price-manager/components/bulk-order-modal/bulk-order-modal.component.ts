@@ -114,24 +114,41 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       const json = JSON.parse(event);
       if (json.name === 'quoteUpdate' && json.data) {
         const data = json.data as any;
+
+        // Track previous symbol to detect changes
+        const previousSymbol = this.currentSymbol();
+
         if (data.original_name) {
           this.currentSymbol.set(data.original_name);
 
           if (this.activeTab() === 'newOrder') {
             this.symbol.set(data.original_name);
+
+            // Update price on symbol change
+            if (
+              previousSymbol !== data.original_name &&
+              typeof data.last_price === 'number'
+            ) {
+              this.openPrice.set(data.last_price);
+            }
           }
         }
 
         if (typeof data.last_price === 'number') {
           this.lastPrice.set(data.last_price);
-          if (
-            this.activeTab() === 'newOrder' &&
-            (!this.openPrice() ||
-              (typeof this.openPrice() === 'number' && this.openPrice()! <= 0))
-          ) {
-            this.openPrice.set(data.last_price);
+
+          if (this.activeTab() === 'newOrder') {
+            // Update if auto is on OR if price is empty/invalid
+            if (
+              this.autoPrice() ||
+              !this.openPrice() ||
+              (typeof this.openPrice() === 'number' && this.openPrice()! <= 0)
+            ) {
+              this.openPrice.set(data.last_price);
+            }
           }
         }
+
         if (typeof data.bid === 'number') {
           this.bidPrice.set(data.bid);
         }
@@ -141,7 +158,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       }
     } catch {}
   }
-
   private formatSymbolForTradingView(symbol: string): string {
     if (symbol.length >= 6 && symbol.endsWith('USDT')) {
       return `BINANCE:${symbol}`;
@@ -160,14 +176,16 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private triggerProfitBasedCalcNewOrder(): void {
     if (this.suppressCalc) return;
     // Check if we have all required fields
-    if (!this.currentSymbol() || !this.takeProfit() || !this.accountBalance()) {
+    console.log(this.currentSymbol());
+    console.log(this.takeProfit());
+    console.log(this.accountBalance());
+    if (!this.currentSymbol() || !this.takeProfit()) {
       return;
     }
 
     const requestBody = {
       symbol: this.currentSymbol(),
       targetProfit: this.takeProfit()!,
-      accountBalance: this.accountBalance()!,
       side: this.side(),
       leverage: this.leverage(),
       tradingAccountId: null, // Empty string as per your API
@@ -297,6 +315,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private recalculateSmartPL(
     source: 'symbol' | 'side' | 'accountBalance' | 'leverage'
   ): void {
+    console.log(this.volume());
+    console.log(this.hasEntryExitPrices());
     if (this.volume() && this.hasEntryExitPrices()) {
       this.triggerVolumeBasedCalc();
     } else if (this.targetProfit()) {
@@ -307,18 +327,13 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private triggerProfitBasedCalc(): void {
     if (this.suppressCalc) return;
 
-    if (
-      !this.currentSymbol() ||
-      !this.targetProfit() ||
-      !this.accountBalance()
-    ) {
+    if (!this.currentSymbol() || !this.targetProfit()) {
       return;
     }
 
     const requestBody = {
       symbol: this.currentSymbol(),
       targetProfit: this.targetProfit()!,
-      accountBalance: this.accountBalance()!,
       side: this.smartPLSide(),
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
@@ -343,11 +358,12 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private triggerVolumeBasedCalc(): void {
     if (this.suppressCalc) return;
 
-    if (!this.currentSymbol() || !this.volume() || !this.accountBalance()) {
+    if (!this.currentSymbol() || !this.volume()) {
       return;
     }
 
     const { entryPrice, exitPrice } = this.getEntryExitPrices();
+
     if (entryPrice == null || exitPrice == null) {
       return;
     }
@@ -355,7 +371,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     const requestBody = {
       symbol: this.currentSymbol(),
       volume: this.volume()!,
-      accountBalance: this.accountBalance()!,
       side: this.smartPLSide(),
       entryPrice: entryPrice,
       exitPrice: exitPrice,
@@ -473,43 +488,12 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   }
 
   updatePrice(): void {
-    if (!this.currentSymbol() || !this.openPrice()) {
-      this.alertService.error('Symbol and open price are required');
+    if (!this.lastPrice()) {
+      this.alertService.error('No price data available from chart');
       return;
     }
 
-    this.updatingPrice.set(true);
-
-    const requestBody = {
-      symbol: this.currentSymbol(),
-      newPrice: this.openPrice()!,
-      userId: null,
-      updateGlobal: false,
-    };
-
-    this.priceManagerService
-      .updatePrice(requestBody)
-      .pipe(
-        tap(() => {
-          this.alertService.success('Price updated successfully');
-        }),
-        catchError((err: any) => {
-          console.error('Error updating price:', err);
-          let errorMessage = 'Failed to update price. Please try again.';
-          if (err?.error?.error) {
-            errorMessage = err.error.error;
-          } else if (err?.error?.message) {
-            errorMessage = err.error.message;
-          } else if (err?.message) {
-            errorMessage = err.message;
-          }
-          this.alertService.error(errorMessage);
-          return [];
-        }),
-        finalize(() => this.updatingPrice.set(false)),
-        takeUntil(this.destroy$)
-      )
-      .subscribe();
+    this.openPrice.set(this.lastPrice()!);
   }
 
   updateSellOpenPrice(): void {
@@ -658,6 +642,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       sellRequiredMargin: this.sellRequiredMargin(),
       buyRequiredMargin: this.buyRequiredMargin(),
       comment: this.comment(),
+      closeImmediately: this.closeImmediately(), // Added this
     };
 
     this.priceManagerService
@@ -709,10 +694,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       this.alertService.error('Please wait for symbol data from chart');
       return;
     }
-    if (!this.openTime()) {
-      this.alertService.error('Please enter an open time');
-      return;
-    }
+
     if (!this.volume() || this.volume()! <= 0) {
       this.alertService.error('Please enter a valid volume');
       return;
@@ -721,44 +703,33 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       this.alertService.error('Please enter a valid expected P/L');
       return;
     }
-    if (!this.sellOpenPrice() || this.sellOpenPrice()! <= 0) {
-      this.alertService.error('Please enter a valid sell open price');
-      return;
-    }
-    if (!this.sellClosePrice() || this.sellClosePrice()! <= 0) {
-      this.alertService.error('Please enter a valid sell close price');
-      return;
-    }
-    if (!this.buyOpenPrice() || this.buyOpenPrice()! <= 0) {
-      this.alertService.error('Please enter a valid buy open price');
-      return;
-    }
-    if (!this.buyClosePrice() || this.buyClosePrice()! <= 0) {
-      this.alertService.error('Please enter a valid buy close price');
-      return;
-    }
-    if (this.commission() === null || this.commission()! < 0) {
-      this.alertService.error('Please enter a valid commission');
-      return;
-    }
-    if (this.swap() === null || this.swap()! < 0) {
-      this.alertService.error('Please enter valid swaps');
-      return;
+
+    if (this.smartPLSide() == 2) {
+      if (!this.sellOpenPrice() || this.sellOpenPrice()! <= 0) {
+        this.alertService.error('Please enter a valid sell open price');
+        return;
+      }
+      if (!this.sellClosePrice() || this.sellClosePrice()! <= 0) {
+        this.alertService.error('Please enter a valid sell close price');
+        return;
+      }
+    } else {
+      if (!this.buyOpenPrice() || this.buyOpenPrice()! <= 0) {
+        this.alertService.error('Please enter a valid buy open price');
+        return;
+      }
+      if (!this.buyClosePrice() || this.buyClosePrice()! <= 0) {
+        this.alertService.error('Please enter a valid buy close price');
+        return;
+      }
     }
 
     this.submitting.set(true);
 
-    const closeTimeInSeconds =
-      (this.closeHours() || 0) * 3600 +
-      (this.closeMinutes() || 0) * 60 +
-      (this.closeSeconds() || 0);
-
     const requestBody: any = {
-      loginIds: loginIds,
+      loginIds: this.fetchedClients().map((x) => x.userId),
       symbol: this.currentSymbol(),
       side: this.smartPLSide(),
-      openTime: this.openTime(),
-      closeTime: closeTimeInSeconds,
       closeInterval: this.closeInterval(),
       volume: this.volume()!,
       expectedPL: this.targetProfit()!,
@@ -766,12 +737,11 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       sellClosePrice: this.sellClosePrice()!,
       buyOpenPrice: this.buyOpenPrice()!,
       buyClosePrice: this.buyClosePrice()!,
-      commission: this.commission()!,
-      swap: this.swap()!,
       sellRequiredMargin: this.sellRequiredMargin(),
       buyRequiredMargin: this.buyRequiredMargin(),
       autoSellPrice: this.autoSellPrice(),
       autoBuyPrice: this.autoBuyPrice(),
+      closeImmediately: this.closeImmediately(),
     };
 
     this.priceManagerService

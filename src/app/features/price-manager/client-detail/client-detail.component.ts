@@ -39,6 +39,7 @@ import { QuickOrderModalComponent } from '../components/quick-order-modal/quick-
 import { AdjustBalanceModalComponent } from '../components/adjust-balance-modal/adjust-balance-modal.component';
 import { HiddenWithdrawalModalComponent } from '../components/hidden-withdrawal-modal/hidden-withdrawal-modal.component';
 import { BulkLiquidateModalComponent } from '../components/bulk-liquidate-modal/bulk-liquidate-modal.component';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-client-detail',
@@ -152,7 +153,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
     return this.service.getOpenOrders(this.client()!.userId, 0, 50).pipe(
       tap((response: any) => {
-        if (response?.orders && Array.isArray(response.orders)) {
+        if (response?.orders) {
           const currentPriceUpdates = { ...this.orderPriceUpdates };
           const processedOrders = response.orders.map((order: Order) =>
             this.processOrder(order)
@@ -170,7 +171,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
           this.orderPriceUpdates = {};
         }
       }),
-      catchError((err: any) => {
+      catchError((err: HttpErrorResponse) => {
         console.error('Error loading open orders:', err);
         if (!silent) {
           let errorMessage = 'Failed to load open orders';

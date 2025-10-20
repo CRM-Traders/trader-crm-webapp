@@ -222,6 +222,22 @@ export class PriceManagerService {
   }
 }
 
+export interface OrderMetadata {
+  Swap?: number;
+  SmartPL?: boolean;
+  Commission?: number;
+  BulkOrderId?: string;
+  WalletsUsed?: {
+    [currency: string]: number;
+  };
+  TargetProfit?: number;
+  FundsDeducted?: number;
+  RequiredMargin?: number;
+  PaymentCurrency?: string;
+  ConversionTransactions?: string[];
+  [key: string]: any; // Allow for additional metadata fields
+}
+
 export interface Order {
   id: string;
   tradingAccountId: string;
@@ -238,13 +254,14 @@ export interface Order {
   stopPrice?: number | null;
   expiresAt?: string | null;
   clientOrderId?: string | null;
-  metadata?: any;
+  metadata?: OrderMetadata;
   createdAt: string;
   lastModifiedAt: string | null;
   requiredMargin: number;
   totalValue: number;
   isFillable?: boolean;
-  // New fields
+
+  // Extended fields (may not always be present)
   volume?: number;
   openPrice?: number;
   openTime?: string;
@@ -258,10 +275,12 @@ export interface Order {
   netFloatingPL?: number;
   margin?: number;
   comment?: string;
+
   // Computed fields
   currentPrice?: number;
   unrealizedPnL?: number;
   unrealizedPnLPercent?: number;
+
   // Display fields (converted from enums)
   orderTypeLabel?: string;
   sideLabel?: string;

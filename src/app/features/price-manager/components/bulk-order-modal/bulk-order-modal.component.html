@@ -141,28 +141,6 @@
             ✓ {{ fetchedClients().length }} client(s) found and ready
           </p>
         </div>
-
-        <!-- Account Balance for calculations -->
-        <!-- <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Account Balance (for calculations)
-          </label>
-          <input
-            type="number"
-            [ngModel]="accountBalance()"
-            (ngModelChange)="accountBalance.set($event ? +$event : null)"
-            name="accountBalance"
-            (keydown)="preventInvalidNumberInput($event)"
-            step="0.01"
-            min="0"
-            placeholder="Enter account balance"
-            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div> -->
-
-        <!-- Volume -->
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -448,6 +426,26 @@
           </div>
         </div>
 
+        <div>
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              [ngModel]="closeImmediately()"
+              (ngModelChange)="closeImmediately.set($event)"
+              name="closeImmediately"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span
+              class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Close Immediately
+            </span>
+          </label>
+          <p class="mt-1 ml-6 text-xs text-gray-500 dark:text-gray-400">
+            Close the order immediately after opening
+          </p>
+        </div>
+
         <!-- Comment -->
         <div>
           <label
@@ -547,91 +545,6 @@
           />
         </div> -->
 
-        <!-- Row: Open Time -->
-        <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Open Time <span class="text-red-500">*</span>
-          </label>
-          <input
-            type="datetime-local"
-            [ngModel]="openTime()"
-            (ngModelChange)="openTime.set($event)"
-            name="openTime"
-            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <!-- Row: Hour, Minute, Second and Close Interval Checkbox -->
-        <div class="grid grid-cols-4 gap-3">
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Hours
-            </label>
-            <input
-              type="number"
-              [ngModel]="closeHours()"
-              (ngModelChange)="closeHours.set($event ? +$event : null)"
-              name="closeHours"
-              min="0"
-              max="23"
-              placeholder="HH"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Minutes
-            </label>
-            <input
-              type="number"
-              [ngModel]="closeMinutes()"
-              (ngModelChange)="closeMinutes.set($event ? +$event : null)"
-              name="closeMinutes"
-              min="0"
-              max="59"
-              placeholder="MM"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Seconds
-            </label>
-            <input
-              type="number"
-              [ngModel]="closeSeconds()"
-              (ngModelChange)="closeSeconds.set($event ? +$event : null)"
-              name="closeSeconds"
-              min="0"
-              max="59"
-              placeholder="SS"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div class="flex items-end pb-2">
-            <label class="flex items-center">
-              <input
-                type="checkbox"
-                [ngModel]="closeInterval()"
-                (ngModelChange)="closeInterval.set($event)"
-                name="closeInterval"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                Close Interval
-              </span>
-            </label>
-          </div>
-        </div>
-
         <!-- Row: Volume and Expected P/L -->
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -708,7 +621,7 @@
         </div>
 
         <!-- Row: Sell Open Price with Update Button, Auto Checkbox, and Sell Close Price -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4" *ngIf="smartPLSide() == 2">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -736,7 +649,7 @@
                   class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              <button
+              <!-- <button
                 type="button"
                 (click)="updateSellOpenPrice()"
                 [disabled]="
@@ -778,7 +691,7 @@
                 <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   Auto
                 </label>
-              </div>
+              </div> -->
             </div>
           </div>
 
@@ -803,7 +716,7 @@
         </div>
 
         <!-- Row: Buy Open Price with Update Button, Auto Checkbox, and Buy Close Price -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4" *ngIf="smartPLSide() == 1">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -897,47 +810,6 @@
           </div>
         </div>
 
-        <!-- Row: Commission and Swaps -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Commission <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              [ngModel]="commission()"
-              (ngModelChange)="commission.set($event ? +$event : null)"
-              name="commission"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Commission"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Swaps <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              [ngModel]="swap()"
-              (ngModelChange)="swap.set($event ? +$event : null)"
-              name="swap"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Swaps"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
         <!-- Row: Sell Required Margin and Buy Required Margin -->
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -1018,6 +890,26 @@
             </label>
           </div>
         </div>
+
+        <div>
+          <label class="flex items-center">
+            <input
+              type="checkbox"
+              [ngModel]="closeImmediately()"
+              (ngModelChange)="closeImmediately.set($event)"
+              name="closeImmediatelySmartPL"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span
+              class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Close Immediately
+            </span>
+          </label>
+          <p class="mt-1 ml-6 text-xs text-gray-500 dark:text-gray-400">
+            Close the order immediately after opening
+          </p>
+        </div>
       </form>
     </div>
   </div>
@@ -1048,23 +940,7 @@
           volume()! <= 0 ||
           openPrice()! <= 0)) ||
       (activeTab() === 'smartPL' &&
-        (!loginIdsInput() ||
-          !currentSymbol() ||
-          !openTime() ||
-          !volume() ||
-          !targetProfit() ||
-          !sellOpenPrice() ||
-          !sellClosePrice() ||
-          !buyOpenPrice() ||
-          !buyClosePrice() ||
-          volume()! <= 0 ||
-          targetProfit()! <= 0 ||
-          sellOpenPrice()! <= 0 ||
-          sellClosePrice()! <= 0 ||
-          buyOpenPrice()! <= 0 ||
-          buyClosePrice()! <= 0 ||
-          commission() === null ||
-          swap() === null))
+        (!loginIdsInput() || !currentSymbol() || !volume()))
     "
     class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
   >

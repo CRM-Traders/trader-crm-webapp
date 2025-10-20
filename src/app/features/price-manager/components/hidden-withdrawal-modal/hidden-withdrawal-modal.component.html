@@ -14,7 +14,9 @@
     <form (ngSubmit)="onSubmit()" class="space-y-6">
       <!-- Trading Account Selection -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           Trading Account <span class="text-red-500">*</span>
         </label>
         <select
@@ -22,9 +24,13 @@
           name="tradingAccountId"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           [disabled]="loadingAccounts()"
-          required>
+          required
+        >
           <option value="" disabled>Select a trading account</option>
-          <option *ngFor="let account of tradingAccounts()" [value]="account.id">
+          <option
+            *ngFor="let account of tradingAccounts()"
+            [value]="account.id"
+          >
             {{ account.displayName }} ({{ account.accountNumber }})
           </option>
         </select>
@@ -35,14 +41,28 @@
 
       <!-- Currency Selection -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           Currency <span class="text-red-500">*</span>
         </label>
         <!-- Currency Search -->
         <div class="relative mb-2">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          <div
+            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+          >
+            <svg
+              class="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
             </svg>
           </div>
           <input
@@ -60,8 +80,18 @@
             class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Clear search"
           >
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <svg
+              class="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
             </svg>
           </button>
         </div>
@@ -71,7 +101,8 @@
           (ngModelChange)="onCurrencyChange()"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           [disabled]="loadingCurrencies()"
-          required>
+          required
+        >
           <option *ngFor="let curr of filteredCurrencies()" [value]="curr">
             {{ curr }}
           </option>
@@ -79,33 +110,71 @@
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Select the currency to withdraw
         </p>
-        
+
         <!-- Balance Information -->
-        <div *ngIf="loadingBalance()" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          <svg class="animate-spin h-4 w-4 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        <div
+          *ngIf="loadingBalance()"
+          class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+        >
+          <svg
+            class="animate-spin h-4 w-4 inline-block mr-2"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
           Loading balance...
         </div>
-        
-        <div *ngIf="!loadingBalance() && userBalance() && userBalance().balances && userBalance().balances.length > 0" class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+
+        <div
+          *ngIf="
+            !loadingBalance() &&
+            userBalance() &&
+            userBalance().balances &&
+            userBalance().balances.length > 0
+          "
+          class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
+        >
           <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Available Balance</span>
-            <span class="text-sm font-semibold text-green-600 dark:text-green-400">
-              {{ userBalance().balances[0].totalAvailable.toFixed(8) }} {{ currency() }}
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >Available Balance</span
+            >
+            <span
+              class="text-sm font-semibold text-green-600 dark:text-green-400"
+            >
+              {{ formatAmount(userBalance().balances[0].totalAvailable) }}
+              {{ currency() }}
             </span>
           </div>
           <div class="flex items-center justify-between mb-2">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Locked Balance</span>
+            <span class="text-sm text-gray-600 dark:text-gray-400"
+              >Locked Balance</span
+            >
             <span class="text-sm text-gray-700 dark:text-gray-300">
-              {{ userBalance().balances[0].totalLocked.toFixed(8) }} {{ currency() }}
+              {{ formatAmount(userBalance().balances[0].totalLocked) }}
+              {{ currency() }}
             </span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-600 dark:text-gray-400">Total Balance</span>
+            <span class="text-sm text-gray-600 dark:text-gray-400"
+              >Total Balance</span
+            >
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {{ userBalance().balances[0].totalBalance.toFixed(8) }} {{ currency() }}
+              {{ formatAmount(userBalance().balances[0].totalBalance) }}
+              {{ currency() }}
             </span>
           </div>
         </div>
@@ -113,7 +182,9 @@
 
       <!-- Amount -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           Withdrawal Amount <span class="text-red-500">*</span>
         </label>
         <input
@@ -125,7 +196,8 @@
           step="0.00000001"
           min="0"
           (keydown)="preventInvalidNumberInput($event)"
-          required />
+          required
+        />
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Amount must be greater than 0
         </p>
@@ -133,7 +205,9 @@
 
       <!-- Note (optional) -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           Note (Optional)
         </label>
         <textarea
@@ -141,7 +215,8 @@
           name="note"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           placeholder="Enter optional note"
-          rows="3"></textarea>
+          rows="3"
+        ></textarea>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
           Add any additional notes for this withdrawal
         </p>
@@ -150,33 +225,51 @@
   </div>
 
   <!-- Modal Footer -->
-  <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+  <div
+    class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3"
+  >
     <button
       type="button"
       (click)="onCancel()"
       [disabled]="submitting()"
-      class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
+      class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
       Cancel
     </button>
     <button
       type="button"
       (click)="onSubmit()"
-      [disabled]="submitting() || !tradingAccountId() || !currency() || !amount() || amount()! <= 0"
-      class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center">
+      [disabled]="
+        submitting() ||
+        !tradingAccountId() ||
+        !currency() ||
+        !amount() ||
+        amount()! <= 0
+      "
+      class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+    >
       <svg
         *ngIf="submitting()"
         class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
-        viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
         <path
           class="opacity-75"
           fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
       </svg>
-      {{ submitting() ? 'Processing...' : 'Process Withdrawal' }}
+      {{ submitting() ? "Processing..." : "Process Withdrawal" }}
     </button>
   </div>
 </div>
-
