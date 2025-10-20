@@ -537,43 +537,12 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   }
 
   updateBuyOpenPrice(): void {
-    if (!this.currentSymbol() || !this.buyOpenPrice()) {
+    if (!this.currentSymbol()) {
       this.alertService.error('Symbol and buy open price are required');
       return;
     }
 
-    this.updatingBuyPrice.set(true);
-
-    const requestBody = {
-      symbol: this.currentSymbol(),
-      newPrice: this.buyOpenPrice()!,
-      userId: null,
-      updateGlobal: false,
-    };
-
-    this.priceManagerService
-      .updatePrice(requestBody)
-      .pipe(
-        tap(() => {
-          this.alertService.success('Buy price updated successfully');
-        }),
-        catchError((err: any) => {
-          console.error('Error updating buy price:', err);
-          let errorMessage = 'Failed to update buy price. Please try again.';
-          if (err?.error?.error) {
-            errorMessage = err.error.error;
-          } else if (err?.error?.message) {
-            errorMessage = err.error.message;
-          } else if (err?.message) {
-            errorMessage = err.message;
-          }
-          this.alertService.error(errorMessage);
-          return [];
-        }),
-        finalize(() => this.updatingBuyPrice.set(false)),
-        takeUntil(this.destroy$)
-      )
-      .subscribe();
+    this.buyOpenPrice.set(this.lastPrice());
   }
 
   ngOnDestroy(): void {
@@ -745,7 +714,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     };
 
     this.priceManagerService
-      .createBulkOrder(requestBody)
+      .createOrderWithSmartPL(requestBody)
       .pipe(
         tap(() => {
           this.alertService.success(

@@ -137,7 +137,7 @@ export class PriceManagerService {
 
   createOrderWithSmartPL(data: SmartPLOrderRequest) {
     return this.http.post(
-      `traiding/api/admin/trading/order/create-with-smart-pl`,
+      `traiding/api/admin/trading/smart-pl/bulk-orders`,
       data
     );
   }

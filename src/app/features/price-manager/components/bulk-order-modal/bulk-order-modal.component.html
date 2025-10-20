@@ -303,7 +303,7 @@
             <button
               type="button"
               (click)="updatePrice()"
-              [disabled]="updatingPrice() || !currentSymbol() || !openPrice()"
+              [disabled]="!currentSymbol()"
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
               <span *ngIf="!updatingPrice()">Update</span>
@@ -329,7 +329,7 @@
                 </svg>
               </span>
             </button>
-            <div class="flex items-center pt-2">
+            <!-- <div class="flex items-center pt-2">
               <input
                 type="checkbox"
                 [ngModel]="autoPrice()"
@@ -340,7 +340,7 @@
               <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                 Auto
               </label>
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -747,9 +747,7 @@
               <button
                 type="button"
                 (click)="updateBuyOpenPrice()"
-                [disabled]="
-                  updatingBuyPrice() || !currentSymbol() || !buyOpenPrice()
-                "
+                [disabled]="!currentSymbol()"
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
                 <span *ngIf="!updatingBuyPrice()">Update</span>
@@ -775,7 +773,7 @@
                   </svg>
                 </span>
               </button>
-              <div class="flex items-center pt-2">
+              <!-- <div class="flex items-center pt-2">
                 <input
                   type="checkbox"
                   [ngModel]="autoBuyPrice()"
@@ -786,7 +784,7 @@
                 <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                   Auto
                 </label>
-              </div>
+              </div> -->
             </div>
           </div>
 
