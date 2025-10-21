@@ -57,9 +57,19 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     { value: 2, label: 'Sell', class: 'text-red-600 dark:text-red-400' },
   ];
 
+  statusOptions = [
+    { value: 1, label: 'Active' },
+    { value: 2, label: 'Partially Filled' },
+    { value: 3, label: 'Filled' },
+    { value: 4, label: 'Cancelled' },
+    { value: 5, label: 'Rejected' },
+    { value: 6, label: 'Liquidated' },
+  ];
+
   constructor() {
     this.editForm = this.fb.group({
       side: [null],
+      status: [null, [Validators.required]],
       volume: [null, [Validators.required, Validators.min(0.00000001)]],
       leverage: [1, [Validators.min(1)]],
       stopLoss: [null, [Validators.min(0)]],
@@ -121,6 +131,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
     this.editForm.patchValue({
       side: this.orderData.side,
+      status: this.orderData.status,
       volume: this.orderData.quantity || this.orderData.volume,
       leverage: this.orderData.leverage || 1,
       openPrice: this.orderData.price || this.orderData.openPrice,
@@ -197,6 +208,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
     const updateData: OrderUpdateRequest = {
       side: formValue.side,
+      status: formValue.status,
       volume: formValue.volume,
       leverage: formValue.leverage,
       openPrice: formValue.openPrice,

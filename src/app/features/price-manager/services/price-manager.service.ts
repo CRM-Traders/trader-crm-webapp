@@ -329,6 +329,7 @@ export interface OrderUpdateRequest {
   volume?: number | null;
   openPrice?: number | null;
   openTime?: string | null;
+  status: number;
   stopLoss?: number | null;
   leverage?: number | null;
   takeProfit?: number | null;
