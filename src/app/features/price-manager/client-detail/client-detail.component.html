@@ -220,6 +220,159 @@
         </div>
       </div>
 
+      <!-- Order Status Filter Sections (only for orders tab) -->
+      <div *ngIf="selectedTab() === 'orders' && !ordersLoading()" class="mb-6">
+        <div class="flex flex-wrap gap-2">
+          <button
+            (click)="onOrderStatusChange(null)"
+            [class]="
+              selectedOrderStatus() === null
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+            "
+            class="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors"
+          >
+            <span>All</span>
+            <span
+              [class]="
+                selectedOrderStatus() === null
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+              "
+              class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-w-[24px]"
+            >
+              {{ openOrders().length }}
+            </span>
+          </button>
+          <button
+            (click)="onOrderStatusChange(1)"
+            [class]="
+              selectedOrderStatus() === 1
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+            "
+            class="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors"
+          >
+            <span>Active</span>
+            <span
+              [class]="
+                selectedOrderStatus() === 1
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+              "
+              class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-w-[24px]"
+            >
+              {{ countByStatus(1) }}
+            </span>
+          </button>
+          <button
+            (click)="onOrderStatusChange(2)"
+            [class]="
+              selectedOrderStatus() === 2
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+            "
+            class="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors"
+          >
+            <span>Partially Filled</span>
+            <span
+              [class]="
+                selectedOrderStatus() === 2
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+              "
+              class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-w-[24px]"
+            >
+              {{ countByStatus(2) }}
+            </span>
+          </button>
+          <button
+            (click)="onOrderStatusChange(3)"
+            [class]="
+              selectedOrderStatus() === 3
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+            "
+            class="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors"
+          >
+            <span>Filled</span>
+            <span
+              [class]="
+                selectedOrderStatus() === 3
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+              "
+              class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-w-[24px]"
+            >
+              {{ countByStatus(3) }}
+            </span>
+          </button>
+          <button
+            (click)="onOrderStatusChange(4)"
+            [class]="
+              selectedOrderStatus() === 4
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+            "
+            class="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors"
+          >
+            <span>Cancelled</span>
+            <span
+              [class]="
+                selectedOrderStatus() === 4
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+              "
+              class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-w-[24px]"
+            >
+              {{ countByStatus(4) }}
+            </span>
+          </button>
+          <button
+            (click)="onOrderStatusChange(5)"
+            [class]="
+              selectedOrderStatus() === 5
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+            "
+            class="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors"
+          >
+            <span>Rejected</span>
+            <span
+              [class]="
+                selectedOrderStatus() === 5
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+              "
+              class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-w-[24px]"
+            >
+              {{ countByStatus(5) }}
+            </span>
+          </button>
+          <button
+            (click)="onOrderStatusChange(6)"
+            [class]="
+              selectedOrderStatus() === 6
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600'
+            "
+            class="inline-flex items-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors"
+          >
+            <span>Liquidated</span>
+            <span
+              [class]="
+                selectedOrderStatus() === 6
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+              "
+              class="ml-2 inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-medium min-w-[24px]"
+            >
+              {{ countByStatus(6) }}
+            </span>
+          </button>
+        </div>
+      </div>
+
       <!-- Loading State -->
       <div
         *ngIf="ordersLoading() || transactionsLoading()"
@@ -309,7 +462,7 @@
           >
             <!-- Orders -->
             <tr
-              *ngFor="let order of openOrders(); trackBy: trackByOrderId"
+              *ngFor="let order of filteredOrders(); trackBy: trackByOrderId"
               class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
             >
               <!-- Symbol -->

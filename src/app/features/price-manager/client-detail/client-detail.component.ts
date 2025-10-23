@@ -63,12 +63,23 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   selectedTab = signal<'orders' | 'transactions'>('orders');
 
+  // Order status filter
+  selectedOrderStatus = signal<number | null>(null);
+
   openOrders = signal<Order[]>([]);
   transactions = signal<Transaction[]>([]);
   ordersLoading = signal(false);
   transactionsLoading = signal(false);
   updatingOrderIds = signal<Set<string>>(new Set());
   orderPriceUpdates: { [orderId: string]: number } = {};
+
+  // Filtered orders based on selected status
+  filteredOrders = computed(() => {
+    const orders = this.openOrders();
+    const status = this.selectedOrderStatus();
+    if (status === null) return orders;
+    return orders.filter((order) => order.status === status);
+  });
 
   // Check if user has any of the required permissions for Actions column
   hasAnyActionPermission = computed(() => {
@@ -131,6 +142,11 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   onTabChange(tab: 'orders' | 'transactions'): void {
     this.selectedTab.set(tab);
     this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
+  }
+
+  // Method to change order status filter
+  onOrderStatusChange(status: number | null): void {
+    this.selectedOrderStatus.set(status);
   }
 
   private loadCurrentDataType(silent: boolean = false): Observable<void> {
@@ -292,56 +308,74 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
   }
 
-  updateOrderPrice(orderId: string, newPrice: number): void {
-    if (!newPrice || newPrice <= 0) {
+  onOrderPriceChange(orderId: string, newPrice: any): void {
+    const numericPrice = Number(newPrice);
+    if (!isNaN(numericPrice) && isFinite(numericPrice)) {
+      this.orderPriceUpdates[orderId] = numericPrice;
+    }
+  }
+
+  updateOrderPrice(orderId: string, currentPrice: number): void {
+    const newPrice = this.orderPriceUpdates[orderId];
+    if (
+      newPrice === undefined ||
+      newPrice === null ||
+      isNaN(newPrice) ||
+      !isFinite(newPrice)
+    ) {
+      this.alertService.error('Please enter a valid price');
       return;
     }
 
-    const currentUpdating = new Set(this.updatingOrderIds());
-    currentUpdating.add(orderId);
-    this.updatingOrderIds.set(currentUpdating);
+    if (newPrice === currentPrice) {
+      this.alertService.info('Price is the same as current price');
+      return;
+    }
+
+    if (newPrice <= 0) {
+      this.alertService.error('Price must be greater than 0');
+      return;
+    }
+
+    const currentUpdatingIds = this.updatingOrderIds();
+    currentUpdatingIds.add(orderId);
+    this.updatingOrderIds.set(new Set(currentUpdatingIds));
 
     this.service
       .updateOrderPrice(orderId, newPrice)
       .pipe(
         takeUntil(this.destroy$),
+        finalize(() => {
+          const updatedIds = this.updatingOrderIds();
+          updatedIds.delete(orderId);
+          this.updatingOrderIds.set(new Set(updatedIds));
+        }),
         catchError((err: any) => {
           console.error('Error updating order price:', err);
-          let errorMessage = 'Failed to update order price. Please try again.';
+          let errorMessage = 'Failed to update order price';
           if (err?.error?.error) {
             errorMessage = err.error.error;
           } else if (err?.message) {
             errorMessage = err.message;
           }
           this.alertService.error(errorMessage);
-          return of(void 0);
-        }),
-        finalize(() => {
-          const updatedUpdating = new Set(this.updatingOrderIds());
-          updatedUpdating.delete(orderId);
-          this.updatingOrderIds.set(updatedUpdating);
+          return of(null);
         })
       )
-      .subscribe(() => {
-        this.loadOpenOrders()
-          .pipe(takeUntil(this.destroy$))
-          .subscribe(() => {
-            delete this.orderPriceUpdates[orderId];
-          });
+      .subscribe((response) => {
+        if (response) {
+          this.alertService.success('Order price updated successfully');
+          delete this.orderPriceUpdates[orderId];
+          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+        }
       });
   }
 
-  cancaleOrder(orderId: string): void {
-    const order = this.openOrders().find((o) => o.id === orderId);
-    if (!order) {
-      this.alertService.error('Order not found');
-      return;
-    }
-
+  closeOrder(order: Order): void {
     const modalRef = this.modalService.open(
       OrderCloseModalComponent,
       {
-        size: 'lg',
+        size: 'md',
         centered: true,
         closable: true,
       },
@@ -351,9 +385,9 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     modalRef.result.then(
-      (result: { useCustomPrice: boolean; price: number | null }) => {
+      (result) => {
         if (result) {
-          this.executeCloseOrder(orderId, result.price);
+          this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
@@ -362,36 +396,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     );
   }
 
-  private executeCloseOrder(orderId: string, price: number | null): void {
-    const currentUpdating = new Set(this.updatingOrderIds());
-    currentUpdating.add(orderId);
-    this.updatingOrderIds.set(currentUpdating);
-
-    this.service
-      .closeOrder(orderId)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError((err: any) => {
-          console.error('Error closing order:', err);
-          let errorMessage = 'Failed to close order. Please try again.';
-          if (err?.error?.error) {
-            errorMessage = err.error.error;
-          } else if (err?.message) {
-            errorMessage = err.message;
-          }
-          this.alertService.error(errorMessage);
-          return of(void 0);
-        }),
-        finalize(() => {
-          const updatedUpdating = new Set(this.updatingOrderIds());
-          updatedUpdating.delete(orderId);
-          this.updatingOrderIds.set(updatedUpdating);
-        })
-      )
-      .subscribe(() => {
-        this.alertService.success('Order closed successfully');
-        this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
-      });
+  countByStatus(status: number) {
+    return this.openOrders().filter((o) => o.status === status).length;
   }
 
   trackByOrderId(index: number, order: Order): string {

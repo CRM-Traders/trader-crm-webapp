@@ -760,6 +760,42 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     }
   }
 
+  removeDuplicates(): void {
+    const loginIdsString = this.loginIdsInput().trim();
+    if (!loginIdsString) {
+      this.alertService.error('Please enter login IDs first');
+      return;
+    }
+
+    // Split by comma, trim, and filter out empty strings
+    const loginIds = loginIdsString
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
+
+    if (loginIds.length === 0) {
+      this.alertService.error('No valid login IDs found');
+      return;
+    }
+
+    // Remove duplicates using Set
+    const uniqueLoginIds = Array.from(new Set(loginIds));
+
+    // Check if there were duplicates
+    const duplicatesRemoved = loginIds.length - uniqueLoginIds.length;
+
+    // Update the input with unique IDs
+    this.loginIdsInput.set(uniqueLoginIds.join(', '));
+
+    if (duplicatesRemoved > 0) {
+      this.alertService.success(
+        `Removed ${duplicatesRemoved} duplicate ID(s). ${uniqueLoginIds.length} unique ID(s) remaining.`
+      );
+    } else {
+      this.alertService.info('No duplicates found');
+    }
+  }
+
   onUploadClients(): void {
     const loginIdsString = this.loginIdsInput().trim();
     if (!loginIdsString) {
