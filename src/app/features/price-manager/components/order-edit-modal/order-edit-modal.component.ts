@@ -249,7 +249,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       });
   }
 
-  cancelOrder(): void {
+  closeOrder(): void {
     if (this.loading || !this.orderData) {
       return;
     }
@@ -261,7 +261,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     this.service
-      .cancelOrder(this.orderData.id)
+      .closeOrder(this.orderData.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {

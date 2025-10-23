@@ -57,10 +57,11 @@ export class PriceManagerService {
     });
   }
 
-  closeOrder(orderId: string, price: number | null) {
-    return this.http.post(`traiding/api/admin/trading/close-order/${orderId}`, {
-      price,
-    });
+  cancleOrder(orderId: string) {
+    return this.http.post(
+      `traiding/api/admin/trading/close-order/${orderId}`,
+      {}
+    );
   }
 
   getOrder(orderId: string) {
@@ -71,11 +72,8 @@ export class PriceManagerService {
     return this.http.put(`traiding/api/admin/trading/order/${orderId}`, data);
   }
 
-  cancelOrder(orderId: string) {
-    return this.http.post(
-      `traiding/api/admin/trading/close-order/${orderId}`,
-      {}
-    );
+  closeOrder(orderId: string) {
+    return this.http.post(`traiding/api/trading/${orderId}/close`, {});
   }
 
   reopenOrder(orderId: string, data: ReopenOrderRequest) {

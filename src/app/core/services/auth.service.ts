@@ -218,7 +218,7 @@ export class AuthService implements OnDestroy {
   getUserId(): string {
     const token = this.getAccessToken();
     if (!token) return '';
-    
+
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.sub || payload.userId || payload.id || '';
@@ -279,7 +279,7 @@ export class AuthService implements OnDestroy {
     this.stopTokenCheck();
 
     if (this.hasValidToken()) {
-      this.tokenCheckInterval = interval(30000).subscribe(() => {
+      this.tokenCheckInterval = interval(300000).subscribe(() => {
         this.checkAndRefreshToken();
       });
 
@@ -305,7 +305,7 @@ export class AuthService implements OnDestroy {
     const timeUntilExpiry = expTime - currentTime;
 
     // Assuming tokens last 5 minutes (300 sec)
-    const totalTokenLifetime = 300;
+    const totalTokenLifetime = 3600;
 
     // Refresh if less than 25% time left
     const refreshThreshold = totalTokenLifetime * 0.25;

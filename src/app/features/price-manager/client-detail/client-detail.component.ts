@@ -368,7 +368,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.updatingOrderIds.set(currentUpdating);
 
     this.service
-      .closeOrder(orderId, price)
+      .closeOrder(orderId)
       .pipe(
         takeUntil(this.destroy$),
         catchError((err: any) => {

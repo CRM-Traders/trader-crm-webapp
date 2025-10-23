@@ -448,10 +448,10 @@
           *ngIf="!isOrderClosed() && !isEditing"
           type="button"
           class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50"
-          (click)="cancelOrder()"
+          (click)="closeOrder()"
           [disabled]="loading"
         >
-          {{ loading ? "Cancelling..." : "Cancel Order" }}
+          {{ loading ? "Cancelling..." : "Close Order" }}
         </button>
       </div>
 
