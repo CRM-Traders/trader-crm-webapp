@@ -73,7 +73,10 @@ export class PriceManagerService {
   }
 
   closeOrder(orderId: string) {
-    return this.http.post(`traiding/api/trading/${orderId}/close`, {});
+    return this.http.post(
+      `traiding/api/admin/trading/order/${orderId}/close`,
+      {}
+    );
   }
 
   reopenOrder(orderId: string, data: ReopenOrderRequest) {
