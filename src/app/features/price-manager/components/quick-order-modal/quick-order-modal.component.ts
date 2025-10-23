@@ -533,7 +533,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       this.alertService.error('Please enter a valid volume');
       return;
     }
-    if (!this.targetProfit() || this.targetProfit()! <= 0) {
+    if (!this.targetProfit()) {
       this.alertService.error('Please enter a valid expected P/L');
       return;
     }
