@@ -207,8 +207,8 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
             this.applyNewOrderCalculationResponse(resp);
           }),
           catchError((err) => {
-            console.error('Error calculating from profit:', err);
-            this.alertService.error('Failed to calculate from profit');
+            this.alertService.error(err.error.error);
+
             return [];
           }),
           finalize(() => this.calculatingFromProfit.set(false))

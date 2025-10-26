@@ -204,7 +204,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
           }),
           catchError((err) => {
             console.error('Error calculating from profit:', err);
-            this.alertService.error('Failed to calculate from profit');
+            this.alertService.error(err.error.error);
+
             return [];
           }),
           finalize(() => this.calculatingFromProfit.set(false))
@@ -365,10 +366,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
     const { entryPrice, exitPrice } = this.getEntryExitPrices();
 
-    if (entryPrice == null || exitPrice == null) {
-      return;
-    }
-
     const requestBody = {
       symbol: this.currentSymbol(),
       volume: this.volume()!,
@@ -391,7 +388,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
           }),
           catchError((err) => {
             console.error('Error calculating from volume:', err);
-            this.alertService.error('Failed to calculate from volume');
+            this.alertService.error(err.error.error);
             return [];
           }),
           finalize(() => this.calculatingFromVolume.set(false))
