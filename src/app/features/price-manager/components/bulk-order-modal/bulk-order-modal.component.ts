@@ -40,7 +40,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private destroy$ = new Subject<void>();
 
-  activeTab = signal<'newOrder' | 'smartPL'>('newOrder');
+  activeTab = signal<'newOrder' | 'smartPL'>('smartPL');
 
   loginIdsInput = signal<string>('');
   symbol = signal<string>('');
@@ -84,6 +84,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   updatingBuyPrice = signal<boolean>(false);
 
   submitting = signal<boolean>(false);
+  submitSide = signal<number | null>(null);
   uploadingClients = signal<boolean>(false);
   fetchedClients = signal<Client[]>([]);
 
@@ -545,6 +546,22 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     this.buyOpenPrice.set(this.lastPrice());
   }
 
+  isFormValid(): boolean {
+    if (this.activeTab() === 'newOrder') {
+      return !!(
+        this.loginIdsInput() &&
+        this.currentSymbol() &&
+        this.volume() &&
+        this.openPrice() &&
+        this.volume()! > 0 &&
+        this.openPrice()! > 0
+      );
+    } else {
+      // smartPL
+      return !!(this.loginIdsInput() && this.currentSymbol() && this.volume());
+    }
+  }
+
   ngOnDestroy(): void {
     this.modalRef.close(true);
 
@@ -552,10 +569,14 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  onSubmit(): void {
+  onSubmit(side: number): void {
+    this.submitSide.set(side);
+
     if (this.activeTab() === 'newOrder') {
+      this.side.set(side);
       this.submitNewOrder();
     } else {
+      this.smartPLSide.set(side);
       this.submitSmartPL();
     }
   }
@@ -618,8 +639,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       .createBulkOrder(requestBody)
       .pipe(
         tap(() => {
+          const sideLabel = this.side() === 1 ? 'Buy' : 'Sell';
           this.alertService.success(
-            `Bulk order created successfully for ${loginIds.length} client(s)`
+            `${sideLabel} bulk order created successfully for ${loginIds.length} client(s)`
           );
           this.modalRef.close(true);
         }),
@@ -636,7 +658,10 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
           this.alertService.error(errorMessage);
           return [];
         }),
-        finalize(() => this.submitting.set(false)),
+        finalize(() => {
+          this.submitting.set(false);
+          this.submitSide.set(null);
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe();
@@ -717,8 +742,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       .createOrderWithSmartPL(requestBody)
       .pipe(
         tap(() => {
+          const sideLabel = this.smartPLSide() === 1 ? 'Buy' : 'Sell';
           this.alertService.success(
-            `Bulk order with Smart P/L created successfully for ${loginIds.length} client(s)`
+            `${sideLabel} bulk order with Smart P/L created successfully for ${loginIds.length} client(s)`
           );
           this.modalRef.close(true);
         }),
@@ -735,7 +761,10 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
           this.alertService.error(errorMessage);
           return [];
         }),
-        finalize(() => this.submitting.set(false)),
+        finalize(() => {
+          this.submitting.set(false);
+          this.submitSide.set(null);
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe();

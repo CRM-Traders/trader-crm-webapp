@@ -167,6 +167,10 @@ export class PriceManagerService {
     );
   }
 
+  getUserBalanceWithoutCurrency(userId: string) {
+    return this.http.get(`traiding/api/admin/trading/balance/user/${userId}`);
+  }
+
   bulkLiquidate(data: BulkLiquidateRequest) {
     return this.http.post(`traiding/api/admin/trading/bulk-liquidate`, data);
   }

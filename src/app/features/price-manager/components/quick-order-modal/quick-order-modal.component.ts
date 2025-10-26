@@ -37,7 +37,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private destroy$ = new Subject<void>();
 
-  activeTab = signal<'newOrder' | 'smartPL'>('newOrder');
+  activeTab = signal<'newOrder' | 'smartPL'>('smartPL');
 
   symbol = signal<string>('');
   side = signal<number>(1);
@@ -71,6 +71,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   updatingBuyPrice = signal<boolean>(false);
 
   submitting = signal<boolean>(false);
+  submitSide = signal<number | null>(null);
 
   lastPrice = signal<number | null>(null);
   bidPrice = signal<number | null>(null);
@@ -435,16 +436,35 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     this.buyOpenPrice.set(this.lastPrice());
   }
 
+  isFormValid(): boolean {
+    if (this.activeTab() === 'newOrder') {
+      return !!(
+        this.currentSymbol() &&
+        this.volume() &&
+        this.openPrice() &&
+        this.volume()! > 0 &&
+        this.openPrice()! > 0
+      );
+    } else {
+      // smartPL
+      return !!(this.currentSymbol() && this.volume());
+    }
+  }
+
   ngOnDestroy(): void {
     this.modalRef.close(true);
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  onSubmit(): void {
+  onSubmit(side: number): void {
+    this.submitSide.set(side);
+
     if (this.activeTab() === 'newOrder') {
+      this.side.set(side);
       this.submitNewOrder();
     } else {
+      this.smartPLSide.set(side);
       this.submitSmartPL();
     }
   }
@@ -496,7 +516,8 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .createBulkOrder(requestBody)
       .pipe(
         tap(() => {
-          this.alertService.success('Order created successfully');
+          const sideLabel = this.side() === 1 ? 'Buy' : 'Sell';
+          this.alertService.success(`${sideLabel} order created successfully`);
           this.modalRef.close(true);
         }),
         catchError((err: any) => {
@@ -512,7 +533,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           this.alertService.error(errorMessage);
           return [];
         }),
-        finalize(() => this.submitting.set(false)),
+        finalize(() => {
+          this.submitting.set(false);
+          this.submitSide.set(null);
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe();
@@ -531,10 +555,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
     if (!this.volume() || this.volume()! <= 0) {
       this.alertService.error('Please enter a valid volume');
-      return;
-    }
-    if (!this.targetProfit()) {
-      this.alertService.error('Please enter a valid expected P/L');
       return;
     }
 
@@ -580,8 +600,9 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .createOrderWithSmartPL(requestBody)
       .pipe(
         tap(() => {
+          const sideLabel = this.smartPLSide() === 1 ? 'Buy' : 'Sell';
           this.alertService.success(
-            'Order with Smart P/L created successfully'
+            `${sideLabel} order with Smart P/L created successfully`
           );
           this.modalRef.close(true);
         }),
@@ -598,7 +619,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           this.alertService.error(errorMessage);
           return [];
         }),
-        finalize(() => this.submitting.set(false)),
+        finalize(() => {
+          this.submitting.set(false);
+          this.submitSide.set(null);
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe();
