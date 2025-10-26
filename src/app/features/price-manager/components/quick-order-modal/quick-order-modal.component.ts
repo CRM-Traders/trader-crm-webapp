@@ -74,7 +74,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   submitSide = signal<number | null>(null);
 
   loadingBalance = signal<boolean>(false);
-  userBalance = signal<any>(null);
+  userBalance = signal<any[]>([]);
 
   lastPrice = signal<number | null>(null);
   bidPrice = signal<number | null>(null);
@@ -103,9 +103,12 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .getUserBalanceWithoutCurrency(this.data.userId)
       .pipe(
         tap((response: any) => {
-          // Response has balances array
+          // Filter balances where totalAvailable > 0
           if (response?.balances && response.balances.length > 0) {
-            this.userBalance.set(response.balances[0]);
+            const availableBalances = response.balances.filter(
+              (balance: any) => balance.totalAvailable > 0
+            );
+            this.userBalance.set(availableBalances);
           }
         }),
         catchError((err) => {

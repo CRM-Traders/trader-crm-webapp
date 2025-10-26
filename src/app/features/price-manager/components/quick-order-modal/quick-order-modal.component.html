@@ -13,35 +13,38 @@
 <!-- Modal Body -->
 <div class="modal-body px-6 py-6 max-h-[calc(100vh-1rem)] overflow-y-auto">
   <!-- User Balance Information -->
-  <div
-    *ngIf="userBalance()"
-    class="mb-4 bg-blue-50 dark:bg-gray-800 rounded-md px-4 py-2 border border-blue-200 dark:border-gray-700 flex items-center justify-between"
-  >
-    <div class="flex items-center space-x-2">
-      <svg
-        class="w-4 h-4 text-blue-600 dark:text-blue-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-        />
-      </svg>
-      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-        {{ userBalance().currency || "USD" }}
-      </span>
+  <div *ngIf="userBalance().length > 0" class="mb-4 space-y-2">
+    <div
+      *ngFor="let balance of userBalance()"
+      class="bg-blue-50 dark:bg-gray-800 rounded-md px-4 py-2 border border-blue-200 dark:border-gray-700 flex items-center justify-between"
+    >
+      <div class="flex items-center space-x-2">
+        <svg
+          class="w-4 h-4 text-blue-600 dark:text-blue-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+          />
+        </svg>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {{ balance.currency }}
+        </span>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-gray-500 dark:text-gray-400">Available</p>
+        <p class="text-sm font-bold text-green-600 dark:text-green-400">
+          {{ balance.totalAvailable?.toFixed(8) }}
+        </p>
+      </div>
     </div>
-    <div class="text-right">
-      <p class="text-xs text-gray-500 dark:text-gray-400">Available</p>
-      <p class="text-sm font-bold text-green-600 dark:text-green-400">
-        ${{ userBalance().totalAvailable?.toFixed(2) || "0.00" }}
-      </p>
-    </div>
-    <div *ngIf="loadingBalance()" class="flex items-center justify-center">
+
+    <div *ngIf="loadingBalance()" class="flex items-center justify-center py-2">
       <svg
         class="animate-spin h-4 w-4 text-blue-600"
         fill="none"
