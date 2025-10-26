@@ -30,6 +30,7 @@ import { AssignOperatorModalComponent } from '../clients/components/assign-opera
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 import { CustomSelectComponent } from '../../shared/components/custom-select/custom-select.component';
 import { SalesStatusConfirmationModalComponent } from '../../shared/components/sales-status-confirmation-modal/sales-status-confirmation-modal.component';
+import { HiddenWithdrawalModalComponent } from '../price-manager/components/hidden-withdrawal-modal/hidden-withdrawal-modal.component';
 
 export enum ClientDetailSection {
   Profile = 'profile',

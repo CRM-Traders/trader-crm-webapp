@@ -105,9 +105,9 @@ export const routes: Routes = [
       {
         path: 'manager/:id',
         loadComponent: () =>
-          import('./features/price-manager/client-detail/client-detail.component').then(
-            (m) => m.ClientDetailComponent
-          ),
+          import(
+            './features/price-manager/client-detail/client-detail.component'
+          ).then((m) => m.ClientDetailComponent),
         canActivate: [authGuard, roleGuard(136)],
       },
       {
@@ -245,14 +245,6 @@ export const routes: Routes = [
             './features/permission-template/permission-template.component'
           ).then((m) => m.PermissionTemplateComponent),
         canActivate: [authGuard, roleGuard(135)],
-      },
-      {
-        path: 'chat',
-        loadComponent: () =>
-          import(
-            './shared/components/employee-chat/employee-chat.component'
-          ).then((m) => m.EmployeeChatComponent),
-        canActivate: [authGuard],
       },
     ],
   },

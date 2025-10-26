@@ -17,6 +17,8 @@ import { TradingOrder, TradingService } from './services/trading-order.service';
 import { WalletService } from './services/wallet.service';
 import { WalletTransaction, ClientWalletsSummary } from './models/wallet.model';
 import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
+import { HiddenWithdrawalModalComponent } from '../../../price-manager/components/hidden-withdrawal-modal/hidden-withdrawal-modal.component';
+import { ModalService } from '../../../../shared/services/modals/modal.service';
 
 @Component({
   selector: 'app-client-payments',
@@ -46,6 +48,8 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
   private adminTradingAccountService = inject(AdminTradingAccountService);
   private tradingService = inject(TradingService);
   private walletService = inject(WalletService);
+  private modalService = inject(ModalService);
+
   private destroy$ = new Subject<void>();
 
   transactionForm: FormGroup;
@@ -247,6 +251,35 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
           this.loadingTradingHistory = false;
         },
       });
+  }
+
+  openHiddenWithdrawalModal(): void {
+    if (!this.client) {
+      this.alertService.error('Client not found');
+      return;
+    }
+
+    const modalRef = this.modalService.open(
+      HiddenWithdrawalModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        data: {
+          userId: this.client!.userId,
+          userFullName: `${this.client!.firstName} ${this.client.lastName}`,
+        },
+      }
+    );
+
+    modalRef.result.then(
+      (result) => {},
+      () => {
+        // Modal dismissed
+      }
+    );
   }
 
   private loadWalletTransactions(): void {

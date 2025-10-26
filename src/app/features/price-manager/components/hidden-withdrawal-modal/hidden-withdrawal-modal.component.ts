@@ -5,6 +5,7 @@ import {
   OnInit,
   OnDestroy,
   signal,
+  AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -29,7 +30,9 @@ export interface HiddenWithdrawalData {
   templateUrl: './hidden-withdrawal-modal.component.html',
   styleUrls: ['./hidden-withdrawal-modal.component.scss'],
 })
-export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
+export class HiddenWithdrawalModalComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   @Input() modalRef!: ModalRef;
   @Input() data!: HiddenWithdrawalData;
 
@@ -59,6 +62,10 @@ export class HiddenWithdrawalModalComponent implements OnInit, OnDestroy {
   userBalance = signal<any>(null);
 
   ngOnInit(): void {
+    // Fetch trading accounts for the user
+  }
+
+  ngAfterViewInit(): void {
     // Fetch trading accounts for the user
     this.loadTradingAccounts();
     // Fetch available currencies

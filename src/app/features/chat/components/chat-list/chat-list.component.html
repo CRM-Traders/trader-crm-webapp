@@ -1,0 +1,180 @@
+<div class="flex flex-col h-full bg-white dark:bg-gray-800">
+  <!-- Search Bar -->
+  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+    <div class="relative">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Search chats..."
+        class="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+      />
+
+      <!-- Search Icon -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
+      </svg>
+
+      <!-- Clear Button -->
+      <button
+        *ngIf="searchQuery"
+        (click)="clearSearch()"
+        class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat List -->
+  <div class="flex-1 overflow-y-auto">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="flex items-center justify-center h-32">
+      <div
+        class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+      ></div>
+    </div>
+
+    <!-- Empty State - No Chats -->
+    <div
+      *ngIf="!isLoading && filteredChats.length === 0 && !searchQuery"
+      class="flex flex-col items-center justify-center h-64 p-6 text-center"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+        />
+      </svg>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+        No chats yet
+      </h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Start a conversation to see it here
+      </p>
+    </div>
+
+    <!-- Empty State - No Search Results -->
+    <div
+      *ngIf="!isLoading && filteredChats.length === 0 && searchQuery"
+      class="flex flex-col items-center justify-center h-64 p-6 text-center"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-16 w-16 text-gray-400 dark:text-gray-600 mb-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
+      </svg>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+        No results found
+      </h3>
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Try searching with different keywords
+      </p>
+    </div>
+
+    <!-- Chat Items -->
+    <div
+      *ngIf="!isLoading && filteredChats.length > 0"
+      class="divide-y divide-gray-200 dark:divide-gray-700"
+    >
+      <div
+        *ngFor="let chat of filteredChats; trackBy: trackByChat"
+        (click)="openChat(chat)"
+        class="flex items-center p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+      >
+        <!-- Avatar -->
+        <div class="relative flex-shrink-0">
+          <div
+            class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-lg"
+          >
+            {{ getChatAvatar(chat) }}
+          </div>
+
+          <!-- Online Status Indicator -->
+          <div
+            *ngIf="chat.type !== 3"
+            class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-800"
+            [ngClass]="getOnlineStatusColor(chat)"
+          ></div>
+        </div>
+
+        <!-- Chat Info -->
+        <div class="flex-1 min-w-0 ml-3">
+          <div class="flex items-center justify-between mb-1">
+            <h3
+              class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate"
+              [class.font-bold]="chat.unreadCount > 0"
+            >
+              {{ chat.name }}
+            </h3>
+            <span
+              class="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0"
+            >
+              {{ getLastMessageTime(chat) }}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <p
+              class="text-sm text-gray-600 dark:text-gray-400 truncate"
+              [class.font-semibold]="chat.unreadCount > 0"
+              [class.text-gray-900]="chat.unreadCount > 0"
+              [class.dark:text-gray-200]="chat.unreadCount > 0"
+            >
+              {{ getLastMessagePreview(chat) }}
+            </p>
+
+            <!-- Unread Badge -->
+            <span
+              *ngIf="chat.unreadCount > 0"
+              class="ml-2 px-2 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-full flex-shrink-0 min-w-[20px] text-center"
+            >
+              {{ chat.unreadCount > 99 ? "99+" : chat.unreadCount }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

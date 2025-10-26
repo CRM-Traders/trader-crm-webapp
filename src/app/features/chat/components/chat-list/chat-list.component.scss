@@ -1,0 +1,51 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+// Custom scrollbar
+.overflow-y-auto {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+  }
+}
+
+// Dark mode scrollbar
+:host-context(.dark) {
+  .overflow-y-auto {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(75, 85, 99, 0.5);
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(75, 85, 99, 0.7);
+    }
+  }
+}
+
+// Avatar gradient variations
+.bg-gradient-to-br {
+  &.from-blue-400 {
+    background-image: linear-gradient(to bottom right, #60a5fa, #2563eb);
+  }
+}
+
+// Smooth transitions
+.transition-colors {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}

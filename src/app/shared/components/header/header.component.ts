@@ -9,7 +9,8 @@ import { UserMenuComponent } from '../user-menu/user-menu.component';
 import { MiniCalendarComponent } from '../mini-calendar/mini-calendar.component';
 import { LocalizationService } from '../../../core/services/localization.service';
 import { environment } from '../../../../environments/environment';
-import { ChatService } from '../../services/chat/chat.service';
+import { ChatService } from '../../../features/chat/services/chat.service';
+import { ChatStateService } from '../../../features/chat/services/chat-state.service';
 
 @Component({
   selector: 'app-header',
@@ -28,6 +29,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private localizationService = inject(LocalizationService);
   private router = inject(Router);
   private chatService = inject(ChatService);
+  private chatStateService = inject(ChatStateService);
 
   public environment = environment;
   userRole = this.authService.userRole;
@@ -46,8 +48,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.updateTime());
 
-    // Subscribe to unread chat count
-    this.subscribeToUnreadCount();
+    // Subscribe to unread count
+    this.initializeChatCount();
 
     document.addEventListener('click', this.closeMenuOnClickOutside.bind(this));
   }
@@ -59,21 +61,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     );
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  private subscribeToUnreadCount(): void {
-    this.isLoadingChatCount = true;
-
-    this.chatService.unreadCount$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: (count) => {
-        this.unreadChatCount = count;
-        this.isLoadingChatCount = false;
-      },
-      error: (error) => {
-        console.error('Error loading unread count:', error);
-        this.isLoadingChatCount = false;
-      },
-    });
   }
 
   toggleSidebar(): void {
@@ -115,6 +102,34 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   openChat(): void {
-    this.router.navigate(['/chat']);
+    // Toggle chat container visibility
+    // We'll implement a global chat container that can be toggled
+    this.chatStateService.toggleChatContainer();
+  }
+
+  private initializeChatCount(): void {
+    if (!environment.enableChatHub) {
+      return;
+    }
+
+    this.isLoadingChatCount = true;
+
+    // Initialize chat connection
+    this.chatService
+      .initializeConnection()
+      .then(() => {
+        this.isLoadingChatCount = false;
+      })
+      .catch((error) => {
+        console.error('Failed to initialize chat:', error);
+        this.isLoadingChatCount = false;
+      });
+
+    // Subscribe to unread count updates
+    this.chatService.unreadCount
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((count) => {
+        this.unreadChatCount = count;
+      });
   }
 }

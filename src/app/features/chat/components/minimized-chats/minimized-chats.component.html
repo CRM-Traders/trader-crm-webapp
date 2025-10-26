@@ -1,0 +1,74 @@
+<div
+  class="fixed bottom-4 right-4 z-40 flex flex-col-reverse items-end space-y-reverse space-y-2 pointer-events-none"
+>
+  <div
+    *ngFor="let minimizedChat of minimizedChats; trackBy: trackByChat"
+    class="pointer-events-auto animate-slide-up"
+  >
+    <!-- Minimized Chat Circle -->
+    <div
+      (click)="maximizeChat(minimizedChat.chatId)"
+      class="relative group cursor-pointer"
+    >
+      <!-- Chat Avatar Circle -->
+      <div
+        class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200 border-3 border-white dark:border-gray-900"
+      >
+        {{ getChatAvatar(minimizedChat.chat) }}
+      </div>
+
+      <!-- Online Status Indicator -->
+      <div
+        *ngIf="getOnlineStatus(minimizedChat.chat)"
+        class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-3 border-white dark:border-gray-900 shadow-sm"
+      ></div>
+
+      <!-- Unread Badge -->
+      <div
+        *ngIf="minimizedChat.unreadCount > 0"
+        class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[22px] h-5.5 px-1.5 flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-900"
+      >
+        {{ minimizedChat.unreadCount > 99 ? "99+" : minimizedChat.unreadCount }}
+      </div>
+
+      <!-- Close Button (appears on hover) -->
+      <button
+        (click)="closeChat(minimizedChat.chatId, $event)"
+        class="absolute -top-2 -left-2 w-6 h-6 bg-gray-700 hover:bg-gray-800 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center shadow-lg"
+        aria-label="Close chat"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2.5"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <!-- Tooltip with Chat Name (appears on hover) -->
+      <div
+        class="absolute right-full mr-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
+      >
+        <div
+          class="bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap"
+        >
+          {{ getChatName(minimizedChat.chat) }}
+          <!-- Tooltip Arrow -->
+          <div class="absolute left-full top-1/2 transform -translate-y-1/2">
+            <div
+              class="border-4 border-transparent border-l-gray-900 dark:border-l-gray-700"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
