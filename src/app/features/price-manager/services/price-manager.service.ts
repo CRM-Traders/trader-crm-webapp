@@ -200,9 +200,9 @@ export class PriceManagerService {
     symbol: string;
     volume: number;
     side: number;
-    entryPrice: number;
-    exitPrice: number;
-    leverage: number;
+    entryPrice: number | null;
+    exitPrice: number | null;
+    leverage: number | null;
     tradingAccountId: string | null;
   }) {
     return this.http.post(

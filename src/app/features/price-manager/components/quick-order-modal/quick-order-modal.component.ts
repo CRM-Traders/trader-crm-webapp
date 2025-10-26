@@ -352,10 +352,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
     const { entryPrice, exitPrice } = this.getEntryExitPrices();
 
-    if (entryPrice == null || exitPrice == null) {
-      return;
-    }
-
     const requestBody = {
       symbol: this.currentSymbol(),
       volume: this.volume()!,
@@ -377,8 +373,9 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
             this.applySmartPLCalculationResponse(resp, 'volume');
           }),
           catchError((err) => {
+            console.log(err);
             console.error('Error calculating from volume:', err);
-            this.alertService.error('Failed to calculate from volume');
+            this.alertService.error(err.error.error);
             return [];
           }),
           finalize(() => this.calculatingFromVolume.set(false))
@@ -586,10 +583,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
     if (!this.volume() || this.volume()! <= 0) {
       this.alertService.error('Please enter a valid volume');
-      return;
-    }
-    if (!this.targetProfit()) {
-      this.alertService.error('Please enter a valid expected P/L');
       return;
     }
 
