@@ -489,7 +489,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       sellRequiredMargin: this.sellRequiredMargin(),
       buyRequiredMargin: this.buyRequiredMargin(),
       comment: this.comment(),
-      closeImmediately: this.closeImmediately(),
+      closeImmediately: false,
     };
 
     this.priceManagerService
@@ -573,7 +573,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       buyClosePrice: this.buyClosePrice()!,
       sellRequiredMargin: this.sellRequiredMargin(),
       buyRequiredMargin: this.buyRequiredMargin(),
-      closeImmediately: this.closeImmediately(),
+      closeImmediately: true,
     };
 
     this.priceManagerService

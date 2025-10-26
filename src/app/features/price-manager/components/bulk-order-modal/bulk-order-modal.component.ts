@@ -611,7 +611,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       sellRequiredMargin: this.sellRequiredMargin(),
       buyRequiredMargin: this.buyRequiredMargin(),
       comment: this.comment(),
-      closeImmediately: this.closeImmediately(), // Added this
+      closeImmediately: false, // Added this
     };
 
     this.priceManagerService
@@ -710,7 +710,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       buyRequiredMargin: this.buyRequiredMargin(),
       autoSellPrice: this.autoSellPrice(),
       autoBuyPrice: this.autoBuyPrice(),
-      closeImmediately: this.closeImmediately(),
+      closeImmediately: true,
     };
 
     this.priceManagerService
