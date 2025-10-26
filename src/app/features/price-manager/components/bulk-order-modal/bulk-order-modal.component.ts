@@ -40,6 +40,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private alertService = inject(AlertService);
   private destroy$ = new Subject<void>();
 
+  // LocalStorage key for saving login IDs
+  private readonly LOGIN_IDS_STORAGE_KEY = 'bulk_order_login_ids';
+
   activeTab = signal<'newOrder' | 'smartPL'>('smartPL');
 
   loginIdsInput = signal<string>('');
@@ -103,7 +106,45 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadSavedLoginIds();
+  }
+
+  /**
+   * Load saved login IDs from localStorage and auto-trigger upload
+   */
+  private loadSavedLoginIds(): void {
+    try {
+      const savedLoginIds = localStorage.getItem(this.LOGIN_IDS_STORAGE_KEY);
+      if (savedLoginIds && savedLoginIds.trim()) {
+        this.loginIdsInput.set(savedLoginIds);
+
+        // Auto-trigger upload after a short delay to ensure component is ready
+        setTimeout(() => {
+          this.onUploadClients();
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error loading saved login IDs:', error);
+    }
+  }
+
+  /**
+   * Save login IDs to localStorage
+   */
+  private saveLoginIdsToStorage(): void {
+    try {
+      const loginIds = this.loginIdsInput().trim();
+      if (loginIds) {
+        localStorage.setItem(this.LOGIN_IDS_STORAGE_KEY, loginIds);
+      } else {
+        // Remove from storage if empty
+        localStorage.removeItem(this.LOGIN_IDS_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.error('Error saving login IDs:', error);
+    }
+  }
 
   switchTab(tab: 'newOrder' | 'smartPL'): void {
     this.activeTab.set(tab);
@@ -159,6 +200,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       }
     } catch {}
   }
+
   private formatSymbolForTradingView(symbol: string): string {
     if (symbol.length >= 6 && symbol.endsWith('USDT')) {
       return `BINANCE:${symbol}`;
@@ -809,6 +851,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     // Update the input with unique IDs
     this.loginIdsInput.set(uniqueLoginIds.join(', '));
 
+    // Save to localStorage after removing duplicates
+    this.saveLoginIdsToStorage();
+
     if (duplicatesRemoved > 0) {
       this.alertService.success(
         `Removed ${duplicatesRemoved} duplicate ID(s). ${uniqueLoginIds.length} unique ID(s) remaining.`
@@ -824,6 +869,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       this.alertService.error('Please enter at least one login ID');
       return;
     }
+
+    // Save to localStorage before uploading
+    this.saveLoginIdsToStorage();
 
     this.uploadingClients.set(true);
     this.fetchedClients.set([]);
