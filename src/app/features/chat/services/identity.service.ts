@@ -48,7 +48,7 @@ export class IdentityService {
 
   searchClients(
     searchTerm: string | null = null,
-    pageIndex: number = 1,
+    pageIndex: number = 0,
     pageSize: number = 20
   ): Observable<SearchResponse<Client>> {
     const request: ClientSearchRequest = {
@@ -65,7 +65,7 @@ export class IdentityService {
 
   searchOperators(
     searchTerm: string | null = null,
-    pageIndex: number = 1,
+    pageIndex: number = 0,
     pageSize: number = 20
   ): Observable<SearchResponse<Operator>> {
     const request: OperatorSearchRequest = {

@@ -73,6 +73,9 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   submitting = signal<boolean>(false);
   submitSide = signal<number | null>(null);
 
+  loadingBalance = signal<boolean>(false);
+  userBalance = signal<any>(null);
+
   lastPrice = signal<number | null>(null);
   bidPrice = signal<number | null>(null);
   askPrice = signal<number | null>(null);
@@ -88,7 +91,32 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.data?.userId) {
+      this.fetchUserBalance();
+    }
+  }
+
+  fetchUserBalance(): void {
+    this.loadingBalance.set(true);
+    this.priceManagerService
+      .getUserBalanceWithoutCurrency(this.data.userId)
+      .pipe(
+        tap((response: any) => {
+          // Response has balances array
+          if (response?.balances && response.balances.length > 0) {
+            this.userBalance.set(response.balances[0]);
+          }
+        }),
+        catchError((err) => {
+          console.error('Error fetching balance:', err);
+          return [];
+        }),
+        finalize(() => this.loadingBalance.set(false)),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
+  }
 
   switchTab(tab: 'newOrder' | 'smartPL'): void {
     this.activeTab.set(tab);
@@ -555,6 +583,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
     if (!this.volume() || this.volume()! <= 0) {
       this.alertService.error('Please enter a valid volume');
+      return;
+    }
+    if (!this.targetProfit()) {
+      this.alertService.error('Please enter a valid expected P/L');
       return;
     }
 

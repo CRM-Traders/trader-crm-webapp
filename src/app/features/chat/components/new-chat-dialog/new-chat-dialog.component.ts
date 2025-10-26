@@ -97,12 +97,12 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
     try {
       if (this.section === ChatSection.Client) {
         const response = await this.identityService
-          .searchClients(query, 1, 20)
+          .searchClients(query, 0, 20)
           .toPromise();
         return response?.items || [];
       } else {
         const response = await this.identityService
-          .searchOperators(query, 1, 20)
+          .searchOperators(query, 0, 20)
           .toPromise();
         return response?.items || [];
       }
