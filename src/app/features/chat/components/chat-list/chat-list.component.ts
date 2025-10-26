@@ -30,9 +30,9 @@ export class ChatListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Subscribe to chats
     this.chatService.chats.pipe(takeUntil(this.destroy$)).subscribe((chats) => {
-      console.log('Chat list received chats:', chats); // Debug log
+      console.log('Chat list received chats:', chats);
       this.chats = this.filterChatsBySection(chats);
-      console.log('Filtered chats for section:', this.chats); // Debug log
+      console.log('Filtered chats for section:', this.chats);
       this.applySearchFilter();
     });
 
@@ -40,7 +40,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
     this.chatService.isLoading
       .pipe(takeUntil(this.destroy$))
       .subscribe((loading) => {
-        console.log('Loading state:', loading); // Debug log
+        console.log('Loading state:', loading);
         this.isLoading = loading;
       });
 
@@ -52,7 +52,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
       });
 
     // Load initial chats
-    console.log('Loading chats for section:', this.section); // Debug log
+    console.log('Loading chats for section:', this.section);
     this.loadChats();
   }
 
@@ -94,7 +94,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
     this.filteredChats = this.chats.filter(
       (chat) =>
         chat.name.toLowerCase().includes(query) ||
-        chat.lastMessage?.content.toLowerCase().includes(query)
+        (chat.lastMessage?.content || '').toLowerCase().includes(query)
     );
   }
 
@@ -116,7 +116,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
       return 'No messages yet';
     }
 
-    const content = chat.lastMessage.content;
+    const content = chat.lastMessage.content || '';
     return content.length > 50 ? content.substring(0, 50) + '...' : content;
   }
 
@@ -125,23 +125,37 @@ export class ChatListComponent implements OnInit, OnDestroy {
       return '';
     }
 
-    const messageDate = new Date(chat.lastMessage.createdAt);
-    const now = new Date();
-    const diffMs = now.getTime() - messageDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    try {
+      const messageDate =
+        chat.lastMessage.createdAt instanceof Date
+          ? chat.lastMessage.createdAt
+          : new Date(chat.lastMessage.createdAt);
 
-    if (diffMins < 1) {
-      return 'Just now';
-    } else if (diffMins < 60) {
-      return `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours}h ago`;
-    } else if (diffDays < 7) {
-      return `${diffDays}d ago`;
-    } else {
-      return messageDate.toLocaleDateString();
+      // Check if date is valid
+      if (isNaN(messageDate.getTime())) {
+        return '';
+      }
+
+      const now = new Date();
+      const diffMs = now.getTime() - messageDate.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) {
+        return 'Just now';
+      } else if (diffMins < 60) {
+        return `${diffMins}m ago`;
+      } else if (diffHours < 24) {
+        return `${diffHours}h ago`;
+      } else if (diffDays < 7) {
+        return `${diffDays}d ago`;
+      } else {
+        return messageDate.toLocaleDateString();
+      }
+    } catch (error) {
+      console.error('Error formatting last message time:', error);
+      return '';
     }
   }
 
@@ -162,8 +176,9 @@ export class ChatListComponent implements OnInit, OnDestroy {
   }
 
   getChatAvatar(chat: Chat): string {
-    // Return first letter of chat name
-    return chat.name.charAt(0).toUpperCase();
+    // Return first letter of chat name, or '?' if name is empty
+    const name = chat.name || 'Unknown';
+    return name.charAt(0).toUpperCase();
   }
 
   trackByChat(index: number, chat: Chat): string {

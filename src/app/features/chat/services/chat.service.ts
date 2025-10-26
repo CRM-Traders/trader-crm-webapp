@@ -1,20 +1,6 @@
 import { Injectable, inject, OnDestroy } from '@angular/core';
-import {
-  BehaviorSubject,
-  Observable,
-  Subject,
-  combineLatest,
-  interval,
-} from 'rxjs';
-import {
-  map,
-  tap,
-  catchError,
-  debounceTime,
-  distinctUntilChanged,
-  switchMap,
-  takeUntil,
-} from 'rxjs/operators';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
 import { ChatHttpService, SendMessageRequest } from './chat-http.service';
 import { ChatSignalRService } from './chat-signalr.service';
 import { ChatStateService } from './chat-state.service';
@@ -39,7 +25,7 @@ export class ChatService implements OnDestroy {
   private authService = inject(AuthService);
   private stateService = inject(ChatStateService);
   private notificationService = inject(ChatNotificationService);
-  private transformerService = inject(ChatTransformerService); // Add this
+  private transformerService = inject(ChatTransformerService);
 
   // State
   private chats$ = new BehaviorSubject<Map<string, Chat>>(new Map());
@@ -53,12 +39,10 @@ export class ChatService implements OnDestroy {
   // Typing indicator timeout tracking
   private typingTimeouts = new Map<string, any>();
 
-  // Add destroy$ for cleanup
   private destroy$ = new Subject<void>();
 
   constructor() {
     this.initializeSignalRListeners();
-    this.startUnreadCountPolling();
     this.monitorConnection();
   }
 
@@ -69,6 +53,31 @@ export class ChatService implements OnDestroy {
     // Cleanup typing timeouts
     this.typingTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.typingTimeouts.clear();
+  }
+
+  // Utility method for safe date parsing
+  private parseDate(dateValue: any): Date {
+    if (!dateValue) {
+      return new Date();
+    }
+
+    // If already a Date object
+    if (dateValue instanceof Date) {
+      return dateValue;
+    }
+
+    // If string, try to parse
+    if (typeof dateValue === 'string') {
+      const parsed = new Date(dateValue);
+      // Check if valid
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+
+    // Fallback to current date
+    console.warn('Invalid date value:', dateValue);
+    return new Date();
   }
 
   // Public observables
@@ -124,12 +133,10 @@ export class ChatService implements OnDestroy {
       const apiChats = await this.httpService.getUserChats().toPromise();
 
       if (apiChats) {
-        console.log('API Chats received:', apiChats);
+        console.log('Raw API chats:', apiChats);
 
         // Transform API response to our model
-        let chats = this.transformerService.transformChatsFromApi(apiChats);
-
-        console.log('Transformed chats:', chats);
+        const chats = this.transformerService.transformChatsFromApi(apiChats);
 
         const currentChats = this.chats$.value;
         const chatType = this.sectionToChatType(section);
@@ -137,7 +144,7 @@ export class ChatService implements OnDestroy {
         // Filter chats by type
         const filteredChats = chats.filter((chat) => chat.type === chatType);
 
-        console.log('Filtered chats:', filteredChats);
+        console.log('Filtered chats for section:', filteredChats);
 
         // Clear existing chats for this section
         const existingChatIds = Array.from(currentChats.keys());
@@ -148,17 +155,16 @@ export class ChatService implements OnDestroy {
           }
         });
 
-        // Add filtered chats and enrich with names
-        for (const chat of filteredChats) {
+        // Add filtered chats
+        filteredChats.forEach((chat) => {
           currentChats.set(chat.id, chat);
-
-          // Enrich with participant names asynchronously
-          this.enrichChatNames(chat.id);
-        }
+        });
 
         this.chats$.next(new Map(currentChats));
+        this.calculateUnreadCount();
 
-        console.log('Updated chat map:', currentChats);
+        // Load last messages for each chat
+        await this.loadLastMessagesForChats(filteredChats);
       }
     } catch (error) {
       console.error('Error loading chats:', error);
@@ -168,21 +174,41 @@ export class ChatService implements OnDestroy {
     }
   }
 
-  private async enrichChatNames(chatId: string): Promise<void> {
-    try {
-      const currentChats = this.chats$.value;
-      const chat = currentChats.get(chatId);
+  // Load last messages for chats
+  private async loadLastMessagesForChats(chats: Chat[]): Promise<void> {
+    const currentChats = this.chats$.value;
 
-      if (!chat) return;
+    for (const chat of chats) {
+      try {
+        // Load just the first page (most recent messages)
+        const response = await this.httpService
+          .getChatMessages(chat.id, 1, 1) // Just get 1 message
+          .toPromise();
 
-      const enrichedChat =
-        await this.transformerService.enrichChatWithParticipantNames(chat);
+        if (response?.messages && response.messages.length > 0) {
+          const lastMessage = response.messages[0];
 
-      currentChats.set(chatId, enrichedChat);
-      this.chats$.next(new Map(currentChats));
-    } catch (error) {
-      console.error(`Error enriching chat ${chatId}:`, error);
+          // Convert date
+          const messageWithDate: Message = {
+            ...lastMessage,
+            createdAt: this.parseDate(lastMessage.createdAt),
+          };
+
+          // Update chat with last message
+          const updatedChat = currentChats.get(chat.id);
+          if (updatedChat) {
+            updatedChat.lastMessage = messageWithDate;
+            updatedChat.updatedAt = messageWithDate.createdAt;
+            currentChats.set(chat.id, { ...updatedChat });
+          }
+        }
+      } catch (error) {
+        console.error(`Error loading last message for chat ${chat.id}:`, error);
+      }
     }
+
+    // Update all chats at once
+    this.chats$.next(new Map(currentChats));
   }
 
   async loadChatById(chatId: string): Promise<Chat | undefined> {
@@ -190,15 +216,32 @@ export class ChatService implements OnDestroy {
       const apiChat = await this.httpService.getChatById(chatId).toPromise();
       if (apiChat) {
         const chat = this.transformerService.transformChatFromApi(apiChat);
-        const enrichedChat =
-          await this.transformerService.enrichChatWithParticipantNames(chat);
 
         // Add to local state
         const currentChats = this.chats$.value;
-        currentChats.set(enrichedChat.id, enrichedChat);
+        currentChats.set(chat.id, chat);
         this.chats$.next(new Map(currentChats));
 
-        return enrichedChat;
+        // Load last message
+        try {
+          const response = await this.httpService
+            .getChatMessages(chat.id, 1, 1)
+            .toPromise();
+
+          if (response?.messages && response.messages.length > 0) {
+            const lastMessage = response.messages[0];
+            chat.lastMessage = {
+              ...lastMessage,
+              createdAt: this.parseDate(lastMessage.createdAt),
+            };
+            currentChats.set(chat.id, { ...chat });
+            this.chats$.next(new Map(currentChats));
+          }
+        } catch (error) {
+          console.error('Error loading last message:', error);
+        }
+
+        return chat;
       }
     } catch (error) {
       console.error('Error loading chat by ID:', error);
@@ -217,11 +260,21 @@ export class ChatService implements OnDestroy {
         const currentMessages = this.messages$.value;
         const existingMessages = currentMessages.get(chatId) || [];
 
+        console.log('Raw messages from API:', response.messages);
+
+        // Convert API date strings to Date objects with robust parsing
+        const messages = response.messages.map((msg) => ({
+          ...msg,
+          createdAt: this.parseDate(msg.createdAt),
+        }));
+
+        console.log('Converted messages:', messages);
+
         // Prepend older messages (for pagination)
         const allMessages =
           page > 1
-            ? [...response.messages.reverse(), ...existingMessages]
-            : response.messages.reverse();
+            ? [...messages.reverse(), ...existingMessages]
+            : messages.reverse();
 
         currentMessages.set(chatId, allMessages);
         this.messages$.next(new Map(currentMessages));
@@ -238,7 +291,7 @@ export class ChatService implements OnDestroy {
     }
   }
 
-  // Send a message
+  // Send a message with optimistic update
   async sendMessage(
     chatId: string,
     content: string,
@@ -251,7 +304,32 @@ export class ChatService implements OnDestroy {
         messageType,
       };
 
-      await this.httpService.sendMessage(request).toPromise();
+      console.log('Sending message:', request);
+
+      // Send message and get response
+      const sentMessage = await this.httpService
+        .sendMessage(request)
+        .toPromise();
+
+      console.log('Message sent, response:', sentMessage);
+
+      if (sentMessage) {
+        // ✅ OPTIMISTIC UPDATE: Add message immediately from HTTP response
+        const messageWithDate: Message = {
+          ...sentMessage,
+          createdAt: this.parseDate(sentMessage.createdAt),
+        };
+
+        // Add to messages immediately
+        this.addMessage(messageWithDate);
+
+        // Update chat's last message
+        this.updateChatLastMessage(messageWithDate);
+
+        console.log('Message added optimistically:', messageWithDate);
+      }
+
+      // SignalR will also send the message, but we have duplicate prevention
     } catch (error) {
       console.error('Error sending message:', error);
       this.notificationService.error(
@@ -318,6 +396,7 @@ export class ChatService implements OnDestroy {
       throw error;
     }
   }
+
   // Mark chat as read
   async markAsRead(chatId: string): Promise<void> {
     try {
@@ -330,10 +409,8 @@ export class ChatService implements OnDestroy {
         chat.unreadCount = 0;
         currentChats.set(chatId, { ...chat });
         this.chats$.next(new Map(currentChats));
+        this.calculateUnreadCount();
       }
-
-      // Refresh unread count
-      await this.refreshUnreadCount();
     } catch (error) {
       console.error('Error marking chat as read:', error);
     }
@@ -352,7 +429,7 @@ export class ChatService implements OnDestroy {
     return this.authService.getUserId();
   }
 
-  // Update the createChat method
+  // Create chat with proper handling
   async createChat(
     type: ChatType,
     participantId?: string,
@@ -363,15 +440,13 @@ export class ChatService implements OnDestroy {
       let chat: Chat | undefined;
 
       if (type === ChatType.ClientToOperator) {
-        // Determine if we're a client or operator creating the chat
-        // For now, assuming operator is creating (you can check user role)
         if (!participantId) {
           throw new Error('Participant ID is required');
         }
         chat = await this.httpService
           .createClientToOperatorChatByOperator(
-            participantId, // clientId
-            this.getCurrentUserId() // operatorId (you)
+            participantId,
+            this.getCurrentUserId()!
           )
           .toPromise();
       } else if (type === ChatType.OperatorToOperator) {
@@ -391,23 +466,43 @@ export class ChatService implements OnDestroy {
       }
 
       if (chat) {
+        console.log('Chat created:', chat);
+
+        // ✅ Add to local state immediately
         const currentChats = this.chats$.value;
         currentChats.set(chat.id, chat);
         this.chats$.next(new Map(currentChats));
 
-        // Open the new chat
+        console.log('Chat added to local state');
+
+        // ✅ Trigger refresh of the chat list for the current section
+        const currentSection = this.stateService.activeSection;
+        const chatSection = this.chatTypeToSection(chat.type);
+
+        // If the new chat belongs to the current section, it's already visible
+        // If it's a different section, we might want to switch to it
+        if (chatSection === currentSection) {
+          console.log('Chat is in current section, already visible');
+        } else {
+          console.log('Chat is in different section:', chatSection);
+        }
+
+        // Open the new chat window
         this.stateService.openChatWindow(chat.id);
 
         this.notificationService.success('Chat created successfully');
+
+        return chat;
       }
 
-      return chat!;
+      throw new Error('Failed to create chat');
     } catch (error) {
       console.error('Error creating chat:', error);
       this.notificationService.error('Failed to create chat');
       throw error;
     }
   }
+
   // Leave a chat room
   async leaveChat(chatId: string): Promise<void> {
     try {
@@ -423,15 +518,25 @@ export class ChatService implements OnDestroy {
     this.signalRService.onMessageReceived
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
-        this.addMessage(message);
-        this.updateChatLastMessage(message);
+        console.log('Message received via SignalR:', message);
+        // Convert date string to Date object
+        const messageWithDate = {
+          ...message,
+          createdAt: this.parseDate(message.createdAt),
+        };
+        this.addMessage(messageWithDate);
+        this.updateChatLastMessage(messageWithDate);
       });
 
     // Message edited
     this.signalRService.onMessageEdited
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
-        this.updateMessage(message);
+        const messageWithDate = {
+          ...message,
+          createdAt: this.parseDate(message.createdAt),
+        };
+        this.updateMessage(messageWithDate);
       });
 
     // Message deleted
@@ -472,6 +577,9 @@ export class ChatService implements OnDestroy {
       chatMessages.push(message);
       currentMessages.set(message.chatId, chatMessages);
       this.messages$.next(new Map(currentMessages));
+      console.log('Message added to local state:', message);
+    } else {
+      console.log('Message already exists, skipping:', message.id);
     }
   }
 
@@ -517,11 +625,12 @@ export class ChatService implements OnDestroy {
       // Increment unread count if window is not open
       if (!this.stateService.isChatOpen(message.chatId)) {
         chat.unreadCount = (chat.unreadCount || 0) + 1;
-        this.refreshUnreadCount();
       }
 
       currentChats.set(message.chatId, { ...chat });
       this.chats$.next(new Map(currentChats));
+      this.calculateUnreadCount();
+      console.log('Chat last message updated:', chat);
     }
   }
 
@@ -559,7 +668,7 @@ export class ChatService implements OnDestroy {
     const currentChats = this.chats$.value;
 
     currentChats.forEach((chat) => {
-      const participant = chat.participants.find((p) => p.id === userId);
+      const participant = chat.participants.find((p) => p.userId === userId);
       if (participant) {
         participant.isOnline = isOnline;
         currentChats.set(chat.id, { ...chat });
@@ -569,29 +678,13 @@ export class ChatService implements OnDestroy {
     this.chats$.next(new Map(currentChats));
   }
 
-  private async refreshUnreadCount(): Promise<void> {
-    try {
-      // If endpoint doesn't exist, calculate from chats
-      const allChats = Array.from(this.chats$.value.values());
-      const totalUnread = allChats.reduce(
-        (sum, chat) => sum + (chat.unreadCount || 0),
-        0
-      );
-      this.unreadCount$.next(totalUnread);
-    } catch (error) {
-      console.error('Error refreshing unread count:', error);
-    }
-  }
-  private startUnreadCountPolling(): void {
-    // Poll unread count every 30 seconds
-    interval(30000)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.refreshUnreadCount();
-      });
-
-    // Initial fetch
-    this.refreshUnreadCount();
+  private calculateUnreadCount(): void {
+    const allChats = Array.from(this.chats$.value.values());
+    const totalUnread = allChats.reduce(
+      (sum, chat) => sum + (chat.unreadCount || 0),
+      0
+    );
+    this.unreadCount$.next(totalUnread);
   }
 
   private monitorConnection(): void {
@@ -621,6 +714,19 @@ export class ChatService implements OnDestroy {
         return ChatType.OperatorGroup;
       default:
         return undefined;
+    }
+  }
+
+  private chatTypeToSection(chatType: ChatType): ChatSection {
+    switch (chatType) {
+      case ChatType.ClientToOperator:
+        return ChatSection.Client;
+      case ChatType.OperatorToOperator:
+        return ChatSection.Operator;
+      case ChatType.OperatorGroup:
+        return ChatSection.Group;
+      default:
+        return ChatSection.Client;
     }
   }
 }

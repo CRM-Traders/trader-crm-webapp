@@ -222,43 +222,88 @@ export class ChatWindowComponent
   }
 
   getMessageTime(message: Message): string {
-    const date = new Date(message.createdAt);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
+    try {
+      // Ensure createdAt is a Date object
+      const date =
+        message.createdAt instanceof Date
+          ? message.createdAt
+          : new Date(message.createdAt);
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid time';
+      }
+
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch (error) {
+      console.error('Error formatting message time:', error, message);
+      return 'Invalid time';
+    }
   }
 
   getMessageDate(message: Message): string {
-    const date = new Date(message.createdAt);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    try {
+      // Ensure createdAt is a Date object
+      const date =
+        message.createdAt instanceof Date
+          ? message.createdAt
+          : new Date(message.createdAt);
 
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year:
-          date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
-      });
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Yesterday';
+      } else {
+        return date.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year:
+            date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+        });
+      }
+    } catch (error) {
+      console.error('Error formatting message date:', error, message);
+      return 'Invalid date';
     }
   }
 
   shouldShowDateSeparator(message: Message, index: number): boolean {
     if (index === 0) return true;
 
-    const currentDate = new Date(message.createdAt).toDateString();
-    const previousDate = new Date(
-      this.messages[index - 1].createdAt
-    ).toDateString();
+    try {
+      const currentDate =
+        message.createdAt instanceof Date
+          ? message.createdAt
+          : new Date(message.createdAt);
 
-    return currentDate !== previousDate;
+      const previousDate =
+        this.messages[index - 1].createdAt instanceof Date
+          ? this.messages[index - 1].createdAt
+          : new Date(this.messages[index - 1].createdAt);
+
+      // Check if dates are valid
+      if (isNaN(currentDate.getTime()) || isNaN(previousDate.getTime())) {
+        return false;
+      }
+
+      return currentDate.toDateString() !== previousDate.toDateString();
+    } catch (error) {
+      console.error('Error checking date separator:', error);
+      return false;
+    }
   }
 
   getOnlineStatus(): boolean {
@@ -269,6 +314,7 @@ export class ChatWindowComponent
     const rightOffset = 20 + this.position * 340;
     return `${rightOffset}px`;
   }
+
   getPositionOffset(): number {
     // 20px base offset + (position × 340px for each window)
     // 320px width + 20px gap between windows
