@@ -1,0 +1,59 @@
+name: Backup Deploy Angular Application
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+  APP_NAME: 'trader-crm-webapp'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Cache Angular build
+        uses: actions/cache@v3
+        with:
+          path: |
+            .angular
+            dist
+          key: ${{ runner.os }}-angular-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-angular-${{ hashFiles('**/package-lock.json') }}
+            ${{ runner.os }}-angular-
+          
+      - name: Build
+        run: |
+          npm ci
+          npm run build --configuration=production
+          
+      - name: Deploy
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BACKUP_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.BACKUP_SERVER_HOST }} >> ~/.ssh/known_hosts
+          
+          # Deploy with compression
+          APP_LOWER=$(echo "${{ env.APP_NAME }}" | tr '[:upper:]' '[:lower:]')
+          DEPLOY_PATH="/www/wwwroot/${APP_LOWER}.crm-system.com"
+          
+          rsync -avz --compress-level=9 \
+            dist/${{ env.APP_NAME }}/browser/ \
+            ${{ secrets.BACKUP_SERVER_USER }}@${{ secrets.BACKUP_SERVER_HOST }}:${DEPLOY_PATH}/
+          
+          # Cleanup
+          rm -rf ~/.ssh
