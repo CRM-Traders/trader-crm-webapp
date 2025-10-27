@@ -45,6 +45,7 @@ export interface ShuffleClientsRequest {
   clientIds: string[];
   clientType: number;
   operators: OperatorAssignment[];
+  saleStatus?: number;
 }
 
 export interface ShuffleClientsResponse {

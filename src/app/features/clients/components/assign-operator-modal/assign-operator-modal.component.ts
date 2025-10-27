@@ -24,6 +24,74 @@ import {
 
 export type UserType = 0 | 1; // 0 = lead, 1 = client
 
+// Sales Status Enum
+export enum SaleStatusEnum {
+  Active = 0,
+  Appointment24Hr = 1,
+  BlackListCountry = 2,
+  Callback = 3,
+  CallbackNA = 4,
+  CallAgain = 5,
+  CallbackInsff = 6,
+  Converted = 7,
+  Depositor = 8,
+  DepositWithMe = 9,
+  DialerAssigned = 10,
+  DialerDrop = 11,
+  DialerFailed = 12,
+  DialerNA = 13,
+  DialerNew = 14,
+  DifferentVoice = 15,
+  DoNotCall = 16,
+  Duplicate = 17,
+  Expectation = 18,
+  FailedDeposit = 19,
+  Fault = 20,
+  Frost = 21,
+  Hot = 22,
+  HungUp = 23,
+  InitialCall = 24,
+  InvalidCountry = 25,
+  InvalidLanguage = 26,
+  JunkLead = 27,
+  LongTermCallBack = 28,
+  Media = 29,
+  Messenger = 30,
+  NeverAnswer = 31,
+  New = 32,
+  NoAnswer = 33,
+  NoAnswer2 = 34,
+  NoAnswer3 = 35,
+  NoAnswer4 = 36,
+  NoAnswer5 = 37,
+  NotInterested = 38,
+  NoPotential = 39,
+  Pending = 40,
+  PotentialFraud = 41,
+  PotentialHigh = 42,
+  PotentialLow = 43,
+  PublicNumber = 44,
+  ReAssign = 45,
+  Referral = 46,
+  SelfDepositor = 47,
+  Shared = 48,
+  Shared10 = 49,
+  Shared2 = 50,
+  Shared3 = 51,
+  Test = 52,
+  Under18 = 53,
+  VoiceMail = 54,
+  WireSent = 55,
+  WrongInfo = 56,
+  WrongNumber = 57,
+  NeverCalled = 58,
+}
+
+interface SaleStatusOption {
+  id: number;
+  value: string;
+}
+
 @Component({
   selector: 'app-assign-operator-modal',
   standalone: true,
@@ -49,6 +117,12 @@ export class AssignOperatorModalComponent implements OnInit {
   dropdownOpen: boolean[] = [];
   operatorSearchTerm: string[] = [];
 
+  // Sales Status properties
+  saleStatusOptions: SaleStatusOption[] = [];
+  selectedSaleStatus: number | null = null;
+  saleStatusDropdownOpen = false;
+  saleStatusSearchTerm = '';
+
   constructor() {
     this.assignmentForm = this.fb.group({
       isActive: [true],
@@ -57,6 +131,7 @@ export class AssignOperatorModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadOperators();
+    this.initializeSaleStatusOptions();
     this.addOperatorAssignment(); // Start with one operator assignment
   }
 
@@ -85,16 +160,36 @@ export class AssignOperatorModalComponent implements OnInit {
       });
   }
 
+  private initializeSaleStatusOptions(): void {
+    this.saleStatusOptions = Object.keys(SaleStatusEnum)
+      .filter((key) => isNaN(Number(key))) // Filter out numeric keys
+      .map((key) => ({
+        id: SaleStatusEnum[key as keyof typeof SaleStatusEnum],
+        value: this.formatSaleStatusLabel(key),
+      }))
+      .sort((a, b) => a.value.localeCompare(b.value)); // Sort alphabetically
+  }
+
+  private formatSaleStatusLabel(enumKey: string): string {
+    // Convert enum key to readable format
+    // e.g., "NoAnswer2" -> "No Answer 2"
+    return enumKey
+      .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+      .replace(/([0-9]+)/g, ' $1') // Add space before numbers
+      .trim()
+      .replace(/\s+/g, ' '); // Remove extra spaces
+  }
+
   addOperatorAssignment(): void {
     const newAssignment = {
       operatorId: '',
-      percentage: 0
+      percentage: 0,
     };
 
     this.operatorAssignments.push(newAssignment);
     this.dropdownOpen.push(false);
     this.operatorSearchTerm.push('');
-    
+
     // Automatically distribute percentages equally among all operators
     this.distributeEqualPercentages();
   }
@@ -104,7 +199,7 @@ export class AssignOperatorModalComponent implements OnInit {
       this.operatorAssignments.splice(index, 1);
       this.dropdownOpen.splice(index, 1);
       this.operatorSearchTerm.splice(index, 1);
-      
+
       // Automatically redistribute percentages equally among remaining operators
       this.distributeEqualPercentages();
     }
@@ -112,18 +207,24 @@ export class AssignOperatorModalComponent implements OnInit {
 
   distributeEqualPercentages(): void {
     if (this.operatorAssignments.length === 0) return;
-    
+
     const equalPercentage = 100 / this.operatorAssignments.length;
-    
+
     this.operatorAssignments.forEach((assignment) => {
       assignment.percentage = Math.round(equalPercentage * 100) / 100; // Round to 2 decimal places
     });
-    
+
     // Handle any rounding differences by adjusting the last operator
-    const totalPercentage = this.operatorAssignments.reduce((sum, assignment) => sum + assignment.percentage, 0);
+    const totalPercentage = this.operatorAssignments.reduce(
+      (sum, assignment) => sum + assignment.percentage,
+      0
+    );
     const difference = 100 - totalPercentage;
-    if (Math.abs(difference) > 0.01) { // Only adjust if difference is significant
-      this.operatorAssignments[this.operatorAssignments.length - 1].percentage += difference;
+    if (Math.abs(difference) > 0.01) {
+      // Only adjust if difference is significant
+      this.operatorAssignments[
+        this.operatorAssignments.length - 1
+      ].percentage += difference;
     }
   }
 
@@ -131,7 +232,11 @@ export class AssignOperatorModalComponent implements OnInit {
     this.distributeEqualPercentages();
   }
 
-  updateOperatorAssignment(index: number, field: 'operatorId' | 'percentage', value: string | number): void {
+  updateOperatorAssignment(
+    index: number,
+    field: 'operatorId' | 'percentage',
+    value: string | number
+  ): void {
     if (field === 'percentage') {
       this.operatorAssignments[index].percentage = Number(value);
     } else {
@@ -142,12 +247,17 @@ export class AssignOperatorModalComponent implements OnInit {
   // Dropdown helpers
   toggleDropdown(index: number): void {
     if (this.loadingOperators || this.isSubmitting) return;
+    // Close sales status dropdown when opening operator dropdown
+    this.saleStatusDropdownOpen = false;
     // Close others
-    this.dropdownOpen = this.dropdownOpen.map((_, i) => i === index ? !this.dropdownOpen[i] : false);
+    this.dropdownOpen = this.dropdownOpen.map((_, i) =>
+      i === index ? !this.dropdownOpen[i] : false
+    );
   }
 
   closeAllDropdowns(): void {
     this.dropdownOpen = this.dropdownOpen.map(() => false);
+    this.saleStatusDropdownOpen = false;
   }
 
   onSearchInput(index: number, value: string): void {
@@ -157,7 +267,9 @@ export class AssignOperatorModalComponent implements OnInit {
   getFilteredOperators(index: number): OperatorDropdownItem[] {
     const term = (this.operatorSearchTerm[index] || '').toLowerCase().trim();
     if (!term) return this.operators;
-    return this.operators.filter((op) => (op.value || '').toLowerCase().includes(term));
+    return this.operators.filter((op) =>
+      (op.value || '').toLowerCase().includes(term)
+    );
   }
 
   selectOperator(index: number, operator: OperatorDropdownItem): void {
@@ -170,18 +282,59 @@ export class AssignOperatorModalComponent implements OnInit {
     return found ? found.value : '';
   }
 
+  // Sales Status dropdown helpers
+  toggleSaleStatusDropdown(): void {
+    if (this.isSubmitting) return;
+    // Close operator dropdowns when opening sales status dropdown
+    this.closeAllDropdowns();
+    this.saleStatusDropdownOpen = !this.saleStatusDropdownOpen;
+  }
+
+  onSaleStatusSearchInput(value: string): void {
+    this.saleStatusSearchTerm = value;
+  }
+
+  getFilteredSaleStatuses(): SaleStatusOption[] {
+    const term = this.saleStatusSearchTerm.toLowerCase().trim();
+    if (!term) return this.saleStatusOptions;
+    return this.saleStatusOptions.filter((status) =>
+      status.value.toLowerCase().includes(term)
+    );
+  }
+
+  selectSaleStatus(status: SaleStatusOption): void {
+    this.selectedSaleStatus = status.id;
+    this.saleStatusDropdownOpen = false;
+  }
+
+  clearSaleStatus(): void {
+    this.selectedSaleStatus = null;
+    this.saleStatusSearchTerm = '';
+  }
+
+  getSaleStatusLabel(): string {
+    if (this.selectedSaleStatus === null) return '';
+    const found = this.saleStatusOptions.find(
+      (s) => s.id === this.selectedSaleStatus
+    );
+    return found ? found.value : '';
+  }
+
   @HostListener('document:click')
   onDocumentClick(): void {
     this.closeAllDropdowns();
   }
 
   getTotalPercentage(): number {
-    return this.operatorAssignments.reduce((total, assignment) => total + assignment.percentage, 0);
+    return this.operatorAssignments.reduce(
+      (total, assignment) => total + assignment.percentage,
+      0
+    );
   }
 
   isFormValid(): boolean {
-    const hasValidAssignments = this.operatorAssignments.every(assignment => 
-      assignment.operatorId && assignment.percentage > 0
+    const hasValidAssignments = this.operatorAssignments.every(
+      (assignment) => assignment.operatorId && assignment.percentage > 0
     );
     const totalPercentage = this.getTotalPercentage();
     return hasValidAssignments && Math.abs(totalPercentage - 100) < 0.01; // Allow small rounding differences
@@ -189,7 +342,9 @@ export class AssignOperatorModalComponent implements OnInit {
 
   onSubmit(): void {
     if (!this.isFormValid()) {
-      this.alertService.warning('Please ensure all operators are selected and percentages total 100%');
+      this.alertService.warning(
+        'Please ensure all operators are selected and percentages total 100%'
+      );
       return;
     }
 
@@ -198,7 +353,10 @@ export class AssignOperatorModalComponent implements OnInit {
     const request: ShuffleClientsRequest = {
       clientIds: clientIds,
       clientType: Number(this.userType),
-      operators: this.operatorAssignments
+      operators: this.operatorAssignments,
+      ...(this.selectedSaleStatus !== null && {
+        saleStatus: this.selectedSaleStatus,
+      }),
     };
 
     this.isSubmitting = true;
@@ -253,7 +411,9 @@ export class AssignOperatorModalComponent implements OnInit {
         },
         error: (error) => {
           const entityType = this.userType === 0 ? 'leads' : 'clients';
-          this.alertService.error(`Failed to assign ${entityType} to operators`);
+          this.alertService.error(
+            `Failed to assign ${entityType} to operators`
+          );
         },
       });
   }
