@@ -255,6 +255,25 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       },
       {
         clients: this.activeClients(),
+        title: 'Create Bulk Order'
+      }
+    );
+
+    modalRef.result.then((result: any) => {
+      window.location.reload();
+    });
+  }
+
+  openNewOrderModal(): void {
+    const modalRef = this.modalService.open(
+      BulkOrderModalComponent,
+      {
+        size: 'full',
+        centered: true,
+      },
+      {
+        clients: this.activeClients(),
+        title: 'Create New Order'
       }
     );
 
