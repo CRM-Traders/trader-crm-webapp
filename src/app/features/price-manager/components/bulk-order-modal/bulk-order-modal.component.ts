@@ -33,6 +33,7 @@ export interface BulkOrderData {
 export class BulkOrderModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
   @Input() data?: BulkOrderData;
+  @Input() title: string = 'Create Bulk Order';
   @ViewChild(TradingViewChartComponent)
   tradingViewChart!: TradingViewChartComponent;
 
