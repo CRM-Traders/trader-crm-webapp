@@ -12,29 +12,6 @@
       </div>
 
       <div class="flex items-center space-x-4" *hasPermission="179">
-        <!-- Bulk Order Button -->
-        <button
-          (click)="openBulkOrderModal()"
-          [disabled]="loading() || activeClients().length === 0"
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <svg
-            class="w-4 h-4 mr-2"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
-          Bulk Order
-        </button>
-
         <!-- Refresh Button -->
         <button
           (click)="refreshData()"
@@ -62,338 +39,1182 @@
     </div>
   </div>
 
-  <!-- Clients Table -->
-  <div *hasPermission="179">
-    <div
-      class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
-    >
-      <!-- Table Header -->
-      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Active Clients
-            </h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Click on a client to view their orders and transactions
-            </p>
-          </div>
+  <!-- Tab Navigation -->
+  <div class="mb-6">
+    <div class="border-b border-gray-200 dark:border-gray-700">
+      <nav class="-mb-px flex space-x-8">
+        <button
+          (click)="setActiveTab('clients')"
+          [class.border-blue-500]="activeTab() === 'clients'"
+          [class.text-blue-600]="activeTab() === 'clients'"
+          [class.border-transparent]="activeTab() !== 'clients'"
+          [class.text-gray-500]="activeTab() !== 'clients'"
+          [class.dark:text-gray-400]="activeTab() !== 'clients'"
+          [class.dark:text-blue-400]="activeTab() === 'clients'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          <svg
+            class="w-5 h-5 inline mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+          Clients
+        </button>
+        <button
+          (click)="setActiveTab('orders')"
+          [class.border-blue-500]="activeTab() === 'orders'"
+          [class.text-blue-600]="activeTab() === 'orders'"
+          [class.border-transparent]="activeTab() !== 'orders'"
+          [class.text-gray-500]="activeTab() !== 'orders'"
+          [class.dark:text-gray-400]="activeTab() !== 'orders'"
+          [class.dark:text-blue-400]="activeTab() === 'orders'"
+          class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+        >
+          <svg
+            class="w-5 h-5 inline mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+            />
+          </svg>
+          Orders
+        </button>
+      </nav>
+    </div>
+  </div>
 
-          <!-- Search Input -->
-          <div class="flex items-center">
-            <div class="relative">
-              <input
-                type="text"
-                [(ngModel)]="searchInput"
-                (input)="onSearchInput()"
-                placeholder="Search clients... (live search)"
-                class="!pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm w-80"
-              />
-              <svg
-                class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                ></path>
-              </svg>
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Clients Tab -->
+    <div *ngIf="activeTab() === 'clients'">
+      <div *hasPermission="179">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
+          <!-- Table Header -->
+          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h2
+                  class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Clients
+                </h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Double-click on a client to view their orders and transactions
+                </p>
+              </div>
+
+              <!-- Search Input -->
+              <div class="flex items-center">
+                <div class="relative">
+                  <input
+                    type="text"
+                    [(ngModel)]="searchInput"
+                    (input)="onSearchInput()"
+                    placeholder="Search clients... (live search)"
+                    class="!pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm w-80"
+                  />
+                  <svg
+                    class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination Info and Page Size Selector -->
+            <div class="flex justify-between items-center mt-4">
+              <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {{ currentPage() * pageSize() + 1 }} to
+                  {{ getEndItem() }} of {{ totalCount() }} clients
+                </span>
+                <span
+                  *ngIf="getSelectedCount() > 0"
+                  class="text-sm text-blue-600 dark:text-blue-400 font-medium"
+                >
+                  {{ getSelectedCount() }} selected
+                </span>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <!-- Copy Selected Button -->
+                <button
+                  *ngIf="getSelectedCount() > 0"
+                  (click)="copySelectedExternalIds()"
+                  class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    ></path>
+                  </svg>
+                  Copy User IDs ({{ getSelectedCount() }})
+                </button>
+
+                <!-- Clear Selection Button -->
+                <button
+                  *ngIf="getSelectedCount() > 0"
+                  (click)="clearSelection()"
+                  class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  <svg
+                    class="w-4 h-4 mr-1.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    ></path>
+                  </svg>
+                  Clear Selection
+                </button>
+
+                <div class="flex items-center space-x-2">
+                  <label
+                    for="pageSize"
+                    class="text-sm text-gray-600 dark:text-gray-400"
+                    >Items per page:</label
+                  >
+                  <select
+                    id="pageSize"
+                    [(ngModel)]="pageSize"
+                    (change)="onPageSizeChange(pageSize())"
+                    class="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm py-1 px-2"
+                  >
+                    <option [ngValue]="10">10</option>
+                    <option [ngValue]="20">20</option>
+                    <option [ngValue]="50">50</option>
+                    <option [ngValue]="100">100</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Pagination Info and Page Size Selector -->
-        <div class="flex justify-between items-center mt-4">
-          <div class="flex items-center space-x-4">
-            <span class="text-sm text-gray-600 dark:text-gray-400">
-              Showing {{ currentPage() * pageSize() + 1 }} to
-              {{ getEndItem() }} of {{ totalCount() }} clients
-            </span>
-          </div>
-
-          <div class="flex items-center space-x-2">
-            <label
-              for="pageSize"
-              class="text-sm text-gray-600 dark:text-gray-400"
-              >Items per page:</label
+          <!-- Clients Table -->
+          <div class="overflow-x-auto">
+            <table
+              class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
             >
-            <select
-              id="pageSize"
-              [(ngModel)]="pageSize"
-              (change)="onPageSizeChange(pageSize())"
-              class="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm py-1 px-2"
-            >
-              <option [ngValue]="10">10</option>
-              <option [ngValue]="20">20</option>
-              <option [ngValue]="50">50</option>
-              <option [ngValue]="100">100</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Clients Table -->
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead class="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-12"
+                  >
+                    <input
+                      type="checkbox"
+                      [checked]="selectAll()"
+                      (change)="toggleSelectAll()"
+                      class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Client Name
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    User ID
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Status
+                  </th>
+                  <th
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="bg-white dark:bg-gray-800 divide-y divide-gray-400/30"
               >
-                Client Name
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                User ID
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Status
-              </th>
-              <th
-                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-400/30">
-            <!-- Skeleton Loading Rows -->
-            <ng-container *ngIf="loading()">
-              <tr *ngFor="let skeleton of [1, 2, 3, 4, 5]">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
+                <!-- Skeleton Loading Rows -->
+                <ng-container *ngIf="loading()">
+                  <tr *ngFor="let skeleton of [1, 2, 3, 4, 5]">
+                    <td class="px-6 py-4 whitespace-nowrap">
                       <div
-                        class="h-10 w-10 rounded-full bg-gray-400/50 animate-pulse"
+                        class="h-4 w-4 bg-gray-400/50 rounded animate-pulse"
                       ></div>
-                    </div>
-                    <div class="ml-4">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                       <div
                         class="h-4 bg-gray-400/50 rounded w-32 animate-pulse"
                       ></div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div
-                    class="h-4 bg-gray-400/50 rounded w-20 animate-pulse"
-                  ></div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div
-                    class="h-6 bg-gray-400/50 rounded-full w-16 animate-pulse"
-                  ></div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right">
-                  <div
-                    class="h-4 bg-gray-400/50 rounded w-24 ml-auto animate-pulse"
-                  ></div>
-                </td>
-              </tr>
-            </ng-container>
-
-            <!-- Actual Data Rows -->
-            <ng-container *ngIf="!loading()">
-              <tr
-                *ngFor="let client of activeClients()"
-                class="hover:bg-gray-500/20 transition-colors cursor-pointer"
-                (click)="viewClientDetails(client)"
-              >
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                       <div
-                        class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center"
-                      >
-                        <span class="text-lg font-medium text-blue-600">
-                          {{ client.fullName.charAt(0).toUpperCase() }}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="ml-4">
+                        class="h-4 bg-gray-400/50 rounded w-20 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-6 bg-gray-400/50 rounded-full w-16 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-24 ml-auto animate-pulse"
+                      ></div>
+                    </td>
+                  </tr>
+                </ng-container>
+
+                <!-- Actual Data Rows -->
+                <ng-container *ngIf="!loading()">
+                  <tr
+                    *ngFor="let client of activeClients()"
+                    class="hover:bg-gray-500/20 transition-colors cursor-pointer"
+                    (dblclick)="viewClientDetails(client)"
+                  >
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        [checked]="isClientSelected(client.externalId)"
+                        (change)="
+                          toggleClientSelection(client.externalId);
+                          $event.stopPropagation()
+                        "
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap max-w-16">
                       <div
                         class="text-sm font-medium text-gray-900 dark:text-gray-100"
                       >
                         {{ client.fullName }}
                       </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center gap-2">
+                        <div class="text-sm text-gray-900 dark:text-gray-100">
+                          {{ client.externalId }}
+                        </div>
+                        <button
+                          (click)="copyExternalId(client.externalId)"
+                          class="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200"
+                          title="Copy External ID"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            ></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                      >
+                        Active
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                    >
+                      <button
+                        (click)="
+                          viewClientDetails(client); $event.stopPropagation()
+                        "
+                        class="inline-flex items-center text-blue-400 hover:text-blue-900"
+                      >
+                        View Details
+                        <svg
+                          class="ml-2 w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5l7 7-7 7"
+                          />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                </ng-container>
+
+                <!-- Empty State -->
+                <tr *ngIf="!loading() && activeClients().length === 0">
+                  <td colspan="6" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center">
+                      <div
+                        class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
+                      >
+                        <svg
+                          class="w-6 h-6 text-gray-400 dark:text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                      </div>
+                      <h3
+                        class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
+                      >
+                        No Clients Found
+                      </h3>
+                      <p class="text-gray-500 dark:text-gray-400">
+                        There are no active clients at the moment.
+                      </p>
                     </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="text-sm text-gray-900 dark:text-gray-100">
-                    {{ client.externalId }}
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span
-                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                  >
-                    Active
-                  </span>
-                </td>
-                <td
-                  class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                >
-                  <button
-                    (click)="
-                      viewClientDetails(client); $event.stopPropagation()
-                    "
-                    class="inline-flex items-center text-blue-400 hover:text-blue-900"
-                  >
-                    View Details
-                    <svg
-                      class="ml-2 w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </button>
-                </td>
-              </tr>
-            </ng-container>
-
-            <!-- Empty State -->
-            <tr *ngIf="!loading() && activeClients().length === 0">
-              <td colspan="5" class="px-6 py-12 text-center">
-                <div class="flex flex-col items-center">
-                  <div
-                    class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-6 h-6 text-gray-400 dark:text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </div>
-                  <h3
-                    class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
-                  >
-                    No Clients Found
-                  </h3>
-                  <p class="text-gray-500 dark:text-gray-400">
-                    There are no active clients at the moment.
-                  </p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination Controls -->
-      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-        <div class="flex items-center justify-between">
-          <div class="flex-1 flex justify-between sm:hidden">
-            <button
-              (click)="previousPage()"
-              [disabled]="currentPage() === 0"
-              class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <button
-              (click)="nextPage()"
-              [disabled]="currentPage() >= getTotalPages() - 1"
-              class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <div
-            class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
-          >
-            <div>
-              <p class="text-sm text-gray-700 dark:text-gray-300">
-                Page <span class="font-medium">{{ currentPage() + 1 }}</span> of
-                <span class="font-medium">{{ getTotalPages() }}</span>
-              </p>
-            </div>
-            <div>
-              <nav
-                class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                aria-label="Pagination"
-              >
+
+          <!-- Pagination Controls -->
+          <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 flex justify-between sm:hidden">
                 <button
                   (click)="previousPage()"
                   [disabled]="currentPage() === 0"
-                  class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span class="sr-only">Previous</span>
-                  <svg
-                    class="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
+                  Previous
                 </button>
-
-                <ng-container *ngFor="let page of getPageNumbers()">
-                  <button
-                    *ngIf="page !== -1"
-                    (click)="goToPage(page)"
-                    [class.bg-blue-50]="currentPage() === page"
-                    [class.border-blue-500]="currentPage() === page"
-                    [class.text-blue-600]="currentPage() === page"
-                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                  >
-                    {{ page + 1 }}
-                  </button>
-                  <span
-                    *ngIf="page === -1"
-                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    ...
-                  </span>
-                </ng-container>
-
                 <button
                   (click)="nextPage()"
                   [disabled]="currentPage() >= getTotalPages() - 1"
-                  class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span class="sr-only">Next</span>
-                  <svg
-                    class="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
+                  Next
                 </button>
-              </nav>
+              </div>
+              <div
+                class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p class="text-sm text-gray-700 dark:text-gray-300">
+                    Page
+                    <span class="font-medium">{{ currentPage() + 1 }}</span> of
+                    <span class="font-medium">{{ getTotalPages() }}</span>
+                  </p>
+                </div>
+                <div>
+                  <nav
+                    class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                    aria-label="Pagination"
+                  >
+                    <button
+                      (click)="previousPage()"
+                      [disabled]="currentPage() === 0"
+                      class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">Previous</span>
+                      <svg
+                        class="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+
+                    <ng-container *ngFor="let page of getPageNumbers()">
+                      <button
+                        *ngIf="page !== -1"
+                        (click)="goToPage(page)"
+                        [class.bg-blue-50]="currentPage() === page"
+                        [class.border-blue-500]="currentPage() === page"
+                        [class.text-blue-600]="currentPage() === page"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      >
+                        {{ page + 1 }}
+                      </button>
+                      <span
+                        *ngIf="page === -1"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        ...
+                      </span>
+                    </ng-container>
+
+                    <button
+                      (click)="nextPage()"
+                      [disabled]="currentPage() >= getTotalPages() - 1"
+                      class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">Next</span>
+                      <svg
+                        class="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Tab -->
+    <div *ngIf="activeTab() === 'orders'">
+      <div *hasPermission="179">
+        <div
+          class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
+        >
+          <!-- Orders Header -->
+          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h2
+                  class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+                >
+                  Orders
+                </h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  View and manage all orders
+                </p>
+              </div>
+
+              <!-- New Order Button -->
+              <button
+                (click)="openBulkOrderModal()"
+                class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                New Order
+              </button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="flex items-center">
+              <div class="relative">
+                <input
+                  type="text"
+                  [(ngModel)]="ordersSearchInput"
+                  (input)="onOrdersSearchInput()"
+                  placeholder="Search orders... (live search)"
+                  class="!pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm w-80"
+                />
+                <svg
+                  class="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Pagination Info and Page Size Selector -->
+            <div class="flex justify-between items-center mt-4">
+              <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {{ ordersCurrentPage() * ordersPageSize() + 1 }} to
+                  {{ getOrdersEndItem() }} of {{ ordersTotalCount() }} orders
+                </span>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <label
+                  for="ordersPageSize"
+                  class="text-sm text-gray-600 dark:text-gray-400"
+                  >Items per page:</label
+                >
+                <select
+                  id="ordersPageSize"
+                  [(ngModel)]="ordersPageSize"
+                  (change)="onOrdersPageSizeChange(ordersPageSize())"
+                  class="border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 text-sm py-1 px-2"
+                >
+                  <option [ngValue]="10">10</option>
+                  <option [ngValue]="20">20</option>
+                  <option [ngValue]="50">50</option>
+                  <option [ngValue]="100">100</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Orders Table -->
+          <div class="overflow-x-auto">
+            <table
+              class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+            >
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Order ID
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    User ID
+                  </th> -->
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Symbol
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Type
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Side
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Quantity
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Price
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Leverage
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    P&L
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Status
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Created
+                  </th>
+                  <th
+                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    *hasPermission="181"
+                  >
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                class="bg-white dark:bg-gray-800 divide-y divide-gray-400/30"
+              >
+                <!-- Skeleton Loading Rows -->
+                <ng-container *ngIf="loading()">
+                  <tr *ngFor="let skeleton of [1, 2, 3, 4, 5]">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-24 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-32 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-16 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-12 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-12 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-20 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-20 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-12 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-16 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-6 bg-gray-400/50 rounded-full w-16 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-24 animate-pulse"
+                      ></div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                      <div
+                        class="h-4 bg-gray-400/50 rounded w-24 ml-auto animate-pulse"
+                      ></div>
+                    </td>
+                  </tr>
+                </ng-container>
+
+                <!-- Actual Data Rows -->
+                <ng-container *ngIf="!loading()">
+                  <tr
+                    *ngFor="let order of orders()"
+                    class="hover:bg-gray-500/20 transition-colors"
+                  >
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <div class="flex items-center gap-2">
+                        <span class="truncate max-w-32">{{ order.id }}</span>
+                        <button
+                          (click)="copyOrderId(order.id)"
+                          class="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200"
+                          title="Copy Order ID"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                      <div class="flex items-center gap-2">
+                        <span class="truncate max-w-32">{{ order.userId }}</span>
+                        <button
+                          (click)="copyUserId(order.userId)"
+                          class="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200"
+                          title="Copy User ID"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td> -->
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <span class="font-mono">{{
+                        order.tradingPairSymbol
+                      }}</span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <span
+                        class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800"
+                      >
+                        {{ getOrderTypeLabel(order.orderType) }}
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <span
+                        [class]="
+                          order.side === 1 ? 'text-green-600' : 'text-red-600'
+                        "
+                        class="font-medium"
+                      >
+                        {{ order.side === 1 ? "Buy" : "Sell" }}
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <div class="text-right">
+                        <div class="font-medium">
+                          {{ order.quantity | number : "1.2-8" }}
+                        </div>
+                        <div
+                          class="text-xs text-gray-500"
+                          *ngIf="order.filledQuantity > 0"
+                        >
+                          Filled: {{ order.filledQuantity | number : "1.2-8" }}
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <div class="text-right">
+                        <div class="font-medium">
+                          ${{ order.price | number : "1.2-2" }}
+                        </div>
+                        <div
+                          class="text-xs text-gray-500"
+                          *ngIf="order.metadata?.CalculatedExitPrice"
+                        >
+                          Exit: ${{
+                            order.metadata.CalculatedExitPrice
+                              | number : "1.2-2"
+                          }}
+                        </div>
+                      </div>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <div class="text-center">
+                        <span class="font-medium">{{ order.leverage }}x</span>
+                      </div>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <div class="text-right">
+                        <div
+                          *ngIf="order.metadata?.RealizedPnL !== undefined"
+                          [class]="
+                            order.metadata.RealizedPnL >= 0
+                              ? 'text-green-600'
+                              : 'text-red-600'
+                          "
+                          class="font-medium"
+                        >
+                          ${{ order.metadata.RealizedPnL | number : "1.2-2" }}
+                        </div>
+                        <div
+                          *ngIf="order.metadata?.TargetProfit !== undefined"
+                          class="text-xs text-gray-500"
+                        >
+                          Target: ${{
+                            order.metadata.TargetProfit | number : "1.2-2"
+                          }}
+                        </div>
+                        <div
+                          *ngIf="
+                            !order.metadata?.RealizedPnL &&
+                            !order.metadata?.TargetProfit
+                          "
+                          class="text-gray-400"
+                        >
+                          -
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                        [class]="getStatusClasses(order.status)"
+                      >
+                        {{ getStatusLabel(order.status) }}
+                      </span>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <div class="text-right">
+                        <div>{{ formatDate(order.createdAt) }}</div>
+                        <div
+                          class="text-xs text-gray-500"
+                          *ngIf="order.lastModifiedAt"
+                        >
+                          Modified: {{ formatDate(order.lastModifiedAt) }}
+                        </div>
+                      </div>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="px-6 py-4 whitespace-nowrap text-center" *hasPermission="181">
+                      <div class="flex items-center justify-center gap-2">
+                        <!-- Edit Button -->
+                        <button
+                          *ngIf="order.status != 4"
+                          (click)="
+                            openOrderEditModal(order); $event.stopPropagation()
+                          "
+                          class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                          title="Edit Order"
+                        >
+                          <svg
+                            class="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </button>
+
+                        <!-- Cancel Button (only for active/partially filled orders) -->
+                        <button
+                          (click)="cancelOrder(order, $event)"
+                          *ngIf="order.status != 4"
+                          [disabled]="isCancellingOrder(order.id)"
+                          class="inline-flex items-center px-2.5 py-1.5 border border-red-300 dark:border-red-600 rounded-md text-xs font-medium text-red-700 dark:text-red-400 bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          title="Cancel Order"
+                        >
+                          <svg
+                            *ngIf="!isCancellingOrder(order.id)"
+                            class="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                          <svg
+                            *ngIf="isCancellingOrder(order.id)"
+                            class="w-3.5 h-3.5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              class="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="4"
+                            ></circle>
+                            <path
+                              class="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </button>
+
+                        <!-- Close Button (only for active orders) -->
+                        <button
+                          *ngIf="order.status == 1"
+                          (click)="closeOrder(order, $event)"
+                          [disabled]="isClosingOrder(order.id)"
+                          class="inline-flex items-center px-2.5 py-1.5 border border-orange-300 dark:border-orange-600 rounded-md text-xs font-medium text-orange-700 dark:text-orange-400 bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          title="Close Order"
+                        >
+                          <svg
+                            *ngIf="!isClosingOrder(order.id)"
+                            class="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M6 6h12M6 12h12M6 18h12"
+                            />
+                          </svg>
+                          <svg
+                            *ngIf="isClosingOrder(order.id)"
+                            class="w-3.5 h-3.5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              class="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="4"
+                            ></circle>
+                            <path
+                              class="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </button>
+
+                        <!-- Re-Order Button (only for cancelled/rejected/liquidated orders) -->
+                        <button
+                          (click)="reOrder(order, $event)"
+                          *ngIf="order.status != 4"
+                          [disabled]="isReopeningOrder(order.id)"
+                          class="inline-flex items-center px-2.5 py-1.5 border border-green-300 dark:border-green-600 rounded-md text-xs font-medium text-green-700 dark:text-green-400 bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          title="Re-Open Order"
+                        >
+                          <svg
+                            *ngIf="!isReopeningOrder(order.id)"
+                            class="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                          <svg
+                            *ngIf="isReopeningOrder(order.id)"
+                            class="w-3.5 h-3.5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              class="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="4"
+                            ></circle>
+                            <path
+                              class="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </ng-container>
+
+                <!-- Empty State -->
+                <tr *ngIf="!loading() && orders().length === 0">
+                  <td colspan="11" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center">
+                      <div
+                        class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
+                      >
+                        <svg
+                          class="w-6 h-6 text-gray-400 dark:text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                          />
+                        </svg>
+                      </div>
+                      <h3
+                        class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
+                      >
+                        No Orders Found
+                      </h3>
+                      <p class="text-gray-500 dark:text-gray-400">
+                        There are no orders at the moment.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+              <div class="flex-1 flex justify-between sm:hidden">
+                <button
+                  (click)="previousOrdersPage()"
+                  [disabled]="ordersCurrentPage() === 0"
+                  class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  (click)="nextOrdersPage()"
+                  [disabled]="ordersCurrentPage() >= getOrdersTotalPages() - 1"
+                  class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+              <div
+                class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p class="text-sm text-gray-700 dark:text-gray-300">
+                    Page
+                    <span class="font-medium">{{
+                      ordersCurrentPage() + 1
+                    }}</span>
+                    of
+                    <span class="font-medium">{{ getOrdersTotalPages() }}</span>
+                  </p>
+                </div>
+                <div>
+                  <nav
+                    class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                    aria-label="Pagination"
+                  >
+                    <button
+                      (click)="previousOrdersPage()"
+                      [disabled]="ordersCurrentPage() === 0"
+                      class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">Previous</span>
+                      <svg
+                        class="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+
+                    <ng-container *ngFor="let page of getOrdersPageNumbers()">
+                      <button
+                        *ngIf="page !== -1"
+                        (click)="goToOrdersPage(page)"
+                        [class.bg-blue-50]="ordersCurrentPage() === page"
+                        [class.border-blue-500]="ordersCurrentPage() === page"
+                        [class.text-blue-600]="ordersCurrentPage() === page"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      >
+                        {{ page + 1 }}
+                      </button>
+                      <span
+                        *ngIf="page === -1"
+                        class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
+                        ...
+                      </span>
+                    </ng-container>
+
+                    <button
+                      (click)="nextOrdersPage()"
+                      [disabled]="
+                        ordersCurrentPage() >= getOrdersTotalPages() - 1
+                      "
+                      class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span class="sr-only">Next</span>
+                      <svg
+                        class="h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
             </div>
           </div>
         </div>

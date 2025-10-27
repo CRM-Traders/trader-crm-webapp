@@ -40,6 +40,7 @@ import { QuickOrderModalComponent } from '../components/quick-order-modal/quick-
 import { AdjustBalanceModalComponent } from '../components/adjust-balance-modal/adjust-balance-modal.component';
 import { HiddenWithdrawalModalComponent } from '../components/hidden-withdrawal-modal/hidden-withdrawal-modal.component';
 import { BulkLiquidateModalComponent } from '../components/bulk-liquidate-modal/bulk-liquidate-modal.component';
+import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -74,9 +75,10 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   updatingOrderIds = signal<Set<string>>(new Set());
   orderPriceUpdates: { [orderId: string]: number } = {};
 
-  // Track orders being cancelled or reopened
+  // Track orders being cancelled, reopened, or closed
   cancellingOrderIds = signal<Set<string>>(new Set());
   reopeningOrderIds = signal<Set<string>>(new Set());
+  closingOrderIds = signal<Set<string>>(new Set());
 
   // Filtered orders based on selected status
   filteredOrders = computed(() => {
@@ -581,14 +583,40 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   reOrder(order: Order, event: Event): void {
     event.stopPropagation();
-    if (
-      !confirm(
-        `Are you sure you want to re-order this ${order.sideLabel} order for ${order.tradingPairSymbol}?`
-      )
-    ) {
-      return;
-    }
 
+    const modalRef = this.modalService.open(
+      ConfirmationDialogComponent,
+      {
+        size: 'sm',
+        centered: true,
+        closable: true,
+      },
+      {
+        title: 'Re-Open Order',
+        message: `Are you sure you want to re-open this ${order.sideLabel} order for ${order.tradingPairSymbol}?`,
+        type: 'info',
+        confirmText: 'Re-Open Order',
+        cancelText: 'Cancel',
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}\nStatus: ${order.statusLabel}`
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          this.performReOrder(order);
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  /**
+   * Perform the actual order re-opening
+   */
+  private performReOrder(order: Order): void {
     this.service
       .reorderOrder(order.id)
       .pipe(
@@ -597,7 +625,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
           this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
         }),
         catchError((err: HttpErrorResponse) => {
-          console.error('Error cancelling order:', err);
+          console.error('Error re-ordering order:', err);
           let errorMessage = 'Failed to re-order order';
           if (err?.error?.error) {
             errorMessage = err.error.error;
@@ -618,15 +646,39 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   cancelOrder(order: Order, event: Event): void {
     event.stopPropagation();
 
-    // Confirm before cancelling
-    if (
-      !confirm(
-        `Are you sure you want to cancel this ${order.sideLabel} order for ${order.tradingPairSymbol}?`
-      )
-    ) {
-      return;
-    }
+    const modalRef = this.modalService.open(
+      ConfirmationDialogComponent,
+      {
+        size: 'sm',
+        centered: true,
+        closable: true,
+      },
+      {
+        title: 'Cancel Order',
+        message: `Are you sure you want to cancel this ${order.sideLabel} order for ${order.tradingPairSymbol}?`,
+        type: 'warning',
+        confirmText: 'Cancel Order',
+        cancelText: 'Keep Order',
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}`
+      }
+    );
 
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          this.performCancelOrder(order);
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  /**
+   * Perform the actual order cancellation
+   */
+  private performCancelOrder(order: Order): void {
     // Add order ID to cancelling set
     const cancellingIds = new Set(this.cancellingOrderIds());
     cancellingIds.add(order.id);
@@ -673,6 +725,39 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
+    const modalRef = this.modalService.open(
+      ConfirmationDialogComponent,
+      {
+        size: 'sm',
+        centered: true,
+        closable: true,
+      },
+      {
+        title: 'Reopen Order',
+        message: `Are you sure you want to reopen this ${order.sideLabel} order for ${order.tradingPairSymbol}?`,
+        type: 'info',
+        confirmText: 'Reopen Order',
+        cancelText: 'Cancel',
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}\nStatus: ${order.statusLabel}`
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          this.performReopenOrder(order, adminId);
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  /**
+   * Perform the actual order reopening with additional prompts
+   */
+  private performReopenOrder(order: Order, adminId: string): void {
     // Prompt for reopening details
     const applyNewOutcome = confirm(
       'Do you want to apply a new outcome to this order?\n\nClick OK to apply new outcome, Cancel to reopen with original settings.'
@@ -761,11 +846,87 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Close an order
+   */
+  closeOrder(order: Order, event: Event): void {
+    event.stopPropagation();
+
+    const modalRef = this.modalService.open(
+      ConfirmationDialogComponent,
+      {
+        size: 'sm',
+        centered: true,
+        closable: true,
+      },
+      {
+        title: 'Close Order',
+        message: `Are you sure you want to close this ${order.sideLabel} order for ${order.tradingPairSymbol}?`,
+        type: 'warning',
+        confirmText: 'Close Order',
+        cancelText: 'Keep Order',
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}`
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          this.performCloseOrder(order);
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  /**
+   * Perform the actual order closing
+   */
+  private performCloseOrder(order: Order): void {
+    // Add order ID to closing set
+    const closingIds = new Set(this.closingOrderIds());
+    closingIds.add(order.id);
+    this.closingOrderIds.set(closingIds);
+
+    this.service
+      .closeOrder(order.id)
+      .pipe(
+        tap(() => {
+          this.alertService.success('Order closed successfully');
+          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('Error closing order:', err);
+          let errorMessage = 'Failed to close order';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return of(null);
+        }),
+        finalize(() => {
+          // Remove order ID from closing set
+          const closingIds = new Set(this.closingOrderIds());
+          closingIds.delete(order.id);
+          this.closingOrderIds.set(closingIds);
+        })
+      )
+      .subscribe();
+  }
+
+  /**
    * Check if an order can be cancelled (only active/partially filled orders)
    */
   canCancelOrder(order: Order): boolean {
     return order.status === 1 || order.status === 2; // Active or Partially Filled
   }
+
+  /**
+   * Check if an order can be closed (only active orders)
+   */
 
   /**
    * Check if an order can be reopened (cancelled/rejected/liquidated orders)
@@ -786,6 +947,13 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   isReopeningOrder(orderId: string): boolean {
     return this.reopeningOrderIds().has(orderId);
+  }
+
+  /**
+   * Check if order is being closed
+   */
+  isClosingOrder(orderId: string): boolean {
+    return this.closingOrderIds().has(orderId);
   }
 
   goBack(): void {

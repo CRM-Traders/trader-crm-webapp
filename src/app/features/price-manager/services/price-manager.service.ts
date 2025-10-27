@@ -19,6 +19,20 @@ export class PriceManagerService {
     });
   }
 
+  getOrdersList(
+    searchTerm: string | null = null,
+    pageIndex: number = 0,
+    pageSize: number = 50,
+    status: string | null = null
+  ) {
+    return this.http.post('identity/api/clients/orders/grid', {
+      searchTerm,
+      pageIndex,
+      pageSize,
+      status,
+    });
+  }
+
   chartData(symbol: string, interval: string = '1h', limit = 500) {
     return this.http.get(
       `binance/api/CryptoData/historical-data?symbol=${symbol}&interval=${interval}&limit=${limit}`
@@ -68,12 +82,12 @@ export class PriceManagerService {
   }
 
   updateOrder(orderId: string, data: OrderUpdateRequest) {
-    return this.http.put(`traiding/api/admin/trading/order/${orderId}`, data);
+    return this.http.post(`traiding/api/admin/trading/trade/${orderId}/modify`, data);
   }
 
   closeOrder(orderId: string) {
     return this.http.post(
-      `traiding/api/admin/trading/order/${orderId}/close`,
+      `traiding/api/admin/trading/trade/${orderId}/close`,
       {}
     );
   }
@@ -333,20 +347,30 @@ export interface TransactionsResponse {
 }
 
 export interface OrderUpdateRequest {
+  symbol?: string;
+  orderType?: number | null;
   side?: number | null;
-  volume?: number | null;
   openPrice?: number | null;
-  openTime?: string | null;
-  status: number;
-  stopLoss?: number | null;
+  volume?: number | null;
+  filledQuantity?: number | null;
+  status?: number | null;
   leverage?: number | null;
+  stopLoss?: number | null;
   takeProfit?: number | null;
+  clientOrderId?: string;
+  orderCreatedAt?: string | null;
+  orderModifiedAt?: string | null;
+  createPosition?: boolean;
   closePrice?: number | null;
-  closeTime?: string | null;
+  isClosed?: boolean | null;
+  realizedPnL?: number | null;
+  unrealizedPnL?: number | null;
+  positionOpenTime?: string | null;
+  positionCloseTime?: string | null;
   commission?: number | null;
-  swaps?: number | null;
-  margin?: number | null;
-  comment?: string | null;
+  swap?: number | null;
+  paymentCurrency?: string;
+  reason?: string;
 }
 
 export interface TransactionUpdateRequest {
