@@ -58,9 +58,8 @@ export class PriceManagerService {
   }
 
   cancleOrder(orderId: string) {
-    return this.http.post(
-      `traiding/api/admin/trading/close-order/${orderId}`,
-      {}
+    return this.http.delete(
+      `traiding/api/admin/trading/order/${orderId}/cancel`
     );
   }
 
@@ -180,6 +179,10 @@ export class PriceManagerService {
       `traiding/api/admin/trading/orders/bulk-create`,
       data
     );
+  }
+
+  reorderOrder(id: string) {
+    return this.http.post(`traiding/api/admin/trading/order/${id}/reopen`, {});
   }
 
   // Smart P/L calculation endpoints

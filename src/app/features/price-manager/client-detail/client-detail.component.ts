@@ -15,6 +15,7 @@ import {
   PriceManagerService,
   Order,
   Transaction,
+  ReopenOrderRequest,
 } from '../services/price-manager.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -72,6 +73,10 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   transactionsLoading = signal(false);
   updatingOrderIds = signal<Set<string>>(new Set());
   orderPriceUpdates: { [orderId: string]: number } = {};
+
+  // Track orders being cancelled or reopened
+  cancellingOrderIds = signal<Set<string>>(new Set());
+  reopeningOrderIds = signal<Set<string>>(new Set());
 
   // Filtered orders based on selected status
   filteredOrders = computed(() => {
@@ -306,94 +311,6 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   refreshCurrentData(): void {
     this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
-  }
-
-  onOrderPriceChange(orderId: string, newPrice: any): void {
-    const numericPrice = Number(newPrice);
-    if (!isNaN(numericPrice) && isFinite(numericPrice)) {
-      this.orderPriceUpdates[orderId] = numericPrice;
-    }
-  }
-
-  updateOrderPrice(orderId: string, currentPrice: number): void {
-    const newPrice = this.orderPriceUpdates[orderId];
-    if (
-      newPrice === undefined ||
-      newPrice === null ||
-      isNaN(newPrice) ||
-      !isFinite(newPrice)
-    ) {
-      this.alertService.error('Please enter a valid price');
-      return;
-    }
-
-    if (newPrice === currentPrice) {
-      this.alertService.info('Price is the same as current price');
-      return;
-    }
-
-    if (newPrice <= 0) {
-      this.alertService.error('Price must be greater than 0');
-      return;
-    }
-
-    const currentUpdatingIds = this.updatingOrderIds();
-    currentUpdatingIds.add(orderId);
-    this.updatingOrderIds.set(new Set(currentUpdatingIds));
-
-    this.service
-      .updateOrderPrice(orderId, newPrice)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => {
-          const updatedIds = this.updatingOrderIds();
-          updatedIds.delete(orderId);
-          this.updatingOrderIds.set(new Set(updatedIds));
-        }),
-        catchError((err: any) => {
-          console.error('Error updating order price:', err);
-          let errorMessage = 'Failed to update order price';
-          if (err?.error?.error) {
-            errorMessage = err.error.error;
-          } else if (err?.message) {
-            errorMessage = err.message;
-          }
-          this.alertService.error(errorMessage);
-          return of(null);
-        })
-      )
-      .subscribe((response) => {
-        if (response) {
-          this.alertService.success('Order price updated successfully');
-          delete this.orderPriceUpdates[orderId];
-          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
-        }
-      });
-  }
-
-  closeOrder(order: Order): void {
-    const modalRef = this.modalService.open(
-      OrderCloseModalComponent,
-      {
-        size: 'md',
-        centered: true,
-        closable: true,
-      },
-      {
-        order: order,
-      }
-    );
-
-    modalRef.result.then(
-      (result) => {
-        if (result) {
-          this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
-        }
-      },
-      () => {
-        // Modal dismissed
-      }
-    );
   }
 
   countByStatus(status: number) {
@@ -660,6 +577,215 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         // Modal dismissed
       }
     );
+  }
+
+  reOrder(order: Order, event: Event): void {
+    event.stopPropagation();
+    if (
+      !confirm(
+        `Are you sure you want to re-order this ${order.sideLabel} order for ${order.tradingPairSymbol}?`
+      )
+    ) {
+      return;
+    }
+
+    this.service
+      .reorderOrder(order.id)
+      .pipe(
+        tap(() => {
+          this.alertService.success('Order re-ordered successfully');
+          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('Error cancelling order:', err);
+          let errorMessage = 'Failed to re-order order';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return of(null);
+        }),
+        finalize(() => {})
+      )
+      .subscribe();
+  }
+
+  /**
+   * Cancel an order
+   */
+  cancelOrder(order: Order, event: Event): void {
+    event.stopPropagation();
+
+    // Confirm before cancelling
+    if (
+      !confirm(
+        `Are you sure you want to cancel this ${order.sideLabel} order for ${order.tradingPairSymbol}?`
+      )
+    ) {
+      return;
+    }
+
+    // Add order ID to cancelling set
+    const cancellingIds = new Set(this.cancellingOrderIds());
+    cancellingIds.add(order.id);
+    this.cancellingOrderIds.set(cancellingIds);
+
+    this.service
+      .cancleOrder(order.id)
+      .pipe(
+        tap(() => {
+          this.alertService.success('Order cancelled successfully');
+          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('Error cancelling order:', err);
+          let errorMessage = 'Failed to cancel order';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return of(null);
+        }),
+        finalize(() => {
+          // Remove order ID from cancelling set
+          const cancellingIds = new Set(this.cancellingOrderIds());
+          cancellingIds.delete(order.id);
+          this.cancellingOrderIds.set(cancellingIds);
+        })
+      )
+      .subscribe();
+  }
+
+  /**
+   * Re-open an order (for cancelled/closed orders)
+   */
+  reopenOrder(order: Order, event: Event): void {
+    event.stopPropagation();
+
+    // Get admin ID from auth service
+    const adminId = this.authService.getUserId();
+    if (!adminId) {
+      this.alertService.error('Admin ID not found');
+      return;
+    }
+
+    // Prompt for reopening details
+    const applyNewOutcome = confirm(
+      'Do you want to apply a new outcome to this order?\n\nClick OK to apply new outcome, Cancel to reopen with original settings.'
+    );
+
+    let reopenData: ReopenOrderRequest;
+
+    if (applyNewOutcome) {
+      // Ask for new P&L and close price
+      const newPnLStr = prompt('Enter new desired P&L:', '0');
+      const newClosePriceStr = prompt(
+        'Enter new close price:',
+        order.price.toString()
+      );
+      const reason =
+        prompt(
+          'Enter reason for reopening with new outcome:',
+          'Admin adjustment'
+        ) || 'Admin adjustment';
+
+      if (newPnLStr === null || newClosePriceStr === null) {
+        return; // User cancelled
+      }
+
+      const newDesiredPnL = parseFloat(newPnLStr);
+      const newClosePrice = parseFloat(newClosePriceStr);
+
+      if (isNaN(newDesiredPnL) || isNaN(newClosePrice)) {
+        this.alertService.error('Invalid P&L or close price value');
+        return;
+      }
+
+      reopenData = {
+        adminId,
+        applyNewOutcome: true,
+        newDesiredPnL,
+        newClosePrice,
+        reason,
+      };
+    } else {
+      // Reopen with original settings
+      const reason =
+        prompt('Enter reason for reopening:', 'Admin reopened order') ||
+        'Admin reopened order';
+
+      reopenData = {
+        adminId,
+        applyNewOutcome: false,
+        newDesiredPnL: 0,
+        newClosePrice: order.price,
+        reason,
+      };
+    }
+
+    // Add order ID to reopening set
+    const reopeningIds = new Set(this.reopeningOrderIds());
+    reopeningIds.add(order.id);
+    this.reopeningOrderIds.set(reopeningIds);
+
+    this.service
+      .reopenOrder(order.id, reopenData)
+      .pipe(
+        tap(() => {
+          this.alertService.success('Order reopened successfully');
+          this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('Error reopening order:', err);
+          let errorMessage = 'Failed to reopen order';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return of(null);
+        }),
+        finalize(() => {
+          // Remove order ID from reopening set
+          const reopeningIds = new Set(this.reopeningOrderIds());
+          reopeningIds.delete(order.id);
+          this.reopeningOrderIds.set(reopeningIds);
+        })
+      )
+      .subscribe();
+  }
+
+  /**
+   * Check if an order can be cancelled (only active/partially filled orders)
+   */
+  canCancelOrder(order: Order): boolean {
+    return order.status === 1 || order.status === 2; // Active or Partially Filled
+  }
+
+  /**
+   * Check if an order can be reopened (cancelled/rejected/liquidated orders)
+   */
+  canReopenOrder(order: Order): boolean {
+    return order.status === 4 || order.status === 5 || order.status === 6; // Cancelled, Rejected, or Liquidated
+  }
+
+  /**
+   * Check if order is being cancelled
+   */
+  isCancellingOrder(orderId: string): boolean {
+    return this.cancellingOrderIds().has(orderId);
+  }
+
+  /**
+   * Check if order is being reopened
+   */
+  isReopeningOrder(orderId: string): boolean {
+    return this.reopeningOrderIds().has(orderId);
   }
 
   goBack(): void {
