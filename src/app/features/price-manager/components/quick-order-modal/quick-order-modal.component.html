@@ -13,10 +13,10 @@
 <!-- Modal Body -->
 <div class="modal-body px-6 py-6 max-h-[calc(100vh-1rem)] overflow-y-auto">
   <!-- User Balance Information -->
-  <div *ngIf="userBalance().length > 0" class="mb-4 space-y-2">
+  <div *ngIf="userBalance().length > 0" class="mb-4 space-y-2 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
     <div
       *ngFor="let balance of userBalance()"
-      class="bg-blue-50 dark:bg-gray-800 rounded-md px-4 py-2 border border-blue-200 dark:border-gray-700 flex items-center justify-between"
+      class="bg-white rounded-md px-4 py-2 border border-blue-200 dark:border-gray-700 flex items-center justify-between"
     >
       <div class="flex items-center space-x-2">
         <svg

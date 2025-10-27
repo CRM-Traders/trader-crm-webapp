@@ -36,6 +36,17 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   searchTerm = signal<string>('');
   searchInput = '';
 
+  // Tab management
+  activeTab = signal<'clients' | 'orders'>('clients');
+
+  // Client selection state
+  selectedClients = signal<Set<string>>(new Set());
+  selectAll = signal(false);
+
+  setActiveTab(tab: 'clients' | 'orders'): void {
+    this.activeTab.set(tab);
+  }
+
   viewClientDetails(client: Client): void {
     this.router.navigate(['/manager', client.userId], {
       queryParams: { name: client.fullName },
@@ -94,6 +105,9 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
           }
 
           this.activeClients.set(clients);
+          // Reset selection when data changes
+          this.selectedClients.set(new Set());
+          this.selectAll.set(false);
         }),
         catchError((err: any) => {
           console.error('Error loading active clients:', err);
@@ -217,5 +231,88 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
     modalRef.result.then((result: any) => {
       window.location.reload();
     });
+  }
+
+  copyExternalId(externalId: string): void {
+    if (!externalId) {
+      this.alertService.error('No external ID to copy');
+      return;
+    }
+
+    navigator.clipboard.writeText(externalId).then(() => {
+      this.alertService.success(`External ID "${externalId}" copied to clipboard`);
+    }).catch((err) => {
+      console.error('Failed to copy external ID:', err);
+      this.alertService.error('Failed to copy external ID to clipboard');
+    });
+  }
+
+  // Client selection methods
+  toggleClientSelection(externalId: string): void {
+    const currentSelection = new Set(this.selectedClients());
+    if (currentSelection.has(externalId)) {
+      currentSelection.delete(externalId);
+    } else {
+      currentSelection.add(externalId);
+    }
+    this.selectedClients.set(currentSelection);
+    this.updateSelectAllState();
+  }
+
+  toggleSelectAll(): void {
+    if (this.selectAll()) {
+      // Deselect all
+      this.selectedClients.set(new Set());
+      this.selectAll.set(false);
+    } else {
+      // Select all visible clients
+      const allExternalIds = this.activeClients().map(client => client.externalId);
+      this.selectedClients.set(new Set(allExternalIds));
+      this.selectAll.set(true);
+    }
+  }
+
+  private updateSelectAllState(): void {
+    const visibleExternalIds = this.activeClients().map(client => client.externalId);
+    const selectedCount = this.selectedClients().size;
+    const visibleCount = visibleExternalIds.length;
+    
+    this.selectAll.set(selectedCount === visibleCount && visibleCount > 0);
+  }
+
+  isClientSelected(externalId: string): boolean {
+    return this.selectedClients().has(externalId);
+  }
+
+  copySelectedExternalIds(): void {
+    const selectedIds = Array.from(this.selectedClients());
+    
+    if (selectedIds.length === 0) {
+      this.alertService.error('No clients selected');
+      return;
+    }
+
+    const externalIds = selectedIds.map(id => {
+      const client = this.activeClients().find(c => c.externalId === id);
+      return client?.externalId || id;
+    });
+
+    const commaSeparatedIds = externalIds.join(', ');
+    
+    navigator.clipboard.writeText(commaSeparatedIds).then(() => {
+      this.alertService.success(`${selectedIds.length} external ID(s) copied to clipboard`);
+    }).catch((err) => {
+      console.error('Failed to copy external IDs:', err);
+      this.alertService.error('Failed to copy external IDs to clipboard');
+    });
+  }
+
+  getSelectedCount(): number {
+    return this.selectedClients().size;
+  }
+
+  clearSelection(): void {
+    this.selectedClients.set(new Set());
+    this.selectAll.set(false);
   }
 }
