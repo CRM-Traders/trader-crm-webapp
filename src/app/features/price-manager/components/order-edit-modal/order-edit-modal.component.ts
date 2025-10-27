@@ -66,16 +66,41 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     { value: 6, label: 'Liquidated' },
   ];
 
+  orderTypeOptions = [
+    { value: 1, label: 'Market' },
+    { value: 2, label: 'Limit' },
+    { value: 3, label: 'Buy Limit' },
+    { value: 4, label: 'Buy Stop' },
+    { value: 5, label: 'Sell Stop' },
+    { value: 6, label: 'Sell Limit' },
+  ];
+
   constructor() {
     this.editForm = this.fb.group({
+      symbol: [''],
+      orderType: [null],
       side: [null],
-      status: [null, [Validators.required]],
-      volume: [null, [Validators.required, Validators.min(0.00000001)]],
+      openPrice: [null, [Validators.min(0)]],
+      volume: [null, [Validators.min(0.00000001)]],
+      filledQuantity: [null, [Validators.min(0)]],
+      status: [null],
       leverage: [1, [Validators.min(1)]],
       stopLoss: [null, [Validators.min(0)]],
       takeProfit: [null, [Validators.min(0)]],
-      openPrice: [null, [Validators.required, Validators.min(0)]],
-      comment: [null],
+      clientOrderId: [''],
+      orderCreatedAt: [null],
+      orderModifiedAt: [null],
+      createPosition: [true],
+      closePrice: [null, [Validators.min(0)]],
+      isClosed: [null],
+      realizedPnL: [null],
+      unrealizedPnL: [null],
+      positionOpenTime: [null],
+      positionCloseTime: [null],
+      commission: [null],
+      swap: [null],
+      paymentCurrency: [''],
+      reason: [''],
     });
 
     this.reopenForm = this.fb.group({
@@ -88,7 +113,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.order) {
-      this.orderData = this.order;
+      this.orderData = this.normalizeOrder(this.order as any);
       this.populateForm();
     } else if (this.orderId) {
       this.fetchOrderData();
@@ -103,7 +128,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: any) => {
-          this.orderData = response.order || response;
+          const raw = response.order || response;
+          this.orderData = this.normalizeOrder(raw);
           this.populateForm();
           this.loadingData = false;
         },
@@ -130,23 +156,127 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const metadata = this.orderData.metadata || {};
 
     this.editForm.patchValue({
+      symbol: this.orderData.symbol || this.orderData.tradingPairSymbol || '',
+      orderType: this.orderData.orderType,
       side: this.orderData.side,
+      openPrice: this.orderData.openPrice ?? this.orderData.price,
+      volume: this.orderData.volume ?? this.orderData.quantity,
+      filledQuantity: this.orderData.filledQuantity,
       status: this.orderData.status,
-      volume: this.orderData.quantity || this.orderData.volume,
       leverage: this.orderData.leverage || 1,
-      openPrice: this.orderData.price || this.orderData.openPrice,
-      stopLoss: this.orderData.stopPrice || null,
-      takeProfit: metadata.TargetProfit || metadata.ExpectedProfit || null,
-      comment: this.orderData.comment || metadata.Comment || null,
+      stopLoss: this.orderData.stopLoss ?? this.orderData.stopPrice ?? null,
+      takeProfit:
+        this.orderData.takeProfit ??
+        metadata.TargetProfit ??
+        metadata.ExpectedProfit ??
+        null,
+      clientOrderId: this.orderData.clientOrderId || '',
+      orderCreatedAt: this.orderData.orderCreatedAt ?? this.orderData.createdAt,
+      orderModifiedAt: this.orderData.orderModifiedAt ?? this.orderData.lastModifiedAt,
+      createPosition: this.orderData.createPosition ?? true,
+      closePrice: this.orderData.closePrice,
+      isClosed: this.orderData.isClosed,
+      realizedPnL: this.orderData.realizedPnL,
+      unrealizedPnL: this.orderData.unrealizedPnL,
+      positionOpenTime: this.formatDateTimeForInput(this.orderData.positionOpenTime),
+      positionCloseTime: this.formatDateTimeForInput(this.orderData.positionCloseTime),
+      commission: this.orderData.commission,
+      swap: this.orderData.swap ?? this.orderData.swaps,
+      paymentCurrency: this.orderData.paymentCurrency || '',
+      reason: this.orderData.reason || '',
     });
 
     this.editForm.disable();
+    // Ensure symbol and orderType are always disabled
+    this.editForm.get('symbol')?.disable();
+    this.editForm.get('orderType')?.disable();
     this.originalValues = this.editForm.value;
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private normalizeOrder(raw: any): any {
+    if (!raw) return raw;
+
+    const normalized: any = {
+      // Core identifiers
+      id: raw.id ?? raw.orderId,
+      orderId: raw.orderId ?? raw.id,
+      tradingAccountId: raw.tradingAccountId,
+      userId: raw.userId,
+
+      // Instrument
+      tradingPairSymbol: raw.tradingPairSymbol ?? raw.symbol,
+      symbol: raw.symbol ?? raw.tradingPairSymbol,
+
+      // Type and side
+      orderType: raw.orderType,
+      side: raw.side,
+
+      // Pricing and quantities
+      price: raw.price ?? raw.openPrice,
+      openPrice: raw.openPrice ?? raw.price,
+      closePrice: raw.closePrice ?? null,
+      volume: raw.volume ?? raw.quantity,
+      quantity: raw.quantity ?? raw.volume,
+      filledQuantity: raw.filledQuantity ?? 0,
+      remainingQuantity: raw.remainingQuantity ?? null,
+
+      // Status and leverage
+      status: raw.status,
+      leverage: raw.leverage ?? 1,
+
+      // Risk params
+      stopLoss: raw.stopLoss ?? raw.stopPrice ?? null,
+      stopPrice: raw.stopPrice ?? raw.stopLoss ?? null,
+      takeProfit: raw.takeProfit ?? null,
+
+      // Client linkage
+      clientOrderId: raw.clientOrderId ?? null,
+      positionId: raw.positionId ?? null,
+
+      // Dates
+      createdAt: raw.createdAt ?? raw.orderCreatedAt ?? null,
+      lastModifiedAt: raw.lastModifiedAt ?? raw.orderModifiedAt ?? null,
+      positionOpenTime: raw.positionOpenTime ?? null,
+      positionCloseTime: raw.positionCloseTime ?? null,
+
+      // Financials
+      requiredMargin: raw.requiredMargin ?? null,
+      positionMargin: raw.positionMargin ?? null,
+      realizedPnL: raw.realizedPnL ?? null,
+      unrealizedPnL: raw.unrealizedPnL ?? null,
+      commission: raw.commission ?? null,
+      swaps: raw.swap ?? raw.swaps ?? null,
+      paymentCurrency: raw.paymentCurrency ?? null,
+
+      // Flags
+      isClosed: raw.isClosed ?? false,
+      createPosition: raw.createPosition ?? null,
+
+      // Misc
+      reason: raw.reason ?? null,
+      metadata: raw.metadata ?? {},
+      comment: raw.comment ?? null,
+    };
+
+    return normalized;
+  }
+
+  getOrderTypeLabel(orderType: number | null | undefined): string {
+    if (orderType === null || orderType === undefined) return 'Unknown';
+    const map: { [k: number]: string } = {
+      1: 'Market',
+      2: 'Limit',
+      3: 'Buy Limit',
+      4: 'Buy Stop',
+      5: 'Sell Stop',
+      6: 'Sell Limit',
+    };
+    return map[orderType] ?? `Type ${orderType}`;
   }
 
   getOrderSide(side: number): string {
@@ -190,6 +320,9 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     this.isEditing = true;
     this.originalValues = this.editForm.value;
     this.editForm.enable();
+    // Keep symbol and orderType disabled even in edit mode
+    this.editForm.get('symbol')?.disable();
+    this.editForm.get('orderType')?.disable();
   }
 
   cancelEdit(): void {
@@ -207,14 +340,30 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const formValue = this.editForm.value;
 
     const updateData: OrderUpdateRequest = {
+      symbol: formValue.symbol,
+      orderType: formValue.orderType,
       side: formValue.side,
-      status: formValue.status,
-      volume: formValue.volume,
-      leverage: formValue.leverage,
       openPrice: formValue.openPrice,
+      volume: formValue.volume,
+      filledQuantity: formValue.filledQuantity,
+      status: formValue.status,
+      leverage: formValue.leverage,
       stopLoss: formValue.stopLoss,
       takeProfit: formValue.takeProfit,
-      comment: formValue.comment,
+      clientOrderId: formValue.clientOrderId,
+      orderCreatedAt: formValue.orderCreatedAt,
+      orderModifiedAt: formValue.orderModifiedAt,
+      createPosition: formValue.createPosition,
+      closePrice: formValue.closePrice,
+      isClosed: formValue.isClosed,
+      realizedPnL: formValue.realizedPnL,
+      unrealizedPnL: formValue.unrealizedPnL,
+      positionOpenTime: this.formatDateTimeForAPI(formValue.positionOpenTime),
+      positionCloseTime: this.formatDateTimeForAPI(formValue.positionCloseTime),
+      commission: formValue.commission,
+      swap: formValue.swap,
+      paymentCurrency: formValue.paymentCurrency,
+      reason: formValue.reason,
     };
 
     this.service
@@ -394,6 +543,42 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       if (target && target.value.includes('.')) {
         event.preventDefault();
       }
+    }
+  }
+
+  private formatDateTimeForInput(dateTime: string | null | undefined): string | null {
+    if (!dateTime) return null;
+    
+    try {
+      const date = new Date(dateTime);
+      if (isNaN(date.getTime())) return null;
+      
+      // Format as YYYY-MM-DDTHH:mm for datetime-local input
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.error('Error formatting datetime:', error);
+      return null;
+    }
+  }
+
+  private formatDateTimeForAPI(dateTimeString: string | null): string | null {
+    if (!dateTimeString) return null;
+    
+    try {
+      const date = new Date(dateTimeString);
+      if (isNaN(date.getTime())) return null;
+      
+      // Return ISO string for API
+      return date.toISOString();
+    } catch (error) {
+      console.error('Error formatting datetime for API:', error);
+      return null;
     }
   }
 }

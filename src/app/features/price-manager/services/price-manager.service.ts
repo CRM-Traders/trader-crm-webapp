@@ -68,7 +68,7 @@ export class PriceManagerService {
   }
 
   updateOrder(orderId: string, data: OrderUpdateRequest) {
-    return this.http.put(`traiding/api/admin/trading/order/${orderId}`, data);
+    return this.http.post(`traiding/api/admin/trading/trade/${orderId}/modify`, data);
   }
 
   closeOrder(orderId: string) {
@@ -333,20 +333,30 @@ export interface TransactionsResponse {
 }
 
 export interface OrderUpdateRequest {
+  symbol?: string;
+  orderType?: number | null;
   side?: number | null;
-  volume?: number | null;
   openPrice?: number | null;
-  openTime?: string | null;
-  status: number;
-  stopLoss?: number | null;
+  volume?: number | null;
+  filledQuantity?: number | null;
+  status?: number | null;
   leverage?: number | null;
+  stopLoss?: number | null;
   takeProfit?: number | null;
+  clientOrderId?: string;
+  orderCreatedAt?: string | null;
+  orderModifiedAt?: string | null;
+  createPosition?: boolean;
   closePrice?: number | null;
-  closeTime?: string | null;
+  isClosed?: boolean | null;
+  realizedPnL?: number | null;
+  unrealizedPnL?: number | null;
+  positionOpenTime?: string | null;
+  positionCloseTime?: string | null;
   commission?: number | null;
-  swaps?: number | null;
-  margin?: number | null;
-  comment?: string | null;
+  swap?: number | null;
+  paymentCurrency?: string;
+  reason?: string;
 }
 
 export interface TransactionUpdateRequest {
