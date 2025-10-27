@@ -68,6 +68,8 @@
 
     <!-- Action Buttons -->
     <div class="flex items-center space-x-2">
+      <ng-content select="[customFilters]"></ng-content>
+
       <!-- Saved Filters Component -->
       <app-grid-saved-filters
         *ngIf="showFilters"

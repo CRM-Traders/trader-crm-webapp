@@ -67,6 +67,8 @@ import { OperatorDetailsModalComponent } from '../operators/components/operator-
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 import { OperatorDropdownItem } from '../officies/models/office-rules.model';
 import { AuthService } from '../../core/services/auth.service';
+import { FilterOperator } from '../../shared/models/grid/filter-operator.model';
+import { GridService } from '../../shared/services/grid/grid.service';
 
 interface InlineCommentState {
   clientId: string;
@@ -2446,16 +2448,16 @@ export class ClientsComponent implements OnInit {
 
   // Close dropdowns when clicking outside
   @HostListener('document:click', ['$event'])
+  // Update the existing onDocumentClick method to handle the operators filter
   onDocumentClick(event: Event): void {
     const target = event.target as HTMLElement;
 
-    // Check if click is inside dropdown containers
+    // Existing operator dropdown logic...
     const operatorDropdowns = target.closest('[data-dropdown="operator"]');
     const salesStatusDropdowns = target.closest(
       '[data-dropdown="salesStatus"]'
     );
 
-    // Close dropdowns if click is outside
     if (!operatorDropdowns) {
       this.operatorDropdownStates.clear();
       this.operatorDropdownPositions.clear();
@@ -2465,7 +2467,13 @@ export class ClientsComponent implements OnInit {
       this.salesStatusDropdownPositions.clear();
     }
 
-    // Existing inline comment logic
+    // NEW: Handle operators filter dropdown
+    const operatorFilterButton = target.closest('.operators-filter-dropdown');
+    if (!operatorFilterButton && this.operatorsFilterDropdownOpen) {
+      this.operatorsFilterDropdownOpen = false;
+    }
+
+    // Existing inline comment logic...
     const inlineCommentBox = document.querySelector('.inline-comment-box');
     if (
       this.inlineCommentState &&
@@ -2620,5 +2628,80 @@ export class ClientsComponent implements OnInit {
 
   hasPermission(permissionIndex: number): boolean {
     return this.authService.hasPermission(permissionIndex);
+  }
+
+  /// Custom Filters Section
+  operatorsFilterDropdownOpen = false;
+  operatorFilterSearchTerm = '';
+  selectedOperatorFilters: string[] = [];
+  filteredOperatorFilterOptions: OperatorDropdownItem[] = [];
+
+  // Inject GridService in constructor
+  private gridService = inject(GridService);
+
+  // Add these methods
+
+  toggleOperatorsFilterDropdown(event: Event): void {
+    event.stopPropagation();
+    this.operatorsFilterDropdownOpen = !this.operatorsFilterDropdownOpen;
+
+    if (this.operatorsFilterDropdownOpen) {
+      this.operatorFilterSearchTerm = '';
+      this.filteredOperatorFilterOptions = [...this.operators];
+    }
+  }
+
+  onOperatorFilterSearch(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const searchTerm = target.value.toLowerCase();
+    this.operatorFilterSearchTerm = searchTerm;
+
+    this.filteredOperatorFilterOptions = this.operators.filter((operator) =>
+      operator.value.toLowerCase().includes(searchTerm)
+    );
+  }
+
+  toggleOperatorFilter(operatorId: string): void {
+    const index = this.selectedOperatorFilters.indexOf(operatorId);
+    if (index === -1) {
+      this.selectedOperatorFilters.push(operatorId);
+    } else {
+      this.selectedOperatorFilters.splice(index, 1);
+    }
+
+    this.applyOperatorFilter();
+  }
+
+  selectAllOperatorFilters(): void {
+    this.selectedOperatorFilters = this.filteredOperatorFilterOptions.map(
+      (op) => op.id
+    );
+    this.applyOperatorFilter();
+  }
+
+  clearAllOperatorFilters(): void {
+    this.selectedOperatorFilters = [];
+    this.applyOperatorFilter();
+  }
+
+  isOperatorFilterSelected(operatorId: string): boolean {
+    return this.selectedOperatorFilters.includes(operatorId);
+  }
+
+  private applyOperatorFilter(): void {
+    if (this.selectedOperatorFilters.length > 0) {
+      // Apply filter through grid service using operator IDs
+      this.gridService.setFilter('clients-grid', {
+        field: 'operatorId', // Changed from 'operatorName' to 'operatorId'
+        operator: FilterOperator.IN,
+        value: this.selectedOperatorFilters, // Send IDs directly, no mapping needed
+      });
+    } else {
+      // Remove filter if no operators selected
+      this.gridService.removeFilter('clients-grid', 'operatorId'); // Changed from 'operatorName'
+    }
+
+    // Trigger grid refresh
+    this.refreshGrid();
   }
 }
