@@ -66,6 +66,8 @@ export class GridComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
   private globalFilterSubject = new Subject<string>();
+  draggedColumnIndex: number | null = null;
+  dragOverColumnIndex: number | null = null;
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
   @ViewChild('columnSelectorDropdown', { static: false })
@@ -266,27 +268,24 @@ export class GridComponent implements OnInit, OnDestroy {
         this.currentSort = state.sort;
 
         if (state.columnsInitialized) {
-          this.visibleColumns = this.columns.filter((col) =>
-            state.visibleColumns.includes(col.field)
-          );
+          // FIXED: Respect the column order from saved state
+          this.visibleColumns = state.visibleColumns
+            .map((field) => this.columns.find((col) => col.field === field))
+            .filter((col) => col !== undefined) as GridColumn[];
         }
 
         this.savedFilters = state.savedFilters || [];
 
         // Only update filter state if it's different from the cleared state
-        // This prevents restoring filters after we've just cleared them
         if (
           state.filters &&
           (Object.keys(state.filters.filters).length > 0 ||
             state.filters.globalFilter)
         ) {
-          // Check if this is happening during initialization
-          // If we just cleared filters, don't restore them
           if (
             Object.keys(this.currentFilterState.filters).length === 0 &&
             !this.currentFilterState.globalFilter
           ) {
-            // We just cleared filters, don't restore them from state
             return;
           }
           this.currentFilterState = state.filters;
@@ -311,12 +310,12 @@ export class GridComponent implements OnInit, OnDestroy {
 
   onSavedFilterSelected(filter: SavedFilter): void {
     this.gridService.applySavedFilter(this.gridId, filter);
-    
+
     // Apply the saved filter state to the grid-filter component UI
     if (this.gridFilterComponent) {
       this.gridFilterComponent.applySavedFilterState(filter.filterState);
     }
-    
+
     this.filterChange.emit(filter.filterState);
 
     // Reset pagination when applying saved filter
@@ -948,5 +947,137 @@ export class GridComponent implements OnInit, OnDestroy {
     }
 
     return Array.from({ length: 5 }, (_, i) => currentPage - 2 + i);
+  }
+
+  onColumnDragStart(event: DragEvent, columnIndex: number): void {
+    this.draggedColumnIndex = columnIndex;
+
+    // Set drag effect
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/html', ''); // Required for Firefox
+    }
+
+    // Add dragging class to the header
+    const target = event.target as HTMLElement;
+    target.classList.add('dragging');
+  }
+
+  onColumnDragOver(event: DragEvent, columnIndex: number): void {
+    event.preventDefault();
+
+    if (
+      this.draggedColumnIndex === null ||
+      this.draggedColumnIndex === columnIndex
+    ) {
+      return;
+    }
+
+    this.dragOverColumnIndex = columnIndex;
+
+    // Set drop effect
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onColumnDragEnter(event: DragEvent, columnIndex: number): void {
+    event.preventDefault();
+
+    if (
+      this.draggedColumnIndex === null ||
+      this.draggedColumnIndex === columnIndex
+    ) {
+      return;
+    }
+
+    // Add visual feedback
+    const target = event.currentTarget as HTMLElement;
+    target.classList.add('drag-over');
+  }
+
+  onColumnDragLeave(event: DragEvent): void {
+    // Remove visual feedback
+    const target = event.currentTarget as HTMLElement;
+    target.classList.remove('drag-over');
+  }
+
+  onColumnDrop(event: DragEvent, dropIndex: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Remove visual feedback
+    const target = event.currentTarget as HTMLElement;
+    target.classList.remove('drag-over');
+
+    if (
+      this.draggedColumnIndex === null ||
+      this.draggedColumnIndex === dropIndex
+    ) {
+      this.draggedColumnIndex = null;
+      this.dragOverColumnIndex = null;
+      return;
+    }
+
+    // Reorder the columns
+    this.reorderColumns(this.draggedColumnIndex, dropIndex);
+
+    // Reset drag state
+    this.draggedColumnIndex = null;
+    this.dragOverColumnIndex = null;
+  }
+
+  onColumnDragEnd(event: DragEvent): void {
+    // Remove dragging class
+    const target = event.target as HTMLElement;
+    target.classList.remove('dragging');
+
+    // Remove any remaining drag-over classes
+    document.querySelectorAll('.drag-over').forEach((el) => {
+      el.classList.remove('drag-over');
+    });
+
+    // Reset drag state
+    this.draggedColumnIndex = null;
+    this.dragOverColumnIndex = null;
+  }
+
+  private reorderColumns(fromIndex: number, toIndex: number): void {
+    // Create a copy of visible columns
+    const reorderedColumns = [...this.visibleColumns];
+
+    // Remove the dragged column
+    const [movedColumn] = reorderedColumns.splice(fromIndex, 1);
+
+    // Insert it at the new position
+    reorderedColumns.splice(toIndex, 0, movedColumn);
+
+    // Update visible columns
+    this.visibleColumns = reorderedColumns;
+
+    // Update the column order in the grid service
+    const columnFields = reorderedColumns.map((col) => col.field);
+    this.gridService.setVisibleColumns(this.gridId, columnFields);
+
+    console.log(
+      `Column reordered: moved from index ${fromIndex} to ${toIndex}`
+    );
+  }
+
+  getColumnDragClass(columnIndex: number): string {
+    const classes: string[] = [];
+
+    if (this.draggedColumnIndex === columnIndex) {
+      classes.push('dragging');
+    }
+
+    if (
+      this.dragOverColumnIndex === columnIndex &&
+      this.draggedColumnIndex !== columnIndex
+    ) {
+      classes.push('drag-over');
+    }
+
+    return classes.join(' ');
   }
 }

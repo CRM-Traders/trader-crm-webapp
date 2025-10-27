@@ -326,24 +326,52 @@
             </div>
           </th>
 
-          <!-- Data Columns -->
-          <ng-container *ngFor="let column of visibleColumns">
+          <!-- Data Columns with Drag and Drop -->
+          <ng-container
+            *ngFor="let column of visibleColumns; let columnIndex = index"
+          >
             @if (column.permission){
             <th
               *hasPermission="column.permission"
               scope="col"
               [ngClass]="column.headerClass"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-move select-none transition-all duration-200"
+              [class.opacity-50]="draggedColumnIndex === columnIndex"
+              draggable="true"
+              (dragstart)="onColumnDragStart($event, columnIndex)"
+              (dragover)="onColumnDragOver($event, columnIndex)"
+              (dragenter)="onColumnDragEnter($event, columnIndex)"
+              (dragleave)="onColumnDragLeave($event)"
+              (drop)="onColumnDrop($event, columnIndex)"
+              (dragend)="onColumnDragEnd($event)"
             >
               <div class="flex items-center space-x-1">
+                <!-- Drag Handle Icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  title="Drag to reorder"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 8h16M4 16h16"
+                  />
+                </svg>
+
                 <span>{{ column.header }}</span>
 
                 <!-- Sort Icon -->
                 <button
                   *ngIf="column.sortable && sortable"
-                  (click)="onSortChange(column)"
-                  class="focus:outline-none"
+                  (click)="onSortChange(column); $event.stopPropagation()"
+                  class="focus:outline-none flex-shrink-0"
                   [ngClass]="getSortHeaderClass(column)"
+                  title="Click to sort"
                 >
                   <ng-container *ngIf="currentSort?.field === column.field">
                     <svg
@@ -400,17 +428,43 @@
             <th
               scope="col"
               [ngClass]="column.headerClass"
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-move select-none transition-all duration-200"
+              [class.opacity-50]="draggedColumnIndex === columnIndex"
+              draggable="true"
+              (dragstart)="onColumnDragStart($event, columnIndex)"
+              (dragover)="onColumnDragOver($event, columnIndex)"
+              (dragenter)="onColumnDragEnter($event, columnIndex)"
+              (dragleave)="onColumnDragLeave($event)"
+              (drop)="onColumnDrop($event, columnIndex)"
+              (dragend)="onColumnDragEnd($event)"
             >
               <div class="flex items-center space-x-1">
+                <!-- Drag Handle Icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  title="Drag to reorder"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 8h16M4 16h16"
+                  />
+                </svg>
+
                 <span>{{ column.header }}</span>
 
                 <!-- Sort Icon -->
                 <button
                   *ngIf="column.sortable && sortable"
-                  (click)="onSortChange(column)"
-                  class="focus:outline-none"
+                  (click)="onSortChange(column); $event.stopPropagation()"
+                  class="focus:outline-none flex-shrink-0"
                   [ngClass]="getSortHeaderClass(column)"
+                  title="Click to sort"
                 >
                   <ng-container *ngIf="currentSort?.field === column.field">
                     <svg
