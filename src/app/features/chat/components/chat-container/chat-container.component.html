@@ -1,7 +1,7 @@
 <!-- Backdrop for mobile -->
 <div
   *ngIf="isVisible"
-  class="fixed inset-0 bg-black bg-opacity-30 z-40 md:hidden"
+  class="fixed inset-0 bg-black/30 z-40 md:hidden"
   (click)="closeContainer()"
 ></div>
 
@@ -25,7 +25,7 @@
     </h2>
     <button
       (click)="closeContainer()"
-      class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-500/20 transition-colors"
       aria-label="Close chat"
     >
       <svg
@@ -63,8 +63,7 @@
       [class.dark:text-blue-400]="section === activeSection"
       [class.text-gray-600]="section !== activeSection"
       [class.dark:text-gray-400]="section !== activeSection"
-      [class.hover:bg-gray-50]="section !== activeSection"
-      [class.dark:hover:bg-gray-700]="section !== activeSection"
+      [class.hover\:bg-gray-200]="section !== activeSection"
     >
       <div class="flex flex-col items-center space-y-1">
         <svg
@@ -126,7 +125,7 @@
 <!-- Section Switch Confirmation Dialog -->
 <div
   *ngIf="showSectionDialog"
-  class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+  class="fixed inset-0 bg-black/30 z-[60] flex items-center justify-center p-4"
   (click)="cancelSectionSwitch()"
 >
   <div
@@ -187,7 +186,7 @@
 <!-- Section Switch Confirmation Dialog -->
 <div
   *ngIf="showSectionDialog"
-  class="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-4"
+  class="fixed inset-0 bg-black/30 z-[60] flex items-center justify-center p-4"
   (click)="cancelSectionSwitch()"
 >
   <div
@@ -232,7 +231,7 @@
 
       <div
         *ngIf="hasOpenWindows"
-        class="flex items-start space-x-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg"
+        class="flex items-start space-x-2 p-3 bg-white border border-yellow-200 rounded-lg"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -249,10 +248,10 @@
           />
         </svg>
         <div class="flex-1">
-          <p class="text-sm font-medium text-yellow-800 dark:text-yellow-300">
+          <p class="text-sm font-medium text-yellow-800 dark:text-yellow-400">
             Warning: Open chats will be closed
           </p>
-          <p class="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+          <p class="text-xs text-yellow-800 dark:text-yellow-400 mt-1">
             All currently open chat windows will be closed when switching
             sections.
           </p>

@@ -311,14 +311,14 @@ export class ChatWindowComponent
   }
 
   getPositionStyle(): string {
-    const rightOffset = 20 + this.position * 340;
+    const rightOffset = 20 + this.position * 390;
     return `${rightOffset}px`;
   }
 
   getPositionOffset(): number {
     // 20px base offset + (position × 340px for each window)
     // 320px width + 20px gap between windows
-    return 20 + this.position * 340;
+    return 20 + this.position * 390;
   }
 
   onFileSelect(event: Event): void {
