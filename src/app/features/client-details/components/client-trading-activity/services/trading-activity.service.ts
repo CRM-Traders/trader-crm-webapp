@@ -96,6 +96,19 @@ export class TradingActivityService {
       );
   }
 
+  cancelOrder(orderId: string): Observable<any> {
+    const url = `traiding/api/admin/trading/order/${orderId}/cancel`;
+    return this.http.delete(url).pipe(
+      tap(() => {
+        this.alertService.success('Order cancelled successfully');
+      }),
+      catchError((error) => {
+        this.alertService.error('Failed to cancel order. Please try again.');
+        return throwError(() => error);
+      })
+    );
+  }
+
   getTradingOrders(
     tradingAccountId: string,
     filters?: Partial<TradingActivityFilters>

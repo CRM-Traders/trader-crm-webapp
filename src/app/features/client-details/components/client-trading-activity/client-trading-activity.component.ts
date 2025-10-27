@@ -48,6 +48,7 @@ export class ClientTradingActivityComponent
   orderTypeFilter = '';
   tradingOrders: TradingOrder[] = [];
   loadingClientOrders = false;
+  cancellingOrderId: string | null = null;
 
   // Pagination properties
   currentPage = 1;
@@ -224,5 +225,38 @@ export class ClientTradingActivityComponent
     }
 
     return pages;
+  }
+
+  canCancelOrder(order: TradingOrder): boolean {
+    return order.status === 'Pending';
+  }
+
+  cancelOrder(order: TradingOrder): void {
+    if (
+      !confirm(
+        `Are you sure you want to cancel this ${order.side} order for ${order.tradingPairSymbol}?`
+      )
+    ) {
+      return;
+    }
+
+    this.cancellingOrderId = order.id;
+
+    this.tradingActivityService
+      .cancelOrder(order.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.cancellingOrderId = null;
+          this.loadClientOrders();
+        },
+        error: (error) => {
+          this.cancellingOrderId = null;
+        },
+      });
+  }
+
+  isCancelling(orderId: string): boolean {
+    return this.cancellingOrderId === orderId;
   }
 }
