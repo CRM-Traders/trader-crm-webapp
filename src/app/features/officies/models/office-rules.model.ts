@@ -5,7 +5,7 @@ export enum RuleCategory {
   Desk = 1,
   Team = 2,
   Sale = 3,
-  Retention = 4
+  Retention = 4,
 }
 
 export interface OfficeRule {
@@ -138,4 +138,5 @@ export interface OperatorDropdownItem {
   id: string;
   value: string;
   email: string;
+  department?: string;
 }

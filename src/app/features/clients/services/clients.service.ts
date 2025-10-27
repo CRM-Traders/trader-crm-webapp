@@ -294,6 +294,7 @@ export class ClientsService {
           return response.items.map((operator: any) => ({
             id: operator.id,
             value: operator.value || operator.fullName,
+            department: operator.department,
           }));
         }),
         catchError((error) => {

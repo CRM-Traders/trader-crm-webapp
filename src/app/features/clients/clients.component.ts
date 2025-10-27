@@ -931,15 +931,15 @@ export class ClientsComponent implements OnInit {
       (operators) => {
         this.updateColumnFilterOptions(
           'operatorId',
-          this.processOperatorFilterOptions(operators)
+          this.processOperatorFilterOptions(operators, null)
         );
         this.updateColumnFilterOptions(
           'retentionOperatorId',
-          this.processOperatorFilterOptions(operators)
+          this.processOperatorFilterOptions(operators, 'Retention')
         );
         this.updateColumnFilterOptions(
           'salesOperatorId',
-          this.processOperatorFilterOptions(operators)
+          this.processOperatorFilterOptions(operators, 'Sales')
         );
 
         this.operators = operators;
@@ -1800,15 +1800,15 @@ export class ClientsComponent implements OnInit {
           this.updateColumnFilterOptions('teamId', teams);
           this.updateColumnFilterOptions(
             'operatorId',
-            this.processOperatorFilterOptions(operators)
+            this.processOperatorFilterOptions(operators, null)
           );
           this.updateColumnFilterOptions(
             'retentionOperatorId',
-            this.processOperatorFilterOptions(operators)
+            this.processOperatorFilterOptions(operators, 'Retention')
           );
           this.updateColumnFilterOptions(
             'salesOperatorId',
-            this.processOperatorFilterOptions(operators)
+            this.processOperatorFilterOptions(operators, 'Sales')
           );
           this.updateColumnFilterOptions('timezone', timezones);
 
@@ -1913,12 +1913,15 @@ export class ClientsComponent implements OnInit {
   }
 
   private processOperatorFilterOptions(
-    operators: OperatorDropdownItem[]
+    operators: OperatorDropdownItem[],
+    department: string | null
   ): { value: string; label: string }[] {
-    const operatorOptions = operators.map((operator: OperatorDropdownItem) => ({
-      value: operator.id,
-      label: operator.value,
-    }));
+    const operatorOptions = operators
+      .filter((x) => !department || x.department === department)
+      .map((operator: OperatorDropdownItem) => ({
+        value: operator.id,
+        label: operator.value,
+      }));
     return operatorOptions.sort((a: any, b: any) =>
       a.label.localeCompare(b.label)
     );
