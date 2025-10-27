@@ -13,7 +13,7 @@
   <div *ngIf="!loadingData && orderData">
     <!-- Modal Header -->
     <div
-      class="modal-header border-b border-gray-200 dark:border-gray-700 px-6 py-4"
+      class="modal-header border-b border-gray-200 dark:border-gray-700 pb-4"
     >
       <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
         {{ isEditing ? "Edit Order" : "Order Details" }}
@@ -45,7 +45,7 @@
     </div>
 
     <!-- Modal Body -->
-    <div class="modal-body px-6 py-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+    <div class="modal-body px-6 py-6 max-h-[calc(100vh-100px)] overflow-y-auto">
       <form [formGroup]="editForm" class="max-w-4xl mx-auto">
         <!-- Basic Order Information -->
         <div class="mb-6">
@@ -754,10 +754,10 @@
 
     <!-- Modal Footer -->
     <div
-      class="modal-footer border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
+      class="modal-footer border-t border-gray-200 dark:border-gray-700 pt-4 flex justify-between items-center"
     >
       <!-- Left side: Cancel/Reopen Order button -->
-      <div class="flex items-center gap-3">
+      <!-- <div class="flex items-center gap-3">
         <button
           *ngIf="!isOrderClosed() && !isEditing"
           type="button"
@@ -765,12 +765,12 @@
           (click)="closeOrder()"
           [disabled]="loading"
         >
-          {{ loading ? "Cancelling..." : "Close Order" }}
+          {{ loading ? "Closing..." : "Close Order" }}
         </button>
-      </div>
+      </div> -->
 
       <!-- Right side: Edit/Save/Close buttons -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 ms-auto">
         <button
           *ngIf="!isEditing"
           type="button"

@@ -337,7 +337,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
-    const formValue = this.editForm.value;
+    // Use getRawValue() to include disabled fields (symbol and orderType)
+    const formValue = this.editForm.getRawValue();
 
     const updateData: OrderUpdateRequest = {
       symbol: formValue.symbol,
@@ -403,7 +404,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!confirm('Are you sure you want to cancel this order?')) {
+    if (!confirm('Are you sure you want to close this order?')) {
       return;
     }
 

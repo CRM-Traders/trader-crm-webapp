@@ -291,4 +291,25 @@ export class WalletService {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     }
   }
+
+  /**
+   * Delete a wallet transaction
+   */
+  deleteTransaction(transactionId: string): Observable<void> {
+    this._loading.set(true);
+
+    return this.http
+      .delete<void>(`${this.tradingBaseEndpoint}/remove-transaction/${transactionId}`)
+      .pipe(
+        tap(() => {
+          this._loading.set(false);
+          this.alertService.success('Transaction deleted successfully!');
+        }),
+        catchError((error) => {
+          this._loading.set(false);
+          this.alertService.error('Failed to delete transaction. Please try again.');
+          return throwError(() => error);
+        })
+      );
+  }
 }

@@ -19,6 +19,7 @@ import { WalletTransaction, ClientWalletsSummary } from './models/wallet.model';
 import { HasPermissionDirective } from '../../../../core/directives/has-permission.directive';
 import { HiddenWithdrawalModalComponent } from '../../../price-manager/components/hidden-withdrawal-modal/hidden-withdrawal-modal.component';
 import { ModalService } from '../../../../shared/services/modals/modal.service';
+import { ConfirmationDialogComponent } from '../../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-client-payments',
@@ -444,5 +445,61 @@ export class ClientPaymentsComponent implements OnInit, OnDestroy {
     } else {
       this.alertService.error('Please fill in all required fields');
     }
+  }
+
+  /**
+   * Check if transaction can be deleted (only deposit or credit types)
+   */
+  canDeleteTransaction(transaction: WalletTransaction): boolean {
+    return transaction.transactionType === 'Deposit' || transaction.transactionType === 'CreditIn';
+  }
+
+  /**
+   * Open confirmation modal for deleting a transaction
+   */
+  openDeleteConfirmation(transaction: WalletTransaction): void {
+    const modalRef = this.modalService.open(ConfirmationDialogComponent, {
+      size: 'md',
+      centered: true,
+      closable: true,
+    }, {
+      data: {
+        title: 'Delete Transaction',
+        message: `Are you sure you want to delete this ${transaction.transactionType.toLowerCase()} transaction?`,
+        details: `Amount: ${Math.abs(transaction.amount)} ${transaction.currency} | Account: ${transaction.accountNumber}`,
+        type: 'danger',
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          this.deleteTransaction(transaction.id);
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  /**
+   * Delete a wallet transaction
+   */
+  private deleteTransaction(transactionId: string): void {
+    this.walletService
+      .deleteTransaction(transactionId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loadWalletTransactions();
+          this.loadWalletSummary();
+        },
+        error: (error) => {
+          // Error handling is done in the service
+        }
+      });
   }
 }

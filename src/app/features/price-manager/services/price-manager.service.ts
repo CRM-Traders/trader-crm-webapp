@@ -19,6 +19,20 @@ export class PriceManagerService {
     });
   }
 
+  getOrdersList(
+    searchTerm: string | null = null,
+    pageIndex: number = 0,
+    pageSize: number = 50,
+    status: string | null = null
+  ) {
+    return this.http.post('identity/api/clients/orders/grid', {
+      searchTerm,
+      pageIndex,
+      pageSize,
+      status,
+    });
+  }
+
   chartData(symbol: string, interval: string = '1h', limit = 500) {
     return this.http.get(
       `binance/api/CryptoData/historical-data?symbol=${symbol}&interval=${interval}&limit=${limit}`
@@ -73,7 +87,7 @@ export class PriceManagerService {
 
   closeOrder(orderId: string) {
     return this.http.post(
-      `traiding/api/admin/trading/order/${orderId}/close`,
+      `traiding/api/admin/trading/trade/${orderId}/close`,
       {}
     );
   }
