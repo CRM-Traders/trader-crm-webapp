@@ -49,7 +49,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .subscribe(() => this.updateTime());
 
     // Subscribe to unread count
-    this.initializeChatCount();
+    //this.initializeChatCount();
 
     document.addEventListener('click', this.closeMenuOnClickOutside.bind(this));
   }
