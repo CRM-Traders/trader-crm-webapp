@@ -11,6 +11,7 @@ import { LocalizationService } from '../../../core/services/localization.service
 import { environment } from '../../../../environments/environment';
 import { ChatService } from '../../../features/chat/services/chat.service';
 import { ChatStateService } from '../../../features/chat/services/chat-state.service';
+import { ChatSection } from '../../../features/chat/models/chat.model';
 
 @Component({
   selector: 'app-header',
@@ -107,18 +108,22 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   private initializeChatCount(): void {
-    if (!environment.enableChatHub) {
-      console.log('Chat hub is disabled in environment');
-      return;
-    }
-
     this.isLoadingChatCount = true;
 
-    // ✅ FIX: Initialize chat connection
+    // ✅ FIX: Initialize chat connection and load all chats
     this.chatService
       .initializeConnection()
       .then(() => {
         console.log('✅ Chat connection initialized successfully');
+
+        // ✅ Load all chats to get unread counts
+        return Promise.all([
+          this.chatService.loadChats(ChatSection.Client),
+          this.chatService.loadChats(ChatSection.Operator),
+        ]);
+      })
+      .then(() => {
+        console.log('✅ All chats loaded successfully');
         this.isLoadingChatCount = false;
       })
       .catch((error) => {
