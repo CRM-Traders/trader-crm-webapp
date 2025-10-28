@@ -207,11 +207,26 @@
 
       <!-- Search Results -->
       <div class="space-y-2">
-        <!-- Loading -->
-        <div *ngIf="isLoading" class="flex items-center justify-center py-8">
-          <div
-            class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
-          ></div>
+        <!-- Loading - Skeleton -->
+        <div *ngIf="isLoading" class="space-y-1 max-h-[300px] overflow-y-auto">
+          <!-- Skeleton Search Results -->
+          <div *ngFor="let item of [1,2,3,4]" class="flex items-center space-x-3 p-3 rounded-lg">
+            <!-- Avatar Skeleton -->
+            <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-400/30 animate-pulse"></div>
+
+            <!-- Info Skeleton -->
+            <div class="flex-1 min-w-0">
+              <!-- Name Skeleton -->
+              <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded animate-pulse w-32 mb-1"></div>
+              <!-- Subtitle Skeleton -->
+              <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded animate-pulse w-24"></div>
+            </div>
+
+            <!-- Checkbox Skeleton -->
+            <div class="flex-shrink-0">
+              <div class="w-5 h-5 rounded border-2 border-gray-200 dark:border-gray-400/30 animate-pulse"></div>
+            </div>
+          </div>
         </div>
 
         <!-- No Results -->
@@ -239,7 +254,7 @@
         </div>
 
         <!-- Results List -->
-        <div *ngIf="!isLoading && searchResults.length > 0" class="space-y-1">
+        <div *ngIf="!isLoading && searchResults.length > 0" class="space-y-1 max-h-[300px] overflow-y-auto">
           <div
             *ngFor="let item of searchResults"
             (click)="toggleSelection(item)"
