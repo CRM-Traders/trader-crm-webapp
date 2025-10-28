@@ -1058,10 +1058,6 @@ export class GridComponent implements OnInit, OnDestroy {
     // Update the column order in the grid service
     const columnFields = reorderedColumns.map((col) => col.field);
     this.gridService.setVisibleColumns(this.gridId, columnFields);
-
-    console.log(
-      `Column reordered: moved from index ${fromIndex} to ${toIndex}`
-    );
   }
 
   getColumnDragClass(columnIndex: number): string {

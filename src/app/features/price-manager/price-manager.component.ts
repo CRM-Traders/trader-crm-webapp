@@ -1,6 +1,18 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+} from '@angular/core';
 import { Router } from '@angular/router';
-import { Client, PriceManagerService, Order, ReopenOrderRequest } from './services/price-manager.service';
+import {
+  Client,
+  PriceManagerService,
+  Order,
+  ReopenOrderRequest,
+} from './services/price-manager.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, catchError, finalize, tap, of } from 'rxjs';
@@ -255,7 +267,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       },
       {
         clients: this.activeClients(),
-        title: 'Create Bulk Order'
+        title: 'Create Bulk Order',
       }
     );
 
@@ -273,7 +285,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       },
       {
         clients: this.activeClients(),
-        title: 'Create New Order'
+        title: 'Create New Order',
       }
     );
 
@@ -288,12 +300,17 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    navigator.clipboard.writeText(externalId).then(() => {
-      this.alertService.success(`External ID "${externalId}" copied to clipboard`);
-    }).catch((err) => {
-      console.error('Failed to copy external ID:', err);
-      this.alertService.error('Failed to copy external ID to clipboard');
-    });
+    navigator.clipboard
+      .writeText(externalId)
+      .then(() => {
+        this.alertService.success(
+          `External ID "${externalId}" copied to clipboard`
+        );
+      })
+      .catch((err) => {
+        console.error('Failed to copy external ID:', err);
+        this.alertService.error('Failed to copy external ID to clipboard');
+      });
   }
 
   // Client selection methods
@@ -315,17 +332,21 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       this.selectAll.set(false);
     } else {
       // Select all visible clients
-      const allExternalIds = this.activeClients().map(client => client.externalId);
+      const allExternalIds = this.activeClients().map(
+        (client) => client.externalId
+      );
       this.selectedClients.set(new Set(allExternalIds));
       this.selectAll.set(true);
     }
   }
 
   private updateSelectAllState(): void {
-    const visibleExternalIds = this.activeClients().map(client => client.externalId);
+    const visibleExternalIds = this.activeClients().map(
+      (client) => client.externalId
+    );
     const selectedCount = this.selectedClients().size;
     const visibleCount = visibleExternalIds.length;
-    
+
     this.selectAll.set(selectedCount === visibleCount && visibleCount > 0);
   }
 
@@ -335,25 +356,30 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   copySelectedExternalIds(): void {
     const selectedIds = Array.from(this.selectedClients());
-    
+
     if (selectedIds.length === 0) {
       this.alertService.error('No clients selected');
       return;
     }
 
-    const externalIds = selectedIds.map(id => {
-      const client = this.activeClients().find(c => c.externalId === id);
+    const externalIds = selectedIds.map((id) => {
+      const client = this.activeClients().find((c) => c.externalId === id);
       return client?.externalId || id;
     });
 
     const commaSeparatedIds = externalIds.join(', ');
-    
-    navigator.clipboard.writeText(commaSeparatedIds).then(() => {
-      this.alertService.success(`${selectedIds.length} external ID(s) copied to clipboard`);
-    }).catch((err) => {
-      console.error('Failed to copy external IDs:', err);
-      this.alertService.error('Failed to copy external IDs to clipboard');
-    });
+
+    navigator.clipboard
+      .writeText(commaSeparatedIds)
+      .then(() => {
+        this.alertService.success(
+          `${selectedIds.length} external ID(s) copied to clipboard`
+        );
+      })
+      .catch((err) => {
+        console.error('Failed to copy external IDs:', err);
+        this.alertService.error('Failed to copy external IDs to clipboard');
+      });
   }
 
   getSelectedCount(): number {
@@ -378,14 +404,11 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       )
       .pipe(
         tap((response: any) => {
-          console.log('Orders response:', response);
-          // Handle the actual API response format
           let orders: any[] = [];
           if (response?.items && Array.isArray(response.items)) {
             orders = response.items;
             this.ordersTotalCount.set(response.totalCount || 0);
           } else {
-            console.warn('Unexpected orders response format:', response);
             orders = [];
             this.ordersTotalCount.set(0);
           }
@@ -394,7 +417,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
         }),
         catchError((err: any) => {
           console.error('Error loading orders:', err);
-          let errorMessage = 'Failed to load orders. Please check your connection and try again.';
+          let errorMessage =
+            'Failed to load orders. Please check your connection and try again.';
           if (err?.error?.error) {
             errorMessage = err.error.error;
           } else if (err?.message) {
@@ -496,7 +520,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
     if (typeof status === 'string') {
       return status;
     }
-    
+
     switch (status) {
       case 1:
         return 'Active';
@@ -553,7 +577,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
           return 'bg-gray-100 text-gray-800';
       }
     }
-    
+
     switch (status) {
       case 1:
         return 'bg-blue-100 text-blue-800';
@@ -574,7 +598,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   formatDate(dateString: string | null | undefined): string {
     if (!dateString) return 'N/A';
-    
+
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
@@ -589,12 +613,15 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    navigator.clipboard.writeText(orderId).then(() => {
-      this.alertService.success(`Order ID "${orderId}" copied to clipboard`);
-    }).catch((err) => {
-      console.error('Failed to copy order ID:', err);
-      this.alertService.error('Failed to copy order ID to clipboard');
-    });
+    navigator.clipboard
+      .writeText(orderId)
+      .then(() => {
+        this.alertService.success(`Order ID "${orderId}" copied to clipboard`);
+      })
+      .catch((err) => {
+        console.error('Failed to copy order ID:', err);
+        this.alertService.error('Failed to copy order ID to clipboard');
+      });
   }
 
   copyUserId(userId: string): void {
@@ -603,12 +630,15 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    navigator.clipboard.writeText(userId).then(() => {
-      this.alertService.success(`User ID "${userId}" copied to clipboard`);
-    }).catch((err) => {
-      console.error('Failed to copy user ID:', err);
-      this.alertService.error('Failed to copy user ID to clipboard');
-    });
+    navigator.clipboard
+      .writeText(userId)
+      .then(() => {
+        this.alertService.success(`User ID "${userId}" copied to clipboard`);
+      })
+      .catch((err) => {
+        console.error('Failed to copy user ID:', err);
+        this.alertService.error('Failed to copy user ID to clipboard');
+      });
   }
 
   // Order action methods
@@ -649,11 +679,21 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       },
       {
         title: 'Re-Open Order',
-        message: `Are you sure you want to re-open this ${this.getOrderSideLabel(order.side)} order for ${order.tradingPairSymbol}?`,
+        message: `Are you sure you want to re-open this ${this.getOrderSideLabel(
+          order.side
+        )} order for ${order.tradingPairSymbol}?`,
         type: 'info',
         confirmText: 'Re-Open Order',
         cancelText: 'Cancel',
-        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${this.getOrderTypeLabel(order.orderType)}\nSide: ${this.getOrderSideLabel(order.side)}\nPrice: $${order.price}\nQuantity: ${order.quantity}\nStatus: ${this.getStatusLabel(order.status)}`
+        details: `Order ID: ${order.id}\nSymbol: ${
+          order.tradingPairSymbol
+        }\nType: ${this.getOrderTypeLabel(
+          order.orderType
+        )}\nSide: ${this.getOrderSideLabel(order.side)}\nPrice: $${
+          order.price
+        }\nQuantity: ${order.quantity}\nStatus: ${this.getStatusLabel(
+          order.status
+        )}`,
       }
     );
 
@@ -705,11 +745,19 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       },
       {
         title: 'Cancel Order',
-        message: `Are you sure you want to cancel this ${this.getOrderSideLabel(order.side)} order for ${order.tradingPairSymbol}?`,
+        message: `Are you sure you want to cancel this ${this.getOrderSideLabel(
+          order.side
+        )} order for ${order.tradingPairSymbol}?`,
         type: 'warning',
         confirmText: 'Cancel Order',
         cancelText: 'Keep Order',
-        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${this.getOrderTypeLabel(order.orderType)}\nSide: ${this.getOrderSideLabel(order.side)}\nPrice: $${order.price}\nQuantity: ${order.quantity}`
+        details: `Order ID: ${order.id}\nSymbol: ${
+          order.tradingPairSymbol
+        }\nType: ${this.getOrderTypeLabel(
+          order.orderType
+        )}\nSide: ${this.getOrderSideLabel(order.side)}\nPrice: $${
+          order.price
+        }\nQuantity: ${order.quantity}`,
       }
     );
 
@@ -771,11 +819,19 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       },
       {
         title: 'Close Order',
-        message: `Are you sure you want to close this ${this.getOrderSideLabel(order.side)} order for ${order.tradingPairSymbol}?`,
+        message: `Are you sure you want to close this ${this.getOrderSideLabel(
+          order.side
+        )} order for ${order.tradingPairSymbol}?`,
         type: 'warning',
         confirmText: 'Close Order',
         cancelText: 'Keep Order',
-        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${this.getOrderTypeLabel(order.orderType)}\nSide: ${this.getOrderSideLabel(order.side)}\nPrice: $${order.price}\nQuantity: ${order.quantity}`
+        details: `Order ID: ${order.id}\nSymbol: ${
+          order.tradingPairSymbol
+        }\nType: ${this.getOrderTypeLabel(
+          order.orderType
+        )}\nSide: ${this.getOrderSideLabel(order.side)}\nPrice: $${
+          order.price
+        }\nQuantity: ${order.quantity}`,
       }
     );
 

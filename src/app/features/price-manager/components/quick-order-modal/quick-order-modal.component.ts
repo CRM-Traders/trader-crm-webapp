@@ -373,8 +373,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
             this.applySmartPLCalculationResponse(resp, 'volume');
           }),
           catchError((err) => {
-            console.log(err);
-            console.error('Error calculating from volume:', err);
             this.alertService.error(err.error.error);
             return [];
           }),

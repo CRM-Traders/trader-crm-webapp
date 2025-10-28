@@ -179,14 +179,12 @@ export class ChatSignalRService {
     });
 
     this.hubConnection.onreconnected((connectionId) => {
-      console.log('SignalR reconnected', connectionId);
       this.connectionState$.next(signalR.HubConnectionState.Connected);
     });
   }
 
   async start(): Promise<void> {
     if (!this.hubConnection) {
-      console.warn('Hub connection not initialized');
       return;
     }
 
@@ -197,9 +195,7 @@ export class ChatSignalRService {
     try {
       await this.hubConnection.start();
       this.connectionState$.next(signalR.HubConnectionState.Connected);
-      console.log('SignalR Connected');
     } catch (error) {
-      console.error('Error starting SignalR connection:', error);
       this.connectionState$.next(signalR.HubConnectionState.Disconnected);
 
       // Retry connection after 5 seconds
@@ -213,10 +209,7 @@ export class ChatSignalRService {
     try {
       await this.hubConnection.stop();
       this.connectionState$.next(signalR.HubConnectionState.Disconnected);
-      console.log('SignalR Disconnected');
-    } catch (error) {
-      console.error('Error stopping SignalR connection:', error);
-    }
+    } catch (error) {}
   }
 
   // Hub method invocations

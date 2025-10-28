@@ -219,10 +219,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
   private triggerProfitBasedCalcNewOrder(): void {
     if (this.suppressCalc) return;
-    // Check if we have all required fields
-    console.log(this.currentSymbol());
-    console.log(this.takeProfit());
-    console.log(this.accountBalance());
     if (!this.currentSymbol() || !this.takeProfit()) {
       return;
     }
@@ -360,8 +356,6 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private recalculateSmartPL(
     source: 'symbol' | 'side' | 'accountBalance' | 'leverage'
   ): void {
-    console.log(this.volume());
-    console.log(this.hasEntryExitPrices());
     if (this.volume() && this.hasEntryExitPrices()) {
       this.triggerVolumeBasedCalc();
     } else if (this.targetProfit()) {

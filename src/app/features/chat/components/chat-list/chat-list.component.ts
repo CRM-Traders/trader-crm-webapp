@@ -30,9 +30,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Subscribe to chats
     this.chatService.chats.pipe(takeUntil(this.destroy$)).subscribe((chats) => {
-      console.log('Chat list received chats:', chats);
       this.chats = this.filterChatsBySection(chats);
-      console.log('Filtered chats for section:', this.chats);
       this.applySearchFilter();
     });
 
@@ -40,7 +38,6 @@ export class ChatListComponent implements OnInit, OnDestroy {
     this.chatService.isLoading
       .pipe(takeUntil(this.destroy$))
       .subscribe((loading) => {
-        console.log('Loading state:', loading);
         this.isLoading = loading;
       });
 
@@ -51,8 +48,6 @@ export class ChatListComponent implements OnInit, OnDestroy {
         this.applySearchFilter();
       });
 
-    // Load initial chats
-    console.log('Loading chats for section:', this.section);
     this.loadChats();
   }
 

@@ -133,8 +133,6 @@ export class ChatService implements OnDestroy {
       const apiChats = await this.httpService.getUserChats().toPromise();
 
       if (apiChats) {
-        console.log('Raw API chats:', apiChats);
-
         // Transform API response to our model
         const chats = this.transformerService.transformChatsFromApi(apiChats);
 
@@ -143,8 +141,6 @@ export class ChatService implements OnDestroy {
 
         // Filter chats by type
         const filteredChats = chats.filter((chat) => chat.type === chatType);
-
-        console.log('Filtered chats for section:', filteredChats);
 
         // Clear existing chats for this section
         const existingChatIds = Array.from(currentChats.keys());
@@ -202,9 +198,7 @@ export class ChatService implements OnDestroy {
             currentChats.set(chat.id, { ...updatedChat });
           }
         }
-      } catch (error) {
-        console.error(`Error loading last message for chat ${chat.id}:`, error);
-      }
+      } catch (error) {}
     }
 
     // Update all chats at once
@@ -237,15 +231,11 @@ export class ChatService implements OnDestroy {
             currentChats.set(chat.id, { ...chat });
             this.chats$.next(new Map(currentChats));
           }
-        } catch (error) {
-          console.error('Error loading last message:', error);
-        }
+        } catch (error) {}
 
         return chat;
       }
-    } catch (error) {
-      console.error('Error loading chat by ID:', error);
-    }
+    } catch (error) {}
     return undefined;
   }
 
@@ -260,15 +250,11 @@ export class ChatService implements OnDestroy {
         const currentMessages = this.messages$.value;
         const existingMessages = currentMessages.get(chatId) || [];
 
-        console.log('Raw messages from API:', response.messages);
-
         // Convert API date strings to Date objects with robust parsing
         const messages = response.messages.map((msg) => ({
           ...msg,
           createdAt: this.parseDate(msg.createdAt),
         }));
-
-        console.log('Converted messages:', messages);
 
         // Prepend older messages (for pagination)
         const allMessages =
@@ -286,7 +272,6 @@ export class ChatService implements OnDestroy {
         }
       }
     } catch (error) {
-      console.error('Error loading messages:', error);
       this.notificationService.error('Failed to load messages');
     }
   }
@@ -304,14 +289,10 @@ export class ChatService implements OnDestroy {
         messageType,
       };
 
-      console.log('Sending message:', request);
-
       // Send message and get response
       const sentMessage = await this.httpService
         .sendMessage(request)
         .toPromise();
-
-      console.log('Message sent, response:', sentMessage);
 
       if (sentMessage) {
         // ✅ OPTIMISTIC UPDATE: Add message immediately from HTTP response
@@ -325,8 +306,6 @@ export class ChatService implements OnDestroy {
 
         // Update chat's last message
         this.updateChatLastMessage(messageWithDate);
-
-        console.log('Message added optimistically:', messageWithDate);
       }
 
       // SignalR will also send the message, but we have duplicate prevention
@@ -466,14 +445,10 @@ export class ChatService implements OnDestroy {
       }
 
       if (chat) {
-        console.log('Chat created:', chat);
-
         // ✅ Add to local state immediately
         const currentChats = this.chats$.value;
         currentChats.set(chat.id, chat);
         this.chats$.next(new Map(currentChats));
-
-        console.log('Chat added to local state');
 
         // ✅ Trigger refresh of the chat list for the current section
         const currentSection = this.stateService.activeSection;
@@ -482,9 +457,7 @@ export class ChatService implements OnDestroy {
         // If the new chat belongs to the current section, it's already visible
         // If it's a different section, we might want to switch to it
         if (chatSection === currentSection) {
-          console.log('Chat is in current section, already visible');
         } else {
-          console.log('Chat is in different section:', chatSection);
         }
 
         // Open the new chat window
@@ -497,7 +470,6 @@ export class ChatService implements OnDestroy {
 
       throw new Error('Failed to create chat');
     } catch (error) {
-      console.error('Error creating chat:', error);
       this.notificationService.error('Failed to create chat');
       throw error;
     }
@@ -507,9 +479,7 @@ export class ChatService implements OnDestroy {
   async leaveChat(chatId: string): Promise<void> {
     try {
       await this.signalRService.leaveChat(chatId);
-    } catch (error) {
-      console.error('Error leaving chat:', error);
-    }
+    } catch (error) {}
   }
 
   // Private methods
@@ -518,8 +488,6 @@ export class ChatService implements OnDestroy {
     this.signalRService.onMessageReceived
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
-        console.log('Message received via SignalR:', message);
-        // Convert date string to Date object
         const messageWithDate = {
           ...message,
           createdAt: this.parseDate(message.createdAt),
@@ -577,9 +545,7 @@ export class ChatService implements OnDestroy {
       chatMessages.push(message);
       currentMessages.set(message.chatId, chatMessages);
       this.messages$.next(new Map(currentMessages));
-      console.log('Message added to local state:', message);
     } else {
-      console.log('Message already exists, skipping:', message.id);
     }
   }
 
@@ -630,7 +596,6 @@ export class ChatService implements OnDestroy {
       currentChats.set(message.chatId, { ...chat });
       this.chats$.next(new Map(currentChats));
       this.calculateUnreadCount();
-      console.log('Chat last message updated:', chat);
     }
   }
 
