@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, filter, take } from 'rxjs';
 import { ChatService } from '../../services/chat.service';
 import { ChatStateService } from '../../services/chat-state.service';
-import { Chat, Message, MessageType } from '../../models/chat.model';
+import { Chat, Message, MessageType, ChatType } from '../../models/chat.model';
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
@@ -27,7 +27,6 @@ export class ChatWindowComponent
   implements OnInit, OnDestroy, AfterViewChecked
 {
   @Input() chatId!: string;
-  @Input() position: number = 0;
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @ViewChild('messageInput') messageInput!: ElementRef;
@@ -158,12 +157,25 @@ export class ChatWindowComponent
   }
 
   getChatName(): string {
-    return this.chat?.name || 'Loading...';
+    const chat = this.chat;
+    if (!chat) return '';
+
+    const explicitName = (chat.name || '').trim();
+    if (explicitName) return explicitName;
+
+    if (chat.type === ChatType.OperatorGroup) {
+      return 'Group Chat';
+    }
+
+    const otherParticipant = chat.participants?.find(
+      (p) => p.userId !== this.currentUserId
+    );
+    return (otherParticipant?.name || 'Chat').trim();
   }
 
   getChatAvatar(): string {
     const name = this.getChatName();
-    if (name === 'Loading...') return '?';
+    if (!name) return '?';
     return name
       .split(' ')
       .map((n) => n.charAt(0))
@@ -232,13 +244,13 @@ export class ChatWindowComponent
     return message.senderId === this.currentUserId;
   }
 
-  getMessageTime(message: Message): string {
+  getMessageTime(sentAt: Date): string {
     try {
       // Ensure createdAt is a Date object
       const date =
-        message.createdAt instanceof Date
-          ? message.createdAt
-          : new Date(message.createdAt);
+        sentAt instanceof Date
+          ? sentAt
+          : new Date(sentAt);
 
       // Check if date is valid
       if (isNaN(date.getTime())) {
@@ -251,7 +263,7 @@ export class ChatWindowComponent
         hour12: true,
       });
     } catch (error) {
-      console.error('Error formatting message time:', error, message);
+      console.error('Error formatting message time:', error, sentAt);
       return 'Invalid time';
     }
   }
@@ -322,14 +334,27 @@ export class ChatWindowComponent
   }
 
   getPositionStyle(): string {
-    const rightOffset = 20 + this.position * 390;
+    const rightOffset = this.getPositionOffset();
     return `${rightOffset}px`;
   }
 
   getPositionOffset(): number {
-    // 20px base offset + (position × 340px for each window)
-    // 320px width + 20px gap between windows
-    return 20 + this.position * 390;
+    // Calculate position based on non-minimized windows only
+    const nonMinimizedWindows = this.chatStateService.getMaximizedWindows();
+    const currentWindowIndex = nonMinimizedWindows.findIndex(
+      (w) => w.chatId === this.chatId
+    );
+
+    // If there are minimized chats (rendered as a right-side column of circles),
+    // shift maximized windows left so they don't overlap that column.
+    // Minimized column width: 16px (right-4) + 56px (w-14) + 16px gap ≈ 88px
+    const minimizedExists = this.chatStateService.getMinimizedWindows().length > 0;
+    const baseOffset = minimizedExists ? 88 : 20;
+
+    // Step per maximized window: keep current spacing (approx 320px width + 20px gap)
+    const windowStep = 390;
+
+    return baseOffset + Math.max(0, currentWindowIndex) * windowStep;
   }
 
   onFileSelect(event: Event): void {

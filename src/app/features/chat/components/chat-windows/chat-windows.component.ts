@@ -14,7 +14,6 @@ import { ChatWindowState } from '../../models/chat.model';
       <app-chat-window
         *ngIf="!window.isMinimized"
         [chatId]="window.chatId"
-        [position]="window.position"
       ></app-chat-window>
     </ng-container>
   `,

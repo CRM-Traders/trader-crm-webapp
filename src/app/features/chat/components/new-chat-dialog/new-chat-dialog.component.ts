@@ -45,6 +45,8 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
   private identityService = inject(IdentityService);
   private chatService = inject(ChatService);
 
+  private readonly DRAFT_STORAGE_KEY = 'crm_new_chat_draft';
+
   searchQuery = '';
   searchResults: SearchResultItem[] = [];
   selectedItems: SearchResultItem[] = [];
@@ -61,6 +63,9 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
   ChatSection = ChatSection;
 
   ngOnInit(): void {
+    // Restore draft if available
+    this.loadDraft();
+
     // Setup search with debounce
     this.searchSubject$
       .pipe(
@@ -79,6 +84,12 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
       });
+
+    // If we restored a query, re-run the search to repopulate the list
+    if (this.searchQuery.trim().length >= 2) {
+      this.isLoading = true;
+      this.searchSubject$.next(this.searchQuery);
+    }
   }
 
   ngOnDestroy(): void {
@@ -94,6 +105,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
     } else {
       this.searchResults = [];
     }
+    this.saveDraft();
   }
 
   private async performSearch(query: string): Promise<SearchResultItem[]> {
@@ -132,6 +144,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
         this.selectedItems = [item];
       }
     }
+    this.saveDraft();
   }
 
   isItemSelected(item: SearchResultItem): boolean {
@@ -144,6 +157,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
     this.selectedItems = this.selectedItems.filter(
       (i) => this.getItemId(i) !== this.getItemId(item)
     );
+    this.saveDraft();
   }
 
   // NEW: Toggle between 1-on-1 and group chat creation
@@ -152,6 +166,24 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
     // Clear selections when switching modes
     this.selectedItems = [];
     this.groupChatName = '';
+    this.saveDraft();
+  }
+
+  switchToOneOnOne(): void {
+    if (this.isCreatingGroupChat) {
+      this.isCreatingGroupChat = false;
+      this.selectedItems = [];
+      this.groupChatName = '';
+      this.saveDraft();
+    }
+  }
+
+  switchToGroupMode(): void {
+    if (!this.isCreatingGroupChat) {
+      this.isCreatingGroupChat = true;
+      this.selectedItems = [];
+      this.saveDraft();
+    }
   }
 
   async createChat(): Promise<void> {
@@ -198,6 +230,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
       }
 
       // Close dialog after successful creation
+      this.clearDraft();
       this.closeDialog();
     } catch (error) {
       console.error('Error creating chat:', error);
@@ -213,6 +246,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
     this.selectedItems = [];
     this.groupChatName = '';
     this.isCreatingGroupChat = false;
+    this.clearDraft();
     this.close.emit();
   }
 
@@ -280,5 +314,85 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
   // NEW: Check if we should show group chat toggle
   shouldShowGroupToggle(): boolean {
     return this.section === ChatSection.Operator;
+  }
+
+  saveDraft(): void {
+    try {
+      const draft = {
+        section: this.section,
+        isCreatingGroupChat: this.isCreatingGroupChat,
+        groupChatName: this.groupChatName,
+        searchQuery: this.searchQuery,
+        selectedItems: this.selectedItems.map((item) => {
+          if ('externalId' in item) {
+            const client = item as Client;
+            return {
+              kind: 'client' as const,
+              userId: client.userId,
+              fullName: client.fullName,
+              externalId: client.externalId,
+            };
+          } else {
+            const operator = item as any as {
+              userId: string;
+              value: string;
+              department: string;
+              role: string;
+            };
+            return {
+              kind: 'operator' as const,
+              userId: operator.userId,
+              value: operator.value,
+              department: operator.department,
+              role: operator.role,
+            };
+          }
+        }),
+      };
+      localStorage.setItem(this.DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch {}
+  }
+
+  private loadDraft(): void {
+    try {
+      const raw = localStorage.getItem(this.DRAFT_STORAGE_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+
+      // Only restore if the stored section matches current input section
+      if (draft.section && draft.section !== this.section) {
+        return;
+      }
+
+      this.isCreatingGroupChat = !!draft.isCreatingGroupChat;
+      this.groupChatName = draft.groupChatName || '';
+      this.searchQuery = draft.searchQuery || '';
+
+      if (Array.isArray(draft.selectedItems)) {
+        this.selectedItems = draft.selectedItems.map((it: any) => {
+          if (it.kind === 'client') {
+            return {
+              userId: it.userId,
+              fullName: it.fullName,
+              externalId: it.externalId,
+            } as Client;
+          } else {
+            return {
+              id: it.userId,
+              userId: it.userId,
+              value: it.value,
+              department: it.department,
+              role: it.role,
+            } as unknown as SearchResultItem;
+          }
+        });
+      }
+    } catch {}
+  }
+
+  private clearDraft(): void {
+    try {
+      localStorage.removeItem(this.DRAFT_STORAGE_KEY);
+    } catch {}
   }
 }

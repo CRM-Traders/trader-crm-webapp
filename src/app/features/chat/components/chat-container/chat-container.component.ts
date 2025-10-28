@@ -28,14 +28,21 @@ export class ChatContainerComponent implements OnInit, OnDestroy {
 
   // Add this property
   showNewChatDialog = false;
+  private readonly NEW_CHAT_OPEN_KEY = 'crm_new_chat_is_open';
 
   // Add this method
   openNewChatDialog(): void {
     this.showNewChatDialog = true;
+    try {
+      localStorage.setItem(this.NEW_CHAT_OPEN_KEY, 'true');
+    } catch {}
   }
 
   closeNewChatDialog(): void {
     this.showNewChatDialog = false;
+    try {
+      localStorage.removeItem(this.NEW_CHAT_OPEN_KEY);
+    } catch {}
   }
 
   isVisible = false;
@@ -71,6 +78,12 @@ export class ChatContainerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Restore new chat dialog open state
+    try {
+      const isOpen = localStorage.getItem(this.NEW_CHAT_OPEN_KEY);
+      this.showNewChatDialog = isOpen === 'true';
+    } catch {}
+
     // Subscribe to container visibility
     this.chatStateService.isChatContainerVisible
       .pipe(takeUntil(this.destroy$))

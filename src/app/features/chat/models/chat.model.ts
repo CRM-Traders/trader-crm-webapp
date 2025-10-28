@@ -52,6 +52,7 @@ export interface Message {
   createdAt: Date;
   isEdited: boolean;
   isDeleted: boolean;
+  sentAt: Date;
 }
 
 export interface ChatWindowState {

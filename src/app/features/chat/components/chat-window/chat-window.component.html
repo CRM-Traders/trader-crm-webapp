@@ -193,7 +193,7 @@
                 'text-gray-500 dark:text-gray-400': !isOwnMessage(message)
               }"
             >
-              {{ getMessageTime(message) }}
+              {{ getMessageTime(message.sentAt) }}
               <span *ngIf="message.isEdited" class="ml-1">(edited)</span>
             </p>
           </div>
