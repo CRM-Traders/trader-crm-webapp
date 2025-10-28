@@ -51,6 +51,9 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
   isLoading = false;
   groupChatName = '';
 
+  // NEW: Track if user wants to create a group chat (only for Operators section)
+  isCreatingGroupChat = false;
+
   private searchSubject$ = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -101,6 +104,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
           .toPromise();
         return response?.items || [];
       } else {
+        // For Operators section, always search operators (for both 1-on-1 and group)
         const response = await this.identityService
           .searchOperators(query, 0, 20)
           .toPromise();
@@ -120,7 +124,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
         (i) => this.getItemId(i) !== this.getItemId(item)
       );
     } else {
-      if (this.section === ChatSection.Group) {
+      if (this.isCreatingGroupChat) {
         // Allow multiple selections for group chats
         this.selectedItems.push(item);
       } else {
@@ -142,6 +146,14 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
     );
   }
 
+  // NEW: Toggle between 1-on-1 and group chat creation
+  toggleGroupChatMode(): void {
+    this.isCreatingGroupChat = !this.isCreatingGroupChat;
+    // Clear selections when switching modes
+    this.selectedItems = [];
+    this.groupChatName = '';
+  }
+
   async createChat(): Promise<void> {
     if (this.selectedItems.length === 0) {
       return;
@@ -155,34 +167,37 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
         const client = this.selectedItems[0] as Client;
         await this.chatService.createChat(
           ChatType.ClientToOperator,
-          client.userId // This is the client's userId
+          client.userId
         );
       } else if (this.section === ChatSection.Operator) {
-        // Create OperatorToOperator chat
-        const operator = this.selectedItems[0] as Operator;
-        await this.chatService.createChat(
-          ChatType.OperatorToOperator,
-          operator.userId // This is the other operator's userId
-        );
-      } else if (this.section === ChatSection.Group) {
-        // Create OperatorGroup chat
-        if (!this.groupChatName.trim()) {
-          alert('Please enter a group name');
-          this.isLoading = false;
-          return;
-        }
+        if (this.isCreatingGroupChat) {
+          // Create OperatorGroup chat
+          if (!this.groupChatName.trim()) {
+            alert('Please enter a group name');
+            this.isLoading = false;
+            return;
+          }
 
-        const operatorIds = this.selectedItems.map(
-          (item) => (item as Operator).userId
-        );
-        await this.chatService.createChat(
-          ChatType.OperatorGroup,
-          undefined,
-          this.groupChatName.trim(),
-          operatorIds
-        );
+          const operatorIds = this.selectedItems.map(
+            (item) => (item as Operator).userId
+          );
+          await this.chatService.createChat(
+            ChatType.OperatorGroup,
+            undefined,
+            this.groupChatName.trim(),
+            operatorIds
+          );
+        } else {
+          // Create OperatorToOperator chat (1-on-1)
+          const operator = this.selectedItems[0] as Operator;
+          await this.chatService.createChat(
+            ChatType.OperatorToOperator,
+            operator.userId
+          );
+        }
       }
 
+      // Close dialog after successful creation
       this.closeDialog();
     } catch (error) {
       console.error('Error creating chat:', error);
@@ -197,6 +212,7 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
     this.searchResults = [];
     this.selectedItems = [];
     this.groupChatName = '';
+    this.isCreatingGroupChat = false;
     this.close.emit();
   }
 
@@ -232,28 +248,20 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
   }
 
   getDialogTitle(): string {
-    switch (this.section) {
-      case ChatSection.Client:
-        return 'New Chat with Client';
-      case ChatSection.Operator:
-        return 'New Chat with Operator';
-      case ChatSection.Group:
-        return 'Create Group Chat';
-      default:
-        return 'New Chat';
+    if (this.section === ChatSection.Client) {
+      return 'New Chat with Client';
+    } else if (this.isCreatingGroupChat) {
+      return 'Create Group Chat';
+    } else {
+      return 'New Chat with Operator';
     }
   }
 
   getSearchPlaceholder(): string {
-    switch (this.section) {
-      case ChatSection.Client:
-        return 'Search clients by name or ID...';
-      case ChatSection.Operator:
-        return 'Search operators by name...';
-      case ChatSection.Group:
-        return 'Search operators to add...';
-      default:
-        return 'Search...';
+    if (this.section === ChatSection.Client) {
+      return 'Search clients by name or ID...';
+    } else {
+      return 'Search operators by name...';
     }
   }
 
@@ -262,10 +270,15 @@ export class NewChatDialogComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    if (this.section === ChatSection.Group && !this.groupChatName.trim()) {
+    if (this.isCreatingGroupChat && !this.groupChatName.trim()) {
       return false;
     }
 
     return true;
+  }
+
+  // NEW: Check if we should show group chat toggle
+  shouldShowGroupToggle(): boolean {
+    return this.section === ChatSection.Operator;
   }
 }

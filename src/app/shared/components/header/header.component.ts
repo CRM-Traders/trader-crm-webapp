@@ -48,8 +48,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.updateTime());
 
-    // Subscribe to unread count
-    //this.initializeChatCount();
+    // ✅ FIX: Initialize chat connection immediately
+    this.initializeChatCount();
 
     document.addEventListener('click', this.closeMenuOnClickOutside.bind(this));
   }
@@ -103,25 +103,26 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   openChat(): void {
     // Toggle chat container visibility
-    // We'll implement a global chat container that can be toggled
     this.chatStateService.toggleChatContainer();
   }
 
   private initializeChatCount(): void {
     if (!environment.enableChatHub) {
+      console.log('Chat hub is disabled in environment');
       return;
     }
 
     this.isLoadingChatCount = true;
 
-    // Initialize chat connection
+    // ✅ FIX: Initialize chat connection
     this.chatService
       .initializeConnection()
       .then(() => {
+        console.log('✅ Chat connection initialized successfully');
         this.isLoadingChatCount = false;
       })
       .catch((error) => {
-        console.error('Failed to initialize chat:', error);
+        console.error('❌ Failed to initialize chat:', error);
         this.isLoadingChatCount = false;
       });
 
@@ -130,6 +131,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((count) => {
         this.unreadChatCount = count;
+        console.log('📬 Unread chat count updated:', count);
       });
   }
 }

@@ -45,18 +45,12 @@
     </button>
   </div>
 
-  <!-- Section Tabs -->
+  <!-- Section Tabs - Only Client and Operators -->
   <div
     class="flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
   >
     <button
-      *ngFor="
-        let section of [
-          ChatSection.Client,
-          ChatSection.Operator,
-          ChatSection.Group
-        ]
-      "
+      *ngFor="let section of [ChatSection.Client, ChatSection.Operator]"
       (click)="onSectionClick(section)"
       class="flex-1 py-3 px-2 text-sm font-medium transition-colors relative"
       [class.text-blue-600]="section === activeSection"
@@ -119,67 +113,6 @@
   <!-- Chat List -->
   <div class="h-[480px] overflow-hidden">
     <app-chat-list [section]="activeSection"></app-chat-list>
-  </div>
-</div>
-
-<!-- Section Switch Confirmation Dialog -->
-<div
-  *ngIf="showSectionDialog"
-  class="fixed inset-0 bg-black/30 z-[60] flex items-center justify-center p-4"
-  (click)="cancelSectionSwitch()"
->
-  <div
-    class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 transform transition-all animate-scale-in"
-    (click)="$event.stopPropagation()"
-  >
-    <!-- Dialog Header -->
-    <div class="flex items-center space-x-3 mb-4">
-      <div
-        class="flex-shrink-0 w-10 h-10 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-6 w-6 text-yellow-600 dark:text-yellow-400"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-          />
-        </svg>
-      </div>
-      <div>
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Switch Chat Section?
-        </h3>
-      </div>
-    </div>
-
-    <!-- Dialog Content -->
-    <p class="text-gray-600 dark:text-gray-300 mb-6">
-      You have open chat windows. Switching sections will close all open chats.
-      Do you want to continue?
-    </p>
-
-    <!-- Dialog Actions -->
-    <div class="flex space-x-3 justify-end">
-      <button
-        (click)="cancelSectionSwitch()"
-        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-      >
-        Cancel
-      </button>
-      <button
-        (click)="confirmSectionSwitch()"
-        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Continue
-      </button>
-    </div>
   </div>
 </div>
 

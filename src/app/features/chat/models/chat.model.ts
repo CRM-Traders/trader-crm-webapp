@@ -16,8 +16,7 @@ export enum UserType {
 
 export enum ChatSection {
   Client = 'client',
-  Operator = 'operator',
-  Group = 'group',
+  Operator = 'operators', // Merged Operator and Group into one section
 }
 
 export interface Chat {

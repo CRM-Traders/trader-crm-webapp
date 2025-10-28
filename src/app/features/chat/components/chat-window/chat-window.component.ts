@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, debounceTime } from 'rxjs';
+import { Subject, takeUntil, debounceTime, filter, take } from 'rxjs';
 import { ChatService } from '../../services/chat.service';
 import { ChatStateService } from '../../services/chat-state.service';
 import { Chat, Message, MessageType } from '../../models/chat.model';
@@ -40,7 +40,7 @@ export class ChatWindowComponent
   messages: Message[] = [];
   messageContent = '';
   isMinimized = false;
-  isLoading = false;
+  isLoading = true; // ✅ Start with loading state
   typingUsers: string[] = [];
 
   private currentUserId: string = '';
@@ -54,8 +54,23 @@ export class ChatWindowComponent
   ngOnInit(): void {
     this.currentUserId = this.authService.getUserId() || '';
 
-    // Load chat data
+    // ✅ FIX: Subscribe to chat updates with proper filtering
+    this.chatService
+      .getChatById(this.chatId)
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((chat) => chat !== undefined) // Only proceed when chat is available
+      )
+      .subscribe((chat) => {
+        console.log('✅ Chat loaded in window:', chat?.name);
+        this.chat = chat;
+        this.isLoading = false;
+      });
+
+    // Load chat data immediately
     this.loadChat();
+
+    // Load messages
     this.loadMessages();
 
     // Subscribe to new messages
@@ -65,14 +80,6 @@ export class ChatWindowComponent
       .subscribe((messages) => {
         this.messages = messages;
         this.shouldScrollToBottom = true;
-      });
-
-    // Subscribe to chat updates
-    this.chatService
-      .getChatById(this.chatId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((chat) => {
-        this.chat = chat;
       });
 
     // Subscribe to typing indicators
@@ -126,22 +133,35 @@ export class ChatWindowComponent
 
   async loadChat(): Promise<void> {
     try {
-      // First try to get from local state
-      const chat = await this.chatService
+      console.log('🔄 Loading chat:', this.chatId);
+
+      // ✅ FIX: First, try to load from API if not in local state
+      // This ensures we have the chat data when opening a newly created chat
+      const chatFromObservable = await this.chatService
         .getChatById(this.chatId)
-        .pipe(takeUntil(this.destroy$))
+        .pipe(take(1))
         .toPromise();
 
-      if (chat) {
-        this.chat = chat;
-      } else {
-        // If not in local state, fetch from API
+      if (!chatFromObservable) {
+        // Chat not in local state, fetch from API
+        console.log('🌐 Fetching chat from API:', this.chatId);
         const apiChat = await this.chatService.loadChatById(this.chatId);
-        this.chat = apiChat;
+
+        if (apiChat) {
+          console.log('✅ Chat loaded from API:', apiChat.name);
+          this.chat = apiChat;
+          this.isLoading = false;
+        } else {
+          console.error('❌ Chat not found:', this.chatId);
+          this.close();
+        }
+      } else {
+        console.log('✅ Chat found in local state:', chatFromObservable.name);
+        this.chat = chatFromObservable;
+        this.isLoading = false;
       }
     } catch (error) {
-      console.error('Error loading chat:', error);
-      // Close this window if we can't load the chat
+      console.error('❌ Error loading chat:', error);
       this.close();
     }
   }

@@ -675,8 +675,6 @@ export class ChatService implements OnDestroy {
         return ChatType.ClientToOperator;
       case ChatSection.Operator:
         return ChatType.OperatorToOperator;
-      case ChatSection.Group:
-        return ChatType.OperatorGroup;
       default:
         return undefined;
     }
@@ -688,8 +686,6 @@ export class ChatService implements OnDestroy {
         return ChatSection.Client;
       case ChatType.OperatorToOperator:
         return ChatSection.Operator;
-      case ChatType.OperatorGroup:
-        return ChatSection.Group;
       default:
         return ChatSection.Client;
     }

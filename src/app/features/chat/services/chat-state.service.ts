@@ -281,12 +281,8 @@ export class ChatStateService {
   }
 
   private validateState(state: any): ChatState {
-    // Ensure the state has the required structure
-    const validSections = [
-      ChatSection.Client,
-      ChatSection.Operator,
-      ChatSection.Group,
-    ];
+    // ✅ FIX: Only validate against Client and Operators sections
+    const validSections = [ChatSection.Client, ChatSection.Operator];
 
     return {
       activeSection: validSections.includes(state.activeSection)

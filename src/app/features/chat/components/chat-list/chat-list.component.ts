@@ -24,6 +24,9 @@ export class ChatListComponent implements OnInit, OnDestroy {
   searchQuery = '';
   isLoading = false;
 
+  // Expose ChatType for template
+  ChatType = ChatType;
+
   private destroy$ = new Subject<void>();
   private searchSubject$ = new Subject<string>();
 
@@ -75,8 +78,18 @@ export class ChatListComponent implements OnInit, OnDestroy {
   }
 
   private filterChatsBySection(allChats: Chat[]): Chat[] {
-    const chatType = this.sectionToChatType(this.section);
-    return allChats.filter((chat) => chat.type === chatType);
+    if (this.section === ChatSection.Client) {
+      // Show only ClientToOperator chats
+      return allChats.filter((chat) => chat.type === ChatType.ClientToOperator);
+    } else if (this.section === ChatSection.Operator) {
+      // Show both OperatorToOperator AND OperatorGroup chats
+      return allChats.filter(
+        (chat) =>
+          chat.type === ChatType.OperatorToOperator ||
+          chat.type === ChatType.OperatorGroup
+      );
+    }
+    return [];
   }
 
   private applySearchFilter(): void {
@@ -91,19 +104,6 @@ export class ChatListComponent implements OnInit, OnDestroy {
         chat.name.toLowerCase().includes(query) ||
         (chat.lastMessage?.content || '').toLowerCase().includes(query)
     );
-  }
-
-  private sectionToChatType(section: ChatSection): ChatType {
-    switch (section) {
-      case ChatSection.Client:
-        return ChatType.ClientToOperator;
-      case ChatSection.Operator:
-        return ChatType.OperatorToOperator;
-      case ChatSection.Group:
-        return ChatType.OperatorGroup;
-      default:
-        return ChatType.ClientToOperator;
-    }
   }
 
   getLastMessagePreview(chat: Chat): string {
@@ -174,6 +174,11 @@ export class ChatListComponent implements OnInit, OnDestroy {
     // Return first letter of chat name, or '?' if name is empty
     const name = chat.name || 'Unknown';
     return name.charAt(0).toUpperCase();
+  }
+
+  // NEW: Check if chat is a group chat
+  isGroupChat(chat: Chat): boolean {
+    return chat.type === ChatType.OperatorGroup;
   }
 
   trackByChat(index: number, chat: Chat): string {
