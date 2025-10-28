@@ -7,10 +7,10 @@ import {
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, take, takeUntil } from 'rxjs';
 import { ChatStateService } from '../../services/chat-state.service';
 import { ChatService } from '../../services/chat.service';
-import { ChatSection } from '../../models/chat.model';
+import { ChatSection, ChatType } from '../../models/chat.model';
 import { ChatListComponent } from '../chat-list/chat-list.component';
 import { NewChatDialogComponent } from '../new-chat-dialog/new-chat-dialog.component';
 
@@ -168,6 +168,32 @@ export class ChatContainerComponent implements OnInit, OnDestroy {
       default:
         return '';
     }
+  }
+
+  getSectionUnreadCount(section: ChatSection): number {
+    // Get all chats from the service and filter by section
+    let unreadCount = 0;
+
+    this.chatService.chats.pipe(take(1)).subscribe((chats) => {
+      const sectionChats = chats.filter((chat) => {
+        if (section === ChatSection.Client) {
+          return chat.type === ChatType.ClientToOperator;
+        } else if (section === ChatSection.Operator) {
+          return (
+            chat.type === ChatType.OperatorToOperator ||
+            chat.type === ChatType.OperatorGroup
+          );
+        }
+        return false;
+      });
+
+      unreadCount = sectionChats.reduce(
+        (sum, chat) => sum + (chat.unreadCount || 0),
+        0
+      );
+    });
+
+    return unreadCount;
   }
 
   getPendingSectionLabel(): string {

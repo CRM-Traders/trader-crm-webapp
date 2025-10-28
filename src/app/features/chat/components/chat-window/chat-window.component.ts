@@ -59,10 +59,15 @@ export class ChatWindowComponent
       .getChatById(this.chatId)
       .pipe(
         takeUntil(this.destroy$),
-        filter((chat) => chat !== undefined) // Only proceed when chat is available
+        filter((chat) => chat !== undefined)
       )
       .subscribe((chat) => {
-        console.log('✅ Chat loaded in window:', chat?.name);
+        console.log(
+          '✅ Chat updated in window:',
+          chat?.name,
+          'Online:',
+          chat?.participants[0]?.isOnline
+        );
         this.chat = chat;
         this.isLoading = false;
       });

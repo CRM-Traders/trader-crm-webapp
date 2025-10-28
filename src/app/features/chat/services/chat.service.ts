@@ -42,8 +42,14 @@ export class ChatService implements OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor() {
+    console.log('🚀 ChatService initialized');
     this.initializeSignalRListeners();
     this.monitorConnection();
+
+    // Start SignalR connection immediately
+    this.initializeConnection().catch((error) => {
+      console.error('❌ Failed to start SignalR connection:', error);
+    });
   }
 
   ngOnDestroy(): void {
@@ -53,6 +59,9 @@ export class ChatService implements OnDestroy {
     // Cleanup typing timeouts
     this.typingTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.typingTimeouts.clear();
+
+    // Stop SignalR connection
+    this.disconnect();
   }
 
   // Utility method for safe date parsing
@@ -118,10 +127,18 @@ export class ChatService implements OnDestroy {
 
   // Initialize SignalR connection and listeners
   async initializeConnection(): Promise<void> {
-    await this.signalRService.start();
+    console.log('🔌 Initializing SignalR connection...');
+    try {
+      await this.signalRService.start();
+      console.log('✅ SignalR connection established');
+    } catch (error) {
+      console.error('❌ SignalR connection failed:', error);
+      throw error;
+    }
   }
 
   async disconnect(): Promise<void> {
+    console.log('🔌 Disconnecting SignalR...');
     await this.signalRService.stop();
   }
 
@@ -242,6 +259,8 @@ export class ChatService implements OnDestroy {
   // Load messages for a chat
   async loadMessages(chatId: string, page: number = 1): Promise<void> {
     try {
+      console.log(`📥 Loading messages for chat: ${chatId}`);
+
       const response = await this.httpService
         .getChatMessages(chatId, page)
         .toPromise();
@@ -267,22 +286,26 @@ export class ChatService implements OnDestroy {
 
         // Join the chat room via SignalR
         if (page === 1) {
+          console.log(`🔗 Joining chat room: ${chatId}`);
           await this.signalRService.joinChat(chatId);
           await this.markAsRead(chatId);
         }
       }
     } catch (error) {
+      console.error('❌ Error loading messages:', error);
       this.notificationService.error('Failed to load messages');
     }
   }
 
-  // Send a message with optimistic update
+  // Send a message
   async sendMessage(
     chatId: string,
     content: string,
     messageType: MessageType = MessageType.Text
   ): Promise<void> {
     try {
+      console.log(`📤 Sending message to chat: ${chatId}`);
+
       const request: SendMessageRequest = {
         chatId,
         content,
@@ -295,22 +318,22 @@ export class ChatService implements OnDestroy {
         .toPromise();
 
       if (sentMessage) {
-        // ✅ OPTIMISTIC UPDATE: Add message immediately from HTTP response
+        console.log('✅ Message sent successfully:', sentMessage.id);
+
+        // Add message immediately from HTTP response (optimistic update)
         const messageWithDate: Message = {
           ...sentMessage,
           createdAt: this.parseDate(sentMessage.createdAt),
         };
 
         // Add to messages immediately
-        this.addMessage(messageWithDate);
+        this.addMessage(messageWithDate, true); // Mark as own message
 
         // Update chat's last message
         this.updateChatLastMessage(messageWithDate);
       }
-
-      // SignalR will also send the message, but we have duplicate prevention
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
       this.notificationService.error(
         'Failed to send message. Please try again.'
       );
@@ -445,20 +468,10 @@ export class ChatService implements OnDestroy {
       }
 
       if (chat) {
-        // ✅ Add to local state immediately
+        // Add to local state immediately
         const currentChats = this.chats$.value;
         currentChats.set(chat.id, chat);
         this.chats$.next(new Map(currentChats));
-
-        // ✅ Trigger refresh of the chat list for the current section
-        const currentSection = this.stateService.activeSection;
-        const chatSection = this.chatTypeToSection(chat.type);
-
-        // If the new chat belongs to the current section, it's already visible
-        // If it's a different section, we might want to switch to it
-        if (chatSection === currentSection) {
-        } else {
-        }
 
         // Open the new chat window
         this.stateService.openChatWindow(chat.id);
@@ -478,28 +491,67 @@ export class ChatService implements OnDestroy {
   // Leave a chat room
   async leaveChat(chatId: string): Promise<void> {
     try {
+      console.log(`🚪 Leaving chat room: ${chatId}`);
       await this.signalRService.leaveChat(chatId);
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error leaving chat:', error);
+    }
   }
 
   // Private methods
   private initializeSignalRListeners(): void {
+    console.log('👂 Setting up SignalR listeners...');
+
     // Message received
     this.signalRService.onMessageReceived
       .pipe(takeUntil(this.destroy$))
-      .subscribe((message) => {
+      .subscribe((receivedData: any) => {
+        console.log('📨 RAW SignalR data received:', receivedData);
+
+        // ✅ FIX: Handle different SignalR message structures
+        let message: Message;
+
+        // Check if it's nested (e.g., {chatId: '...', message: {...}})
+        if (receivedData.message) {
+          console.log('📦 Message is nested, extracting...');
+          message = receivedData.message;
+        } else {
+          // Direct message object
+          message = receivedData;
+        }
+
+        console.log('📨 Extracted message:', message);
+
         const messageWithDate = {
           ...message,
           createdAt: this.parseDate(message.createdAt),
         };
-        this.addMessage(messageWithDate);
-        this.updateChatLastMessage(messageWithDate);
+
+        // Only add if it's not our own message (avoid double-add)
+        // Only add if it's not our own message (avoid double-add)
+        const currentUserId = this.getCurrentUserId();
+        if (message.senderId !== currentUserId) {
+          console.log('📨 Message from another user, adding to UI');
+          this.addMessage(messageWithDate, false);
+          this.updateChatLastMessage(messageWithDate);
+
+          // Play notification sound if chat window is not open
+          if (!this.stateService.isChatOpen(message.chatId)) {
+            console.log('🔔 Playing notification sound');
+            this.playNotificationSound();
+          }
+        } else {
+          console.log(
+            '📨 Message from current user, skipping (already added optimistically)'
+          );
+        }
       });
 
     // Message edited
     this.signalRService.onMessageEdited
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
+        console.log('✏️ Message edited via SignalR:', message);
         const messageWithDate = {
           ...message,
           createdAt: this.parseDate(message.createdAt),
@@ -511,6 +563,7 @@ export class ChatService implements OnDestroy {
     this.signalRService.onMessageDeleted
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ messageId, chatId }) => {
+        console.log('🗑️ Message deleted via SignalR:', messageId);
         this.removeMessage(messageId, chatId);
       });
 
@@ -518,34 +571,63 @@ export class ChatService implements OnDestroy {
     this.signalRService.onChatUpdated
       .pipe(takeUntil(this.destroy$))
       .subscribe((chat) => {
+        console.log('🔄 Chat updated via SignalR:', chat);
         this.updateChat(chat);
       });
 
     // Typing indicator
     this.signalRService.onUserTyping
       .pipe(takeUntil(this.destroy$))
-      .subscribe((event) => {
-        this.handleTypingEvent(event);
+      .subscribe((event: any) => {
+        console.log('⌨️ RAW Typing event received:', event);
+
+        // ✅ FIX: Extract the actual event data
+        let typingEvent = event;
+
+        // Handle if event is wrapped
+        if (event.event) {
+          typingEvent = event.event;
+        }
+
+        console.log('⌨️ Extracted typing event:', typingEvent);
+        this.handleTypingEvent(typingEvent);
       });
 
     // Online status changed
     this.signalRService.onOnlineStatusChanged
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ userId, isOnline }) => {
+        console.log(
+          `👤 User ${userId} is now ${isOnline ? 'online' : 'offline'}`
+        );
         this.updateUserOnlineStatus(userId, isOnline);
       });
+
+    console.log('✅ SignalR listeners configured');
   }
 
-  private addMessage(message: Message): void {
+  // ✅ FIX: Updated addMessage with better handling
+  private addMessage(message: Message, isOwnMessage: boolean = false): void {
     const currentMessages = this.messages$.value;
     const chatMessages = currentMessages.get(message.chatId) || [];
 
-    // Check if message already exists (prevent duplicates)
-    if (!chatMessages.find((m) => m.id === message.id)) {
+    console.log(`🔍 Checking message: ${message.id}, isOwn: ${isOwnMessage}`);
+    console.log(`🔍 Current messages in chat: ${chatMessages.length}`);
+
+    // Check if message already exists
+    const exists = chatMessages.find((m) => m.id === message.id);
+
+    if (!exists) {
+      console.log(`✅ Adding new message: ${message.id}`);
       chatMessages.push(message);
       currentMessages.set(message.chatId, chatMessages);
       this.messages$.next(new Map(currentMessages));
+
+      console.log(
+        `✅ Message added! Total messages now: ${chatMessages.length}`
+      );
     } else {
+      console.log(`⚠️ Duplicate message detected, skipping: ${message.id}`);
     }
   }
 
@@ -600,33 +682,58 @@ export class ChatService implements OnDestroy {
   }
 
   private handleTypingEvent(event: any): void {
+    console.log('⌨️ Processing typing event:', event);
+
+    // Ensure we have the required fields
+    if (!event.chatId || !event.userId || event.isTyping === undefined) {
+      console.error('❌ Invalid typing event structure:', event);
+      return;
+    }
+
     const currentTyping = this.typingUsers$.value;
     const chatTyping = currentTyping.get(event.chatId) || new Set<string>();
 
+    const currentUserId = this.getCurrentUserId();
+
     if (event.isTyping) {
-      chatTyping.add(event.userId);
+      // Don't show typing indicator for current user
+      if (event.userId !== currentUserId) {
+        console.log(
+          `✅ User ${event.userId} is typing in chat ${event.chatId}`
+        );
+        chatTyping.add(event.userId);
 
-      // Clear existing timeout
-      const timeoutKey = `${event.chatId}-${event.userId}`;
-      if (this.typingTimeouts.has(timeoutKey)) {
-        clearTimeout(this.typingTimeouts.get(timeoutKey));
+        // Clear existing timeout
+        const timeoutKey = `${event.chatId}-${event.userId}`;
+        if (this.typingTimeouts.has(timeoutKey)) {
+          clearTimeout(this.typingTimeouts.get(timeoutKey));
+        }
+
+        // Set new timeout to remove typing indicator after 3 seconds
+        const timeout = setTimeout(() => {
+          console.log(`⏱️ Typing timeout for user ${event.userId}`);
+          chatTyping.delete(event.userId);
+          currentTyping.set(event.chatId, new Set(chatTyping));
+          this.typingUsers$.next(new Map(currentTyping));
+          this.typingTimeouts.delete(timeoutKey);
+        }, 3000);
+
+        this.typingTimeouts.set(timeoutKey, timeout);
       }
-
-      // Set new timeout to remove typing indicator after 3 seconds
-      const timeout = setTimeout(() => {
-        chatTyping.delete(event.userId);
-        currentTyping.set(event.chatId, new Set(chatTyping));
-        this.typingUsers$.next(new Map(currentTyping));
-        this.typingTimeouts.delete(timeoutKey);
-      }, 3000);
-
-      this.typingTimeouts.set(timeoutKey, timeout);
     } else {
+      console.log(
+        `❌ User ${event.userId} stopped typing in chat ${event.chatId}`
+      );
       chatTyping.delete(event.userId);
     }
 
     currentTyping.set(event.chatId, new Set(chatTyping));
     this.typingUsers$.next(new Map(currentTyping));
+
+    console.log(
+      `⌨️ Typing users in chat ${event.chatId}:`,
+      Array.from(chatTyping)
+    );
   }
 
   private updateUserOnlineStatus(userId: string, isOnline: boolean): void {
@@ -656,6 +763,11 @@ export class ChatService implements OnDestroy {
     this.signalRService.connectionState
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
+        console.log(
+          '🔌 SignalR connection state:',
+          signalR.HubConnectionState[state]
+        );
+
         if (state === signalR.HubConnectionState.Connected) {
           this.notificationService.success('Chat connected', 2000);
         } else if (state === signalR.HubConnectionState.Reconnecting) {
@@ -688,6 +800,32 @@ export class ChatService implements OnDestroy {
         return ChatSection.Operator;
       default:
         return ChatSection.Client;
+    }
+  }
+
+  private playNotificationSound(): void {
+    try {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.5
+      );
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      console.error('Error playing notification sound:', error);
     }
   }
 }
