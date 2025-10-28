@@ -1,7 +1,7 @@
 <div
   class="fixed bottom-0 bg-white dark:bg-gray-800 rounded-t-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden transition-all duration-300 z-30"
   [ngClass]="{
-    'w-80 h-[500px]': !isMinimized,
+    'w-full max-w-sm h-[500px]': !isMinimized,
     'w-80 h-14': isMinimized
   }"
   [style.right.px]="getPositionOffset()"
@@ -276,7 +276,7 @@
         class="p-2 rounded-lg transition-colors"
         [ngClass]="{
           'bg-blue-600 text-white hover:bg-blue-700': messageContent.trim(),
-          'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-600 cursor-not-allowed':
+          'bg-gray-200 dark:bg-gray-400 text-gray-400 dark:text-gray-600 cursor-not-allowed':
             !messageContent.trim()
         }"
         title="Send message"

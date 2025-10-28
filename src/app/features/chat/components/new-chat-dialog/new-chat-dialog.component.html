@@ -1,7 +1,7 @@
 <!-- Dialog Backdrop -->
 <div
   *ngIf="isOpen"
-  class="fixed inset-0 bg-black bg-opacity-50 z-[70] flex items-center justify-center p-4"
+  class="fixed inset-0 bg-black/30 z-[70] flex items-center justify-center p-4"
   (click)="closeDialog()"
 >
   <div
@@ -17,7 +17,7 @@
       </h2>
       <button
         (click)="closeDialog()"
-        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-500/20 transition-colors"
         aria-label="Close"
       >
         <svg
@@ -103,7 +103,7 @@
             [(ngModel)]="searchQuery"
             (ngModelChange)="onSearchChange($event)"
             [placeholder]="getSearchPlaceholder()"
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+            class="w-full !pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           />
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -167,7 +167,7 @@
             [ngClass]="{
               'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500':
                 isItemSelected(item),
-              'hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-transparent':
+              'hover:bg-gray-50 dark:hover:bg-gray-500/20 border-2 border-transparent':
                 !isItemSelected(item)
             }"
           >
