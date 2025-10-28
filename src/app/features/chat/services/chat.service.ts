@@ -446,10 +446,7 @@ export class ChatService implements OnDestroy {
           throw new Error('Participant ID is required');
         }
         chat = await this.httpService
-          .createClientToOperatorChatByOperator(
-            participantId,
-            this.getCurrentUserId()!
-          )
+          .createClientToOperatorChatByOperator(participantId, 'Hi!')
           .toPromise();
       } else if (type === ChatType.OperatorToOperator) {
         if (!participantId) {

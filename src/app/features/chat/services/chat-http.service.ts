@@ -11,7 +11,7 @@ import {
 } from '../models/chat.model';
 
 export interface CreateClientToOperatorChatRequest {
-  operatorId: string;
+  initialMessage: string;
 }
 
 export interface CreateOperatorToOperatorChatRequest {
@@ -72,9 +72,9 @@ export class ChatHttpService {
   }
 
   // Create client to operator chat (by client)
-  createClientToOperatorChat(operatorId: string): Observable<Chat> {
+  createClientToOperatorChat(initialMessage: string): Observable<Chat> {
     const request: CreateClientToOperatorChatRequest = {
-      operatorId,
+      initialMessage,
     };
     return this.http.post<Chat>(
       `${this.baseEndpoint}/client-to-operator`,
@@ -85,10 +85,10 @@ export class ChatHttpService {
   // Create client to operator chat (by operator)
   createClientToOperatorChatByOperator(
     clientId: string,
-    operatorId: string
+    initialMessage: string
   ): Observable<Chat> {
     const request: CreateClientToOperatorChatRequest = {
-      operatorId,
+      initialMessage,
     };
     return this.http.post<Chat>(
       `${this.baseEndpoint}/client-to-operator-by-op/${clientId}`,
