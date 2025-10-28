@@ -1,6 +1,8 @@
-<div class="flex flex-col h-full bg-white dark:bg-gray-800">
+<div class="chat-list-wrapper bg-white dark:bg-gray-800">
   <!-- Search Bar -->
-  <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+  <div
+    class="search-container p-3 border-b border-gray-200 dark:border-gray-700"
+  >
     <div class="relative">
       <input
         type="text"
@@ -51,7 +53,7 @@
   </div>
 
   <!-- Chat List -->
-  <div class="flex-1 overflow-y-auto">
+  <div class="chat-list-scroll">
     <!-- Loading State -->
     <div *ngIf="isLoading" class="flex items-center justify-center h-32">
       <div
