@@ -42,14 +42,11 @@ export class ChatService implements OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor() {
-    console.log('🚀 ChatService initialized');
     this.initializeSignalRListeners();
     this.monitorConnection();
 
     // Start SignalR connection immediately
-    this.initializeConnection().catch((error) => {
-      console.error('❌ Failed to start SignalR connection:', error);
-    });
+    this.initializeConnection().catch((error) => {});
   }
 
   ngOnDestroy(): void {
@@ -84,8 +81,6 @@ export class ChatService implements OnDestroy {
       }
     }
 
-    // Fallback to current date
-    console.warn('Invalid date value:', dateValue);
     return new Date();
   }
 
@@ -127,18 +122,14 @@ export class ChatService implements OnDestroy {
 
   // Initialize SignalR connection and listeners
   async initializeConnection(): Promise<void> {
-    console.log('🔌 Initializing SignalR connection...');
     try {
       await this.signalRService.start();
-      console.log('✅ SignalR connection established');
     } catch (error) {
-      console.error('❌ SignalR connection failed:', error);
       throw error;
     }
   }
 
   async disconnect(): Promise<void> {
-    console.log('🔌 Disconnecting SignalR...');
     await this.signalRService.stop();
   }
 
@@ -154,17 +145,42 @@ export class ChatService implements OnDestroy {
         const chats = this.transformerService.transformChatsFromApi(apiChats);
 
         const currentChats = this.chats$.value;
-        const chatType = this.sectionToChatType(section);
 
-        // Filter chats by type
-        const filteredChats = chats.filter((chat) => chat.type === chatType);
+        // ✅ FIX: Filter chats based on section (handle Operator section specially)
+        let filteredChats: Chat[];
+        if (section === ChatSection.Client) {
+          filteredChats = chats.filter(
+            (chat) => chat.type === ChatType.ClientToOperator
+          );
+        } else if (section === ChatSection.Operator) {
+          // ✅ Include BOTH OperatorToOperator AND OperatorGroup
+          filteredChats = chats.filter(
+            (chat) =>
+              chat.type === ChatType.OperatorToOperator ||
+              chat.type === ChatType.OperatorGroup
+          );
+        } else {
+          filteredChats = [];
+        }
 
         // Clear existing chats for this section
         const existingChatIds = Array.from(currentChats.keys());
         existingChatIds.forEach((id) => {
           const existingChat = currentChats.get(id);
-          if (existingChat && existingChat.type === chatType) {
-            currentChats.delete(id);
+          if (existingChat) {
+            // Remove if it belongs to the current section
+            if (
+              section === ChatSection.Client &&
+              existingChat.type === ChatType.ClientToOperator
+            ) {
+              currentChats.delete(id);
+            } else if (
+              section === ChatSection.Operator &&
+              (existingChat.type === ChatType.OperatorToOperator ||
+                existingChat.type === ChatType.OperatorGroup)
+            ) {
+              currentChats.delete(id);
+            }
           }
         });
 
@@ -180,13 +196,11 @@ export class ChatService implements OnDestroy {
         await this.loadLastMessagesForChats(filteredChats);
       }
     } catch (error) {
-      console.error('Error loading chats:', error);
       this.notificationService.error('Failed to load chats');
     } finally {
       this.loading$.next(false);
     }
   }
-
   // Load last messages for chats
   private async loadLastMessagesForChats(chats: Chat[]): Promise<void> {
     const currentChats = this.chats$.value;
@@ -259,8 +273,6 @@ export class ChatService implements OnDestroy {
   // Load messages for a chat
   async loadMessages(chatId: string, page: number = 1): Promise<void> {
     try {
-      console.log(`📥 Loading messages for chat: ${chatId}`);
-
       const response = await this.httpService
         .getChatMessages(chatId, page)
         .toPromise();
@@ -286,7 +298,6 @@ export class ChatService implements OnDestroy {
 
         // Join the chat room via SignalR
         if (page === 1) {
-          console.log(`🔗 Joining chat room: ${chatId}`);
           await this.signalRService.joinChat(chatId);
           await this.markAsRead(chatId);
         }
@@ -304,8 +315,6 @@ export class ChatService implements OnDestroy {
     messageType: MessageType = MessageType.Text
   ): Promise<void> {
     try {
-      console.log(`📤 Sending message to chat: ${chatId}`);
-
       const request: SendMessageRequest = {
         chatId,
         content,
@@ -318,8 +327,6 @@ export class ChatService implements OnDestroy {
         .toPromise();
 
       if (sentMessage) {
-        console.log('✅ Message sent successfully:', sentMessage.id);
-
         // Add message immediately from HTTP response (optimistic update)
         const messageWithDate: Message = {
           ...sentMessage,
@@ -333,7 +340,6 @@ export class ChatService implements OnDestroy {
         this.updateChatLastMessage(messageWithDate);
       }
     } catch (error) {
-      console.error('❌ Error sending message:', error);
       this.notificationService.error(
         'Failed to send message. Please try again.'
       );
@@ -488,36 +494,26 @@ export class ChatService implements OnDestroy {
   // Leave a chat room
   async leaveChat(chatId: string): Promise<void> {
     try {
-      console.log(`🚪 Leaving chat room: ${chatId}`);
       await this.signalRService.leaveChat(chatId);
-    } catch (error) {
-      console.error('Error leaving chat:', error);
-    }
+    } catch (error) {}
   }
 
   // Private methods
   private initializeSignalRListeners(): void {
-    console.log('👂 Setting up SignalR listeners...');
-
     // Message received
     this.signalRService.onMessageReceived
       .pipe(takeUntil(this.destroy$))
       .subscribe((receivedData: any) => {
-        console.log('📨 RAW SignalR data received:', receivedData);
-
         // ✅ FIX: Handle different SignalR message structures
         let message: Message;
 
         // Check if it's nested (e.g., {chatId: '...', message: {...}})
         if (receivedData.message) {
-          console.log('📦 Message is nested, extracting...');
           message = receivedData.message;
         } else {
           // Direct message object
           message = receivedData;
         }
-
-        console.log('📨 Extracted message:', message);
 
         const messageWithDate = {
           ...message,
@@ -528,19 +524,14 @@ export class ChatService implements OnDestroy {
         // Only add if it's not our own message (avoid double-add)
         const currentUserId = this.getCurrentUserId();
         if (message.senderId !== currentUserId) {
-          console.log('📨 Message from another user, adding to UI');
           this.addMessage(messageWithDate, false);
           this.updateChatLastMessage(messageWithDate);
 
           // Play notification sound if chat window is not open
           if (!this.stateService.isChatOpen(message.chatId)) {
-            console.log('🔔 Playing notification sound');
             this.playNotificationSound();
           }
         } else {
-          console.log(
-            '📨 Message from current user, skipping (already added optimistically)'
-          );
         }
       });
 
@@ -548,7 +539,6 @@ export class ChatService implements OnDestroy {
     this.signalRService.onMessageEdited
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
-        console.log('✏️ Message edited via SignalR:', message);
         const messageWithDate = {
           ...message,
           createdAt: this.parseDate(message.createdAt),
@@ -560,7 +550,6 @@ export class ChatService implements OnDestroy {
     this.signalRService.onMessageDeleted
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ messageId, chatId }) => {
-        console.log('🗑️ Message deleted via SignalR:', messageId);
         this.removeMessage(messageId, chatId);
       });
 
@@ -568,7 +557,6 @@ export class ChatService implements OnDestroy {
     this.signalRService.onChatUpdated
       .pipe(takeUntil(this.destroy$))
       .subscribe((chat) => {
-        console.log('🔄 Chat updated via SignalR:', chat);
         this.updateChat(chat);
       });
 
@@ -576,8 +564,6 @@ export class ChatService implements OnDestroy {
     this.signalRService.onUserTyping
       .pipe(takeUntil(this.destroy$))
       .subscribe((event: any) => {
-        console.log('⌨️ RAW Typing event received:', event);
-
         // ✅ FIX: Extract the actual event data
         let typingEvent = event;
 
@@ -585,8 +571,6 @@ export class ChatService implements OnDestroy {
         if (event.event) {
           typingEvent = event.event;
         }
-
-        console.log('⌨️ Extracted typing event:', typingEvent);
         this.handleTypingEvent(typingEvent);
       });
 
@@ -594,37 +578,22 @@ export class ChatService implements OnDestroy {
     this.signalRService.onOnlineStatusChanged
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ userId, isOnline }) => {
-        console.log(
-          `👤 User ${userId} is now ${isOnline ? 'online' : 'offline'}`
-        );
         this.updateUserOnlineStatus(userId, isOnline);
       });
-
-    console.log('✅ SignalR listeners configured');
   }
 
   // ✅ FIX: Updated addMessage with better handling
   private addMessage(message: Message, isOwnMessage: boolean = false): void {
     const currentMessages = this.messages$.value;
     const chatMessages = currentMessages.get(message.chatId) || [];
-
-    console.log(`🔍 Checking message: ${message.id}, isOwn: ${isOwnMessage}`);
-    console.log(`🔍 Current messages in chat: ${chatMessages.length}`);
-
     // Check if message already exists
     const exists = chatMessages.find((m) => m.id === message.id);
 
     if (!exists) {
-      console.log(`✅ Adding new message: ${message.id}`);
       chatMessages.push(message);
       currentMessages.set(message.chatId, chatMessages);
       this.messages$.next(new Map(currentMessages));
-
-      console.log(
-        `✅ Message added! Total messages now: ${chatMessages.length}`
-      );
     } else {
-      console.log(`⚠️ Duplicate message detected, skipping: ${message.id}`);
     }
   }
 
@@ -679,11 +648,8 @@ export class ChatService implements OnDestroy {
   }
 
   private handleTypingEvent(event: any): void {
-    console.log('⌨️ Processing typing event:', event);
-
     // Ensure we have the required fields
     if (!event.chatId || !event.userId || event.isTyping === undefined) {
-      console.error('❌ Invalid typing event structure:', event);
       return;
     }
 
@@ -695,9 +661,6 @@ export class ChatService implements OnDestroy {
     if (event.isTyping) {
       // Don't show typing indicator for current user
       if (event.userId !== currentUserId) {
-        console.log(
-          `✅ User ${event.userId} is typing in chat ${event.chatId}`
-        );
         chatTyping.add(event.userId);
 
         // Clear existing timeout
@@ -708,7 +671,6 @@ export class ChatService implements OnDestroy {
 
         // Set new timeout to remove typing indicator after 3 seconds
         const timeout = setTimeout(() => {
-          console.log(`⏱️ Typing timeout for user ${event.userId}`);
           chatTyping.delete(event.userId);
           currentTyping.set(event.chatId, new Set(chatTyping));
           this.typingUsers$.next(new Map(currentTyping));
@@ -718,19 +680,11 @@ export class ChatService implements OnDestroy {
         this.typingTimeouts.set(timeoutKey, timeout);
       }
     } else {
-      console.log(
-        `❌ User ${event.userId} stopped typing in chat ${event.chatId}`
-      );
       chatTyping.delete(event.userId);
     }
 
     currentTyping.set(event.chatId, new Set(chatTyping));
     this.typingUsers$.next(new Map(currentTyping));
-
-    console.log(
-      `⌨️ Typing users in chat ${event.chatId}:`,
-      Array.from(chatTyping)
-    );
   }
 
   private updateUserOnlineStatus(userId: string, isOnline: boolean): void {
@@ -760,11 +714,6 @@ export class ChatService implements OnDestroy {
     this.signalRService.connectionState
       .pipe(takeUntil(this.destroy$))
       .subscribe((state) => {
-        console.log(
-          '🔌 SignalR connection state:',
-          signalR.HubConnectionState[state]
-        );
-
         if (state === signalR.HubConnectionState.Connected) {
           this.notificationService.success('Chat connected', 2000);
         } else if (state === signalR.HubConnectionState.Reconnecting) {

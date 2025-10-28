@@ -114,8 +114,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.chatService
       .initializeConnection()
       .then(() => {
-        console.log('✅ Chat connection initialized successfully');
-
         // ✅ Load all chats to get unread counts
         return Promise.all([
           this.chatService.loadChats(ChatSection.Client),
@@ -123,7 +121,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         ]);
       })
       .then(() => {
-        console.log('✅ All chats loaded successfully');
         this.isLoadingChatCount = false;
       })
       .catch((error) => {
@@ -136,7 +133,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((count) => {
         this.unreadChatCount = count;
-        console.log('📬 Unread chat count updated:', count);
       });
   }
 }

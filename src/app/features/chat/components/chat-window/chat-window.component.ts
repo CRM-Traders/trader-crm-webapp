@@ -62,12 +62,6 @@ export class ChatWindowComponent
         filter((chat) => chat !== undefined)
       )
       .subscribe((chat) => {
-        console.log(
-          '✅ Chat updated in window:',
-          chat?.name,
-          'Online:',
-          chat?.participants[0]?.isOnline
-        );
         this.chat = chat;
         this.isLoading = false;
       });
@@ -138,22 +132,15 @@ export class ChatWindowComponent
 
   async loadChat(): Promise<void> {
     try {
-      console.log('🔄 Loading chat:', this.chatId);
-
-      // ✅ FIX: First, try to load from API if not in local state
-      // This ensures we have the chat data when opening a newly created chat
       const chatFromObservable = await this.chatService
         .getChatById(this.chatId)
         .pipe(take(1))
         .toPromise();
 
       if (!chatFromObservable) {
-        // Chat not in local state, fetch from API
-        console.log('🌐 Fetching chat from API:', this.chatId);
         const apiChat = await this.chatService.loadChatById(this.chatId);
 
         if (apiChat) {
-          console.log('✅ Chat loaded from API:', apiChat.name);
           this.chat = apiChat;
           this.isLoading = false;
         } else {
@@ -161,7 +148,6 @@ export class ChatWindowComponent
           this.close();
         }
       } else {
-        console.log('✅ Chat found in local state:', chatFromObservable.name);
         this.chat = chatFromObservable;
         this.isLoading = false;
       }
