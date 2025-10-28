@@ -345,8 +345,11 @@ export class ClientsComponent implements OnInit {
       field: 'assignOperator',
       header: 'Assign Operator',
       sortable: false,
-      filterable: false,
       cellTemplate: null,
+      filterable: true,
+      filterType: 'select',
+      filterOptions: [], // Will be populated in ngOnInit
+      hidden: true,
       selector: (row: Client) => row,
       permission: 2,
     },
@@ -933,6 +936,15 @@ export class ClientsComponent implements OnInit {
           'operatorId',
           this.processOperatorFilterOptions(operators, null)
         );
+        this.updateColumnFilterOptions(
+          'assignOperator',
+          this.processOperatorFilterOptions(operators, null)
+        );
+        this.updateColumnFilterOptions(
+          'operatorName',
+          this.processOperatorFilterOptions(operators, null)
+        );
+
         this.updateColumnFilterOptions(
           'retentionOperatorId',
           this.processOperatorFilterOptions(operators, 'Retention')
@@ -1810,6 +1822,15 @@ export class ClientsComponent implements OnInit {
             'salesOperatorId',
             this.processOperatorFilterOptions(operators, 'Sales')
           );
+          this.updateColumnFilterOptions(
+            'assignOperator',
+            this.processOperatorFilterOptions(operators, null)
+          );
+          this.updateColumnFilterOptions(
+            'operatorName',
+            this.processOperatorFilterOptions(operators, null)
+          );
+
           this.updateColumnFilterOptions('timezone', timezones);
 
           this.operators = operators;

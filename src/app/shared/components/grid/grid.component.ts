@@ -42,6 +42,8 @@ import { HasPermissionDirective } from '../../../core/directives/has-permission.
 import { AuthService } from '../../../core/services/auth.service';
 import { GridSavedFiltersComponent } from '../grid-saved-filters/grid-saved-filters.component';
 import { SavedFilter } from '../../models/grid/saved-filter.model';
+import { GridFilter } from '../../models/grid/grid-filter.model';
+import { FilterOperator } from '../../models/grid/filter-operator.model';
 
 @Component({
   selector: 'app-grid',
@@ -68,6 +70,11 @@ export class GridComponent implements OnInit, OnDestroy {
   private globalFilterSubject = new Subject<string>();
   draggedColumnIndex: number | null = null;
   dragOverColumnIndex: number | null = null;
+
+  // Inline column filter state
+  openColumnFilterId: string | null = null;
+  columnFilterValues: Record<string, any> = {};
+  columnFilterSearchTerms: Record<string, string> = {};
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
   @ViewChild('columnSelectorDropdown', { static: false })
@@ -184,6 +191,26 @@ export class GridComponent implements OnInit, OnDestroy {
         this.isColumnSelectorVisible = false;
       }
     }
+
+    // Close inline column filter if click is outside
+    if (this.openColumnFilterId) {
+      const target = event.target as HTMLElement;
+      const filterDropdown = this.gridContainer?.nativeElement.querySelector(
+        `[data-column-filter="${this.openColumnFilterId}"]`
+      );
+      const filterButton = this.gridContainer?.nativeElement.querySelector(
+        `[data-column-filter-button="${this.openColumnFilterId}"]`
+      );
+
+      if (
+        filterDropdown &&
+        !filterDropdown.contains(target) &&
+        filterButton &&
+        !filterButton.contains(target)
+      ) {
+        this.openColumnFilterId = null;
+      }
+    }
   }
 
   @HostListener('document:contextmenu', ['$event'])
@@ -289,6 +316,12 @@ export class GridComponent implements OnInit, OnDestroy {
             return;
           }
           this.currentFilterState = state.filters;
+
+          // Initialize column filter values from current state
+          Object.entries(state.filters.filters).forEach(([field, filter]) => {
+            this.columnFilterValues[field] =
+              this.extractColumnFilterValue(filter);
+          });
         }
 
         this.activeFilterId = state.activeFilterId;
@@ -300,6 +333,263 @@ export class GridComponent implements OnInit, OnDestroy {
     } else {
       this.processLocalData();
     }
+  }
+
+  // Inline column filter methods
+  toggleColumnFilter(column: GridColumn, event: Event): void {
+    event.stopPropagation();
+
+    if (this.openColumnFilterId === column.field) {
+      this.openColumnFilterId = null;
+    } else {
+      this.openColumnFilterId = column.field;
+
+      // Initialize filter value if not exists
+      if (!this.columnFilterValues[column.field]) {
+        const existingFilter = this.currentFilterState.filters[column.field];
+        if (existingFilter) {
+          this.columnFilterValues[column.field] =
+            this.extractColumnFilterValue(existingFilter);
+        } else {
+          this.columnFilterValues[column.field] =
+            this.getDefaultColumnFilterValue(column);
+        }
+      }
+
+      // Initialize search term
+      if (!this.columnFilterSearchTerms[column.field]) {
+        this.columnFilterSearchTerms[column.field] = '';
+      }
+    }
+  }
+
+  isColumnFilterOpen(columnField: string): boolean {
+    return this.openColumnFilterId === columnField;
+  }
+
+  getColumnFilterType(column: GridColumn): string {
+    const filterType =
+      column.filterType || this.getFilterTypeFromColumnType(column.type);
+    return filterType;
+  }
+
+  private getFilterTypeFromColumnType(columnType?: string): string {
+    switch (columnType) {
+      case 'number':
+      case 'currency':
+        return 'number';
+      case 'date':
+        return 'date';
+      case 'boolean':
+        return 'boolean';
+      default:
+        return 'text';
+    }
+  }
+
+  private getDefaultColumnFilterValue(column: GridColumn): any {
+    const filterType = this.getColumnFilterType(column);
+
+    switch (filterType) {
+      case 'number':
+      case 'date':
+        return { from: null, to: null };
+      case 'boolean':
+        return null;
+      case 'select':
+        return [];
+      default:
+        return '';
+    }
+  }
+
+  private extractColumnFilterValue(filter: GridFilter): any {
+    if (
+      filter.operator === FilterOperator.BETWEEN &&
+      Array.isArray(filter.value)
+    ) {
+      return { from: filter.value[0], to: filter.value[1] };
+    } else if (
+      filter.operator === FilterOperator.IN &&
+      Array.isArray(filter.value)
+    ) {
+      return filter.value;
+    } else {
+      return filter.value;
+    }
+  }
+
+  applyColumnFilter(column: GridColumn): void {
+    const filterValue = this.columnFilterValues[column.field];
+    const filterType = this.getColumnFilterType(column);
+
+    // Determine operator and value based on type
+    let operator: FilterOperator;
+    let value: any;
+
+    switch (filterType) {
+      case 'text':
+        if (!filterValue || filterValue.trim() === '') {
+          this.removeColumnFilter(column);
+          return;
+        }
+        operator = FilterOperator.CONTAINS;
+        value = filterValue;
+        break;
+
+      case 'number':
+      case 'date':
+        if (
+          filterValue.from !== null &&
+          filterValue.from !== undefined &&
+          filterValue.to !== null &&
+          filterValue.to !== undefined
+        ) {
+          operator = FilterOperator.BETWEEN;
+          value = [filterValue.from, filterValue.to];
+        } else if (
+          filterValue.from !== null &&
+          filterValue.from !== undefined
+        ) {
+          operator = FilterOperator.GREATER_THAN_OR_EQUALS;
+          value = filterValue.from;
+        } else if (filterValue.to !== null && filterValue.to !== undefined) {
+          operator = FilterOperator.LESS_THAN_OR_EQUALS;
+          value = filterValue.to;
+        } else {
+          this.removeColumnFilter(column);
+          return;
+        }
+        break;
+
+      case 'boolean':
+        if (
+          filterValue === null ||
+          filterValue === undefined ||
+          filterValue === ''
+        ) {
+          this.removeColumnFilter(column);
+          return;
+        }
+        operator = FilterOperator.EQUALS;
+        value = filterValue;
+        break;
+
+      case 'select':
+        if (!Array.isArray(filterValue) || filterValue.length === 0) {
+          this.removeColumnFilter(column);
+          return;
+        }
+        operator = FilterOperator.IN;
+        value = filterValue;
+        break;
+
+      default:
+        return;
+    }
+
+    const gridFilter: GridFilter = {
+      field: column.field,
+      operator,
+      value,
+    };
+
+    this.gridService.setFilter(this.gridId, gridFilter);
+
+    // Update current filter state
+    this.currentFilterState.filters[column.field] = gridFilter;
+    this.filterChange.emit(this.currentFilterState);
+
+    // Reset pagination
+    this.pagination.pageIndex = 0;
+    this.gridService.setPagination(this.gridId, { pageIndex: 0 });
+
+    if (this.endpoint) {
+      this.fetchData();
+    }
+
+    this.clearSelection();
+  }
+
+  removeColumnFilter(column: GridColumn): void {
+    delete this.columnFilterValues[column.field];
+    delete this.columnFilterSearchTerms[column.field];
+
+    this.gridService.removeFilter(this.gridId, column.field);
+    delete this.currentFilterState.filters[column.field];
+
+    this.filterChange.emit(this.currentFilterState);
+
+    this.pagination.pageIndex = 0;
+    this.gridService.setPagination(this.gridId, { pageIndex: 0 });
+
+    if (this.endpoint) {
+      this.fetchData();
+    }
+
+    this.clearSelection();
+  }
+
+  clearColumnFilter(column: GridColumn): void {
+    this.columnFilterValues[column.field] =
+      this.getDefaultColumnFilterValue(column);
+    this.columnFilterSearchTerms[column.field] = '';
+    this.removeColumnFilter(column);
+  }
+
+  hasColumnFilter(column: GridColumn): boolean {
+    return !!this.currentFilterState.filters[column.field];
+  }
+
+  getColumnFilterOptions(column: GridColumn): any[] {
+    return column.filterOptions || [];
+  }
+
+  getFilteredColumnOptions(column: GridColumn): any[] {
+    const options = this.getColumnFilterOptions(column);
+    const searchTerm = (
+      this.columnFilterSearchTerms[column.field] || ''
+    ).toLowerCase();
+
+    if (!searchTerm) {
+      return options;
+    }
+
+    return options.filter((opt: any) => {
+      const label = String(opt?.label ?? '').toLowerCase();
+      const value = String(opt?.value ?? '').toLowerCase();
+      return label.includes(searchTerm) || value.includes(searchTerm);
+    });
+  }
+
+  toggleColumnFilterOption(column: GridColumn, optionValue: any): void {
+    if (!this.columnFilterValues[column.field]) {
+      this.columnFilterValues[column.field] = [];
+    }
+
+    const values = this.columnFilterValues[column.field];
+    const index = values.indexOf(optionValue);
+
+    if (index === -1) {
+      values.push(optionValue);
+    } else {
+      values.splice(index, 1);
+    }
+
+    this.applyColumnFilter(column);
+  }
+
+  selectAllColumnOptions(column: GridColumn): void {
+    const allOptions = this.getColumnFilterOptions(column);
+    this.columnFilterValues[column.field] = allOptions.map(
+      (opt: any) => opt.value
+    );
+    this.applyColumnFilter(column);
+  }
+
+  clearAllColumnOptions(column: GridColumn): void {
+    this.columnFilterValues[column.field] = [];
+    this.removeColumnFilter(column);
   }
 
   loadSavedFilters(): void {
@@ -401,6 +691,10 @@ export class GridComponent implements OnInit, OnDestroy {
       filters: {},
       globalFilter: undefined,
     };
+
+    // Clear column filter values
+    this.columnFilterValues = {};
+    this.columnFilterSearchTerms = {};
 
     this.filterChange.emit(this.currentFilterState);
 
