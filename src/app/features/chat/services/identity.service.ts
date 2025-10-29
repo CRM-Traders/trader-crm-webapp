@@ -10,9 +10,11 @@ export interface ClientSearchRequest {
 }
 
 export interface OperatorSearchRequest {
-  searchTerm?: string | null;
-  pageIndex?: number;
-  pageSize?: number;
+  pageIndex: number;
+  pageSize: number;
+  sortField: string;
+  sortDirection: string;
+  globalFilter: string;
 }
 
 export interface Client {
@@ -66,12 +68,14 @@ export class IdentityService {
   searchOperators(
     searchTerm: string | null = null,
     pageIndex: number = 0,
-    pageSize: number = 20
+    pageSize: number = 1000
   ): Observable<SearchResponse<Operator>> {
     const request: OperatorSearchRequest = {
-      searchTerm,
       pageIndex,
       pageSize,
+      sortField: '',
+      sortDirection: 'asc',
+      globalFilter: searchTerm ?? '',
     };
 
     return this.http.post<SearchResponse<Operator>>(
