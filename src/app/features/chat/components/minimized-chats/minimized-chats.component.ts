@@ -60,15 +60,33 @@ export class MinimizedChatsComponent implements OnInit, OnDestroy {
   }
 
   getChatName(chat?: Chat): string {
-    return chat?.name || 'Chat';
+    if (!chat) {
+      return 'Chat';
+    }
+
+    if (chat.name && chat.name.trim().length > 0) {
+      return chat.name;
+    }
+
+    const currentUserId = this.chatService.getCurrentUserId();
+    const otherParticipant = chat.participants?.find(
+      (p) => p.userId !== currentUserId
+    ) || chat.participants?.[0];
+
+    return otherParticipant?.name?.trim() || 'Chat';
   }
 
   getChatAvatar(chat?: Chat): string {
-    return chat?.name.charAt(0).toUpperCase() || '?';
+    const name = this.getChatName(chat);
+    return name.trim().charAt(0).toUpperCase();
   }
 
   getOnlineStatus(chat?: Chat): boolean {
-    return chat?.participants[0]?.isOnline || false;
+    const currentUserId = this.chatService.getCurrentUserId();
+    const otherParticipant = chat?.participants?.find(
+      (p) => p.userId !== currentUserId
+    ) || chat?.participants?.[0];
+    return otherParticipant?.isOnline ?? chat?.isOnline ?? false;
   }
 
   trackByChat(index: number, item: MinimizedChatDisplay): string {

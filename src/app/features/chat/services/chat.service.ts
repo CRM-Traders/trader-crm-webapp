@@ -471,6 +471,9 @@ export class ChatService implements OnDestroy {
       }
 
       if (chat) {
+        // Ensure chat has a proper name saved
+        chat = this.normalizeChatName(chat);
+
         // Add to local state immediately
         const currentChats = this.chats$.value;
         currentChats.set(chat.id, chat);
@@ -489,6 +492,32 @@ export class ChatService implements OnDestroy {
       this.notificationService.error('Failed to create chat');
       throw error;
     }
+  }
+
+  private normalizeChatName(chat: Chat): Chat {
+    const normalized: Chat = { ...chat };
+
+    const hasValidName =
+      typeof normalized.name === 'string' && normalized.name.trim().length > 0;
+
+    if (!hasValidName) {
+      if (normalized.type === ChatType.OperatorGroup) {
+        // Some APIs return groupName separately; attempt to use it if present
+        const anyChat = normalized as any;
+        normalized.name = (anyChat.groupName as string) || 'Group Chat';
+      } else {
+        const currentUserId = this.getCurrentUserId();
+        const otherParticipant =
+          normalized.participants?.find((p) => p.userId !== currentUserId) ||
+          normalized.participants?.[0];
+        normalized.name = otherParticipant?.name?.trim() || 'Chat';
+      }
+    }
+
+    // Ensure unreadCount is a number
+    normalized.unreadCount = normalized.unreadCount || 0;
+
+    return normalized;
   }
 
   // Leave a chat room
