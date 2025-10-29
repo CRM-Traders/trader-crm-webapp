@@ -54,17 +54,7 @@
           Refresh Data
         </button>
       </div>
-    </div>
-
-    <!-- Loading State -->
-    <div *ngIf="loading()" class="flex justify-center items-center py-12">
-      <div
-        class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
-      ></div>
-      <span class="ml-3 text-gray-600 dark:text-gray-400"
-        >Loading client data...</span
-      >
-    </div>
+    </div>  
   </div>
 
   <!-- Tabs Section -->
@@ -158,8 +148,14 @@
       </div>
 
       <!-- Order Status Filter Sections (only for orders tab) -->
-      <div *ngIf="selectedTab() === 'orders' && !ordersLoading()" class="mb-6">
-        <div class="flex flex-wrap gap-2">
+      <div *ngIf="selectedTab() === 'orders'" class="mb-6">
+        <!-- Skeleton Loading for Filter Buttons -->
+        <div *ngIf="ordersLoading()" class="flex flex-wrap gap-2">
+          <div *ngFor="let skeleton of [1, 2, 3, 4, 5, 6, 7]" class="h-10 bg-gray-200 dark:bg-gray-400/30 rounded-lg w-24 animate-pulse"></div>
+        </div>
+        
+        <!-- Actual Filter Buttons -->
+        <div *ngIf="!ordersLoading()" class="flex flex-wrap gap-2">
           <button
             (click)="onOrderStatusChange(null)"
             [class]="
@@ -308,25 +304,13 @@
             </span>
           </button>
         </div>
+        </div>
       </div>
 
-      <!-- Loading State -->
-      <div
-        *ngIf="ordersLoading() || transactionsLoading()"
-        class="flex justify-center items-center py-8"
-      >
-        <div
-          class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"
-        ></div>
-        <span class="ml-3 text-gray-600 dark:text-gray-400"
-          >Loading
-          {{ selectedTab() === "orders" ? "orders" : "transactions" }}...</span
-        >
-      </div>
 
       <!-- Orders Table -->
       <div
-        *ngIf="!ordersLoading() && selectedTab() === 'orders'"
+        *ngIf="selectedTab() === 'orders'"
         class="overflow-x-auto"
       >
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -398,11 +382,91 @@
           <tbody
             class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30"
           >
+            <!-- Skeleton Loading Rows -->
+            <ng-container *ngIf="ordersLoading()">
+              <tr *ngFor="let skeleton of [1, 2, 3, 4, 5]">
+                <!-- Symbol -->
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Type / Side -->
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                    <div class="h-5 bg-gray-200 dark:bg-gray-400/30 rounded-full w-12 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Price -->
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                  <div class="flex flex-col items-end gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-8 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Quantity -->
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                  <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse ml-auto"></div>
+                </td>
+                <!-- Filled -->
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                  <div class="flex flex-col items-end gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-8 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Status -->
+                <td class="px-4 py-3 whitespace-nowrap text-center">
+                  <div class="h-6 bg-gray-200 dark:bg-gray-400/30 rounded-full w-16 mx-auto animate-pulse"></div>
+                </td>
+                <!-- Margin -->
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                  <div class="flex flex-col items-end gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Target Profit -->
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                  <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse ml-auto"></div>
+                </td>
+                <!-- Fees -->
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                  <div class="flex flex-col items-end gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-8 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- P&L -->
+                <td class="px-4 py-3 whitespace-nowrap text-right">
+                  <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse ml-auto"></div>
+                </td>
+                <!-- Created -->
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Actions -->
+                <td class="px-4 py-3 whitespace-nowrap text-center" *hasPermission="181">
+                  <div class="flex items-center justify-center gap-2">
+                    <div class="h-6 w-6 bg-gray-200 dark:bg-gray-400/30 rounded animate-pulse"></div>
+                    <div class="h-6 w-6 bg-gray-200 dark:bg-gray-400/30 rounded animate-pulse"></div>
+                    <div class="h-6 w-6 bg-gray-200 dark:bg-gray-400/30 rounded animate-pulse"></div>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+
             <!-- Orders -->
-            <tr
-              *ngFor="let order of filteredOrders(); trackBy: trackByOrderId"
-              class="hover:bg-gray-50 dark:hover:bg-gray-700/10 transition-colors"
-            >
+            <ng-container *ngIf="!ordersLoading()">
+              <tr
+                *ngFor="let order of filteredOrders(); trackBy: trackByOrderId"
+                class="hover:bg-gray-50 dark:hover:bg-gray-700/10 transition-colors"
+              >
               <!-- Symbol -->
               <td class="px-4 py-3 whitespace-nowrap">
                 <div class="flex flex-col">
@@ -554,39 +618,10 @@
               <td class="px-4 py-3 whitespace-nowrap text-right">
                 <div class="flex flex-col items-end">
                   <span
-                    class="text-sm font-semibold"
-                    [ngClass]="{
-                      'text-green-600 dark:text-green-400':
-                        (order.unrealizedPnL || 0) > 0,
-                      'text-red-600 dark:text-red-400':
-                        (order.unrealizedPnL || 0) < 0,
-                      'text-gray-600 dark:text-gray-400':
-                        (order.unrealizedPnL || 0) === 0
-                    }"
-                  >
-                    {{ (order.unrealizedPnL || 0) >= 0 ? "+" : "" }}${{
-                      order.unrealizedPnL || 0 | number : "1.2-2"
-                    }}
-                  </span>
-                  <span
-                    class="text-xs font-medium"
-                    [ngClass]="{
-                      'text-green-600 dark:text-green-400':
-                        (order.unrealizedPnLPercent || 0) > 0,
-                      'text-red-600 dark:text-red-400':
-                        (order.unrealizedPnLPercent || 0) < 0,
-                      'text-gray-600 dark:text-gray-400':
-                        (order.unrealizedPnLPercent || 0) === 0
-                    }"
-                  >
-                    {{ (order.unrealizedPnLPercent || 0) >= 0 ? "+" : ""
-                    }}{{ order.unrealizedPnLPercent || 0 | number : "1.2-2" }}%
-                  </span>
-                  <span
-                    class="text-xs font-medium"
+                    class="text-sm font-medium"
                     [ngClass]="(order.targetProfit || 0) < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'"
                   >
-                    {{ order.targetProfit || 0 | number : "1.2-2" }}
+                    ${{ order.targetProfit || 0 | number : "1.2-2" }}
                   </span>
                 </div>
               </td>
@@ -768,46 +803,47 @@
               </td>
             </tr>
 
-            <!-- Empty State Row -->
-            <tr *ngIf="openOrders().length === 0">
-              <td colspan="12" class="px-6 py-16 text-center">
-                <div class="flex flex-col items-center">
-                  <div
-                    class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-8 h-8 text-gray-400 dark:text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              <!-- Empty State Row -->
+              <tr *ngIf="openOrders().length === 0">
+                <td colspan="12" class="px-6 py-16 text-center">
+                  <div class="flex flex-col items-center">
+                    <div
+                      class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                      />
-                    </svg>
+                      <svg
+                        class="w-8 h-8 text-gray-400 dark:text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                        />
+                      </svg>
+                    </div>
+                    <h3
+                      class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1"
+                    >
+                      No Orders
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      {{ client()?.fullName || "This account" }} has no orders at
+                      the moment.
+                    </p>
                   </div>
-                  <h3
-                    class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1"
-                  >
-                    No Orders
-                  </h3>
-                  <p class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ client()?.fullName || "This account" }} has no orders at
-                    the moment.
-                  </p>
-                </div>
-              </td>
-            </tr>
+                </td>
+              </tr>
+            </ng-container>
           </tbody>
         </table>
       </div>
 
       <!-- Transactions Table -->
       <div
-        *ngIf="!transactionsLoading() && selectedTab() === 'transactions'"
+        *ngIf="selectedTab() === 'transactions'"
         class="overflow-x-auto"
       >
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -858,14 +894,68 @@
           <tbody
             class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700/30"
           >
+            <!-- Skeleton Loading Rows -->
+            <ng-container *ngIf="transactionsLoading()">
+              <tr *ngFor="let skeleton of [1, 2, 3, 4, 5]">
+                <!-- Account -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Type -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-6 bg-gray-200 dark:bg-gray-400/30 rounded-full w-16 animate-pulse"></div>
+                </td>
+                <!-- Amount -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Balance -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Payment Status -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="h-6 bg-gray-200 dark:bg-gray-400/30 rounded-full w-16 animate-pulse"></div>
+                </td>
+                <!-- Date -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-16 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Description -->
+                <td class="px-6 py-4">
+                  <div class="flex flex-col gap-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-32 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-400/30 rounded w-20 animate-pulse"></div>
+                  </div>
+                </td>
+                <!-- Actions -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div class="h-8 bg-gray-200 dark:bg-gray-400/30 rounded w-24 animate-pulse"></div>
+                </td>
+              </tr>
+            </ng-container>
+
             <!-- Transactions -->
-            <tr
-              *ngFor="
-                let transaction of transactions();
-                trackBy: trackByTransactionId
-              "
-              class="hover:bg-gray-50/10 transition-colors"
-            >
+            <ng-container *ngIf="!transactionsLoading()">
+              <tr
+                *ngFor="
+                  let transaction of transactions();
+                  trackBy: trackByTransactionId
+                "
+                class="hover:bg-gray-50/10 transition-colors"
+              >
               <!-- Account -->
               <td class="px-6 py-4 whitespace-nowrap">
                 <div
@@ -1009,41 +1099,41 @@
               </td>
             </tr>
 
-            <!-- Empty State Row -->
-            <tr *ngIf="transactions().length === 0">
-              <td colspan="8" class="px-6 py-12 text-center">
-                <div class="flex flex-col items-center">
-                  <div
-                    class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-6 h-6 text-gray-400 dark:text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              <!-- Empty State Row -->
+              <tr *ngIf="transactions().length === 0">
+                <td colspan="8" class="px-6 py-12 text-center">
+                  <div class="flex flex-col items-center">
+                    <div
+                      class="w-12 h-12 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
                     >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                      />
-                    </svg>
+                      <svg
+                        class="w-6 h-6 text-gray-400 dark:text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                        />
+                      </svg>
+                    </div>
+                    <h3
+                      class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
+                    >
+                      No Transactions Found
+                    </h3>
+                    <p class="text-gray-500 dark:text-gray-400">
+                      {{ client()?.fullName }} has no transactions at the moment.
+                    </p>
                   </div>
-                  <h3
-                    class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2"
-                  >
-                    No Transactions Found
-                  </h3>
-                  <p class="text-gray-500 dark:text-gray-400">
-                    {{ client()?.fullName }} has no transactions at the moment.
-                  </p>
-                </div>
-              </td>
-            </tr>
+                </td>
+              </tr>
+            </ng-container>
           </tbody>
         </table>
       </div>
     </div>
   </div>
-</div>

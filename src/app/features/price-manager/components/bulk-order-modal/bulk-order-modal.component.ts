@@ -49,7 +49,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   loginIdsInput = signal<string>('');
   symbol = signal<string>('');
   side = signal<number>(1);
-  volume = signal<number | null>(null);
+  volume = signal<number | null>(0.1);
   leverage = signal<number>(1);
 
   stopLoss = signal<number | null>(null);

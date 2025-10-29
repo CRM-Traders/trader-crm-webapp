@@ -41,7 +41,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   symbol = signal<string>('');
   side = signal<number>(1);
-  volume = signal<number | null>(null);
+  volume = signal<number | null>(0.1);
   leverage = signal<number>(1);
 
   stopLoss = signal<number | null>(null);
@@ -103,12 +103,52 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .getUserBalanceWithoutCurrency(this.data.userId)
       .pipe(
         tap((response: any) => {
-          // Filter balances where totalAvailable > 0
+          // Ensure EUR, USD, and GBP are always displayed (even if 0),
+          // include other currencies only when totalAvailable > 0
           if (response?.balances && response.balances.length > 0) {
-            const availableBalances = response.balances.filter(
-              (balance: any) => balance.totalAvailable > 0
-            );
-            this.userBalance.set(availableBalances);
+            const balances: any[] = Array.isArray(response.balances)
+              ? response.balances
+              : [];
+
+            const requiredCurrencies = ['EUR', 'USD', 'GBP'];
+
+            const currencyToBalance = new Map<string, any>();
+            for (const b of balances) {
+              if (b && typeof b.currency === 'string') {
+                currencyToBalance.set(b.currency, b);
+              }
+            }
+
+            const result: any[] = [];
+
+            // Add required currencies first (even when zero or missing)
+            for (const cur of requiredCurrencies) {
+              const existing = currencyToBalance.get(cur);
+              if (existing) {
+                result.push(existing);
+              } else {
+                result.push({
+                  currency: cur,
+                  totalAvailable: 0,
+                  totalLocked: 0,
+                  totalBalance: 0,
+                  accountCount: 0,
+                });
+              }
+            }
+
+            // Add other currencies with positive available balance
+            for (const b of balances) {
+              if (
+                !requiredCurrencies.includes(b.currency) &&
+                typeof b.totalAvailable === 'number' &&
+                b.totalAvailable > 0
+              ) {
+                result.push(b);
+              }
+            }
+
+            this.userBalance.set(result);
           }
         }),
         catchError((err) => {

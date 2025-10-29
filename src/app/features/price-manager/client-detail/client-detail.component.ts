@@ -961,15 +961,11 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private startOrderbookRefetch(): void {
-    interval(4000)
+    interval(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        if (
-          this.client() &&
-          !this.ordersLoading() &&
-          !this.transactionsLoading()
-        ) {
-          this.loadCurrentDataType(true);
+        if (this.client() && this.selectedTab() === 'orders' && !this.ordersLoading()) {
+          this.loadOpenOrders(true).pipe(takeUntil(this.destroy$)).subscribe();
         }
       });
   }

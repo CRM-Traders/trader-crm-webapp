@@ -15,7 +15,7 @@ import {
 } from './services/price-manager.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, finalize, tap, of } from 'rxjs';
+import { Subject, takeUntil, catchError, finalize, tap, of, interval } from 'rxjs';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
@@ -97,6 +97,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadInitialData();
+    this.startOrdersPolling();
   }
 
   ngOnDestroy(): void {
@@ -392,8 +393,10 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   }
 
   // Orders methods
-  private loadOrders() {
-    this.loading.set(true);
+  private loadOrders(silent: boolean = false) {
+    if (!silent) {
+      this.loading.set(true);
+    }
 
     this.service
       .getOrdersList(
@@ -417,19 +420,25 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
         }),
         catchError((err: any) => {
           console.error('Error loading orders:', err);
-          let errorMessage =
-            'Failed to load orders. Please check your connection and try again.';
-          if (err?.error?.error) {
-            errorMessage = err.error.error;
-          } else if (err?.message) {
-            errorMessage = err.message;
+          if (!silent) {
+            let errorMessage =
+              'Failed to load orders. Please check your connection and try again.';
+            if (err?.error?.error) {
+              errorMessage = err.error.error;
+            } else if (err?.message) {
+              errorMessage = err.message;
+            }
+            this.alertService.error(errorMessage);
           }
-          this.alertService.error(errorMessage);
           this.orders.set([]);
           this.ordersTotalCount.set(0);
           return [];
         }),
-        finalize(() => this.loading.set(false)),
+        finalize(() => {
+          if (!silent) {
+            this.loading.set(false);
+          }
+        }),
         takeUntil(this.destroy$)
       )
       .subscribe();
@@ -895,5 +904,16 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   isClosingOrder(orderId: string): boolean {
     return this.closingOrderIds().has(orderId);
+  }
+
+  private startOrdersPolling(): void {
+    interval(3000) // Poll every 3 seconds
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        // Only poll when orders tab is active and not currently loading
+        if (this.activeTab() === 'orders' && !this.loading()) {
+          this.loadOrders(true); // Silent refresh
+        }
+      });
   }
 }

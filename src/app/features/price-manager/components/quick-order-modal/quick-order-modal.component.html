@@ -13,7 +13,7 @@
 <!-- Modal Body -->
 <div class="modal-body px-6 py-6 max-h-[calc(100vh-1rem)] overflow-y-auto">
   <!-- User Balance Information -->
-  <div *ngIf="userBalance().length > 0" class="mb-4 space-y-2 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
+  <div *ngIf="userBalance().length > 0" class="mb-4 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
     <div
       *ngFor="let balance of userBalance()"
       class="bg-white rounded-md px-4 py-2 border border-blue-200 dark:border-gray-700 flex items-center justify-between"
@@ -39,7 +39,7 @@
       <div class="text-right">
         <p class="text-xs text-gray-500 dark:text-gray-400">Available</p>
         <p class="text-sm font-bold text-green-600 dark:text-green-400">
-          {{ balance.totalAvailable?.toFixed(8) }}
+          {{ balance.totalAvailable }}
         </p>
       </div>
     </div>
