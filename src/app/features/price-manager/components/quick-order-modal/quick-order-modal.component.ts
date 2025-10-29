@@ -41,7 +41,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   symbol = signal<string>('');
   side = signal<number>(1);
-  volume = signal<number | null>(0.1);
+  volume = signal<number | null>(0.01);
   leverage = signal<number>(1);
 
   stopLoss = signal<number | null>(null);
@@ -103,52 +103,32 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       .getUserBalanceWithoutCurrency(this.data.userId)
       .pipe(
         tap((response: any) => {
-          // Ensure EUR, USD, and GBP are always displayed (even if 0),
-          // include other currencies only when totalAvailable > 0
+          // Show only the balance with the highest totalAvailable amount
           if (response?.balances && response.balances.length > 0) {
             const balances: any[] = Array.isArray(response.balances)
               ? response.balances
               : [];
 
-            const requiredCurrencies = ['EUR', 'USD', 'GBP'];
+            // Filter out invalid balances and find the one with highest totalAvailable
+            const validBalances = balances.filter(
+              (b) => 
+                b && 
+                typeof b.currency === 'string' && 
+                typeof b.totalAvailable === 'number'
+            );
 
-            const currencyToBalance = new Map<string, any>();
-            for (const b of balances) {
-              if (b && typeof b.currency === 'string') {
-                currencyToBalance.set(b.currency, b);
-              }
+            if (validBalances.length > 0) {
+              // Find the balance with the highest totalAvailable
+              const highestBalance = validBalances.reduce((max, current) => 
+                current.totalAvailable > max.totalAvailable ? current : max
+              );
+
+              this.userBalance.set([highestBalance]);
+            } else {
+              this.userBalance.set([]);
             }
-
-            const result: any[] = [];
-
-            // Add required currencies first (even when zero or missing)
-            for (const cur of requiredCurrencies) {
-              const existing = currencyToBalance.get(cur);
-              if (existing) {
-                result.push(existing);
-              } else {
-                result.push({
-                  currency: cur,
-                  totalAvailable: 0,
-                  totalLocked: 0,
-                  totalBalance: 0,
-                  accountCount: 0,
-                });
-              }
-            }
-
-            // Add other currencies with positive available balance
-            for (const b of balances) {
-              if (
-                !requiredCurrencies.includes(b.currency) &&
-                typeof b.totalAvailable === 'number' &&
-                b.totalAvailable > 0
-              ) {
-                result.push(b);
-              }
-            }
-
-            this.userBalance.set(result);
+          } else {
+            this.userBalance.set([]);
           }
         }),
         catchError((err) => {
@@ -376,7 +356,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           tap((resp: any) => {
             this.applySmartPLCalculationResponse(resp, 'profit');
           }),
-          catchError(() => []),
+          catchError((err) => {
+            this.alertService.error(err.error.error);
+            return [];
+          }),
           finalize(() => this.calculatingFromProfit.set(false))
         )
         .subscribe();
