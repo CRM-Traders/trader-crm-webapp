@@ -282,6 +282,7 @@ export interface Order {
   requiredMargin: number;
   totalValue: number;
   isFillable?: boolean;
+  targetProfit?: number;
 
   // Extended fields (may not always be present)
   volume?: number;

@@ -899,16 +899,17 @@
                         </div>
                         <div
                           *ngIf="order.metadata?.TargetProfit !== undefined"
-                          class="text-xs text-gray-500"
+                          class="text-xs"
+                          [ngClass]="order.targetProfit < 0 ? 'text-red-600' : 'text-green-600'"
                         >
-                          Target: ${{
-                            order.metadata.TargetProfit | number : "1.2-2"
+                          Target Profit: {{
+                            order.targetProfit | number : "1.2-2"
                           }}
                         </div>
                         <div
                           *ngIf="
                             !order.metadata?.RealizedPnL &&
-                            !order.metadata?.TargetProfit
+                            !order.targetProfit
                           "
                           class="text-gray-400"
                         >
