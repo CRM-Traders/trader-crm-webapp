@@ -77,6 +77,11 @@ export class GridComponent implements OnInit, OnDestroy {
   columnFilterSearchTerms: Record<string, string> = {};
   columnFilterPositions: Record<string, { left: number; top: number }> = {};
 
+  // Scroll handling for inline column filter dropdown
+  private boundOnAnyScroll = (event?: Event) => this.onAnyScroll(event);
+  private attachedScrollElements: HTMLElement[] = [];
+  private isWindowScrollAttached = false;
+
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
   @ViewChild('columnSelectorDropdown', { static: false })
   columnSelectorDropdown!: ElementRef;
@@ -234,6 +239,14 @@ export class GridComponent implements OnInit, OnDestroy {
     this.refreshGrid();
   }
 
+  // Close inline column filter on window scroll
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll(event: Event): void {
+    if (this.openColumnFilterId) {
+      this.closeOpenColumnFilter();
+    }
+  }
+
   ngOnInit(): void {
     this.gridService.clearAllFilters(this.gridId);
 
@@ -345,8 +358,7 @@ export class GridComponent implements OnInit, OnDestroy {
     event.stopPropagation();
 
     if (this.openColumnFilterId === column.field) {
-      this.openColumnFilterId = null;
-      delete this.columnFilterPositions[column.field];
+      this.closeOpenColumnFilter();
     } else {
       this.openColumnFilterId = column.field;
 
@@ -369,6 +381,11 @@ export class GridComponent implements OnInit, OnDestroy {
       if (!this.columnFilterSearchTerms[column.field]) {
         this.columnFilterSearchTerms[column.field] = '';
       }
+
+      // Attach scroll listeners to close dropdown on scroll (window and scrollable ancestors)
+      const targetEl = event.target as HTMLElement | null;
+      this.detachScrollListeners();
+      this.attachScrollListeners(targetEl || undefined);
     }
   }
 
@@ -394,6 +411,116 @@ export class GridComponent implements OnInit, OnDestroy {
       default:
         return 'text';
     }
+  }
+
+  // Close the currently open inline column filter and cleanup listeners
+  private closeOpenColumnFilter(): void {
+    const currentFilterId = this.openColumnFilterId;
+    if (!currentFilterId) return;
+
+    this.openColumnFilterId = null;
+    delete this.columnFilterPositions[currentFilterId];
+    this.detachScrollListeners();
+  }
+
+  // Generic scroll handler for window and scrollable ancestors
+  private onAnyScroll(event?: Event): void {
+    if (!this.openColumnFilterId) return;
+
+    // If the scroll originates inside the currently open dropdown, do not close it
+    if (event) {
+      const dropdownEl = this.gridContainer?.nativeElement.querySelector(
+        `[data-column-filter="${this.openColumnFilterId}"]`
+      ) as HTMLElement | null;
+
+      if (dropdownEl) {
+        let inside = false;
+        const anyEvent = event as any;
+        if (typeof anyEvent.composedPath === 'function') {
+          const path = anyEvent.composedPath() as EventTarget[];
+          inside = path.includes(dropdownEl);
+        } else if (event.target) {
+          inside = dropdownEl.contains(event.target as Node);
+        }
+
+        if (inside) {
+          return;
+        }
+      }
+    }
+
+    this.closeOpenColumnFilter();
+  }
+
+  // Attach scroll listeners to window and scrollable ancestor containers
+  private attachScrollListeners(startFrom?: HTMLElement): void {
+    // Window scroll
+    if (!this.isWindowScrollAttached) {
+      window.addEventListener('scroll', this.boundOnAnyScroll, true);
+      this.isWindowScrollAttached = true;
+    }
+
+    // Scrollable ancestors (e.g., .overflow-x-auto wrappers)
+    const ancestors = this.findScrollableAncestors(startFrom);
+    ancestors.forEach((el) => {
+      el.addEventListener('scroll', this.boundOnAnyScroll, true);
+      this.attachedScrollElements.push(el);
+    });
+  }
+
+  // Detach all previously attached scroll listeners
+  private detachScrollListeners(): void {
+    if (this.isWindowScrollAttached) {
+      window.removeEventListener('scroll', this.boundOnAnyScroll, true);
+      this.isWindowScrollAttached = false;
+    }
+
+    this.attachedScrollElements.forEach((el) =>
+      el.removeEventListener('scroll', this.boundOnAnyScroll, true)
+    );
+    this.attachedScrollElements = [];
+  }
+
+  // Walk up the DOM from the trigger element and collect scrollable ancestors
+  private findScrollableAncestors(startEl?: HTMLElement): HTMLElement[] {
+    const result: HTMLElement[] = [];
+    let node: HTMLElement | null = startEl || null;
+
+    // If we don't have a starting element, try using the grid container itself
+    if (!node && this.gridContainer?.nativeElement) {
+      node = this.gridContainer.nativeElement as HTMLElement;
+    }
+
+    const isScrollable = (el: HTMLElement) => {
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY;
+      const overflowX = style.overflowX;
+      const canScrollY =
+        (overflowY === 'auto' || overflowY === 'scroll') &&
+        el.scrollHeight > el.clientHeight;
+      const canScrollX =
+        (overflowX === 'auto' || overflowX === 'scroll') &&
+        el.scrollWidth > el.clientWidth;
+      return canScrollX || canScrollY;
+    };
+
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (isScrollable(node)) {
+        result.push(node);
+      }
+      node = node.parentElement;
+    }
+
+    // Also include any common scroll containers by selector, if present
+    // (e.g., pages often wrap tables in .overflow-x-auto)
+    document.querySelectorAll('.overflow-x-auto').forEach((el) => {
+      const elem = el as HTMLElement;
+      if (!result.includes(elem)) {
+        result.push(elem);
+      }
+    });
+
+    return result;
   }
 
   private getDefaultColumnFilterValue(column: GridColumn): any {
@@ -787,6 +914,9 @@ export class GridComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     // Clear filters when component is destroyed (navigating away)
     this.gridService.clearAllFilters(this.gridId);
+
+    // Detach any scroll listeners
+    this.detachScrollListeners();
 
     this.destroy$.next();
     this.destroy$.complete();
