@@ -154,9 +154,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   onChartEvent(event: any): void {
     try {
       if (!event) return;
-      const json = JSON.parse(event);
-      if (json.name === 'quoteUpdate' && json.data) {
-        const data = json.data as any;
+      // Event is already parsed from the trading view chart component
+      if (event.name === 'quoteUpdate' && event.data) {
+        const data = event.data as any;
 
         // Track previous symbol to detect changes
         const previousSymbol = this.currentSymbol();

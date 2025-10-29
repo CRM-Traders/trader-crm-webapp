@@ -315,7 +315,7 @@
       <!-- UPDATED TABLE HEADER SECTION WITH INLINE COLUMN FILTERS -->
       <!-- Replace the existing <thead> section in grid.component.html with this: -->
 
-      <thead class="bg-gray-50 dark:bg-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700 relative">
         <tr>
           <!-- Checkbox Column (optional) -->
           <th *ngIf="isSelectionEnabled" scope="col" class="px-6 py-3 w-10">
@@ -461,7 +461,9 @@
                 *ngIf="isColumnFilterOpen(column.field)"
                 [attr.data-column-filter]="column.field"
                 (click)="$event.stopPropagation()"
-                class="absolute left-0 top-full mt-1 z-[999] w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl"
+                [style.left.px]="getColumnFilterPosition(column.field).left"
+                [style.top.px]="getColumnFilterPosition(column.field).top"
+                class="fixed z-[9999] w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl"
               >
                 <!-- Filter Header -->
                 <div
@@ -774,7 +776,9 @@
                 *ngIf="isColumnFilterOpen(column.field)"
                 [attr.data-column-filter]="column.field"
                 (click)="$event.stopPropagation()"
-                class="absolute left-0 top-full mt-1 z-[999] w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl"
+                [style.left.px]="getColumnFilterPosition(column.field).left"
+                [style.top.px]="getColumnFilterPosition(column.field).top"
+                class="fixed z-[9999] w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-xl"
               >
                 <!-- Filter Header -->
                 <div

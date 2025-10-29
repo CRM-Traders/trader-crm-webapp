@@ -1,23 +1,29 @@
-// Add any custom styles here if needed
-
 .chart-section {
-    display: flex;
-    flex-direction: column;
-
-    .chart-header {
-      flex-shrink: 0;
-    }
-
-    .chart-wrapper {
-      flex: 1;
-      border: 1px solid rgb(229, 231, 235);
-      border-radius: 8px;
-      overflow: hidden;
-      background-color: white;
-
-      .dark & {
-        border-color: rgb(55, 65, 81);
-        background-color: #394d6e;
-      }
+  .chart-wrapper {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    height: 100%;
+    max-height: 600px;
+    
+    .dark & {
+      border-color: #374151;
     }
   }
+}
+
+.form-section {
+  .grid {
+    gap: 1rem;
+  }
+  
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}

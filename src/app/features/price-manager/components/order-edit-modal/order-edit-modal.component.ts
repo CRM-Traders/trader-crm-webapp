@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, Input, OnInit, OnDestroy, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -16,12 +16,14 @@ import {
   OrderUpdateRequest,
   ReopenOrderRequest,
 } from '../../services/price-manager.service';
+import { TradingViewChartComponent } from '../../../../shared/components/trading-view-chart/trading-view-chart.component';
 
 @Component({
   selector: 'app-order-edit-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TradingViewChartComponent],
   templateUrl: './order-edit-modal.component.html',
+  styleUrls: ['./order-edit-modal.component.scss'],
   styles: [
     `
       :host {
@@ -36,6 +38,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
   @Input() orderId!: string;
   @Input() order?: Order;
+  @ViewChild(TradingViewChartComponent) tradingViewChart!: TradingViewChartComponent;
 
   private service = inject(PriceManagerService);
   private alertService = inject(AlertService);
@@ -45,12 +48,16 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   editForm!: FormGroup;
   reopenForm!: FormGroup;
-  isEditing = false;
+  isEditing = true; // Start in edit mode by default
   loading = false;
   loadingData = false;
   originalValues: any = {};
   orderData: any | null = null;
   showReopenModal = false;
+
+  // Chart related properties
+  currentSymbol = signal<string>('');
+  lastPrice = signal<number | null>(null);
 
   sideOptions = [
     { value: 1, label: 'Buy', class: 'text-green-600 dark:text-green-400' },
@@ -154,9 +161,13 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     if (!this.orderData) return;
 
     const metadata = this.orderData.metadata || {};
+    const symbol = this.orderData.symbol || this.orderData.tradingPairSymbol || '';
+
+    // Set current symbol for chart
+    this.currentSymbol.set(symbol);
 
     this.editForm.patchValue({
-      symbol: this.orderData.symbol || this.orderData.tradingPairSymbol || '',
+      symbol: symbol,
       orderType: this.orderData.orderType,
       side: this.orderData.side,
       openPrice: this.orderData.openPrice ?? this.orderData.price,
@@ -186,7 +197,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       reason: this.orderData.reason || '',
     });
 
-    this.editForm.disable();
+    this.editForm.enable();
     // Ensure symbol and orderType are always disabled
     this.editForm.get('symbol')?.disable();
     this.editForm.get('orderType')?.disable();
@@ -316,6 +327,26 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     return this.orderData?.requiredMargin || metadata.RequiredMargin || null;
   }
 
+  onChartEvent(event: any): void {
+    try {
+      if (!event) return;
+      // Event is already parsed from the trading view chart component
+      if (event.name === 'quoteUpdate' && event.data) {
+        const data = event.data as any;
+
+        if (data.original_name) {
+          this.currentSymbol.set(data.original_name);
+        }
+
+        if (typeof data.last_price === 'number') {
+          this.lastPrice.set(data.last_price);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing chart event:', error);
+    }
+  }
+
   startEdit(): void {
     this.isEditing = true;
     this.originalValues = this.editForm.value;
@@ -326,9 +357,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   }
 
   cancelEdit(): void {
-    this.isEditing = false;
-    this.editForm.patchValue(this.originalValues);
-    this.editForm.disable();
+    // Close the modal directly instead of going to read mode
+    this.modalRef.dismiss();
   }
 
   saveOrder(): void {
@@ -374,8 +404,12 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           this.alertService.success('Order updated successfully');
           this.loading = false;
-          this.isEditing = false;
-          this.editForm.disable();
+          // Keep in edit mode after saving
+          this.isEditing = true;
+          this.editForm.enable();
+          // Keep symbol and orderType disabled
+          this.editForm.get('symbol')?.disable();
+          this.editForm.get('orderType')?.disable();
 
           if (response && this.orderData) {
             Object.assign(this.orderData, response);

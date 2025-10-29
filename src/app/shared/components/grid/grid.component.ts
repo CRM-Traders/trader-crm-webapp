@@ -75,6 +75,7 @@ export class GridComponent implements OnInit, OnDestroy {
   openColumnFilterId: string | null = null;
   columnFilterValues: Record<string, any> = {};
   columnFilterSearchTerms: Record<string, string> = {};
+  columnFilterPositions: Record<string, { left: number; top: number }> = {};
 
   @ViewChild('gridContainer', { static: false }) gridContainer!: ElementRef;
   @ViewChild('columnSelectorDropdown', { static: false })
@@ -208,7 +209,11 @@ export class GridComponent implements OnInit, OnDestroy {
         filterButton &&
         !filterButton.contains(target)
       ) {
+        const currentFilterId = this.openColumnFilterId;
         this.openColumnFilterId = null;
+        if (currentFilterId) {
+          delete this.columnFilterPositions[currentFilterId];
+        }
       }
     }
   }
@@ -341,8 +346,12 @@ export class GridComponent implements OnInit, OnDestroy {
 
     if (this.openColumnFilterId === column.field) {
       this.openColumnFilterId = null;
+      delete this.columnFilterPositions[column.field];
     } else {
       this.openColumnFilterId = column.field;
+
+      // Calculate dropdown position
+      this.calculateColumnFilterPosition(column.field, event);
 
       // Initialize filter value if not exists
       if (!this.columnFilterValues[column.field]) {
@@ -415,6 +424,13 @@ export class GridComponent implements OnInit, OnDestroy {
     ) {
       return filter.value;
     } else {
+      // For date filters that are not BETWEEN, we need to determine if it's a date filter
+      // and return the appropriate structure
+      const column = this.columns.find(col => col.field === filter.field);
+      if (column && this.getColumnFilterType(column) === 'date') {
+        // For single date values, we'll put it in the 'from' field
+        return { from: filter.value, to: null };
+      }
       return filter.value;
     }
   }
@@ -590,6 +606,21 @@ export class GridComponent implements OnInit, OnDestroy {
   clearAllColumnOptions(column: GridColumn): void {
     this.columnFilterValues[column.field] = [];
     this.removeColumnFilter(column);
+  }
+
+  calculateColumnFilterPosition(columnField: string, event: Event): void {
+    const button = event.target as HTMLElement;
+    const rect = button.getBoundingClientRect();
+    
+    // Position dropdown below the button with some margin
+    const left = rect.right;
+    const top = rect.bottom + 100;
+    
+    this.columnFilterPositions[columnField] = { left, top };
+  }
+
+  getColumnFilterPosition(columnField: string): { left: number; top: number } {
+    return this.columnFilterPositions[columnField] || { left: 0, top: 0 };
   }
 
   loadSavedFilters(): void {
