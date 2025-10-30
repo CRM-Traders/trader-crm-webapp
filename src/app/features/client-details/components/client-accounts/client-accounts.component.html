@@ -320,7 +320,7 @@
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                 >
-                  {{ account.accountType }}
+                  {{ getAccountTypeInfo(account.accountType) }}
                 </span>
               </td>
 
@@ -656,6 +656,27 @@
           class="mt-1 text-sm text-red-600 dark:text-red-400"
         >
           Account name is required and must be at least 3 characters long.
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Account Type <span class="text-red-500">*</span>
+        </label>
+        <select
+          formControlName="accountType"
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+        >
+          <option [ngValue]="AccountType.Trading">Trading</option>
+          <option [ngValue]="AccountType.Saving">Saving</option>
+        </select>
+        <div
+          *ngIf="accountForm.get('type')?.invalid && accountForm.get('type')?.touched"
+          class="mt-1 text-sm text-red-600 dark:text-red-400"
+        >
+          Account type is required.
         </div>
       </div>
 

@@ -46,7 +46,7 @@ export class OffersComponent implements OnInit, OnDestroy {
 
   editOffer(offer: OfferResponse): void {
     this.offersService
-      .getById(offer.id, true)
+      .getById(offer.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe((fresh) => {
         if (!fresh) {
@@ -83,7 +83,7 @@ export class OffersComponent implements OnInit, OnDestroy {
 
     modalRef.result.then((confirmed) => {
       if (confirmed) {
-        this.offersService.delete(offer.id);
+        this.offersService.delete(offer.id).subscribe();
       }
     });
   }

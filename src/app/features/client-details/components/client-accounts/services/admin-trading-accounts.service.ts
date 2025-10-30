@@ -148,14 +148,31 @@ export class AdminTradingAccountService {
   /**
    * Get account type display information
    */
-  getAccountTypeInfo(accountType: AccountType): string {
+  getAccountTypeInfo(accountType: AccountType | string | number): string {
+    // If API already provided a readable string
+    if (typeof accountType === 'string') {
+      const normalized = accountType.trim().toLowerCase();
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    }
+
+    // If we have numeric enum values
+    if (typeof accountType === 'number') {
+      switch (accountType) {
+        case AccountType.Trading:
+          return 'Trading';
+        case AccountType.Saving:
+          return 'Saving';
+        default:
+          return 'Unknown';
+      }
+    }
+
+    // Enum case fallback
     switch (accountType) {
-      case AccountType.DEMO:
-        return 'Demo';
-      case AccountType.REAL:
-        return 'Live';
-      case AccountType.PAPER:
-        return 'Paper';
+      case AccountType.Trading:
+        return 'Trading';
+      case AccountType.Saving:
+        return 'Saving';
       default:
         return 'Unknown';
     }

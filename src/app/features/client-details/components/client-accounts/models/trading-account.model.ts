@@ -1,9 +1,8 @@
 // src/app/core/models/trading-account.model.ts
 
 export enum AccountType {
-  DEMO = 1,
-  REAL = 2,
-  PAPER = 3,
+  Trading = 2,
+  Saving = 3,
 }
 
 export enum AccountStatus {
@@ -19,7 +18,7 @@ export interface TradingAccount {
   userId: string;
   accountNumber: string;
   displayName: string;
-  accountType: AccountType;
+  accountType: AccountType | string; // API may return a string like "Saving"
   status: AccountStatus;
   initialBalance: number;
   enableSpotTrading: boolean;
@@ -34,4 +33,5 @@ export interface TradingAccount {
 export interface CreateTradingAccountRequest {
   displayName: string;
   clientUserId: string;
+  accountType: number;
 }

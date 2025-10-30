@@ -254,14 +254,6 @@ export const routes: Routes = [
           ),
         canActivate: [authGuard],
       },
-      {
-        path: 'savings-accounts',
-        loadComponent: () =>
-          import('./features/savings-accounts/savings-accounts.component').then(
-            (m) => m.SavingsAccountsComponent
-          ),
-        canActivate: [authGuard],
-      },
     ],
   },
 

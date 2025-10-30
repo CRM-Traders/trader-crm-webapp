@@ -81,6 +81,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   constructor() {
     this.accountForm = this.fb.group({
       displayName: ['', [Validators.required, Validators.minLength(3)]],
+      accountType: [AccountType.Trading, [Validators.required]],
     });
 
     // Close menus when clicking outside
@@ -180,6 +181,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
       const request: CreateTradingAccountRequest = {
         displayName: formData.displayName,
         clientUserId: this.clientId,
+        accountType: Number(formData.accountType),
       };
 
       this.adminTradingAccountService
@@ -441,7 +443,7 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
   }
 
   // Utility methods
-  getAccountTypeInfo(accountType: AccountType): string {
+  getAccountTypeInfo(accountType: AccountType | string | number): string {
     return this.adminTradingAccountService.getAccountTypeInfo(accountType);
   }
 

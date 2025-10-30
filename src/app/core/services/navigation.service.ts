@@ -129,12 +129,6 @@ export class NavigationService {
       route: '/offers',
       permission: -1, // Special value to bypass permission check
     },
-    {
-      label: 'Savings Accounts',
-      icon: 'assets',
-      route: '/savings-accounts',
-      permission: -1, // Special value to bypass permission check
-    },
   ];
 
   constructor(private router: Router) {

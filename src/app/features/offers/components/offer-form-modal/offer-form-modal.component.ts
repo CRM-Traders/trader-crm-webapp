@@ -50,11 +50,13 @@ export class OfferFormModalComponent implements OnInit {
     }
     const req: OfferRequest = this.form.getRawValue() as OfferRequest;
     if (this.offer) {
-      const updated = this.offersService.update(this.offer.id, req);
-      this.modalRef.close(updated);
+      this.offersService.update(this.offer.id, req).subscribe(() => {
+        this.modalRef.close(true);
+      });
     } else {
-      const created = this.offersService.add(req);
-      this.modalRef.close(created);
+      this.offersService.add(req).subscribe(() => {
+        this.modalRef.close(true);
+      });
     }
   }
 
