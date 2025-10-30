@@ -246,6 +246,22 @@ export const routes: Routes = [
           ).then((m) => m.PermissionTemplateComponent),
         canActivate: [authGuard, roleGuard(135)],
       },
+      {
+        path: 'offers',
+        loadComponent: () =>
+          import('./features/offers/offers.component').then(
+            (m) => m.OffersComponent
+          ),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'savings-accounts',
+        loadComponent: () =>
+          import('./features/savings-accounts/savings-accounts.component').then(
+            (m) => m.SavingsAccountsComponent
+          ),
+        canActivate: [authGuard],
+      },
     ],
   },
 
