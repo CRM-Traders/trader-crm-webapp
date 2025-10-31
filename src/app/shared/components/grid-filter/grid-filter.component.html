@@ -348,7 +348,7 @@
                 #multiSelectDropdown
                 *ngIf="isFilterDropdownOpen(activeFilter.id)"
                 (click)="$event.stopPropagation()"
-                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-64 overflow-hidden"
+                class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg"
               >
                 <!-- Search in options -->
                 <div class="p-2 border-b border-gray-200 dark:border-gray-700">
@@ -401,7 +401,7 @@
                 </div>
 
                 <!-- Options List -->
-                <div class="max-h-48 overflow-y-auto">
+                <div class="max-h-42 overflow-y-auto">
                   <div
                     *ngFor="let option of getFilteredFilterOptions(activeFilter.column, activeFilter.id)"
                     (click)="
