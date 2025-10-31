@@ -132,6 +132,14 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
     );
   }
 
+  get hasTradingAccount(): boolean {
+    return this.accounts.some((account) => account.accountType == 'Trading');
+  }
+
+  get canCreateTradingAccount(): boolean {
+    return !this.hasTradingAccount;
+  }
+
   loadAccounts(): void {
     this.adminTradingAccountService
       .getUserAccounts(this.clientId)
@@ -171,12 +179,34 @@ export class ClientAccountsComponent implements OnInit, OnDestroy {
     this.showCreateModal = !this.showCreateModal;
     if (!this.showCreateModal) {
       this.accountForm.reset();
+    } else {
+      // If opening modal and trading account exists, default to Saving type
+      if (this.hasTradingAccount) {
+        this.accountForm.patchValue({
+          accountType: AccountType.Saving,
+        });
+      } else {
+        this.accountForm.patchValue({
+          accountType: AccountType.Trading,
+        });
+      }
     }
   }
 
   submitAccount(): void {
     if (this.accountForm.valid && this.clientId) {
       const formData = this.accountForm.value;
+
+      // Check if trying to create a trading account when one already exists
+      if (
+        Number(formData.accountType) === AccountType.Trading &&
+        this.hasTradingAccount
+      ) {
+        this.alertService.error(
+          'This client already has a trading account. Only one trading account is allowed per client.'
+        );
+        return;
+      }
 
       const request: CreateTradingAccountRequest = {
         displayName: formData.displayName,

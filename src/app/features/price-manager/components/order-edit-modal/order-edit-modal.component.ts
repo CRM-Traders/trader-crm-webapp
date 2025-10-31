@@ -377,7 +377,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       openPrice: formValue.openPrice,
       volume: formValue.volume,
       filledQuantity: formValue.filledQuantity,
-      status: formValue.status,
+      status: Number(formValue.status),
       leverage: formValue.leverage,
       stopLoss: formValue.stopLoss,
       takeProfit: formValue.takeProfit,
