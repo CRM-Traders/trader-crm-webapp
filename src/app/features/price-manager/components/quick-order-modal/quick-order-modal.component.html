@@ -13,7 +13,10 @@
 <!-- Modal Body -->
 <div class="modal-body px-6 py-6 max-h-[calc(100vh-1rem)] overflow-y-auto">
   <!-- User Balance Information -->
-  <div *ngIf="userBalance().length > 0" class="mb-4 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4">
+  <div
+    *ngIf="userBalance().length > 0"
+    class="mb-4 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4"
+  >
     <div
       class="bg-white rounded-md px-4 py-3 border border-blue-200 dark:border-gray-700 flex items-center justify-between"
     >
@@ -45,7 +48,10 @@
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="loadingBalance()" class="mb-4 flex items-center justify-center py-4">
+  <div
+    *ngIf="loadingBalance()"
+    class="mb-4 flex items-center justify-center py-4"
+  >
     <svg
       class="animate-spin h-4 w-4 text-blue-600"
       fill="none"
@@ -138,6 +144,54 @@
 
       <!-- Smart P/L Form -->
       <form *ngIf="activeTab() === 'smartPL'" class="space-y-4">
+        <!-- Row: Amount + Currency (ABOVE Volume row) -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Amount
+              <span
+                *ngIf="calculatingFromAmount()"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
+            </label>
+            <input
+              type="number"
+              [ngModel]="amount()"
+              (ngModelChange)="onAmountInput($event)"
+              name="amountSmartPL"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.01"
+              min="0"
+              placeholder="Enter amount (e.g., 14000)"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Calculates volume, prices, margin and P/L from the cash amount.
+            </p>
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Currency
+            </label>
+            <select
+              [ngModel]="paymentCurrency()"
+              (ngModelChange)="onPaymentCurrencyChange($event)"
+              name="paymentCurrencySmartPL"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Row: Volume and Expected P/L -->
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -390,6 +444,54 @@
 
       <!-- New Order Form -->
       <form *ngIf="activeTab() === 'newOrder'" class="space-y-5">
+        <!-- Amount + Currency (ABOVE Volume) -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Amount
+              <span
+                *ngIf="calculatingFromAmount()"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
+            </label>
+            <input
+              type="number"
+              [ngModel]="amount()"
+              (ngModelChange)="onAmountInput($event)"
+              name="amountNewOrder"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.01"
+              min="0"
+              placeholder="Enter amount (e.g., 14000)"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Auto-fills volume, open price, P/L and margins.
+            </p>
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Currency
+            </label>
+            <select
+              [ngModel]="paymentCurrency()"
+              (ngModelChange)="onPaymentCurrencyChange($event)"
+              name="paymentCurrencyNewOrder"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+        </div>
+
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"

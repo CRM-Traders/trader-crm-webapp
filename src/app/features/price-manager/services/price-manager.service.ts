@@ -39,6 +39,21 @@ export class PriceManagerService {
     );
   }
 
+  // price-manager.service.ts
+  calculateFromAmount(body: {
+    symbol: string;
+    paymentCurrency: 'USD' | 'EUR' | 'GBP';
+    amount: number;
+    side: number;
+    leverage: number;
+    targetProfit: number | null;
+  }) {
+    return this.http.post(
+      'traiding/api/admin/trading/smart-pl/calculate',
+      body
+    );
+  }
+
   manipulatePrice(data: ManipulatePriceRequest) {
     return this.http.post('binance/api/CryptoData/manipulate-price', data);
   }
@@ -82,7 +97,10 @@ export class PriceManagerService {
   }
 
   updateOrder(orderId: string, data: OrderUpdateRequest) {
-    return this.http.post(`traiding/api/admin/trading/trade/${orderId}/modify`, data);
+    return this.http.post(
+      `traiding/api/admin/trading/trade/${orderId}/modify`,
+      data
+    );
   }
 
   closeOrder(orderId: string) {

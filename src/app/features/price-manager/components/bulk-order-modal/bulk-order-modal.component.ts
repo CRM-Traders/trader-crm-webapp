@@ -103,6 +103,14 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     { value: 2, label: 'Sell', class: 'text-red-600 dark:text-red-400' },
   ];
 
+  // --- NEW: signals (put near other signals) ---
+  amount = signal<number | null>(null);
+  paymentCurrency = signal<'USD' | 'EUR' | 'GBP'>('USD');
+  calculatingFromAmount = signal<boolean>(false);
+
+  // --- NEW: timer holder (put near other timers) ---
+  private amountCalcTimer: any = null;
+
   private suppressCalc = false;
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
@@ -145,6 +153,66 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error saving login IDs:', error);
     }
+  }
+
+  // --- NEW: handlers ---
+  onAmountInput(value: any): void {
+    this.amount.set(value ? +value : null);
+    this.triggerAmountBasedCalc();
+  }
+
+  onPaymentCurrencyChange(value: string): void {
+    this.paymentCurrency.set((value as 'USD' | 'EUR' | 'GBP') ?? 'USD');
+    // Recalculate if we have an amount already
+    if (this.amount()) this.triggerAmountBasedCalc();
+  }
+
+  // --- NEW: unified amount-based calculation ---
+  private triggerAmountBasedCalc(): void {
+    if (this.suppressCalc) return;
+    if (!this.currentSymbol() || !this.amount() || !this.paymentCurrency())
+      return;
+
+    const isSmart = this.activeTab() === 'smartPL';
+
+    const requestBody = {
+      symbol: this.currentSymbol(), // e.g. "BINANCE:BTCUSDT" from chart
+      paymentCurrency: this.paymentCurrency(), // "USD" | "EUR" | "GBP"
+      amount: this.amount()!, // number
+      side: isSmart ? this.smartPLSide() : this.side(),
+      leverage: isSmart ? this.smartPLLeverage() : this.leverage(),
+      targetProfit: null as number | null,
+    };
+
+    if (this.amountCalcTimer) clearTimeout(this.amountCalcTimer);
+    this.calculatingFromAmount.set(true);
+
+    this.amountCalcTimer = setTimeout(() => {
+      this.priceManagerService
+        .calculateFromAmount(requestBody)
+        .pipe(
+          tap((resp: any) => {
+            if (isSmart) {
+              // Reuse your existing applier to populate prices, volume, margin, PL, etc.
+              this.applySmartPLCalculationResponse(resp, 'profit');
+            } else {
+              this.applyNewOrderCalculationResponse(resp);
+            }
+          }),
+          catchError((err) => {
+            console.error('Error calculating from amount:', err);
+            const msg =
+              err?.error?.error ||
+              err?.error?.message ||
+              err?.message ||
+              'Failed to calculate from amount';
+            this.alertService.error(msg);
+            return [];
+          }),
+          finalize(() => this.calculatingFromAmount.set(false))
+        )
+        .subscribe();
+    }, 300);
   }
 
   switchTab(tab: 'newOrder' | 'smartPL'): void {
@@ -666,6 +734,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       buyRequiredMargin: this.buyRequiredMargin(),
       comment: this.comment(),
       closeImmediately: false, // Added this
+      paymentCurrency: this.paymentCurrency(),
+      amount: this.amount(),
     };
 
     this.priceManagerService
@@ -765,6 +835,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       autoSellPrice: this.autoSellPrice(),
       autoBuyPrice: this.autoBuyPrice(),
       closeImmediately: true,
+      paymentCurrency: this.paymentCurrency(),
+      amount: this.amount(),
     };
 
     this.priceManagerService

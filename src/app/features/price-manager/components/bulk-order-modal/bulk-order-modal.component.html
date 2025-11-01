@@ -151,6 +151,54 @@
           </p>
         </div>
 
+        <!-- Row: Amount + Currency (ABOVE Volume row) -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Amount
+              <span
+                *ngIf="calculatingFromAmount()"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
+            </label>
+            <input
+              type="number"
+              [ngModel]="amount()"
+              (ngModelChange)="onAmountInput($event)"
+              name="amountSmartPL"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.01"
+              min="0"
+              placeholder="Enter amount (e.g., 14000)"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Calculates volume, prices, margin and P/L from the cash amount.
+            </p>
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Currency
+            </label>
+            <select
+              [ngModel]="paymentCurrency()"
+              (ngModelChange)="onPaymentCurrencyChange($event)"
+              name="paymentCurrencySmartPL"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Row: Volume and Expected P/L -->
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -470,6 +518,55 @@
             ✓ {{ fetchedClients().length }} client(s) found and ready
           </p>
         </div>
+
+        <!-- Amount + Currency (ABOVE Volume) -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Amount
+              <span
+                *ngIf="calculatingFromAmount()"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
+            </label>
+            <input
+              type="number"
+              [ngModel]="amount()"
+              (ngModelChange)="onAmountInput($event)"
+              name="amountNewOrder"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.01"
+              min="0"
+              placeholder="Enter amount (e.g., 14000)"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Auto-fills volume, open price, P/L and margins.
+            </p>
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Currency
+            </label>
+            <select
+              [ngModel]="paymentCurrency()"
+              (ngModelChange)="onPaymentCurrencyChange($event)"
+              name="paymentCurrencyNewOrder"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+        </div>
+
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
