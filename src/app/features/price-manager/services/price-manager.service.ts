@@ -326,6 +326,8 @@ export interface Order {
   orderTypeLabel?: string;
   sideLabel?: string;
   statusLabel?: string;
+  openPosition?: string;
+  closePosition?: string;
 }
 
 export interface OrdersResponse {
