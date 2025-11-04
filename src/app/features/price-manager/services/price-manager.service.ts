@@ -260,6 +260,20 @@ export class PriceManagerService {
       data
     );
   }
+
+  calculatePnL(data: {
+    symbol: string;
+    side: number;
+    volume: number;
+    openPrice: number;
+    closePrice: number | null;
+    leverage: number;
+  }) {
+    return this.http.post(
+      `traiding/api/admin/trading/calculate/pnl`,
+      data
+    );
+  }
 }
 
 export interface OrderMetadata {

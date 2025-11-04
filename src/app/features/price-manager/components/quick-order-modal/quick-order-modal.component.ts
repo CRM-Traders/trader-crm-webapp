@@ -87,6 +87,13 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   paymentCurrency = signal<'USD' | 'EUR' | 'GBP'>('USD');
   calculatingFromAmount = signal<boolean>(false);
 
+  // --- Checkbox states for controlling calculations ---
+  useAmount = signal<boolean>(true);
+  useVolume = signal<boolean>(true);
+  useTakeProfit = signal<boolean>(true);
+  useExpectedPL = signal<boolean>(true);
+  useLeverage = signal<boolean>(true);
+
   // --- NEW: timer holder (put near other timers) ---
   private amountCalcTimer: any = null;
 
@@ -98,11 +105,13 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   private suppressCalc = false;
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
+  private pnlRefreshInterval: any = null;
 
   ngOnInit(): void {
     if (this.data?.userId) {
       this.fetchUserBalance();
     }
+    this.startPnLRefresh();
   }
 
   // --- NEW: handlers ---
@@ -120,6 +129,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   // --- NEW: unified amount-based calculation ---
   private triggerAmountBasedCalc(): void {
     if (this.suppressCalc) return;
+    if (!this.useAmount()) return;
     if (!this.currentSymbol() || !this.amount() || !this.paymentCurrency())
       return;
 
@@ -265,11 +275,14 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   onTakeProfitInput(value: any): void {
     this.takeProfit.set(value ? +value : null);
-    this.triggerProfitBasedCalcNewOrder();
+    if (this.useTakeProfit()) {
+      this.triggerProfitBasedCalcNewOrder();
+    }
   }
 
   private triggerProfitBasedCalcNewOrder(): void {
     if (this.suppressCalc) return;
+    if (!this.useTakeProfit()) return;
 
     if (!this.currentSymbol() || !this.takeProfit()) {
       return;
@@ -367,12 +380,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   onLeverageChange(value: any): void {
     this.leverage.set(value ? +value : 1);
-    this.triggerProfitBasedCalcNewOrder();
   }
 
   onSmartPLLeverageChange(value: any): void {
     this.smartPLLeverage.set(value ? +value : 1);
-    this.recalculateSmartPL('leverage');
   }
 
   onSellClosePriceInput(value: any): void {
@@ -387,7 +398,9 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   onExpectedPLInput(value: any): void {
     this.targetProfit.set(value ? +value : null);
-    this.triggerProfitBasedCalc();
+    if (this.useExpectedPL()) {
+      this.triggerProfitBasedCalc();
+    }
   }
 
   private recalculateSmartPL(source: 'symbol' | 'side' | 'leverage'): void {
@@ -400,6 +413,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   private triggerProfitBasedCalc(): void {
     if (this.suppressCalc) return;
+    if (!this.useExpectedPL()) return;
 
     if (!this.currentSymbol() || !this.targetProfit()) {
       return;
@@ -568,9 +582,86 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPnLRefresh();
     this.modalRef.close(true);
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private startPnLRefresh(): void {
+    this.stopPnLRefresh(); // Clear any existing interval
+    this.pnlRefreshInterval = setInterval(() => {
+      this.refreshPnL();
+    }, 3000);
+  }
+
+  private stopPnLRefresh(): void {
+    if (this.pnlRefreshInterval) {
+      clearInterval(this.pnlRefreshInterval);
+      this.pnlRefreshInterval = null;
+    }
+  }
+
+  private refreshPnL(): void {
+    // Only refresh if we have all required data
+    const symbol = this.currentSymbol();
+    const volume = this.volume();
+    const openPrice = this.activeTab() === 'newOrder' 
+      ? this.openPrice() 
+      : (this.smartPLSide() === 1 ? this.buyOpenPrice() : this.sellOpenPrice());
+    const leverage = this.activeTab() === 'newOrder' 
+      ? this.leverage() 
+      : this.smartPLLeverage();
+    const side = this.activeTab() === 'newOrder' 
+      ? this.side() 
+      : this.smartPLSide();
+    const closePrice = this.activeTab() === 'newOrder' 
+      ? null 
+      : (this.smartPLSide() === 1 ? this.buyClosePrice() : this.sellClosePrice());
+
+    if (!symbol || !volume || !openPrice || !leverage || volume <= 0 || openPrice <= 0) {
+      return;
+    }
+
+    const requestBody = {
+      symbol: symbol,
+      side: side,
+      volume: volume,
+      openPrice: openPrice,
+      closePrice: closePrice,
+      leverage: leverage,
+    };
+
+    this.priceManagerService
+      .calculatePnL(requestBody)
+      .pipe(
+        tap((resp: any) => {
+          if (resp && typeof resp === 'object') {
+            // Update only margin and profitLoss
+            if (typeof resp.margin === 'number') {
+              if (side === 1) {
+                this.buyRequiredMargin.set(resp.margin);
+              } else {
+                this.sellRequiredMargin.set(resp.margin);
+              }
+            }
+            if (typeof resp.profitLoss === 'number') {
+              if (side === 1) {
+                this.buyPL.set(resp.profitLoss);
+              } else {
+                this.sellPL.set(resp.profitLoss);
+              }
+            }
+          }
+        }),
+        catchError((err) => {
+          // Silently fail in background refresh
+          console.error('Error refreshing PnL:', err);
+          return [];
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
   }
 
   onSubmit(side: number): void {
@@ -618,7 +709,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       openPrice: this.openPrice()!,
       leverage: this.leverage(),
       stopLoss: this.stopLoss(),
-      takeProfit: this.takeProfit(),
+      takeProfit: this.useTakeProfit() ? this.takeProfit() : undefined,
       autoPrice: this.autoPrice(),
       sellPL: this.sellPL(),
       buyPL: this.buyPL(),
@@ -627,7 +718,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       comment: this.comment(),
       closeImmediately: false,
       paymentCurrency: this.paymentCurrency(),
-      amount: this.amount(),
+      amount: this.useAmount() ? this.amount() : undefined,
     };
 
     this.priceManagerService
@@ -704,7 +795,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       side: this.smartPLSide(),
       closeInterval: this.closeInterval(),
       volume: this.volume()!,
-      expectedPL: this.targetProfit()!,
+      expectedPL: this.useExpectedPL() ? this.targetProfit()! : undefined,
       sellOpenPrice: this.sellOpenPrice()!,
       sellClosePrice: this.sellClosePrice()!,
       buyOpenPrice: this.buyOpenPrice()!,
@@ -713,7 +804,8 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       buyRequiredMargin: this.buyRequiredMargin(),
       closeImmediately: true,
       paymentCurrency: this.paymentCurrency(),
-      amount: this.amount(),
+      amount: this.useAmount() ? this.amount() : undefined,
+      leverage: this.smartPLLeverage(),
     };
 
     this.priceManagerService

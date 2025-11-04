@@ -505,6 +505,31 @@
                 </div>
               </div>
             </ng-template>
+            <!-- Retention Status Cell Template -->
+            <ng-template #retentionStatusCell let-value="value" let-row="row">
+              <div class="flex items-center gap-2">
+                <div class="relative" data-dropdown="retentionStatus">
+                  <app-custom-select
+                    [disabled]="
+                      updatingRetentionStatus === (value.id || row.id)
+                    "
+                    [options]="retentionStatusOptions"
+                    [selectedValue]="getRetentionStatusSelectedValue(value, row)"
+                    [placeholder]="'Select status...'"
+                    [dropdownWidth]="180"
+                    [scrollContainers]="selectScrollContainers"
+                    (valueChange)="
+                      onRetentionStatusSelect(
+                        value.id || row.id,
+                        $event,
+                        value || row
+                      )
+                    "
+                    class="min-w-[140px] text-xs"
+                  ></app-custom-select>
+                </div>
+              </div>
+            </ng-template>
             <!-- Assign Operator Cell Template -->
             <ng-template #assignOperatorCell let-value="value" let-row="row">
               <div class="flex items-center gap-2">

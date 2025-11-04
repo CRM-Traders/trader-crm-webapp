@@ -16,6 +16,7 @@ export class SalesStatusConfirmationModalComponent {
   @Input() clientId: string = '';
   @Input() status: { value: number; label: string } | null = null;
   @Input() clientData: any = null;
+  @Input() statusType: 'sales' | 'retention' = 'sales';
 
   @Output() confirm = new EventEmitter<{
     clientId: string;

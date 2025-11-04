@@ -124,6 +124,8 @@ export class ClientsComponent implements OnInit {
   investmentCellTemplate!: TemplateRef<any>;
   @ViewChild('salesStatusCell', { static: true })
   salesStatusCellTemplate!: TemplateRef<any>;
+  @ViewChild('retentionStatusCell', { static: true })
+  retentionStatusCellTemplate!: TemplateRef<any>;
   @ViewChild('commentsCell', { static: true })
   commentsCellTemplate!: TemplateRef<any>;
   @ViewChild('autoLoginCell', { static: true })
@@ -136,6 +138,7 @@ export class ClientsComponent implements OnInit {
   assignOperatorCellTemplate!: TemplateRef<any>;
 
   updatingSalesStatus: string | null = null;
+  updatingRetentionStatus: string | null = null;
   updatingOperatorAssignment: string | null = null;
 
   activeInlineCommentClientId: string | null = null;
@@ -155,6 +158,7 @@ export class ClientsComponent implements OnInit {
   clientCommentsCache: Map<string, ClientComment[]> = new Map();
 
   salesStatusOptions: { value: number; label: string }[] = [];
+  retentionStatusOptions: { value: number; label: string }[] = [];
   operators: OperatorDropdownItem[] = [];
   importLoading = false;
   showDeleteModal = false;
@@ -164,6 +168,8 @@ export class ClientsComponent implements OnInit {
 
   // Temporary selection state for sales status dropdowns
   private tempSalesStatusSelections: Map<string, number> = new Map();
+  // Temporary selection state for retention status dropdowns
+  private tempRetentionStatusSelections: Map<string, number> = new Map();
 
   operatorDropdownStates: Map<string, boolean> = new Map();
   salesStatusDropdownStates: Map<string, boolean> = new Map();
@@ -441,7 +447,7 @@ export class ClientsComponent implements OnInit {
       cellTemplate: null,
       selector: (row: Client) => this.getLatestComment(row),
     },
-    {
+    { 
       field: 'retentionStatus',
       header: 'Retention Status',
       sortable: true,
@@ -451,6 +457,8 @@ export class ClientsComponent implements OnInit {
         value: Number(value),
         label: label,
       })),
+      cellTemplate: this.retentionStatusCellTemplate,
+      selector: (row: Client) => row,
       hidden: true,
     },
     {
@@ -777,6 +785,12 @@ export class ClientsComponent implements OnInit {
         label: label,
       })
     );
+    this.retentionStatusOptions = Object.entries(KycStatusLabels).map(
+      ([value, label]) => ({
+        value: Number(value),
+        label: label,
+      })
+    );
     document.addEventListener('click', this.onDocumentClick.bind(this));
   }
 
@@ -820,6 +834,28 @@ export class ClientsComponent implements OnInit {
     return actualValue;
   }
 
+  // Get the selected value for retention status dropdown (considers temporary selections)
+  getRetentionStatusSelectedValue(value: any, row: any): number | null {
+    const clientId = value?.id || row?.id;
+    if (!clientId) return null;
+
+    // Check if there's a temporary selection for this client
+    if (this.tempRetentionStatusSelections.has(clientId)) {
+      const tempValue = this.tempRetentionStatusSelections.get(clientId)!;
+      return tempValue;
+    }
+
+    // Return the actual data value
+    const actualValue = this.normalizeRetentionStatus(
+      value?.retentionStatusEnum ??
+        value?.retentionStatus ??
+        row?.retentionStatusEnum ??
+        row?.retentionStatus ??
+        null
+    );
+    return actualValue;
+  }
+
   // Handler for CustomSelect change (Sales Status)
   onSalesStatusSelect(clientId: string, value: number, clientData: any): void {
     const status = this.salesStatusOptions.find((s) => s.value === value);
@@ -835,6 +871,32 @@ export class ClientsComponent implements OnInit {
 
     // Show confirmation modal instead of directly changing status
     this.showSalesStatusConfirmationModal(
+      clientId,
+      status,
+      clientData,
+      originalStatus
+    );
+  }
+
+  // Handler for CustomSelect change (Retention Status)
+  onRetentionStatusSelect(
+    clientId: string,
+    value: number,
+    clientData: any
+  ): void {
+    const status = this.retentionStatusOptions.find((s) => s.value === value);
+    if (!status) return;
+
+    // Store the original status before showing modal
+    const originalStatus = this.normalizeRetentionStatus(
+      clientData?.retentionStatusEnum || clientData?.retentionStatus
+    );
+
+    // Store temporary selection to show in dropdown
+    this.tempRetentionStatusSelections.set(clientId, value);
+
+    // Show confirmation modal instead of directly changing status
+    this.showRetentionStatusConfirmationModal(
       clientId,
       status,
       clientData,
@@ -910,6 +972,75 @@ export class ClientsComponent implements OnInit {
     });
   }
 
+  // Show retention status confirmation modal
+  showRetentionStatusConfirmationModal(
+    clientId: string,
+    status: { value: number; label: string },
+    clientData: any,
+    originalStatus: number
+  ): void {
+    const currentStatusLabel =
+      this.retentionStatusOptions.find((s) => s.value === originalStatus)
+        ?.label || 'Unknown';
+
+    const modalRef = this.modalService.open(
+      SalesStatusConfirmationModalComponent,
+      {
+        size: 'md',
+        closable: true,
+        backdrop: true,
+        keyboard: true,
+        centered: true,
+        animation: true,
+      },
+      {
+        clientId: clientId,
+        clientName:
+          clientData?.firstName && clientData?.lastName
+            ? `${clientData.firstName} ${clientData.lastName}`
+            : clientData?.email || 'Unknown Client',
+        currentStatus: currentStatusLabel,
+        newStatus: status.label,
+        status: status,
+        clientData: clientData,
+        originalStatus: originalStatus,
+        statusType: 'retention',
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          // User confirmed, proceed with the status change
+          this.selectRetentionStatus(clientId, status, clientData);
+        }
+        // Clear temporary selection regardless of outcome
+        this.tempRetentionStatusSelections.delete(clientId);
+        this.cdr.detectChanges();
+      },
+      (reason) => {
+        // User cancelled or modal was dismissed - clear temporary selection and force UI update
+        this.tempRetentionStatusSelections.delete(clientId);
+        // Force change detection to ensure dropdown reverts to original value
+        this.cdr.detectChanges();
+        // Additional change detection cycle to ensure UI is properly updated
+        setTimeout(() => {
+          this.cdr.detectChanges();
+        }, 0);
+      }
+    );
+
+    // Handle modal dismissal (backdrop click, escape key, etc.)
+    modalRef.dismissed.then((reason) => {
+      // Clear temporary selection and revert dropdown
+      this.tempRetentionStatusSelections.delete(clientId);
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 0);
+    });
+  }
+
   private reinitializeComponent(): void {
     this.operators = [];
     this.operatorsLoaded = false;
@@ -922,6 +1053,12 @@ export class ClientsComponent implements OnInit {
     this.loadFilterOptionsDirectly();
 
     this.salesStatusOptions = Object.entries(KycStatusLabels).map(
+      ([value, label]) => ({
+        value: Number(value),
+        label: label,
+      })
+    );
+    this.retentionStatusOptions = Object.entries(KycStatusLabels).map(
       ([value, label]) => ({
         value: Number(value),
         label: label,
@@ -1050,6 +1187,7 @@ export class ClientsComponent implements OnInit {
     this.destroy$.complete();
     document.removeEventListener('click', this.onDocumentClick.bind(this));
     this.tempSalesStatusSelections.clear();
+    this.tempRetentionStatusSelections.clear();
   }
 
   /**
@@ -1067,6 +1205,25 @@ export class ClientsComponent implements OnInit {
     }
 
     return typeof salesStatus === 'number' ? salesStatus : 0;
+  }
+
+  /**
+   * Normalizes the retention status value to ensure it's a number
+   * Handles both string and numeric values from the API
+   */
+  private normalizeRetentionStatus(
+    retentionStatus: string | number | null
+  ): number {
+    if (retentionStatus === null || retentionStatus === undefined) {
+      return 0; // Default to first status
+    }
+
+    if (typeof retentionStatus === 'string') {
+      const parsed = parseInt(retentionStatus, 10);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    return typeof retentionStatus === 'number' ? retentionStatus : 0;
   }
 
   private initializeGridTemplates(): void {
@@ -1094,6 +1251,13 @@ export class ClientsComponent implements OnInit {
     );
     if (salesStatusColumn) {
       salesStatusColumn.cellTemplate = this.salesStatusCellTemplate;
+    }
+
+    const retentionStatusColumn = this.gridColumns.find(
+      (col) => col.field === 'retentionStatus'
+    );
+    if (retentionStatusColumn) {
+      retentionStatusColumn.cellTemplate = this.retentionStatusCellTemplate;
     }
 
     const autoLoginColumn = this.gridColumns.find(
@@ -2444,6 +2608,80 @@ export class ClientsComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  selectRetentionStatus(
+    clientId: string,
+    status: { value: number; label: string },
+    clientData: any
+  ): void {
+    const newRetentionStatus = status.value;
+    const currentRetentionStatus = this.normalizeRetentionStatus(
+      clientData?.retentionStatusEnum || clientData?.retentionStatus
+    );
+
+    if (!clientId) {
+      this.alertService.error(
+        'Unable to update retention status: Client data not found'
+      );
+      return;
+    }
+
+    if (newRetentionStatus === currentRetentionStatus) {
+      return;
+    }
+
+    // Update the client data immediately for instant UI feedback
+    if (clientData) {
+      // Update both possible field names
+      if (clientData.retentionStatusEnum !== undefined) {
+        clientData.retentionStatusEnum = status.value;
+      }
+      if (clientData.retentionStatus !== undefined) {
+        clientData.retentionStatus = status.value;
+      }
+    }
+
+    this.updatingRetentionStatus = clientId;
+
+    this.clientsService
+      .updateRetentionStatus(clientId, newRetentionStatus)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((error) => {
+          this.alertService.error('Failed to update retention status');
+
+          // Revert the client data changes on error
+          if (clientData) {
+            if (clientData.retentionStatusEnum !== undefined) {
+              clientData.retentionStatusEnum = currentRetentionStatus;
+            }
+            if (clientData.retentionStatus !== undefined) {
+              clientData.retentionStatus = currentRetentionStatus;
+            }
+          }
+
+          return of(null);
+        }),
+        finalize(() => {
+          this.updatingRetentionStatus = null;
+        })
+      )
+      .subscribe((result) => {
+        if (result !== null) {
+          this.alertService.success(
+            `Retention status updated to ${
+              KycStatusLabels[newRetentionStatus as KycStatus]
+            }`
+          );
+
+          this.loadClientStatistics();
+          this.refreshClientComments(clientId);
+        }
+      });
+
+    // Trigger change detection to update the UI immediately
+    this.cdr.detectChanges();
+  }
+
   getSelectedSalesStatusName(clientId: string, clientData: any): string {
     if (!clientData) return 'Select status...';
 
@@ -2481,6 +2719,9 @@ export class ClientsComponent implements OnInit {
     const salesStatusDropdowns = target.closest(
       '[data-dropdown="salesStatus"]'
     );
+    const retentionStatusDropdowns = target.closest(
+      '[data-dropdown="retentionStatus"]'
+    );
 
     if (!operatorDropdowns) {
       this.operatorDropdownStates.clear();
@@ -2489,6 +2730,10 @@ export class ClientsComponent implements OnInit {
     if (!salesStatusDropdowns) {
       this.salesStatusDropdownStates.clear();
       this.salesStatusDropdownPositions.clear();
+    }
+    if (!retentionStatusDropdowns) {
+      // Clear retention status dropdown states if needed
+      // (Add similar state maps if you implement dropdown positioning for retention status)
     }
 
     // NEW: Handle operators filter dropdown

@@ -108,15 +108,24 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   paymentCurrency = signal<'USD' | 'EUR' | 'GBP'>('USD');
   calculatingFromAmount = signal<boolean>(false);
 
+  // --- Checkbox states for controlling calculations ---
+  useAmount = signal<boolean>(true);
+  useVolume = signal<boolean>(true);
+  useTakeProfit = signal<boolean>(true);
+  useExpectedPL = signal<boolean>(true);
+  useLeverage = signal<boolean>(true);
+
   // --- NEW: timer holder (put near other timers) ---
   private amountCalcTimer: any = null;
 
   private suppressCalc = false;
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
+  private pnlRefreshInterval: any = null;
 
   ngOnInit(): void {
     this.loadSavedLoginIds();
+    this.startPnLRefresh();
   }
 
   /**
@@ -170,6 +179,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   // --- NEW: unified amount-based calculation ---
   private triggerAmountBasedCalc(): void {
     if (this.suppressCalc) return;
+    if (!this.useAmount()) return;
     if (!this.currentSymbol() || !this.amount() || !this.paymentCurrency())
       return;
 
@@ -281,11 +291,14 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
   onTakeProfitInput(value: any): void {
     this.takeProfit.set(value ? +value : null);
-    this.triggerProfitBasedCalcNewOrder();
+    if (this.useTakeProfit()) {
+      this.triggerProfitBasedCalcNewOrder();
+    }
   }
 
   private triggerProfitBasedCalcNewOrder(): void {
     if (this.suppressCalc) return;
+    if (!this.useTakeProfit()) return;
     if (!this.currentSymbol() || !this.takeProfit()) {
       return;
     }
@@ -366,24 +379,30 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
   onVolumeInput(value: any): void {
     this.volume.set(value ? +value : null);
-    if (this.activeTab() === 'smartPL') {
+    if (this.activeTab() === 'smartPL' && this.useVolume()) {
       this.triggerVolumeBasedCalc();
     }
   }
 
   onBuyOpenPriceInput(value: any): void {
     this.buyOpenPrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onBuyClosePriceInput(value: any): void {
     this.buyClosePrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onSellOpenPriceInput(value: any): void {
     this.sellOpenPrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onAccountBalanceInput(value: any): void {
@@ -397,17 +416,23 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
   onLeverageChange(value: any): void {
     this.leverage.set(value ? +value : 1);
-    this.triggerProfitBasedCalcNewOrder();
+    if (this.useLeverage()) {
+      this.triggerProfitBasedCalcNewOrder();
+    }
   }
 
   onSmartPLLeverageChange(value: any): void {
     this.smartPLLeverage.set(value ? +value : 1);
-    this.recalculateSmartPL('leverage');
+    if (this.useLeverage()) {
+      this.recalculateSmartPL('leverage');
+    }
   }
 
   onSellClosePriceInput(value: any): void {
     this.sellClosePrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onSmartPLSideChange(side: number): void {
@@ -417,7 +442,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
   onExpectedPLInput(value: any): void {
     this.targetProfit.set(value ? +value : null);
-    this.triggerProfitBasedCalc();
+    if (this.useExpectedPL()) {
+      this.triggerProfitBasedCalc();
+    }
   }
 
   private recalculateSmartPL(
@@ -432,6 +459,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
   private triggerProfitBasedCalc(): void {
     if (this.suppressCalc) return;
+    if (!this.useExpectedPL()) return;
 
     if (!this.currentSymbol() || !this.targetProfit()) {
       return;
@@ -463,6 +491,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
   private triggerVolumeBasedCalc(): void {
     if (this.suppressCalc) return;
+    if (!this.useVolume()) return;
 
     if (!this.currentSymbol() || !this.volume()) {
       return;
@@ -664,10 +693,87 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPnLRefresh();
     this.modalRef.close(true);
 
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private startPnLRefresh(): void {
+    this.stopPnLRefresh(); // Clear any existing interval
+    this.pnlRefreshInterval = setInterval(() => {
+      this.refreshPnL();
+    }, 3000);
+  }
+
+  private stopPnLRefresh(): void {
+    if (this.pnlRefreshInterval) {
+      clearInterval(this.pnlRefreshInterval);
+      this.pnlRefreshInterval = null;
+    }
+  }
+
+  private refreshPnL(): void {
+    // Only refresh if we have all required data
+    const symbol = this.currentSymbol();
+    const volume = this.volume();
+    const openPrice = this.activeTab() === 'newOrder' 
+      ? this.openPrice() 
+      : (this.smartPLSide() === 1 ? this.buyOpenPrice() : this.sellOpenPrice());
+    const leverage = this.activeTab() === 'newOrder' 
+      ? this.leverage() 
+      : this.smartPLLeverage();
+    const side = this.activeTab() === 'newOrder' 
+      ? this.side() 
+      : this.smartPLSide();
+    const closePrice = this.activeTab() === 'newOrder' 
+      ? null 
+      : (this.smartPLSide() === 1 ? this.buyClosePrice() : this.sellClosePrice());
+
+    if (!symbol || !volume || !openPrice || !leverage || volume <= 0 || openPrice <= 0) {
+      return;
+    }
+
+    const requestBody = {
+      symbol: symbol,
+      side: side,
+      volume: volume,
+      openPrice: openPrice,
+      closePrice: closePrice,
+      leverage: leverage,
+    };
+
+    this.priceManagerService
+      .calculatePnL(requestBody)
+      .pipe(
+        tap((resp: any) => {
+          if (resp && typeof resp === 'object') {
+            // Update only margin and profitLoss
+            if (typeof resp.margin === 'number') {
+              if (side === 1) {
+                this.buyRequiredMargin.set(resp.margin);
+              } else {
+                this.sellRequiredMargin.set(resp.margin);
+              }
+            }
+            if (typeof resp.profitLoss === 'number') {
+              if (side === 1) {
+                this.buyPL.set(resp.profitLoss);
+              } else {
+                this.sellPL.set(resp.profitLoss);
+              }
+            }
+          }
+        }),
+        catchError((err) => {
+          // Silently fail in background refresh
+          console.error('Error refreshing PnL:', err);
+          return [];
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
   }
 
   onSubmit(side: number): void {
@@ -722,11 +828,11 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       loginIds: this.fetchedClients().map((x) => x.userId),
       symbol: this.currentSymbol(),
       side: this.side(),
-      volume: this.volume()!,
+      volume: this.useVolume() ? this.volume()! : undefined,
       openPrice: this.openPrice()!,
-      leverage: this.leverage(),
+      leverage: this.useLeverage() ? this.leverage() : undefined,
       stopLoss: this.stopLoss(),
-      takeProfit: this.takeProfit(),
+      takeProfit: this.useTakeProfit() ? this.takeProfit() : undefined,
       autoPrice: this.autoPrice(),
       sellPL: this.sellPL(),
       buyPL: this.buyPL(),
@@ -735,7 +841,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       comment: this.comment(),
       closeImmediately: false, // Added this
       paymentCurrency: this.paymentCurrency(),
-      amount: this.amount(),
+      amount: this.useAmount() ? this.amount() : undefined,
     };
 
     this.priceManagerService
@@ -824,8 +930,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       symbol: this.currentSymbol(),
       side: this.smartPLSide(),
       closeInterval: this.closeInterval(),
-      volume: this.volume()!,
-      expectedPL: this.targetProfit()!,
+      volume: this.useVolume() ? this.volume()! : undefined,
+      expectedPL: this.useExpectedPL() ? this.targetProfit()! : undefined,
       sellOpenPrice: this.sellOpenPrice()!,
       sellClosePrice: this.sellClosePrice()!,
       buyOpenPrice: this.buyOpenPrice()!,
@@ -836,7 +942,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       autoBuyPrice: this.autoBuyPrice(),
       closeImmediately: true,
       paymentCurrency: this.paymentCurrency(),
-      amount: this.amount(),
+      amount: this.useAmount() ? this.amount() : undefined,
+      leverage: this.useLeverage() ? this.smartPLLeverage() : undefined,
     };
 
     this.priceManagerService

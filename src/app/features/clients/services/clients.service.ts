@@ -110,6 +110,19 @@ export class ClientsService {
     });
   }
 
+  updateRetentionStatus(
+    clientId: string,
+    retentionStatus: number
+  ): Observable<void> {
+    return this.httpService.put<void>(
+      `${this.apiPath}/update-retention-status`,
+      {
+        clientId,
+        retentionStatus,
+      }
+    );
+  }
+
   unAssignOperator(clients: string[]) {
     return this.httpService.post(
       'identity/api/operatorclient/unassign-clients-from-operator',

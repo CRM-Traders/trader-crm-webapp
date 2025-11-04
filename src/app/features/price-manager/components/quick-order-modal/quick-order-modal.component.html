@@ -147,16 +147,25 @@
         <!-- Row: Amount + Currency (ABOVE Volume row) -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Amount
-              <span
-                *ngIf="calculatingFromAmount()"
-                class="ml-2 text-xs text-blue-600"
-                >Calculating...</span
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-            </label>
+                Amount
+                <span
+                  *ngIf="calculatingFromAmount()"
+                  class="ml-2 text-xs text-blue-600"
+                  >Calculating...</span
+                >
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useAmount()"
+                (change)="useAmount.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Amount in calculations"
+              />
+            </div>
             <input
               type="number"
               [ngModel]="amount()"
@@ -222,16 +231,25 @@
           </div>
 
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Expected P/L <span class="text-red-500">*</span>
-              <span
-                *ngIf="calculatingFromProfit()"
-                class="ml-2 text-xs text-blue-600"
-                >Calculating...</span
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-            </label>
+                Expected P/L <span class="text-red-500">*</span>
+                <span
+                  *ngIf="calculatingFromProfit()"
+                  class="ml-2 text-xs text-blue-600"
+                  >Calculating...</span
+                >
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useExpectedPL()"
+                (change)="useExpectedPL.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Expected P/L in calculations"
+              />
+            </div>
             <input
               type="number"
               [ngModel]="targetProfit()"
@@ -447,16 +465,25 @@
         <!-- Amount + Currency (ABOVE Volume) -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Amount
-              <span
-                *ngIf="calculatingFromAmount()"
-                class="ml-2 text-xs text-blue-600"
-                >Calculating...</span
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-            </label>
+                Amount
+                <span
+                  *ngIf="calculatingFromAmount()"
+                  class="ml-2 text-xs text-blue-600"
+                  >Calculating...</span
+                >
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useAmount()"
+                (change)="useAmount.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Amount in calculations"
+              />
+            </div>
             <input
               type="number"
               [ngModel]="amount()"
@@ -558,16 +585,25 @@
           </div>
 
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Take Profit
-              <span
-                *ngIf="calculatingFromProfit()"
-                class="ml-2 text-xs text-blue-600"
-                >Calculating...</span
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-            </label>
+                Take Profit
+                <span
+                  *ngIf="calculatingFromProfit()"
+                  class="ml-2 text-xs text-blue-600"
+                  >Calculating...</span
+                >
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useTakeProfit()"
+                (change)="useTakeProfit.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Take Profit in calculations"
+              />
+            </div>
             <input
               type="number"
               [ngModel]="takeProfit()"

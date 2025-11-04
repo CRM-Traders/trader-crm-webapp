@@ -11,10 +11,10 @@
     </div>
     <div>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Confirm Sales Status Change
+        Confirm {{ statusType === 'retention' ? 'Retention' : 'Sales' }} Status Change
       </h3>
       <p class="text-sm text-gray-500 dark:text-gray-400">
-        Are you sure you want to change the sales status?
+        Are you sure you want to change the {{ statusType === 'retention' ? 'retention' : 'sales' }} status?
       </p>
     </div>
   </div>
@@ -51,7 +51,7 @@
       </div>
       <div class="ml-3">
         <p class="text-sm text-amber-800">
-          This action will immediately update the client's sales status. This change cannot be undone.
+          This action will immediately update the client's {{ statusType === 'retention' ? 'retention' : 'sales' }} status. This change cannot be undone.
         </p>
       </div>
     </div>
