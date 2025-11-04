@@ -358,37 +358,65 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   onVolumeInput(value: any): void {
     this.volume.set(value ? +value : null);
-    if (this.activeTab() === 'smartPL') {
+    if (this.activeTab() === 'smartPL' && this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    } else if (this.activeTab() === 'newOrder' && this.useVolume()) {
+      // Trigger P/L calculation for new order tab when volume changes
       this.triggerVolumeBasedCalc();
     }
   }
 
   onBuyOpenPriceInput(value: any): void {
     this.buyOpenPrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onBuyClosePriceInput(value: any): void {
     this.buyClosePrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onSellOpenPriceInput(value: any): void {
     this.sellOpenPrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onLeverageChange(value: any): void {
     this.leverage.set(value ? +value : 1);
+    if (this.useLeverage() && this.activeTab() === 'newOrder') {
+      // Trigger P/L calculation for new order tab when leverage changes
+      this.triggerVolumeBasedCalc();
+    }
+  }
+
+  onOpenPriceInput(value: any): void {
+    this.openPrice.set(value ? +value : null);
+    if (this.activeTab() === 'newOrder' && this.useVolume()) {
+      // Trigger P/L calculation for new order tab when open price changes
+      this.refreshPnL();
+    }
   }
 
   onSmartPLLeverageChange(value: any): void {
     this.smartPLLeverage.set(value ? +value : 1);
+    if (this.useLeverage() && this.activeTab() === 'smartPL') {
+      if (this.useVolume() && this.volume() && this.hasEntryExitPrices()) {
+        this.triggerVolumeBasedCalc();
+      }
+    }
   }
 
   onSellClosePriceInput(value: any): void {
     this.sellClosePrice.set(value ? +value : null);
-    this.triggerVolumeBasedCalc();
+    if (this.useVolume()) {
+      this.triggerVolumeBasedCalc();
+    }
   }
 
   onSmartPLSideChange(side: number): void {
@@ -404,9 +432,9 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   private recalculateSmartPL(source: 'symbol' | 'side' | 'leverage'): void {
-    if (this.volume() && this.hasEntryExitPrices()) {
+    if (this.volume() && this.hasEntryExitPrices() && this.useVolume()) {
       this.triggerVolumeBasedCalc();
-    } else if (this.targetProfit()) {
+    } else if (this.targetProfit() && this.useExpectedPL()) {
       this.triggerProfitBasedCalc();
     }
   }
@@ -449,6 +477,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   private triggerVolumeBasedCalc(): void {
     if (this.suppressCalc) return;
+    if (!this.useVolume()) return;
 
     if (!this.currentSymbol() || !this.volume()) {
       return;
@@ -555,6 +584,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     }
 
     this.openPrice.set(this.lastPrice()!);
+    // Trigger calculation if in newOrder tab and useVolume is enabled
+    if (this.activeTab() === 'newOrder' && this.useVolume()) {
+      this.refreshPnL();
+    }
   }
 
   updateBuyOpenPrice(): void {
