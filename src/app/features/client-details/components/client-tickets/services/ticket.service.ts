@@ -241,12 +241,7 @@ export class TicketService {
   }
 
   formatCurrency(amount: number, currency: string): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+    return `${amount.toFixed(2)} ${currency}`;
   }
 
   getStatusColorClass(status: string): string {
