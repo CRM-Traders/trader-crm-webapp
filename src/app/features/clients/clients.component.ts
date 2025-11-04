@@ -438,15 +438,6 @@ export class ClientsComponent implements OnInit {
       selector: (row: Client) => row,
       permission: 53,
     },
-    {
-      field: 'latestComment',
-      header: 'Latest Comment',
-      sortable: false,
-      filterable: false,
-      width: '200px',
-      cellTemplate: null,
-      selector: (row: Client) => this.getLatestComment(row),
-    },
     { 
       field: 'retentionStatus',
       header: 'Retention Status',
@@ -459,7 +450,16 @@ export class ClientsComponent implements OnInit {
       })),
       cellTemplate: this.retentionStatusCellTemplate,
       selector: (row: Client) => row,
-      hidden: true,
+      permission: 191
+    },
+    {
+      field: 'latestComment',
+      header: 'Latest Comment',
+      sortable: false,
+      filterable: false,
+      width: '200px',
+      cellTemplate: null,
+      selector: (row: Client) => this.getLatestComment(row),
     },
     {
       field: 'retentionOperatorId',
@@ -1193,23 +1193,43 @@ export class ClientsComponent implements OnInit {
   /**
    * Normalizes the sales status value to ensure it's a number
    * Handles both string and numeric values from the API
+   * Also handles label strings like "New" by looking them up in KycStatusLabels
    */
   private normalizeSalesStatus(salesStatus: string | number | null): number {
     if (salesStatus === null || salesStatus === undefined) {
       return 0; // Default to first status
     }
 
-    if (typeof salesStatus === 'string') {
-      const parsed = parseInt(salesStatus, 10);
-      return isNaN(parsed) ? 0 : parsed;
+    if (typeof salesStatus === 'number') {
+      return salesStatus;
     }
 
-    return typeof salesStatus === 'number' ? salesStatus : 0;
+    if (typeof salesStatus === 'string') {
+      // First try to parse as a numeric string
+      const parsed = parseInt(salesStatus, 10);
+      if (!isNaN(parsed)) {
+        return parsed;
+      }
+
+      // If parsing fails, try to find it as a label in KycStatusLabels
+      const labelEntry = Object.entries(KycStatusLabels).find(
+        ([_, label]) => label === salesStatus
+      );
+      if (labelEntry) {
+        return Number(labelEntry[0]);
+      }
+
+      // If not found, return 0
+      return 0;
+    }
+
+    return 0;
   }
 
   /**
    * Normalizes the retention status value to ensure it's a number
    * Handles both string and numeric values from the API
+   * Also handles label strings like "New" by looking them up in KycStatusLabels
    */
   private normalizeRetentionStatus(
     retentionStatus: string | number | null
@@ -1218,12 +1238,30 @@ export class ClientsComponent implements OnInit {
       return 0; // Default to first status
     }
 
-    if (typeof retentionStatus === 'string') {
-      const parsed = parseInt(retentionStatus, 10);
-      return isNaN(parsed) ? 0 : parsed;
+    if (typeof retentionStatus === 'number') {
+      return retentionStatus;
     }
 
-    return typeof retentionStatus === 'number' ? retentionStatus : 0;
+    if (typeof retentionStatus === 'string') {
+      // First try to parse as a numeric string
+      const parsed = parseInt(retentionStatus, 10);
+      if (!isNaN(parsed)) {
+        return parsed;
+      }
+
+      // If parsing fails, try to find it as a label in KycStatusLabels
+      const labelEntry = Object.entries(KycStatusLabels).find(
+        ([_, label]) => label === retentionStatus
+      );
+      if (labelEntry) {
+        return Number(labelEntry[0]);
+      }
+
+      // If not found, return 0
+      return 0;
+    }
+
+    return 0;
   }
 
   private initializeGridTemplates(): void {

@@ -511,7 +511,8 @@
                 <div class="relative" data-dropdown="retentionStatus">
                   <app-custom-select
                     [disabled]="
-                      updatingRetentionStatus === (value.id || row.id)
+                      updatingRetentionStatus === (value.id || row.id) 
+                      || !hasPermission(191)
                     "
                     [options]="retentionStatusOptions"
                     [selectedValue]="getRetentionStatusSelectedValue(value, row)"
