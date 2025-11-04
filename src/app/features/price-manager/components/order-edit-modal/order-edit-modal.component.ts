@@ -322,10 +322,9 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  getRequiredMargin(): number | null {
-    const metadata = this.orderData?.metadata || {};
-    return this.orderData?.requiredMargin || metadata.RequiredMargin || null;
-  }
+  // getRequiredMargin(): number | null {
+  //   return this.orderData.positionMargin || null;
+  // }
 
   onChartEvent(event: any): void {
     try {

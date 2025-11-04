@@ -470,9 +470,9 @@
         </div>
 
         <!-- Row 7: Floating P/L, Net Floating P/L, Margin -->
-        <div class="grid grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 gap-4">
           <!-- Floating P/L -->
-          <div>
+          <!-- <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
@@ -490,14 +490,14 @@
               readonly
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
             />
-          </div>
+          </div> -->
 
-          <!-- Net Floating P/L -->
+          <!-- P/L -->
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Net Floating P/L
+              P/L
             </label>
             <input
               type="text"
@@ -507,7 +507,11 @@
                   : '-'
               "
               readonly
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+              [ngClass]="{
+                '!text-red-500': orderData.realizedPnL < 0,
+                '!text-green-500': orderData.realizedPnL > 0
+              }"
             />
           </div>
 
@@ -521,12 +525,16 @@
             <input
               type="text"
               [value]="
-                getRequiredMargin()
-                  ? '$' + (getRequiredMargin() | number : '1.4-4')
+                orderData.positionMargin
+                  ? '$' + (orderData.positionMargin | number : '1.4-4')
                   : '-'
               "
               readonly
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 cursor-not-allowed"
+              [ngClass]="{
+                '!text-red-500': orderData.positionMargin < 0,
+                '!text-green-500': orderData.positionMargin > 0
+              }"
             />
           </div>
         </div>
