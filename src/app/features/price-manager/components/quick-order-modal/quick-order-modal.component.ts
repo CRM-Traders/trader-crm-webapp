@@ -761,6 +761,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           const sideLabel = this.side() === 1 ? 'Buy' : 'Sell';
           this.alertService.success(`${sideLabel} order created successfully`);
           // this.modalRef.close(true);
+          this.fetchUserBalance();
         }),
         catchError((err: any) => {
           console.error('Error creating order:', err);
@@ -850,6 +851,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
             `${sideLabel} order with Smart P/L created successfully`
           );
           // this.modalRef.close(true);
+          this.fetchUserBalance();
         }),
         catchError((err: any) => {
           console.error('Error creating order:', err);
