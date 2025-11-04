@@ -124,7 +124,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   private pnlRefreshInterval: any = null;
 
   ngOnInit(): void {
-    this.loadSavedLoginIds();
+    // this.loadSavedLoginIds();
     this.startPnLRefresh();
   }
 
@@ -852,7 +852,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
           this.alertService.success(
             `${sideLabel} bulk order created successfully for ${loginIds.length} client(s)`
           );
-          this.modalRef.close(true);
+          // this.modalRef.close(true);
         }),
         catchError((err: any) => {
           console.error('Error creating bulk order:', err);
@@ -954,7 +954,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
           this.alertService.success(
             `${sideLabel} bulk order with Smart P/L created successfully for ${loginIds.length} client(s)`
           );
-          this.modalRef.close(true);
+          // this.modalRef.close(true);
         }),
         catchError((err: any) => {
           console.error('Error creating bulk order:', err);

@@ -426,7 +426,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
             Object.assign(this.orderData, response);
           }
 
-          this.modalRef.close(true);
+          // this.modalRef.close(true);
         },
         error: (error) => {
           console.error('Error updating order:', error);
