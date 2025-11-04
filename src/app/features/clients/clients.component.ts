@@ -587,7 +587,7 @@ export class ClientsComponent implements OnInit {
       filterType: 'date',
       type: 'date',
       format: 'short',
-      selector: (row: Client) => row.ftdTime || '-',
+      selector: (row: Client) => row.ftdDate || '-',
       hidden: true,
     },
     {

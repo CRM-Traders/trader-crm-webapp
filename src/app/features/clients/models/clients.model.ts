@@ -23,6 +23,7 @@ export interface Client {
   affiliateId: string;
   affiliateName: string | null;
   ftdTime: string | null;
+  ftdDate: string | null;
   ltdTime: string | null;
   qualificationTime: string | null;
   registrationDate: string;
