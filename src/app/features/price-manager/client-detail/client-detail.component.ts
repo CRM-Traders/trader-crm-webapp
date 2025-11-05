@@ -59,6 +59,9 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   private modalService = inject(ModalService);
   private destroy$ = new Subject<void>();
 
+  loadingBalance = signal<boolean>(false);
+  userBalance = signal<any[]>([]);
+
   client = signal<Client | null>(null);
   loading = signal(false);
   error = signal<string | null>(null);
@@ -99,6 +102,10 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.loadClientData();
     this.startOrderbookRefetch();
+
+    if (this.client()?.userId) {
+      this.fetchUserBalance();
+    }
   }
 
   ngAfterViewInit(): void {
@@ -108,6 +115,43 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  fetchUserBalance(): void {
+    if (!this.client()) return;
+
+    this.loadingBalance.set(true);
+    this.service
+      .getUserBalanceWithoutCurrency(this.client()!.userId)
+      .pipe(
+        tap((response: any) => {
+          if (response?.balances && response.balances.length > 0) {
+            const balances: any[] = Array.isArray(response.balances)
+              ? response.balances
+              : [];
+
+            // Filter balances where totalAvailable > 0
+            const validBalances = balances.filter(
+              (b) =>
+                b &&
+                typeof b.currency === 'string' &&
+                typeof b.totalAvailable === 'number' &&
+                b.totalAvailable > 0
+            );
+
+            this.userBalance.set(validBalances);
+          } else {
+            this.userBalance.set([]);
+          }
+        }),
+        catchError((err) => {
+          console.error('Error fetching balance:', err);
+          return [];
+        }),
+        finalize(() => this.loadingBalance.set(false)),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
   }
 
   private loadClientData(): void {
@@ -127,6 +171,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       fullName: fullNameFromQuery,
       externalId: clientId,
     });
+
+    this.fetchUserBalance();
 
     this.loadCurrentDataType()
       .pipe(
@@ -597,7 +643,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         type: 'info',
         confirmText: 'Re-Open Order',
         cancelText: 'Cancel',
-        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}\nStatus: ${order.statusLabel}`
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}\nStatus: ${order.statusLabel}`,
       }
     );
 
@@ -659,7 +705,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         type: 'warning',
         confirmText: 'Cancel Order',
         cancelText: 'Keep Order',
-        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}`
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}`,
       }
     );
 
@@ -738,7 +784,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         type: 'info',
         confirmText: 'Reopen Order',
         cancelText: 'Cancel',
-        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}\nStatus: ${order.statusLabel}`
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}\nStatus: ${order.statusLabel}`,
       }
     );
 
@@ -864,7 +910,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         type: 'warning',
         confirmText: 'Close Order',
         cancelText: 'Keep Order',
-        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}`
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${order.orderTypeLabel}\nSide: ${order.sideLabel}\nPrice: $${order.price}\nQuantity: ${order.quantity}`,
       }
     );
 
@@ -964,7 +1010,11 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     interval(3000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        if (this.client() && this.selectedTab() === 'orders' && !this.ordersLoading()) {
+        if (
+          this.client() &&
+          this.selectedTab() === 'orders' &&
+          !this.ordersLoading()
+        ) {
           this.loadOpenOrders(true).pipe(takeUntil(this.destroy$)).subscribe();
         }
       });
