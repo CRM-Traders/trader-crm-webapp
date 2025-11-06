@@ -128,16 +128,17 @@
           Account Balances ({{ userBalance().length }})
         </h3>
         <div
-          class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+          class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
         >
           <div
             *ngFor="let balance of userBalance()"
-            class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg px-4 py-4 border border-blue-200 dark:border-blue-700 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow"
+            class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/5 dark:to-blue-800/5 rounded-lg border border-blue-200 dark:border-blue-700 p-3 shadow-sm hover:shadow-md transition-all duration-200"
           >
-            <div class="flex items-center space-x-3">
-              <div class="bg-blue-500 dark:bg-blue-600 rounded-full p-2">
+            <!-- Currency Header -->
+            <div class="flex items-center space-x-2 mb-2.5 pb-2 border-b border-blue-200 dark:border-blue-700">
+              <div class="w-7 h-7 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center flex-shrink-0">
                 <svg
-                  class="w-5 h-5 text-white"
+                  class="w-4 h-4 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -150,19 +151,32 @@
                   />
                 </svg>
               </div>
-              <span
-                class="text-base font-semibold text-gray-900 dark:text-gray-100"
-              >
+              <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
                 {{ balance.currency }}
-              </span>
+              </h4>
             </div>
-            <div class="text-right">
-              <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                Available
-              </p>
-              <p class="text-lg font-bold text-green-600 dark:text-green-400">
-                {{ balance.totalAvailable | number : "1.2-2" }}
-              </p>
+
+            <!-- Balance Details -->
+            <div class="">
+              <!-- Free Margin -->
+              <div class="flex items-center justify-between px-2 py-1">
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Free Margin
+                </span>
+                <span class="text-sm font-bold text-green-600 dark:text-green-400">
+                  {{ balance.totalAvailable | number : "1.2-2" }}
+                </span>
+              </div>
+
+              <!-- Locked Margin -->
+              <div class="flex items-center justify-between px-2 py-1">
+                <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Used Margin
+                </span>
+                <span class="text-sm font-bold text-green-600 dark:text-green-400">
+                  {{ balance.totalLocked | number : "1.2-2" }}
+                </span>
+              </div>
             </div>
           </div>
         </div>

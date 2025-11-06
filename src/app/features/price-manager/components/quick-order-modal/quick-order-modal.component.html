@@ -15,34 +15,54 @@
   <!-- User Balance Information -->
   <div
     *ngIf="userBalance().length > 0"
-    class="mb-4 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-4"
+    class="mb-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
   >
     <div
-      class="bg-white rounded-md px-4 py-3 border border-blue-200 dark:border-gray-700 flex items-center justify-between"
+      class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/5 dark:to-blue-800/5 rounded-lg border border-blue-200 dark:border-blue-700 p-3 shadow-sm hover:shadow-md transition-all duration-200"
     >
-      <div class="flex items-center space-x-2">
-        <svg
-          class="w-4 h-4 text-blue-600 dark:text-blue-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <!-- Currency Header -->
+      <div class="flex items-center space-x-2 mb-2.5 pb-2 border-b border-blue-200 dark:border-blue-700">
+        <div class="w-7 h-7 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center flex-shrink-0">
+          <svg
+            class="w-4 h-4 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+            />
+          </svg>
+        </div>
+        <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
           {{ userBalance()[0].currency }}
-        </span>
+        </h4>
       </div>
-      <div class="text-right">
-        <p class="text-xs text-gray-500 dark:text-gray-400">Available</p>
-        <p class="text-sm font-bold text-green-600 dark:text-green-400">
-          {{ userBalance()[0].totalAvailable }}
-        </p>
+
+      <!-- Balance Details -->
+      <div class="">
+        <!-- Free Margin -->
+        <div class="flex items-center justify-between px-2">
+          <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+            Free Margin
+          </span>
+          <span class="text-sm font-bold text-green-600 dark:text-green-400">
+            {{ userBalance()[0].totalAvailable | number : "1.2-2" }}
+          </span>
+        </div>
+
+        <!-- Used Margin -->
+        <div class="flex items-center justify-between px-2">
+          <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+            Used Margin
+          </span>
+          <span class="text-sm font-bold text-green-600 dark:text-green-400">
+            {{ userBalance()[0].totalLocked | number : "1.2-2" }}
+          </span>
+        </div>
       </div>
     </div>
   </div>
