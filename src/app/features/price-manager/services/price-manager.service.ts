@@ -342,6 +342,9 @@ export interface Order {
   statusLabel?: string;
   openPosition?: string;
   closePosition?: string;
+
+  openPL?: number;
+  closePL?: number;
 }
 
 export interface OrdersResponse {

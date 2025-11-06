@@ -507,7 +507,12 @@
             <th
               class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
             >
-              P&L
+              Open P&L
+            </th>
+            <th
+              class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            >
+              Close P&L
             </th>
             <th
               class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
@@ -623,6 +628,11 @@
                 </div>
               </td>
               <!-- P&L -->
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div
+                  class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse ml-auto"
+                ></div>
+              </td>
               <td class="px-4 py-3 whitespace-nowrap text-right">
                 <div
                   class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse ml-auto"
@@ -821,12 +831,27 @@
                   <span
                     class="text-sm font-medium"
                     [ngClass]="
-                      (order.targetProfit || 0) < 0
+                      (order.openPL || 0) < 0
                         ? 'text-red-600 dark:text-red-400'
                         : 'text-green-600 dark:text-green-400'
                     "
                   >
-                    ${{ order.targetProfit || 0 | number : "1.2-2" }}
+                    ${{ order.openPL || 0 | number : "1.2-2" }}
+                  </span>
+                </div>
+              </td>
+
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <div class="flex flex-col items-end">
+                  <span
+                    class="text-sm font-medium"
+                    [ngClass]="
+                      (order.closePL || 0) < 0
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-green-600 dark:text-green-400'
+                    "
+                  >
+                    ${{ order.closePL || 0 | number : "1.2-2" }}
                   </span>
                 </div>
               </td>
