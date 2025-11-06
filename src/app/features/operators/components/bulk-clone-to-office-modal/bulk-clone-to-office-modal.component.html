@@ -1,0 +1,348 @@
+<!-- src/app/features/operators/components/bulk-clone-to-office-modal/bulk-clone-to-office-modal.component.html -->
+
+<div class="w-full">
+  <!-- Modal Header -->
+  <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+    <h4 class="text-xl font-semibold text-gray-900 dark:text-white">
+      Clone Operators to Office
+    </h4>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+      Clone {{ operators.length }} operator{{
+        operators.length === 1 ? "" : "s"
+      }}
+      from one office to another
+    </p>
+  </div>
+
+  <!-- Modal Body -->
+  <div class="px-6 py-6">
+    <form [formGroup]="cloneForm" class="space-y-6">
+      <!-- From Office Selection -->
+      <div class="relative" data-dropdown="fromOffice">
+        <label
+          for="fromOfficeId"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          From Office <span class="text-red-500">*</span>
+        </label>
+
+        <!-- If only one office is available, show it as read-only -->
+        <ng-container *ngIf="fromOffices.length === 1; else fromOfficeDropdown">
+          <div class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+            {{ getSelectedFromOfficeName() }}
+          </div>
+
+          <!-- Validation Error -->
+          <p
+            class="mt-1 text-sm text-red-600 dark:text-red-400"
+            *ngIf="
+              cloneForm.get('fromOfficeId')?.invalid &&
+              cloneForm.get('fromOfficeId')?.touched
+            "
+          >
+            <span *ngIf="cloneForm.get('fromOfficeId')?.errors?.['required']">
+              From office selection is required
+            </span>
+          </p>
+        </ng-container>
+
+        <!-- Dropdown version when multiple offices exist -->
+        <ng-template #fromOfficeDropdown>
+          <!-- Custom Dropdown Button -->
+          <button
+            type="button"
+            class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+            [class.border-red-500]="
+              cloneForm.get('fromOfficeId')?.invalid &&
+              cloneForm.get('fromOfficeId')?.touched
+            "
+            (click)="toggleFromOfficeDropdown()"
+            (keydown)="onFromOfficeButtonKeydown($event)"
+          >
+            <span class="truncate">{{ getSelectedFromOfficeName() }}</span>
+            <svg
+              class="w-4 h-4 ml-2 transition-transform"
+              [class.rotate-180]="fromOfficeDropdownOpen"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown Panel -->
+          <div
+            *ngIf="fromOfficeDropdownOpen"
+            class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+          >
+            <!-- Search Input -->
+            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+              <input
+                type="text"
+                placeholder="Search offices..."
+                class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                (input)="onFromOfficeSearch($event)"
+                [value]="fromOfficeSearchTerm"
+              />
+            </div>
+
+            <!-- Offices List -->
+            <div class="max-h-48 overflow-y-auto">
+              <div
+                *ngFor="let office of filteredFromOffices; let i = index"
+                class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+                [class.bg-blue-100]="isFromOfficeFocused(i)"
+                [class.dark:bg-blue-400]="isFromOfficeFocused(i)"
+                [tabindex]="0"
+                (click)="selectFromOffice(office)"
+                (keydown)="onFromOfficeKeydown($event, office, i)"
+                (mouseenter)="setFocusedFromOfficeIndex(i)"
+              >
+                {{ office.value }}
+              </div>
+
+              <!-- Loading indicator -->
+              <div
+                *ngIf="loadingFromOffices"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                <svg
+                  class="animate-spin h-4 w-4 mx-auto"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+
+              <!-- No results -->
+              <div
+                *ngIf="!loadingFromOffices && filteredFromOffices.length === 0"
+                class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+              >
+                No offices found
+              </div>
+            </div>
+          </div>
+
+          <!-- Validation Error -->
+          <p
+            class="mt-1 text-sm text-red-600 dark:text-red-400"
+            *ngIf="
+              cloneForm.get('fromOfficeId')?.invalid &&
+              cloneForm.get('fromOfficeId')?.touched
+            "
+          >
+            <span *ngIf="cloneForm.get('fromOfficeId')?.errors?.['required']">
+              From office selection is required
+            </span>
+          </p>
+        </ng-template>
+      </div>
+
+      <!-- To Office Selection -->
+      <div class="relative" data-dropdown="toOffice">
+        <label
+          for="toOfficeId"
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          To Office <span class="text-red-500">*</span>
+        </label>
+
+        <!-- Custom Dropdown Button -->
+        <button
+          type="button"
+          class="w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-left flex justify-between items-center"
+          [class.border-red-500]="
+            cloneForm.get('toOfficeId')?.invalid &&
+            cloneForm.get('toOfficeId')?.touched
+          "
+          (click)="toggleToOfficeDropdown()"
+          (keydown)="onToOfficeButtonKeydown($event)"
+        >
+          <span class="truncate">{{ getSelectedToOfficeName() }}</span>
+          <svg
+            class="w-4 h-4 ml-2 transition-transform"
+            [class.rotate-180]="toOfficeDropdownOpen"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- Dropdown Panel -->
+        <div
+          *ngIf="toOfficeDropdownOpen"
+          class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-64 overflow-hidden"
+        >
+          <!-- Search Input -->
+          <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+            <input
+              type="text"
+              placeholder="Search offices..."
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              (input)="onToOfficeSearch($event)"
+              [value]="toOfficeSearchTerm"
+            />
+          </div>
+
+          <!-- Offices List -->
+          <div class="max-h-48 overflow-y-auto">
+            <div
+              *ngFor="let office of filteredToOffices; let i = index"
+              class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-400/30 cursor-pointer text-sm text-gray-900 dark:text-white"
+              [class.bg-blue-100]="isToOfficeFocused(i)"
+              [class.dark:bg-blue-400]="isToOfficeFocused(i)"
+              [tabindex]="0"
+              (click)="selectToOffice(office)"
+              (keydown)="onToOfficeKeydown($event, office, i)"
+              (mouseenter)="setFocusedToOfficeIndex(i)"
+            >
+              {{ office.value }}
+            </div>
+
+            <!-- Loading indicator -->
+            <div
+              *ngIf="loadingToOffices"
+              class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+            >
+              <svg
+                class="animate-spin h-4 w-4 mx-auto"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </div>
+
+            <!-- No results -->
+            <div
+              *ngIf="!loadingToOffices && filteredToOffices.length === 0"
+              class="px-3 py-2 text-center text-sm text-gray-500 dark:text-gray-400"
+            >
+              No offices found
+            </div>
+          </div>
+        </div>
+
+        <!-- Validation Error -->
+        <p
+          class="mt-1 text-sm text-red-600 dark:text-red-400"
+          *ngIf="
+            cloneForm.get('toOfficeId')?.invalid &&
+            cloneForm.get('toOfficeId')?.touched
+          "
+        >
+          <span *ngIf="cloneForm.get('toOfficeId')?.errors?.['required']">
+            To office selection is required
+          </span>
+        </p>
+      </div>
+
+      <!-- Selected Operators Info -->
+      <div
+        class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-4 mt-12 mb-8"
+      >
+        <p class="text-sm font-medium text-primary-500 mb-2">
+          Selected Operators ({{ operators.length }}):
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <span
+            *ngFor="let operator of operators.slice(0, 5)"
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
+          >
+            {{ operator.userFullName }}
+          </span>
+          <span
+            *ngIf="operators.length > 5"
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200"
+          >
+            ... and {{ operators.length - 5 }} more
+          </span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal Footer -->
+  <div
+    class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3"
+  >
+    <button
+      type="button"
+      class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+      (click)="onCancel()"
+      [disabled]="isSubmitting"
+    >
+      Cancel
+    </button>
+    <button
+      type="button"
+      class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      (click)="onSubmit()"
+      [disabled]="cloneForm.invalid || isSubmitting"
+    >
+      <span class="flex items-center">
+        <svg
+          *ngIf="isSubmitting"
+          class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+        {{ isSubmitting ? "Cloning..." : "Clone Operators" }}
+      </span>
+    </button>
+  </div>
+</div>

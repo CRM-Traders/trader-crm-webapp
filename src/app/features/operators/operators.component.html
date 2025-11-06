@@ -170,15 +170,17 @@
         <div class="overflow-x-auto">
           <app-grid
             [permission]="98"
+            [selectionPermission]="83"
             [exportPermission]="188"
             gridId="operators-grid"
             [endpoint]="'identity/api/operators/grid'"
             [columns]="gridColumns"
             [actions]="gridActions"
+            [bulkActions]="gridBulkActions"
             [sortable]="true"
             [enableContextMenu]="true"
             [exportable]="true"
-            [selectable]="false"
+            [selectable]="true"
             [showColumnSelector]="false"
             [showFilters]="true"
             emptyMessage="No operators found"
@@ -186,6 +188,8 @@
             (export)="onExport($event)"
             (refresh)="refreshGrid()"
             (filterChange)="onFilterChange($event)"
+            (selectionChange)="onSelectionChange($event)"
+            (bulkActionExecuted)="onBulkActionExecuted($event)"
           >
           </app-grid>
         </div>

@@ -37,6 +37,7 @@ import {
 import { Router } from '@angular/router';
 import { OperatorRegistrationModalComponent } from './components/operator-registration-modal/operator-registration-modal.component';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
+import { BulkCloneToOfficeModalComponent } from './components/bulk-clone-to-office-modal/bulk-clone-to-office-modal.component';
 
 interface RoleDropdownItem {
   id: string;
@@ -218,6 +219,19 @@ export class OperatorsComponent implements OnInit, OnDestroy {
       icon: 'delete',
       action: (item: Operator) => this.confirmDelete(item),
       permission: -1,
+    },
+  ];
+
+  gridBulkActions: GridAction[] = [
+    {
+      id: 'bulk-clone-to-office',
+      label: 'Clone to Office',
+      icon: 'fas fa-copy',
+      type: 'primary',
+      action: (operators: Operator[]) => this.openBulkCloneToOfficeModal(operators),
+      visible: false,
+      disabled: false,
+      permission: 83,
     },
   ];
 
@@ -625,5 +639,44 @@ export class OperatorsComponent implements OnInit, OnDestroy {
 
   returnUserTypeLabels(value: any) {
     return UserTypeLabels[value as UserType];
+  }
+
+  onSelectionChange(selectedItems: Operator[]): void {
+    // Handle selection change if needed
+  }
+
+  onBulkActionExecuted(event: { action: GridAction; items: Operator[] }): void {
+    // Handle bulk action execution if needed
+  }
+
+  openBulkCloneToOfficeModal(operators: Operator[]): void {
+    if (!operators || operators.length === 0) {
+      this.alertService.error('Please select at least one operator');
+      return;
+    }
+
+    const modalRef = this.modalService.open(
+      BulkCloneToOfficeModalComponent,
+      {
+        size: 'lg',
+        centered: true,
+        closable: true,
+      },
+      {
+        operators: operators,
+      }
+    );
+
+    modalRef.result.then(
+      (result) => {
+        if (result) {
+          this.refreshSpecificGrid();
+          this.loadOperatorStatistics();
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
   }
 }

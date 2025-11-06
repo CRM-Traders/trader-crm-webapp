@@ -190,6 +190,26 @@ export class OperatorsService {
     );
   }
 
+  getSwitchOfficesDropdown(
+    pageIndex: number = 0,
+    pageSize: number = 50
+  ): Observable<BranchDropdownResponse> {
+    const requestBody = {
+      pageIndex,
+      pageSize,
+      sortField: null,
+      sortDirection: null,
+      visibleColumns: ['array', null],
+      globalFilter: null,
+      filters: null,
+    };
+
+    return this.httpService.post<BranchDropdownResponse>(
+      `${this.officesApiPath}/switch-office`,
+      requestBody
+    );
+  }
+
   getTeamsDropdown(params: any = {}): Observable<BranchDropdownResponse> {
     const requestBody = {
       deskId: params.deskId || null,
@@ -321,6 +341,18 @@ export class OperatorsService {
   ): Observable<OperatorClientsResponse> {
     return this.httpService.post<OperatorClientsResponse>(
       `${this.operatorClientApiPath}/operator-clients`,
+      request
+    );
+  }
+
+  // Bulk clone operators to office
+  bulkCloneToOffice(request: {
+    userIds: string[];
+    fromOfficeId: string;
+    toOfficeId: string;
+  }): Observable<any> {
+    return this.httpService.post<any>(
+      'identity/api/operators/bulk-clone-to-office',
       request
     );
   }
