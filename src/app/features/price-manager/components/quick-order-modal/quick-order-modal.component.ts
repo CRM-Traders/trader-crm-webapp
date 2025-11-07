@@ -294,6 +294,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       side: this.side(),
       leverage: this.leverage(),
       tradingAccountId: null,
+      volume: this.volume(),
     };
 
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
@@ -453,6 +454,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       side: this.smartPLSide(),
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
+      volume: this.volume(),
     };
 
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
@@ -639,20 +641,33 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     // Only refresh if we have all required data
     const symbol = this.currentSymbol();
     const volume = this.volume();
-    const openPrice = this.activeTab() === 'newOrder' 
-      ? this.openPrice() 
-      : (this.smartPLSide() === 1 ? this.buyOpenPrice() : this.sellOpenPrice());
-    const leverage = this.activeTab() === 'newOrder' 
-      ? this.leverage() 
-      : this.smartPLLeverage();
-    const side = this.activeTab() === 'newOrder' 
-      ? this.side() 
-      : this.smartPLSide();
-    const closePrice = this.activeTab() === 'newOrder' 
-      ? null 
-      : (this.smartPLSide() === 1 ? this.buyClosePrice() : this.sellClosePrice());
+    const openPrice =
+      this.activeTab() === 'newOrder'
+        ? this.openPrice()
+        : this.smartPLSide() === 1
+        ? this.buyOpenPrice()
+        : this.sellOpenPrice();
+    const leverage =
+      this.activeTab() === 'newOrder'
+        ? this.leverage()
+        : this.smartPLLeverage();
+    const side =
+      this.activeTab() === 'newOrder' ? this.side() : this.smartPLSide();
+    const closePrice =
+      this.activeTab() === 'newOrder'
+        ? null
+        : this.smartPLSide() === 1
+        ? this.buyClosePrice()
+        : this.sellClosePrice();
 
-    if (!symbol || !volume || !openPrice || !leverage || volume <= 0 || openPrice <= 0) {
+    if (
+      !symbol ||
+      !volume ||
+      !openPrice ||
+      !leverage ||
+      volume <= 0 ||
+      openPrice <= 0
+    ) {
       return;
     }
 

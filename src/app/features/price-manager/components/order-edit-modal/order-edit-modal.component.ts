@@ -1,4 +1,12 @@
-import { Component, inject, Input, OnInit, OnDestroy, ViewChild, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  Input,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -38,7 +46,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   @Input() modalRef!: ModalRef;
   @Input() orderId!: string;
   @Input() order?: Order;
-  @ViewChild(TradingViewChartComponent) tradingViewChart!: TradingViewChartComponent;
+  @ViewChild(TradingViewChartComponent)
+  tradingViewChart!: TradingViewChartComponent;
 
   private service = inject(PriceManagerService);
   private alertService = inject(AlertService);
@@ -172,7 +181,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     if (!this.orderData) return;
 
     const metadata = this.orderData.metadata || {};
-    const symbol = this.orderData.symbol || this.orderData.tradingPairSymbol || '';
+    const symbol =
+      this.orderData.symbol || this.orderData.tradingPairSymbol || '';
 
     // Set current symbol for chart
     this.currentSymbol.set(symbol);
@@ -194,14 +204,19 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         null,
       clientOrderId: this.orderData.clientOrderId || '',
       orderCreatedAt: this.orderData.orderCreatedAt ?? this.orderData.createdAt,
-      orderModifiedAt: this.orderData.orderModifiedAt ?? this.orderData.lastModifiedAt,
+      orderModifiedAt:
+        this.orderData.orderModifiedAt ?? this.orderData.lastModifiedAt,
       createPosition: this.orderData.createPosition ?? true,
       closePrice: this.orderData.closePrice,
       isClosed: this.orderData.isClosed,
       realizedPnL: this.orderData.realizedPnL,
       unrealizedPnL: this.orderData.unrealizedPnL,
-      positionOpenTime: this.formatDateTimeForInput(this.orderData.positionOpenTime),
-      positionCloseTime: this.formatDateTimeForInput(this.orderData.positionCloseTime),
+      positionOpenTime: this.formatDateTimeForInput(
+        this.orderData.positionOpenTime
+      ),
+      positionCloseTime: this.formatDateTimeForInput(
+        this.orderData.positionCloseTime
+      ),
       commission: this.orderData.commission,
       swap: this.orderData.swap ?? this.orderData.swaps,
       paymentCurrency: this.orderData.paymentCurrency || '',
@@ -592,20 +607,22 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     }
   }
 
-  private formatDateTimeForInput(dateTime: string | null | undefined): string | null {
+  private formatDateTimeForInput(
+    dateTime: string | null | undefined
+  ): string | null {
     if (!dateTime) return null;
-    
+
     try {
       const date = new Date(dateTime);
       if (isNaN(date.getTime())) return null;
-      
+
       // Format as YYYY-MM-DDTHH:mm for datetime-local input
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
-      
+
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     } catch (error) {
       console.error('Error formatting datetime:', error);
@@ -615,11 +632,11 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   private formatDateTimeForAPI(dateTimeString: string | null): string | null {
     if (!dateTimeString) return null;
-    
+
     try {
       const date = new Date(dateTimeString);
       if (isNaN(date.getTime())) return null;
-      
+
       // Return ISO string for API
       return date.toISOString();
     } catch (error) {
@@ -656,7 +673,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   onOpenPriceInput(value: any): void {
     const num = parseFloat(value);
     if (!isFinite(num)) return;
-    if (this.useVolume() && this.editForm.get('volume')?.value) this.triggerVolumeBasedCalc();
+    if (this.useVolume() && this.editForm.get('volume')?.value)
+      this.triggerVolumeBasedCalc();
   }
 
   private triggerProfitBasedCalc(): void {
@@ -664,9 +682,11 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     if (!this.useTakeProfit()) return;
 
     const symbol: string | null = this.currentSymbol();
-    const targetProfit: number | null = this.editForm.get('takeProfit')?.value ?? null;
+    const targetProfit: number | null =
+      this.editForm.get('takeProfit')?.value ?? null;
     const side: number | null = this.editForm.get('side')?.value ?? null;
     const leverage: number | null = this.editForm.get('leverage')?.value ?? 1;
+    const volume: number | null = this.editForm.get('volume')?.value ?? 0.01;
     if (!symbol || targetProfit == null || !side || !leverage) return;
 
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
@@ -680,12 +700,16 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
           side: side!,
           leverage: leverage!,
           tradingAccountId: null,
+          volume: volume,
         })
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (resp: any) => this.applyCalculationResponse(resp),
           error: (err) => {
-            const msg = err?.error?.error || err?.message || 'Failed to calculate from profit';
+            const msg =
+              err?.error?.error ||
+              err?.message ||
+              'Failed to calculate from profit';
             this.alertService.error(msg);
             this.calculatingFromProfit.set(false);
           },
@@ -701,9 +725,13 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const symbol: string | null = this.currentSymbol();
     const volume: number | null = this.editForm.get('volume')?.value ?? null;
     const side: number | null = this.editForm.get('side')?.value ?? null;
-    const leverage: number | null = this.useLeverage() ? (this.editForm.get('leverage')?.value ?? 1) : null;
-    const entryPrice: number | null = this.editForm.get('openPrice')?.value ?? null;
-    const exitPrice: number | null = this.editForm.get('takeProfit')?.value ?? null;
+    const leverage: number | null = this.useLeverage()
+      ? this.editForm.get('leverage')?.value ?? 1
+      : null;
+    const entryPrice: number | null =
+      this.editForm.get('openPrice')?.value ?? null;
+    const exitPrice: number | null =
+      this.editForm.get('takeProfit')?.value ?? null;
 
     if (!symbol || !volume || !side) return;
 
@@ -725,7 +753,10 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (resp: any) => this.applyCalculationResponse(resp),
           error: (err) => {
-            const msg = err?.error?.error || err?.message || 'Failed to calculate from volume';
+            const msg =
+              err?.error?.error ||
+              err?.message ||
+              'Failed to calculate from volume';
             this.alertService.error(msg);
             this.calculatingFromVolume.set(false);
           },
@@ -739,16 +770,24 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     this.suppressCalc = true;
     try {
       if (typeof resp.volume === 'number') {
-        this.editForm.get('volume')?.setValue(resp.volume, { emitEvent: false });
+        this.editForm
+          .get('volume')
+          ?.setValue(resp.volume, { emitEvent: false });
       }
       if (typeof resp.entryPrice === 'number') {
-        this.editForm.get('openPrice')?.setValue(resp.entryPrice, { emitEvent: false });
+        this.editForm
+          .get('openPrice')
+          ?.setValue(resp.entryPrice, { emitEvent: false });
       }
       if (typeof resp.buyOpenPrice === 'number') {
-        this.editForm.get('openPrice')?.setValue(resp.buyOpenPrice, { emitEvent: false });
+        this.editForm
+          .get('openPrice')
+          ?.setValue(resp.buyOpenPrice, { emitEvent: false });
       }
       if (typeof resp.sellOpenPrice === 'number') {
-        this.editForm.get('openPrice')?.setValue(resp.sellOpenPrice, { emitEvent: false });
+        this.editForm
+          .get('openPrice')
+          ?.setValue(resp.sellOpenPrice, { emitEvent: false });
       }
       if (typeof resp.requiredMargin === 'number') {
         if (this.orderData) {
@@ -756,7 +795,9 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         }
       }
       if (typeof resp.commission === 'number') {
-        this.editForm.get('commission')?.setValue(resp.commission, { emitEvent: false });
+        this.editForm
+          .get('commission')
+          ?.setValue(resp.commission, { emitEvent: false });
       }
       if (typeof resp.swap === 'number') {
         this.editForm.get('swap')?.setValue(resp.swap, { emitEvent: false });
@@ -786,7 +827,15 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const leverage = this.editForm.get('leverage')?.value;
     const closePrice = this.editForm.get('takeProfit')?.value ?? null;
 
-    if (!symbol || !side || !volume || !openPrice || !leverage || volume <= 0 || openPrice <= 0) {
+    if (
+      !symbol ||
+      !side ||
+      !volume ||
+      !openPrice ||
+      !leverage ||
+      volume <= 0 ||
+      openPrice <= 0
+    ) {
       return;
     }
 
@@ -807,7 +856,9 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
               this.orderData.positionMargin = resp.margin;
             }
             if (typeof resp.profitLoss === 'number') {
-              this.editForm.get('realizedPnL')?.setValue(resp.profitLoss, { emitEvent: false });
+              this.editForm
+                .get('realizedPnL')
+                ?.setValue(resp.profitLoss, { emitEvent: false });
               if (this.orderData) {
                 this.orderData.realizedPnL = resp.profitLoss;
               }

@@ -307,8 +307,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       symbol: this.currentSymbol(),
       targetProfit: this.takeProfit()!,
       side: this.side(),
+      volume: this.volume(), // Empty string as per your API
       leverage: this.leverage(),
-      tradingAccountId: null, // Empty string as per your API
+      tradingAccountId: null,
     };
 
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
@@ -471,6 +472,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       side: this.smartPLSide(),
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
+      volume: this.volume(),
     };
 
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
@@ -718,20 +720,33 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
     // Only refresh if we have all required data
     const symbol = this.currentSymbol();
     const volume = this.volume();
-    const openPrice = this.activeTab() === 'newOrder' 
-      ? this.openPrice() 
-      : (this.smartPLSide() === 1 ? this.buyOpenPrice() : this.sellOpenPrice());
-    const leverage = this.activeTab() === 'newOrder' 
-      ? this.leverage() 
-      : this.smartPLLeverage();
-    const side = this.activeTab() === 'newOrder' 
-      ? this.side() 
-      : this.smartPLSide();
-    const closePrice = this.activeTab() === 'newOrder' 
-      ? null 
-      : (this.smartPLSide() === 1 ? this.buyClosePrice() : this.sellClosePrice());
+    const openPrice =
+      this.activeTab() === 'newOrder'
+        ? this.openPrice()
+        : this.smartPLSide() === 1
+        ? this.buyOpenPrice()
+        : this.sellOpenPrice();
+    const leverage =
+      this.activeTab() === 'newOrder'
+        ? this.leverage()
+        : this.smartPLLeverage();
+    const side =
+      this.activeTab() === 'newOrder' ? this.side() : this.smartPLSide();
+    const closePrice =
+      this.activeTab() === 'newOrder'
+        ? null
+        : this.smartPLSide() === 1
+        ? this.buyClosePrice()
+        : this.sellClosePrice();
 
-    if (!symbol || !volume || !openPrice || !leverage || volume <= 0 || openPrice <= 0) {
+    if (
+      !symbol ||
+      !volume ||
+      !openPrice ||
+      !leverage ||
+      volume <= 0 ||
+      openPrice <= 0
+    ) {
       return;
     }
 
@@ -931,7 +946,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       side: this.smartPLSide(),
       closeInterval: this.closeInterval(),
       volume: this.useVolume() ? this.volume()! : undefined,
-      expectedPL: this.useExpectedPL() ? this.targetProfit()! : undefined,
+      targetProfit: this.useExpectedPL() ? this.targetProfit()! : undefined,
       sellOpenPrice: this.sellOpenPrice()!,
       sellClosePrice: this.sellClosePrice()!,
       buyOpenPrice: this.buyOpenPrice()!,

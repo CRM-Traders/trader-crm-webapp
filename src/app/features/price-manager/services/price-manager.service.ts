@@ -222,6 +222,7 @@ export class PriceManagerService {
     symbol: string;
     targetProfit: number;
     side: number;
+    volume: number | null;
     leverage: number;
     tradingAccountId: string | null;
   }) {
@@ -269,10 +270,7 @@ export class PriceManagerService {
     closePrice: number | null;
     leverage: number;
   }) {
-    return this.http.post(
-      `traiding/api/admin/trading/calculate/pnl`,
-      data
-    );
+    return this.http.post(`traiding/api/admin/trading/calculate/pnl`, data);
   }
 }
 
