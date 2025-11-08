@@ -553,6 +553,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       (result) => {
         if (result) {
           this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
+          this.fetchUserBalance(); // Add this line
         }
       },
       () => {
@@ -586,6 +587,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       (result) => {
         if (result) {
           this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
+          this.fetchUserBalance(); // Add this line
         }
       },
       () => {
@@ -619,6 +621,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       (result) => {
         if (result) {
           this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
+          this.fetchUserBalance(); // Add this line
         }
       },
       () => {
@@ -669,6 +672,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         tap(() => {
           this.alertService.success('Order re-ordered successfully');
           this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+          this.fetchUserBalance(); // Add this line
         }),
         catchError((err: HttpErrorResponse) => {
           console.error('Error re-ordering order:', err);
@@ -941,6 +945,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         tap(() => {
           this.alertService.success('Order closed successfully');
           this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+          this.fetchUserBalance(); // Add this line
         }),
         catchError((err: HttpErrorResponse) => {
           console.error('Error closing order:', err);
