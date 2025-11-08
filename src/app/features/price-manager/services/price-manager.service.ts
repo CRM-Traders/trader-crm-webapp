@@ -300,6 +300,7 @@ export class PriceManagerService {
     leverage: number;
     amount: number | null;
     paymentCurrency: string;
+    targetProfit: number | null;
   }) {
     return this.http.post(
       `traiding/api/admin/trading/calculate/pnl-bulk`,

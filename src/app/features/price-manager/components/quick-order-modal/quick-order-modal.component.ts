@@ -608,6 +608,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       leverage: leverage,
       amount: this.amount(),
       paymentCurrency: this.paymentCurrency(),
+      targetProfit: this.targetProfit(),
     };
 
     this.priceManagerService
