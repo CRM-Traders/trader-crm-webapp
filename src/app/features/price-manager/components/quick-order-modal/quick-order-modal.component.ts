@@ -845,7 +845,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       side: this.smartPLSide(),
       closeInterval: this.closeInterval(),
       volume: this.volume()!,
-      expectedPL: this.useExpectedPL() ? this.targetProfit()! : undefined,
+      targetProfit: this.useExpectedPL() ? this.targetProfit()! : undefined,
       sellOpenPrice: this.sellOpenPrice()!,
       sellClosePrice: this.sellClosePrice()!,
       buyOpenPrice: this.buyOpenPrice()!,
