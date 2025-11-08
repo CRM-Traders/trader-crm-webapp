@@ -1,4 +1,3 @@
-<!-- Modal Header -->
 <div
   class="modal-header border-b border-gray-200 dark:border-gray-700 px-6 py-4"
 >
@@ -10,9 +9,7 @@
   </p>
 </div>
 
-<!-- Modal Body -->
 <div class="modal-body px-6 py-6 max-h-[calc(100vh-1rem)] overflow-y-auto">
-  <!-- User Balance Information -->
   <div
     *ngIf="userBalance().length > 0"
     class="mb-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
@@ -20,9 +17,12 @@
     <div
       class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/5 dark:to-blue-800/5 rounded-lg border border-blue-200 dark:border-blue-700 p-3 shadow-sm hover:shadow-md transition-all duration-200"
     >
-      <!-- Currency Header -->
-      <div class="flex items-center space-x-2 mb-2.5 pb-2 border-b border-blue-200 dark:border-blue-700">
-        <div class="w-7 h-7 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center flex-shrink-0">
+      <div
+        class="flex items-center space-x-2 mb-2.5 pb-2 border-b border-blue-200 dark:border-blue-700"
+      >
+        <div
+          class="w-7 h-7 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center flex-shrink-0"
+        >
           <svg
             class="w-4 h-4 text-white"
             fill="none"
@@ -42,9 +42,7 @@
         </h4>
       </div>
 
-      <!-- Balance Details -->
       <div class="">
-        <!-- Free Margin -->
         <div class="flex items-center justify-between px-2">
           <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
             Free Margin
@@ -54,7 +52,6 @@
           </span>
         </div>
 
-        <!-- Used Margin -->
         <div class="flex items-center justify-between px-2">
           <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
             Used Margin
@@ -67,7 +64,6 @@
     </div>
   </div>
 
-  <!-- Loading State -->
   <div
     *ngIf="loadingBalance()"
     class="mb-4 flex items-center justify-center py-4"
@@ -94,7 +90,6 @@
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Left Side: TradingView Chart -->
     <div class="chart-section">
       <div class="chart-header mb-3">
         <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -126,9 +121,7 @@
       </div>
     </div>
 
-    <!-- Right Side: Order Form -->
     <div class="form-section">
-      <!-- Tabs -->
       <div class="tabs-container mb-4">
         <div
           class="flex space-x-1 border-b border-gray-200 dark:border-gray-700"
@@ -162,10 +155,8 @@
         </div>
       </div>
 
-      <!-- Smart P/L Form -->
       <form *ngIf="activeTab() === 'smartPL'" class="space-y-4">
-        <!-- Row: Amount + Currency (ABOVE Volume row) -->
-        <div class="grid grid-cols-2 gap-4">
+        <div *ngIf="useAmount()" class="grid grid-cols-2 gap-4">
           <div>
             <div class="flex items-center gap-2 mb-2">
               <label
@@ -178,13 +169,6 @@
                   >Calculating...</span
                 >
               </label>
-              <input
-                type="checkbox"
-                [checked]="useAmount()"
-                (change)="useAmount.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Amount in calculations"
-              />
             </div>
             <input
               type="number"
@@ -221,7 +205,6 @@
           </div>
         </div>
 
-        <!-- Row: Volume and Expected P/L -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <div class="flex items-center gap-2 mb-2">
@@ -255,7 +238,7 @@
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Auto-calculates expected P/L
+              Auto-calculates target profit
             </p>
           </div>
 
@@ -264,30 +247,23 @@
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Expected P/L <span class="text-red-500">*</span>
+                Target Profit <span class="text-red-500">*</span>
                 <span
                   *ngIf="calculatingFromProfit()"
                   class="ml-2 text-xs text-blue-600"
                   >Calculating...</span
                 >
               </label>
-              <input
-                type="checkbox"
-                [checked]="useExpectedPL()"
-                (change)="useExpectedPL.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Expected P/L in calculations"
-              />
             </div>
             <input
               type="number"
               [ngModel]="targetProfit()"
-              (ngModelChange)="onExpectedPLInput($event)"
-              name="expectedPL"
+              (ngModelChange)="onTargetProfitInput($event)"
+              name="targetProfit"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
               min="0"
-              placeholder="Enter expected P/L"
+              placeholder="Enter target profit"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -296,22 +272,12 @@
           </div>
         </div>
 
-        <!-- Leverage -->
         <div>
-          <div class="flex items-center gap-2 mb-2">
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              Leverage
-            </label>
-            <input
-              type="checkbox"
-              [checked]="useLeverage()"
-              (change)="useLeverage.set($any($event.target).checked)"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              title="Include Leverage in calculations"
-            />
-          </div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Leverage
+          </label>
           <input
             type="number"
             [ngModel]="smartPLLeverage()"
@@ -323,66 +289,22 @@
           />
         </div>
 
-        <!-- Row: Sell Open Price with Update Button and Sell Close Price -->
-        <div class="grid grid-cols-2 gap-4" *ngIf="smartPLSide() == 2">
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Sell Open Price <span class="text-red-500">*</span>
-            </label>
-            <div class="flex gap-2 items-start">
-              <div class="flex-1 relative">
-                <div
-                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                >
-                  <span class="text-gray-500 dark:text-gray-400 text-sm"
-                    >$</span
-                  >
-                </div>
-                <input
-                  type="number"
-                  [ngModel]="sellOpenPrice()"
-                  (ngModelChange)="onSellOpenPriceInput($event)"
-                  name="sellOpenPrice"
-                  (keydown)="preventInvalidNumberInput($event)"
-                  step="0.00000001"
-                  min="0"
-                  placeholder="Enter sell open price"
-                  class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Open Price (Entry) <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useOpenPrice()"
+                (change)="useOpenPrice.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Enable manual open price editing"
+              />
             </div>
-          </div>
-
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Sell Close Price <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              [ngModel]="sellClosePrice()"
-              (ngModelChange)="onSellClosePriceInput($event)"
-              name="sellClosePrice"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter sell close price"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <!-- Row: Buy Open Price with Update Button and Buy Close Price -->
-        <div class="grid grid-cols-2 gap-4" *ngIf="smartPLSide() == 1">
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Buy Open Price <span class="text-red-500">*</span>
-            </label>
             <div class="flex gap-2 items-start">
               <div class="flex-1 relative">
                 <div
@@ -394,69 +316,86 @@
                 </div>
                 <input
                   type="number"
-                  [ngModel]="buyOpenPrice()"
-                  (ngModelChange)="onBuyOpenPriceInput($event)"
-                  name="buyOpenPrice"
+                  [ngModel]="openPrice()"
+                  (ngModelChange)="onOpenPriceInput($event)"
+                  name="openPrice"
                   (keydown)="preventInvalidNumberInput($event)"
                   step="0.00000001"
                   min="0"
-                  placeholder="Enter buy open price"
+                  placeholder="Enter open price"
+                  [disabled]="!useOpenPrice()"
+                  [class.cursor-not-allowed]="!useOpenPrice()"
+                  [class.bg-gray-100]="!useOpenPrice()"
+                  [class.dark:bg-gray-800]="!useOpenPrice()"
                   class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <button
                 type="button"
-                (click)="updateBuyOpenPrice()"
+                (click)="updatePrice()"
                 [disabled]="!currentSymbol()"
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
-                <span *ngIf="!updatingBuyPrice()">Update</span>
-                <span *ngIf="updatingBuyPrice()" class="flex items-center">
-                  <svg
-                    class="animate-spin h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </span>
+                Update
               </button>
             </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Auto-filled when symbol changes
+            </p>
           </div>
 
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Buy Close Price <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              [ngModel]="buyClosePrice()"
-              (ngModelChange)="onBuyClosePriceInput($event)"
-              name="buyClosePrice"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter buy close price"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Close Price (Exit) <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useClosePrice()"
+                (change)="useClosePrice.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Enable manual close price editing"
+              />
+            </div>
+            <div class="flex gap-2 items-start">
+              <div class="flex-1 relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <span class="text-gray-500 dark:text-gray-400 text-sm"
+                    >$</span
+                  >
+                </div>
+                <input
+                  type="number"
+                  [ngModel]="closePrice()"
+                  (ngModelChange)="onClosePriceInput($event)"
+                  name="closePrice"
+                  (keydown)="preventInvalidNumberInput($event)"
+                  step="0.00000001"
+                  min="0"
+                  placeholder="Enter close price"
+                  [disabled]="!useClosePrice()"
+                  [class.cursor-not-allowed]="!useClosePrice()"
+                  [class.bg-gray-100]="!useClosePrice()"
+                  [class.dark:bg-gray-800]="!useClosePrice()"
+                  class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <button
+                type="button"
+                (click)="updateClosePrice()"
+                [disabled]="!currentSymbol()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                Update
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Row: Sell Required Margin and Buy Required Margin -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -496,12 +435,34 @@
             />
           </div>
         </div>
+
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Profit/Loss
+          </label>
+          <input
+            type="text"
+            [value]="
+              profitLoss() !== null ? (profitLoss()! | number : '1.2-2') : ''
+            "
+            readonly
+            [style.color]="
+              profitLoss() !== null && profitLoss()! > 0
+                ? '#16a34a'
+                : profitLoss() !== null && profitLoss()! < 0
+                ? '#dc2626'
+                : ''
+            "
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-sm font-medium"
+            placeholder="0.00"
+          />
+        </div>
       </form>
 
-      <!-- New Order Form -->
       <form *ngIf="activeTab() === 'newOrder'" class="space-y-5">
-        <!-- Amount + Currency (ABOVE Volume) -->
-        <div class="grid grid-cols-2 gap-4">
+        <div *ngIf="useAmount()" class="grid grid-cols-2 gap-4">
           <div>
             <div class="flex items-center gap-2 mb-2">
               <label
@@ -514,13 +475,6 @@
                   >Calculating...</span
                 >
               </label>
-              <input
-                type="checkbox"
-                [checked]="useAmount()"
-                (change)="useAmount.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Amount in calculations"
-              />
             </div>
             <input
               type="number"
@@ -576,30 +530,52 @@
             <input
               type="number"
               [ngModel]="volume()"
-              (ngModelChange)="onVolumeInput($event)"
+              (ngModelChange)="volume.set($event ? +$event : null)"
               name="volume"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
               min="0"
               placeholder="Enter volume"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               [readonly]="calculatingFromProfit()"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p
               *ngIf="calculatingFromProfit()"
               class="mt-1 text-xs text-blue-600 dark:text-blue-400"
             >
-              Auto-calculated from Take Profit
-            </p>
-            <p
-              *ngIf="!calculatingFromProfit() && useVolume()"
-              class="mt-1 text-xs text-gray-500 dark:text-gray-400"
-            >
-              Auto-calculates P/L and margins
+              Auto-calculated from Target Profit
             </p>
           </div>
-  
-          <!-- Leverage -->
+
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Target Profit
+                <span
+                  *ngIf="calculatingFromProfit()"
+                  class="ml-2 text-xs text-blue-600"
+                  >Calculating...</span
+                >
+              </label>
+            </div>
+            <input
+              type="number"
+              [ngModel]="targetProfit()"
+              (ngModelChange)="onTargetProfitInputNewOrder($event)"
+              name="targetProfit"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter target profit"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Will auto-calculate volume and prices
+            </p>
+          </div>
+
           <div>
             <div class="flex items-center gap-2 mb-2">
               <label
@@ -624,16 +600,9 @@
               placeholder="Enter leverage"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            <p
-              *ngIf="useLeverage()"
-              class="mt-1 text-xs text-gray-500 dark:text-gray-400"
-            >
-              Auto-calculates P/L and margins
-            </p>
           </div>
         </div>
 
-        <!-- Row: Stop Loss and Take Profit -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -655,29 +624,15 @@
           </div>
 
           <div>
-            <div class="flex items-center gap-2 mb-2">
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Take Profit
-                <span
-                  *ngIf="calculatingFromProfit()"
-                  class="ml-2 text-xs text-blue-600"
-                  >Calculating...</span
-                >
-              </label>
-              <input
-                type="checkbox"
-                [checked]="useTakeProfit()"
-                (change)="useTakeProfit.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Take Profit in calculations"
-              />
-            </div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Take Profit
+            </label>
             <input
               type="number"
               [ngModel]="takeProfit()"
-              (ngModelChange)="onTakeProfitInput($event)"
+              (ngModelChange)="takeProfit.set($event ? +$event : null)"
               name="takeProfit"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -685,13 +640,9 @@
               placeholder="Enter take profit"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Will auto-calculate volume and prices
-            </p>
           </div>
         </div>
 
-        <!-- Row: Open Price, Update Button, and Auto Checkbox -->
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -708,7 +659,7 @@
               <input
                 type="number"
                 [ngModel]="openPrice()"
-                (ngModelChange)="onOpenPriceInput($event)"
+                (ngModelChange)="openPrice.set($event ? +$event : null)"
                 name="openPrice"
                 (keydown)="preventInvalidNumberInput($event)"
                 step="0.00000001"
@@ -749,48 +700,6 @@
           </div>
         </div>
 
-        <!-- Row: Sell P/L and Buy P/L -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Sell P/L
-            </label>
-            <input
-              type="number"
-              [ngModel]="sellPL()"
-              (ngModelChange)="sellPL.set($event ? +$event : null)"
-              name="sellPL"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              placeholder="Sell P/L"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              readonly
-            />
-          </div>
-
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Buy P/L
-            </label>
-            <input
-              type="number"
-              [ngModel]="buyPL()"
-              (ngModelChange)="buyPL.set($event ? +$event : null)"
-              name="buyPL"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              placeholder="Buy P/L"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              readonly
-            />
-          </div>
-        </div>
-
-        <!-- Row: Sell Required Margin and Buy Required Margin -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label
@@ -806,7 +715,7 @@
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
               placeholder="Sell required margin"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed"
               readonly
             />
           </div>
@@ -825,13 +734,76 @@
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
               placeholder="Buy required margin"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed"
               readonly
             />
           </div>
         </div>
 
-        <!-- Comment -->
+        <div>
+          <label
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
+            Profit/Loss
+          </label>
+          <input
+            type="text"
+            [value]="
+              profitLoss() !== null ? (profitLoss()! | number : '1.2-2') : ''
+            "
+            readonly
+            [style.color]="
+              profitLoss() !== null && profitLoss()! > 0
+                ? '#16a34a'
+                : profitLoss() !== null && profitLoss()! < 0
+                ? '#dc2626'
+                : ''
+            "
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-sm font-medium"
+            placeholder="0.00"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Sell P/L
+            </label>
+            <input
+              type="number"
+              [ngModel]="sellPL()"
+              (ngModelChange)="sellPL.set($event ? +$event : null)"
+              name="sellPL"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Sell P/L"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed"
+              readonly
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Buy P/L
+            </label>
+            <input
+              type="number"
+              [ngModel]="buyPL()"
+              (ngModelChange)="buyPL.set($event ? +$event : null)"
+              name="buyPL"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              placeholder="Buy P/L"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed"
+              readonly
+            />
+          </div>
+        </div>
+
         <div>
           <label
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -852,7 +824,6 @@
   </div>
 </div>
 
-<!-- Modal Footer -->
 <div
   class="modal-footer border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-end space-x-3"
 >

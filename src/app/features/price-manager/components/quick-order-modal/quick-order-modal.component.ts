@@ -47,6 +47,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   stopLoss = signal<number | null>(null);
   takeProfit = signal<number | null>(null);
   openPrice = signal<number | null>(null);
+  closePrice = signal<number | null>(null);
   autoPrice = signal<boolean>(false);
   sellPL = signal<number | null>(null);
   buyPL = signal<number | null>(null);
@@ -54,21 +55,20 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   buyRequiredMargin = signal<number | null>(null);
   comment = signal<string>('');
   updatingPrice = signal<boolean>(false);
+  profitLoss = signal<number | null>(null);
   calculatingFromProfit = signal<boolean>(false);
 
   smartPLSide = signal<number>(1);
   targetProfit = signal<number | null>(null);
-  buyOpenPrice = signal<number | null>(null);
-  buyClosePrice = signal<number | null>(null);
-  sellOpenPrice = signal<number | null>(null);
-  sellClosePrice = signal<number | null>(null);
   smartPLLeverage = signal<number>(1);
+  commission = signal<number | null>(null);
+  swap = signal<number | null>(null);
   closeImmediately = signal<boolean>(false);
   calculatingFromVolume = signal<boolean>(false);
 
   closeInterval = signal<boolean>(false);
-  updatingSellPrice = signal<boolean>(false);
-  updatingBuyPrice = signal<boolean>(false);
+  autoOpenPrice = signal<boolean>(false);
+  autoClosePrice = signal<boolean>(false);
 
   submitting = signal<boolean>(false);
   submitSide = signal<number | null>(null);
@@ -82,26 +82,23 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
   currentSymbol = signal<string>('');
 
-  // --- NEW: signals (put near other signals) ---
-  amount = signal<number | null>(null);
-  paymentCurrency = signal<'USD' | 'EUR' | 'GBP'>('USD');
-  calculatingFromAmount = signal<boolean>(false);
-
-  // --- Checkbox states for controlling calculations ---
-  useAmount = signal<boolean>(true);
-  useVolume = signal<boolean>(true);
-  useTakeProfit = signal<boolean>(true);
-  useExpectedPL = signal<boolean>(true);
-  useLeverage = signal<boolean>(true);
-
-  // --- NEW: timer holder (put near other timers) ---
-  private amountCalcTimer: any = null;
-
   sideOptions = [
     { value: 1, label: 'Buy', class: 'text-green-600 dark:text-green-400' },
     { value: 2, label: 'Sell', class: 'text-red-600 dark:text-red-400' },
   ];
 
+  amount = signal<number | null>(null);
+  paymentCurrency = signal<'USD' | 'EUR' | 'GBP'>('USD');
+  calculatingFromAmount = signal<boolean>(false);
+
+  useAmount = signal<boolean>(true);
+  useVolume = signal<boolean>(true);
+  useTakeProfit = signal<boolean>(true);
+  useLeverage = signal<boolean>(true);
+  useOpenPrice = signal<boolean>(false);
+  useClosePrice = signal<boolean>(false);
+
+  private amountCalcTimer: any = null;
   private suppressCalc = false;
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
@@ -114,80 +111,17 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     this.startPnLRefresh();
   }
 
-  // --- NEW: handlers ---
-  onAmountInput(value: any): void {
-    this.amount.set(value ? +value : null);
-    this.triggerAmountBasedCalc();
-  }
-
-  onPaymentCurrencyChange(value: string): void {
-    this.paymentCurrency.set((value as 'USD' | 'EUR' | 'GBP') ?? 'USD');
-    // Recalculate if we have an amount already
-    if (this.amount()) this.triggerAmountBasedCalc();
-  }
-
-  // --- NEW: unified amount-based calculation ---
-  private triggerAmountBasedCalc(): void {
-    if (this.suppressCalc) return;
-    if (!this.useAmount()) return;
-    if (!this.currentSymbol() || !this.amount() || !this.paymentCurrency())
-      return;
-
-    const isSmart = this.activeTab() === 'smartPL';
-
-    const requestBody = {
-      symbol: this.currentSymbol(), // e.g. "BINANCE:BTCUSDT" from chart
-      paymentCurrency: this.paymentCurrency(), // "USD" | "EUR" | "GBP"
-      amount: this.amount()!, // number
-      side: isSmart ? this.smartPLSide() : this.side(),
-      leverage: isSmart ? this.smartPLLeverage() : this.leverage(),
-      targetProfit: null as number | null,
-    };
-
-    if (this.amountCalcTimer) clearTimeout(this.amountCalcTimer);
-    this.calculatingFromAmount.set(true);
-
-    this.amountCalcTimer = setTimeout(() => {
-      this.priceManagerService
-        .calculateFromAmount(requestBody)
-        .pipe(
-          tap((resp: any) => {
-            if (isSmart) {
-              // Reuse your existing applier to populate prices, volume, margin, PL, etc.
-              this.applySmartPLCalculationResponse(resp, 'profit');
-            } else {
-              this.applyNewOrderCalculationResponse(resp);
-            }
-          }),
-          catchError((err) => {
-            console.error('Error calculating from amount:', err);
-            const msg =
-              err?.error?.error ||
-              err?.error?.message ||
-              err?.message ||
-              'Failed to calculate from amount';
-            this.alertService.error(msg);
-            return [];
-          }),
-          finalize(() => this.calculatingFromAmount.set(false))
-        )
-        .subscribe();
-    }, 300);
-  }
-
   fetchUserBalance(): void {
     this.loadingBalance.set(true);
     this.priceManagerService
       .getUserBalanceWithoutCurrency(this.data.userId)
       .pipe(
         tap((response: any) => {
-          // Show only the balance with the highest totalAvailable amount
           if (response?.balances && response.balances.length > 0) {
             const balances: any[] = Array.isArray(response.balances)
               ? response.balances
               : [];
 
-            // Filter out invalid balances and find the one with highest totalAvailable
             const validBalances = balances.filter(
               (b) =>
                 b &&
@@ -196,7 +130,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
             );
 
             if (validBalances.length > 0) {
-              // Find the balance with the highest totalAvailable
               const highestBalance = validBalances.reduce((max, current) =>
                 current.totalAvailable > max.totalAvailable ? current : max
               );
@@ -237,29 +170,26 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
           if (this.activeTab() === 'newOrder') {
             this.symbol.set(data.original_name);
+          }
 
-            // Update price on symbol change
-            if (
-              previousSymbol !== data.original_name &&
-              typeof data.last_price === 'number'
-            ) {
-              this.openPrice.set(data.last_price);
-            }
+          if (
+            previousSymbol !== data.original_name &&
+            typeof data.last_price === 'number'
+          ) {
+            this.openPrice.set(data.last_price);
           }
         }
 
         if (typeof data.last_price === 'number') {
           this.lastPrice.set(data.last_price);
 
-          if (this.activeTab() === 'newOrder') {
-            // Update if auto is on OR if price is empty/invalid
-            if (
-              this.autoPrice() ||
-              !this.openPrice() ||
-              (typeof this.openPrice() === 'number' && this.openPrice()! <= 0)
-            ) {
-              this.openPrice.set(data.last_price);
-            }
+          if (
+            this.autoPrice() ||
+            this.autoOpenPrice() ||
+            !this.openPrice() ||
+            (typeof this.openPrice() === 'number' && this.openPrice()! <= 0)
+          ) {
+            this.openPrice.set(data.last_price);
           }
         }
 
@@ -273,28 +203,86 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     } catch {}
   }
 
-  onTakeProfitInput(value: any): void {
-    this.takeProfit.set(value ? +value : null);
-    if (this.useTakeProfit()) {
-      this.triggerProfitBasedCalcNewOrder();
-    }
+  onAmountInput(value: any): void {
+    this.amount.set(value ? +value : null);
+    this.triggerAmountBasedCalc();
+  }
+
+  onPaymentCurrencyChange(value: string): void {
+    this.paymentCurrency.set((value as 'USD' | 'EUR' | 'GBP') ?? 'USD');
+    if (this.amount()) this.triggerAmountBasedCalc();
+  }
+
+  private triggerAmountBasedCalc(): void {
+    if (this.suppressCalc) return;
+    if (!this.useAmount()) return;
+    if (!this.currentSymbol() || !this.amount() || !this.paymentCurrency())
+      return;
+
+    const isSmart = this.activeTab() === 'smartPL';
+
+    const requestBody = {
+      symbol: this.currentSymbol(),
+      paymentCurrency: this.paymentCurrency(),
+      amount: this.amount()!,
+      side: isSmart ? this.smartPLSide() : this.side(),
+      leverage: isSmart ? this.smartPLLeverage() : this.leverage(),
+      targetProfit: null as number | null,
+    };
+
+    if (this.amountCalcTimer) clearTimeout(this.amountCalcTimer);
+    this.calculatingFromAmount.set(true);
+
+    this.amountCalcTimer = setTimeout(() => {
+      this.priceManagerService
+        .calculateFromAmount(requestBody)
+        .pipe(
+          tap((resp: any) => {
+            if (isSmart) {
+              this.applySmartPLCalculationResponse(resp, 'profit');
+            } else {
+              this.applyNewOrderCalculationResponse(resp);
+            }
+          }),
+          catchError((err) => {
+            console.error('Error calculating from amount:', err);
+            const msg =
+              err?.error?.error ||
+              err?.error?.message ||
+              err?.message ||
+              'Failed to calculate from amount';
+            this.alertService.error(msg);
+            return [];
+          }),
+          finalize(() => this.calculatingFromAmount.set(false))
+        )
+        .subscribe();
+    }, 300);
+  }
+
+  onTargetProfitInput(value: any): void {
+    this.targetProfit.set(value ? +value : null);
+    this.triggerProfitBasedCalc();
+  }
+
+  onTargetProfitInputNewOrder(value: any): void {
+    this.targetProfit.set(value ? +value : null);
+    this.triggerProfitBasedCalcNewOrder();
   }
 
   private triggerProfitBasedCalcNewOrder(): void {
     if (this.suppressCalc) return;
-    if (!this.useTakeProfit()) return;
-
-    if (!this.currentSymbol() || !this.takeProfit()) {
+    if (!this.currentSymbol() || !this.targetProfit()) {
       return;
     }
 
     const requestBody = {
+      userIds: [this.data.userId],
       symbol: this.currentSymbol(),
-      targetProfit: this.takeProfit()!,
+      targetProfit: this.targetProfit()!,
       side: this.side(),
-      leverage: this.leverage(),
-      tradingAccountId: null,
       volume: this.volume(),
+      leverage: this.leverage(),
     };
 
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
@@ -302,13 +290,19 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
     this.profitCalcTimer = setTimeout(() => {
       this.priceManagerService
-        .calculateFromProfit(requestBody)
+        .calculateFromProfitBulk(requestBody)
         .pipe(
           tap((resp: any) => {
             this.applyNewOrderCalculationResponse(resp);
           }),
           catchError((err) => {
-            this.alertService.error(err.error.error);
+            console.error('Error calculating from profit:', err);
+            const errorMsg =
+              err?.error?.error ||
+              err?.error?.message ||
+              err?.message ||
+              'Failed to calculate from profit';
+            this.alertService.error(errorMsg);
 
             return [];
           }),
@@ -329,6 +323,10 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
 
       if (typeof resp.entryPrice === 'number') {
         this.openPrice.set(resp.entryPrice);
+      }
+
+      if (typeof resp.profitLoss === 'number') {
+        this.profitLoss.set(resp.profitLoss);
       }
 
       if (this.side() === 1) {
@@ -361,63 +359,33 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     this.volume.set(value ? +value : null);
     if (this.activeTab() === 'smartPL' && this.useVolume()) {
       this.triggerVolumeBasedCalc();
-    } else if (this.activeTab() === 'newOrder' && this.useVolume()) {
-      // Trigger P/L calculation for new order tab when volume changes
+    }
+  }
+
+  onOpenPriceInput(value: any): void {
+    this.openPrice.set(value ? +value : null);
+    if (this.activeTab() === 'smartPL' && this.useVolume()) {
       this.triggerVolumeBasedCalc();
     }
   }
 
-  onBuyOpenPriceInput(value: any): void {
-    this.buyOpenPrice.set(value ? +value : null);
-    if (this.useVolume()) {
-      this.triggerVolumeBasedCalc();
-    }
-  }
-
-  onBuyClosePriceInput(value: any): void {
-    this.buyClosePrice.set(value ? +value : null);
-    if (this.useVolume()) {
-      this.triggerVolumeBasedCalc();
-    }
-  }
-
-  onSellOpenPriceInput(value: any): void {
-    this.sellOpenPrice.set(value ? +value : null);
-    if (this.useVolume()) {
+  onClosePriceInput(value: any): void {
+    this.closePrice.set(value ? +value : null);
+    if (this.activeTab() === 'smartPL' && this.useVolume()) {
       this.triggerVolumeBasedCalc();
     }
   }
 
   onLeverageChange(value: any): void {
     this.leverage.set(value ? +value : 1);
-    if (this.useLeverage() && this.activeTab() === 'newOrder') {
-      // Trigger P/L calculation for new order tab when leverage changes
-      this.triggerVolumeBasedCalc();
-    }
-  }
-
-  onOpenPriceInput(value: any): void {
-    this.openPrice.set(value ? +value : null);
-    if (this.activeTab() === 'newOrder' && this.useVolume()) {
-      // Trigger P/L calculation for new order tab when open price changes
-      this.refreshPnL();
+    if (this.useLeverage()) {
+      this.triggerProfitBasedCalcNewOrder();
     }
   }
 
   onSmartPLLeverageChange(value: any): void {
     this.smartPLLeverage.set(value ? +value : 1);
-    if (this.useLeverage() && this.activeTab() === 'smartPL') {
-      if (this.useVolume() && this.volume() && this.hasEntryExitPrices()) {
-        this.triggerVolumeBasedCalc();
-      }
-    }
-  }
-
-  onSellClosePriceInput(value: any): void {
-    this.sellClosePrice.set(value ? +value : null);
-    if (this.useVolume()) {
-      this.triggerVolumeBasedCalc();
-    }
+    this.recalculateSmartPL('leverage');
   }
 
   onSmartPLSideChange(side: number): void {
@@ -425,52 +393,40 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     this.recalculateSmartPL('side');
   }
 
-  onExpectedPLInput(value: any): void {
-    this.targetProfit.set(value ? +value : null);
-    if (this.useExpectedPL()) {
-      this.triggerProfitBasedCalc();
-    }
-  }
-
   private recalculateSmartPL(source: 'symbol' | 'side' | 'leverage'): void {
-    if (this.volume() && this.hasEntryExitPrices() && this.useVolume()) {
+    if (this.volume() && this.hasEntryExitPrices()) {
       this.triggerVolumeBasedCalc();
-    } else if (this.targetProfit() && this.useExpectedPL()) {
+    } else if (this.targetProfit()) {
       this.triggerProfitBasedCalc();
     }
   }
 
   private triggerProfitBasedCalc(): void {
     if (this.suppressCalc) return;
-    if (!this.useExpectedPL()) return;
 
     if (!this.currentSymbol() || !this.targetProfit()) {
       return;
     }
 
     const requestBody = {
+      userIds: [this.data.userId],
       symbol: this.currentSymbol(),
       targetProfit: this.targetProfit()!,
       side: this.smartPLSide(),
       leverage: this.smartPLLeverage(),
-      tradingAccountId: null,
       volume: this.volume(),
     };
 
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
     this.calculatingFromProfit.set(true);
-
     this.profitCalcTimer = setTimeout(() => {
       this.priceManagerService
-        .calculateFromProfit(requestBody)
+        .calculateFromProfitBulk(requestBody)
         .pipe(
           tap((resp: any) => {
             this.applySmartPLCalculationResponse(resp, 'profit');
           }),
-          catchError((err) => {
-            this.alertService.error(err.error.error);
-            return [];
-          }),
+          catchError(() => []),
           finalize(() => this.calculatingFromProfit.set(false))
         )
         .subscribe();
@@ -485,17 +441,15 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const { entryPrice, exitPrice } = this.getEntryExitPrices();
-
     const requestBody = {
       symbol: this.currentSymbol(),
       volume: this.volume()!,
       side: this.smartPLSide(),
-      entryPrice: entryPrice,
-      exitPrice: exitPrice,
+      entryPrice: this.openPrice(),
+      exitPrice: this.closePrice(),
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
-      targetProfit: this.targetProfit()
+      targetProfit: this.targetProfit(),
     };
 
     if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);
@@ -509,6 +463,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
             this.applySmartPLCalculationResponse(resp, 'volume');
           }),
           catchError((err) => {
+            console.error('Error calculating from volume:', err);
             this.alertService.error(err.error.error);
             return [];
           }),
@@ -519,27 +474,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   private hasEntryExitPrices(): boolean {
-    if (this.smartPLSide() === 1) {
-      return !!(this.buyOpenPrice() && this.buyClosePrice());
-    } else {
-      return !!(this.sellOpenPrice() && this.sellClosePrice());
-    }
-  }
-
-  private getEntryExitPrices(): {
-    entryPrice: number | null;
-    exitPrice: number | null;
-  } {
-    if (this.smartPLSide() === 1) {
-      return {
-        entryPrice: this.buyOpenPrice(),
-        exitPrice: this.buyClosePrice(),
-      };
-    }
-    return {
-      entryPrice: this.sellOpenPrice(),
-      exitPrice: this.sellClosePrice(),
-    };
+    return !!(this.openPrice() && this.closePrice());
   }
 
   private applySmartPLCalculationResponse(
@@ -558,22 +493,27 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
         this.targetProfit.set(resp.expectedProfit);
       }
 
-      if (typeof resp.buyOpenPrice === 'number') {
-        this.buyOpenPrice.set(resp.buyOpenPrice);
+      if (typeof resp.profitLoss === 'number') {
+        this.profitLoss.set(resp.profitLoss);
       }
-      if (typeof resp.buyClosePrice === 'number') {
-        this.buyClosePrice.set(resp.buyClosePrice);
+
+      if (typeof resp.entryPrice === 'number') {
+        this.openPrice.set(resp.entryPrice);
       }
-      if (typeof resp.sellOpenPrice === 'number') {
-        this.sellOpenPrice.set(resp.sellOpenPrice);
-      }
-      if (typeof resp.sellClosePrice === 'number') {
-        this.sellClosePrice.set(resp.sellClosePrice);
+      if (typeof resp.closePrice === 'number') {
+        this.closePrice.set(resp.closePrice);
       }
 
       if (typeof resp.requiredMargin === 'number') {
         this.buyRequiredMargin.set(resp.requiredMargin);
         this.sellRequiredMargin.set(resp.requiredMargin);
+      }
+
+      if (typeof resp.commission === 'number') {
+        this.commission.set(resp.commission);
+      }
+      if (typeof resp.swap === 'number') {
+        this.swap.set(resp.swap);
       }
     } finally {
       setTimeout(() => (this.suppressCalc = false), 0);
@@ -587,19 +527,15 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     }
 
     this.openPrice.set(this.lastPrice()!);
-    // Trigger calculation if in newOrder tab and useVolume is enabled
-    if (this.activeTab() === 'newOrder' && this.useVolume()) {
-      this.refreshPnL();
-    }
   }
 
-  updateBuyOpenPrice(): void {
-    if (!this.currentSymbol()) {
-      this.alertService.error('Symbol is required');
+  updateClosePrice(): void {
+    if (!this.lastPrice()) {
+      this.alertService.error('No price data available from chart');
       return;
     }
 
-    this.buyOpenPrice.set(this.lastPrice());
+    this.closePrice.set(this.lastPrice()!);
   }
 
   isFormValid(): boolean {
@@ -612,7 +548,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
         this.openPrice()! > 0
       );
     } else {
-      // smartPL
       return !!(this.currentSymbol() && this.volume());
     }
   }
@@ -620,12 +555,13 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopPnLRefresh();
     this.modalRef.close(true);
+
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   private startPnLRefresh(): void {
-    this.stopPnLRefresh(); // Clear any existing interval
+    this.stopPnLRefresh();
     this.pnlRefreshInterval = setInterval(() => {
       this.refreshPnL();
     }, 3000);
@@ -639,15 +575,9 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   private refreshPnL(): void {
-    // Only refresh if we have all required data
     const symbol = this.currentSymbol();
     const volume = this.volume();
-    const openPrice =
-      this.activeTab() === 'newOrder'
-        ? this.openPrice()
-        : this.smartPLSide() === 1
-        ? this.buyOpenPrice()
-        : this.sellOpenPrice();
+    const openPrice = this.openPrice();
     const leverage =
       this.activeTab() === 'newOrder'
         ? this.leverage()
@@ -655,11 +585,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     const side =
       this.activeTab() === 'newOrder' ? this.side() : this.smartPLSide();
     const closePrice =
-      this.activeTab() === 'newOrder'
-        ? null
-        : this.smartPLSide() === 1
-        ? this.buyClosePrice()
-        : this.sellClosePrice();
+      this.activeTab() === 'newOrder' ? null : this.closePrice();
 
     if (
       !symbol ||
@@ -673,20 +599,29 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
     }
 
     const requestBody = {
+      userIds: [this.data.userId],
       symbol: symbol,
       side: side,
       volume: volume,
       openPrice: openPrice,
       closePrice: closePrice,
       leverage: leverage,
+      amount: this.amount(),
+      paymentCurrency: this.paymentCurrency(),
     };
 
     this.priceManagerService
-      .calculatePnL(requestBody)
+      .calculatePnLBulk(requestBody)
       .pipe(
         tap((resp: any) => {
           if (resp && typeof resp === 'object') {
-            // Update only margin and profitLoss
+            if (typeof resp.profitLoss === 'number') {
+              this.profitLoss.set(resp.profitLoss);
+            }
+            if (typeof resp.closePrice === 'number') {
+              this.closePrice.set(resp.closePrice);
+            }
+
             if (typeof resp.margin === 'number') {
               if (side === 1) {
                 this.buyRequiredMargin.set(resp.margin);
@@ -704,7 +639,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           }
         }),
         catchError((err) => {
-          // Silently fail in background refresh
           console.error('Error refreshing PnL:', err);
           return [];
         }),
@@ -754,11 +688,12 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       loginIds: [this.data.userId],
       symbol: this.currentSymbol(),
       side: this.side(),
-      volume: this.volume()!,
+      volume: this.useVolume() ? this.volume()! : undefined,
       openPrice: this.openPrice()!,
-      leverage: this.leverage(),
+      leverage: this.useLeverage() ? this.leverage() : undefined,
       stopLoss: this.stopLoss(),
-      takeProfit: this.useTakeProfit() ? this.takeProfit() : undefined,
+      takeProfit: this.takeProfit(),
+      targetProfit: this.targetProfit(),
       autoPrice: this.autoPrice(),
       sellPL: this.sellPL(),
       buyPL: this.buyPL(),
@@ -776,7 +711,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
         tap(() => {
           const sideLabel = this.side() === 1 ? 'Buy' : 'Sell';
           this.alertService.success(`${sideLabel} order created successfully`);
-          // this.modalRef.close(true);
           this.fetchUserBalance();
         }),
         catchError((err: any) => {
@@ -817,24 +751,13 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.smartPLSide() == 2) {
-      if (!this.sellOpenPrice() || this.sellOpenPrice()! <= 0) {
-        this.alertService.error('Please enter a valid sell open price');
-        return;
-      }
-      if (!this.sellClosePrice() || this.sellClosePrice()! <= 0) {
-        this.alertService.error('Please enter a valid sell close price');
-        return;
-      }
-    } else {
-      if (!this.buyOpenPrice() || this.buyOpenPrice()! <= 0) {
-        this.alertService.error('Please enter a valid buy open price');
-        return;
-      }
-      if (!this.buyClosePrice() || this.buyClosePrice()! <= 0) {
-        this.alertService.error('Please enter a valid buy close price');
-        return;
-      }
+    if (!this.openPrice() || this.openPrice()! <= 0) {
+      this.alertService.error('Please enter a valid open price');
+      return;
+    }
+    if (!this.closePrice() || this.closePrice()! <= 0) {
+      this.alertService.error('Please enter a valid close price');
+      return;
     }
 
     this.submitting.set(true);
@@ -844,14 +767,14 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       symbol: this.currentSymbol(),
       side: this.smartPLSide(),
       closeInterval: this.closeInterval(),
-      volume: this.volume()!,
-      targetProfit: this.useExpectedPL() ? this.targetProfit()! : undefined,
-      sellOpenPrice: this.sellOpenPrice()!,
-      sellClosePrice: this.sellClosePrice()!,
-      buyOpenPrice: this.buyOpenPrice()!,
-      buyClosePrice: this.buyClosePrice()!,
+      volume: this.useVolume() ? this.volume()! : undefined,
+      targetProfit: this.targetProfit()!,
+      openPrice: this.openPrice()!,
+      closePrice: this.closePrice()!,
       sellRequiredMargin: this.sellRequiredMargin(),
       buyRequiredMargin: this.buyRequiredMargin(),
+      autoOpenPrice: this.autoOpenPrice(),
+      autoClosePrice: this.autoClosePrice(),
       closeImmediately: true,
       paymentCurrency: this.paymentCurrency(),
       amount: this.useAmount() ? this.amount() : undefined,
@@ -866,7 +789,6 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
           this.alertService.success(
             `${sideLabel} order with Smart P/L created successfully`
           );
-          // this.modalRef.close(true);
           this.fetchUserBalance();
         }),
         catchError((err: any) => {
