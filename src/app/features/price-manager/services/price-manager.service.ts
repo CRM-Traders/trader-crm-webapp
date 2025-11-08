@@ -311,6 +311,7 @@ export interface OrderMetadata {
   SmartPL?: boolean;
   Commission?: number;
   BulkOrderId?: string;
+  CalculatedExitPrice?: number;
   WalletsUsed?: {
     [currency: string]: number;
   };

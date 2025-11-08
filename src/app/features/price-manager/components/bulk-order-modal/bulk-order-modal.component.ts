@@ -64,6 +64,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   buyRequiredMargin = signal<number | null>(null);
   comment = signal<string>('');
   updatingPrice = signal<boolean>(false);
+  profitLoss = signal<number | null>(null);
   calculatingFromProfit = signal<boolean>(false);
 
   smartPLSide = signal<number>(1);
@@ -354,6 +355,10 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
         this.openPrice.set(resp.entryPrice);
       }
 
+      if (typeof resp.profitLoss === 'number') {
+        this.profitLoss.set(resp.profitLoss);
+      }
+
       // Apply side-specific prices
       if (this.side() === 1) {
         // Buy
@@ -500,7 +505,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       exitPrice: this.closePrice(), // Simplified
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
-      targetProfit: this.targetProfit()
+      targetProfit: this.targetProfit(),
     };
 
     if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);
@@ -563,6 +568,10 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       // Apply expected profit
       if (typeof resp.expectedProfit === 'number') {
         this.targetProfit.set(resp.expectedProfit);
+      }
+
+      if (typeof resp.profitLoss === 'number') {
+        this.profitLoss.set(resp.profitLoss);
       }
 
       // Apply prices - simplified to use entryPrice and exitPrice from API
@@ -697,6 +706,9 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       .pipe(
         tap((resp: any) => {
           if (resp && typeof resp === 'object') {
+            if (typeof resp.profitLoss === 'number') {
+              this.profitLoss.set(resp.profitLoss);
+            }
             // Update only margin and profitLoss
             if (typeof resp.margin === 'number') {
               if (side === 1) {

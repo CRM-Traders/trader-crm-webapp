@@ -660,6 +660,11 @@
                   <th
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                   >
+                    User ID
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
                     Symbol
                   </th>
                   <th
@@ -685,6 +690,11 @@
                   <th
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                   >
+                    Close Price
+                  </th>
+                  <th
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
                     Leverage
                   </th>
                   <th
@@ -701,6 +711,16 @@
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
                   >
                     Status
+                  </th>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Open Position Date
+                  </th>
+                  <th
+                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
+                    Close Position Date
                   </th>
                   <th
                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
@@ -795,41 +815,53 @@
                     *ngFor="let order of orders()"
                     class="hover:bg-gray-500/20 transition-colors"
                   >
-                    <!-- <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                      <div class="flex items-center gap-2">
-                        <span class="truncate max-w-32">{{ order.id }}</span>
-                        <button
-                          (click)="copyOrderId(order.id)"
-                          class="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200"
-                          title="Copy Order ID"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      <div class="flex items-center gap-2">
-                        <span class="truncate max-w-32">{{ order.userId }}</span>
-                        <button
-                          (click)="copyUserId(order.userId)"
-                          class="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200"
-                          title="Copy User ID"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    </td> -->
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
                     >
-                      <span class="font-mono">{{
-                        order.tradingPairSymbol
-                      }}</span>
+                      <div class="flex items-center gap-2">
+                        <span class="truncate max-w-32">{{
+                          order.clientId
+                        }}</span>
+                        <button
+                          (click)="copyUserId(order.clientId)"
+                          class="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200"
+                          title="Copy User ID"
+                        >
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            ></path>
+                          </svg>
+                        </button>
+                      </div>
                     </td>
+
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <div class="flex flex-col">
+                        <span
+                          class="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                        >
+                          {{
+                            order.tradingPairSymbol!.split(":")[1] ||
+                              order.tradingPairSymbol
+                          }}
+                        </span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                          {{
+                            order.tradingPairSymbol!.split(":")[0] || "BINANCE"
+                          }}
+                        </span>
+                      </div>
+                    </td>
+
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
                     >
@@ -873,17 +905,21 @@
                         <div class="font-medium">
                           ${{ order.price | number : "1.2-2" }}
                         </div>
-                        <div
-                          class="text-xs text-gray-500"
-                          *ngIf="order.metadata?.CalculatedExitPrice"
-                        >
-                          Exit: ${{
-                            order.metadata.CalculatedExitPrice
-                              | number : "1.2-2"
+                      </div>
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
+                    >
+                      <div class="text-right">
+                        <div class="font-medium">
+                          @if(order.closePrice){ ${{
+                            order.closePrice | number : "1.2-2"
                           }}
+                          }
                         </div>
                       </div>
                     </td>
+
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
                     >
@@ -935,6 +971,27 @@
                         {{ getStatusLabel(order.status) }}
                       </span>
                     </td>
+                    @if (order.openTime){
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <div class="flex flex-col">
+                        <span class="text-sm text-gray-900 dark:text-gray-100">
+                          {{ formatDate(order.openTime) }}
+                        </span>
+                      </div>
+                    </td>
+                    } @else{
+                    <td></td>
+                    } @if (order.closeTime){
+                    <td class="px-4 py-3 whitespace-nowrap">
+                      <div class="flex flex-col">
+                        <span class="text-sm text-gray-900 dark:text-gray-100">
+                          {{ formatDate(order.closeTime) }}
+                        </span>
+                      </div>
+                    </td>
+                    } @else{
+                    <td></td>
+                    }
                     <td
                       class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100"
                     >
