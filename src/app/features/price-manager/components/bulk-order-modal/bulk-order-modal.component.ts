@@ -500,6 +500,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       exitPrice: this.closePrice(), // Simplified
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
+      targetProfit: this.targetProfit()
     };
 
     if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);

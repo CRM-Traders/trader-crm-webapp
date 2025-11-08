@@ -725,6 +725,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const symbol: string | null = this.currentSymbol();
     const volume: number | null = this.editForm.get('volume')?.value ?? null;
     const side: number | null = this.editForm.get('side')?.value ?? null;
+    const targetProfit: number | null = this.editForm.get('targetProfit')?.value ?? null;
     const leverage: number | null = this.useLeverage()
       ? this.editForm.get('leverage')?.value ?? 1
       : null;
@@ -748,6 +749,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
           exitPrice,
           leverage,
           tradingAccountId: null,
+          targetProfit
         })
         .pipe(takeUntil(this.destroy$))
         .subscribe({

@@ -495,6 +495,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       exitPrice: exitPrice,
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
+      targetProfit: this.targetProfit()
     };
 
     if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);

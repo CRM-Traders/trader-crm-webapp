@@ -255,6 +255,7 @@ export class PriceManagerService {
     exitPrice: number | null;
     leverage: number | null;
     tradingAccountId: string | null;
+    targetProfit: number | null;
   }) {
     return this.http.post(
       `traiding/api/admin/trading/smart-pl/calculate-from-volume`,
