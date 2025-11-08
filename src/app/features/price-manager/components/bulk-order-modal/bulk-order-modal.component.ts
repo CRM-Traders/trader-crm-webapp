@@ -543,8 +543,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       if (typeof resp.entryPrice === 'number') {
         this.openPrice.set(resp.entryPrice);
       }
-      if (typeof resp.exitPrice === 'number') {
-        this.closePrice.set(resp.exitPrice);
+      if (typeof resp.closePrice === 'number') {
+        this.closePrice.set(resp.closePrice);
       }
 
       if (typeof resp.requiredMargin === 'number') {
@@ -658,6 +658,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       openPrice: openPrice,
       closePrice: closePrice,
       leverage: leverage,
+      amount: this.amount(),
+      paymentCurrency: this.paymentCurrency(),
     };
 
     this.priceManagerService
@@ -668,6 +670,10 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
             if (typeof resp.profitLoss === 'number') {
               this.profitLoss.set(resp.profitLoss);
             }
+            if (typeof resp.closePrice === 'number') {
+              this.closePrice.set(resp.closePrice);
+            }
+
             if (typeof resp.margin === 'number') {
               if (side === 1) {
                 this.buyRequiredMargin.set(resp.margin);

@@ -49,7 +49,7 @@ export class PriceManagerService {
     targetProfit: number | null;
   }) {
     return this.http.post(
-      'traiding/api/admin/trading/smart-pl/calculate',
+      'traiding/api/admin/trading/orders/calculate-bulk',
       body
     );
   }
@@ -298,6 +298,8 @@ export class PriceManagerService {
     openPrice: number;
     closePrice: number | null;
     leverage: number;
+    amount: number | null;
+    paymentCurrency: string;
   }) {
     return this.http.post(
       `traiding/api/admin/trading/calculate/pnl-bulk`,
