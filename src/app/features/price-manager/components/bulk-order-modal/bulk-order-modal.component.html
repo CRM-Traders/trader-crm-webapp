@@ -149,6 +149,13 @@
           >
             ✓ {{ fetchedClients().length }} client(s) found and ready
           </p>
+          <!-- NEW: Warning message when no clients uploaded -->
+          <p
+            *ngIf="!hasValidClients()"
+            class="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium"
+          >
+            ⚠ Please upload clients to enable form fields
+          </p>
         </div>
 
         <!-- Row: Amount + Currency (ABOVE Volume row) -->
@@ -169,7 +176,8 @@
                 type="checkbox"
                 [checked]="useAmount()"
                 (change)="useAmount.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                [disabled]="!hasValidClients()"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Include Amount in calculations"
               />
             </div>
@@ -182,6 +190,10 @@
               step="0.01"
               min="0"
               placeholder="Enter amount (e.g., 14000)"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -199,6 +211,10 @@
               [ngModel]="paymentCurrency()"
               (ngModelChange)="onPaymentCurrencyChange($event)"
               name="paymentCurrencySmartPL"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="USD">USD</option>
@@ -226,7 +242,8 @@
                 type="checkbox"
                 [checked]="useVolume()"
                 (change)="useVolume.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                [disabled]="!hasValidClients()"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Include Volume in calculations"
               />
             </div>
@@ -239,6 +256,10 @@
               step="0.00000001"
               min="0"
               placeholder="Enter volume"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -262,7 +283,8 @@
                 type="checkbox"
                 [checked]="useExpectedPL()"
                 (change)="useExpectedPL.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                [disabled]="!hasValidClients()"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Include Expected P/L in calculations"
               />
             </div>
@@ -275,6 +297,10 @@
               step="0.00000001"
               min="0"
               placeholder="Enter expected P/L"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -295,7 +321,8 @@
               type="checkbox"
               [checked]="useLeverage()"
               (change)="useLeverage.set($any($event.target).checked)"
-              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              [disabled]="!hasValidClients()"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
               title="Include Leverage in calculations"
             />
           </div>
@@ -306,17 +333,21 @@
             name="smartPLLeverage"
             min="1"
             placeholder="Enter leverage"
+            [disabled]="!hasValidClients()"
+            [class.cursor-not-allowed]="!hasValidClients()"
+            [class.bg-gray-100]="!hasValidClients()"
+            [class.dark:bg-gray-800]="!hasValidClients()"
             class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
 
-        <!-- Row: Sell Open Price with Update Button, Auto Checkbox, and Sell Close Price -->
-        <div class="grid grid-cols-2 gap-4" *ngIf="smartPLSide() == 2">
+        <!-- Row: Open Price and Close Price (Simplified) -->
+        <div class="grid grid-cols-2 gap-4">
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Sell Open Price <span class="text-red-500">*</span>
+              Open Price (Entry) <span class="text-red-500">*</span>
             </label>
             <div class="flex gap-2 items-start">
               <div class="flex-1 relative">
@@ -329,117 +360,74 @@
                 </div>
                 <input
                   type="number"
-                  [ngModel]="sellOpenPrice()"
-                  (ngModelChange)="onSellOpenPriceInput($event)"
-                  name="sellOpenPrice"
+                  [ngModel]="openPrice()"
+                  (ngModelChange)="onOpenPriceInput($event)"
+                  name="openPrice"
                   (keydown)="preventInvalidNumberInput($event)"
                   step="0.00000001"
                   min="0"
-                  placeholder="Enter sell open price"
-                  class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Sell Close Price <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              [ngModel]="sellClosePrice()"
-              (ngModelChange)="onSellClosePriceInput($event)"
-              name="sellClosePrice"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter sell close price"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <!-- Row: Buy Open Price with Update Button, Auto Checkbox, and Buy Close Price -->
-        <div class="grid grid-cols-2 gap-4" *ngIf="smartPLSide() == 1">
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Buy Open Price <span class="text-red-500">*</span>
-            </label>
-            <div class="flex gap-2 items-start">
-              <div class="flex-1 relative">
-                <div
-                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-                >
-                  <span class="text-gray-500 dark:text-gray-400 text-sm"
-                    >$</span
-                  >
-                </div>
-                <input
-                  type="number"
-                  [ngModel]="buyOpenPrice()"
-                  (ngModelChange)="onBuyOpenPriceInput($event)"
-                  name="buyOpenPrice"
-                  (keydown)="preventInvalidNumberInput($event)"
-                  step="0.00000001"
-                  min="0"
-                  placeholder="Enter buy open price"
+                  placeholder="Enter open price"
+                  [disabled]="!hasValidClients()"
+                  [class.cursor-not-allowed]="!hasValidClients()"
+                  [class.bg-gray-100]="!hasValidClients()"
+                  [class.dark:bg-gray-800]="!hasValidClients()"
                   class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <button
                 type="button"
-                (click)="updateBuyOpenPrice()"
-                [disabled]="!currentSymbol()"
+                (click)="updatePrice()"
+                [disabled]="!currentSymbol() || !hasValidClients()"
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
-                <span *ngIf="!updatingBuyPrice()">Update</span>
-                <span *ngIf="updatingBuyPrice()" class="flex items-center">
-                  <svg
-                    class="animate-spin h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                </span>
+                Update
               </button>
             </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Auto-filled when symbol changes
+            </p>
           </div>
 
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Buy Close Price <span class="text-red-500">*</span>
+              Close Price (Exit) <span class="text-red-500">*</span>
             </label>
-            <input
-              type="number"
-              [ngModel]="buyClosePrice()"
-              (ngModelChange)="onBuyClosePriceInput($event)"
-              name="buyClosePrice"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter buy close price"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div class="flex gap-2 items-start">
+              <div class="flex-1 relative">
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <span class="text-gray-500 dark:text-gray-400 text-sm"
+                    >$</span
+                  >
+                </div>
+                <input
+                  type="number"
+                  [ngModel]="closePrice()"
+                  (ngModelChange)="onClosePriceInput($event)"
+                  name="closePrice"
+                  (keydown)="preventInvalidNumberInput($event)"
+                  step="0.00000001"
+                  min="0"
+                  placeholder="Enter close price"
+                  [disabled]="!hasValidClients()"
+                  [class.cursor-not-allowed]="!hasValidClients()"
+                  [class.bg-gray-100]="!hasValidClients()"
+                  [class.dark:bg-gray-800]="!hasValidClients()"
+                  class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <button
+                type="button"
+                (click)="updateClosePrice()"
+                [disabled]="!currentSymbol() || !hasValidClients()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              >
+                Update
+              </button>
+            </div>
           </div>
         </div>
 
@@ -553,6 +541,13 @@
           >
             ✓ {{ fetchedClients().length }} client(s) found and ready
           </p>
+          <!-- NEW: Warning message when no clients uploaded -->
+          <p
+            *ngIf="!hasValidClients()"
+            class="mt-1 text-xs text-amber-600 dark:text-amber-400 font-medium"
+          >
+            ⚠ Please upload clients to enable form fields
+          </p>
         </div>
 
         <!-- Amount + Currency (ABOVE Volume) -->
@@ -573,7 +568,8 @@
                 type="checkbox"
                 [checked]="useAmount()"
                 (change)="useAmount.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                [disabled]="!hasValidClients()"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Include Amount in calculations"
               />
             </div>
@@ -586,6 +582,10 @@
               step="0.01"
               min="0"
               placeholder="Enter amount (e.g., 14000)"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -603,6 +603,10 @@
               [ngModel]="paymentCurrency()"
               (ngModelChange)="onPaymentCurrencyChange($event)"
               name="paymentCurrencyNewOrder"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="USD">USD</option>
@@ -624,7 +628,8 @@
                 type="checkbox"
                 [checked]="useVolume()"
                 (change)="useVolume.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                [disabled]="!hasValidClients()"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Include Volume in calculations"
               />
             </div>
@@ -637,8 +642,12 @@
               step="0.00000001"
               min="0"
               placeholder="Enter volume"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               [readonly]="calculatingFromProfit()"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p
               *ngIf="calculatingFromProfit()"
@@ -647,7 +656,7 @@
               Auto-calculated from Take Profit
             </p>
           </div>
-  
+
           <!-- Leverage -->
           <div>
             <div class="flex items-center gap-2 mb-2">
@@ -660,7 +669,8 @@
                 type="checkbox"
                 [checked]="useLeverage()"
                 (change)="useLeverage.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                [disabled]="!hasValidClients()"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Include Leverage in calculations"
               />
             </div>
@@ -671,6 +681,10 @@
               name="leverage"
               min="1"
               placeholder="Enter leverage"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -693,6 +707,10 @@
               step="0.00000001"
               min="0"
               placeholder="Enter stop loss"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -713,7 +731,8 @@
                 type="checkbox"
                 [checked]="useTakeProfit()"
                 (change)="useTakeProfit.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                [disabled]="!hasValidClients()"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Include Take Profit in calculations"
               />
             </div>
@@ -726,6 +745,10 @@
               step="0.00000001"
               min="0"
               placeholder="Enter take profit"
+              [disabled]="!hasValidClients()"
+              [class.cursor-not-allowed]="!hasValidClients()"
+              [class.bg-gray-100]="!hasValidClients()"
+              [class.dark:bg-gray-800]="!hasValidClients()"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -757,13 +780,17 @@
                 step="0.00000001"
                 min="0"
                 placeholder="Enter open price"
+                [disabled]="!hasValidClients()"
+                [class.cursor-not-allowed]="!hasValidClients()"
+                [class.bg-gray-100]="!hasValidClients()"
+                [class.dark:bg-gray-800]="!hasValidClients()"
                 class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <button
               type="button"
               (click)="updatePrice()"
-              [disabled]="!currentSymbol()"
+              [disabled]="!currentSymbol() || !hasValidClients()"
               class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
             >
               <span *ngIf="!updatingPrice()">Update</span>
@@ -887,6 +914,10 @@
             name="comment"
             rows="3"
             placeholder="Enter comment (optional)"
+            [disabled]="!hasValidClients()"
+            [class.cursor-not-allowed]="!hasValidClients()"
+            [class.bg-gray-100]="!hasValidClients()"
+            [class.dark:bg-gray-800]="!hasValidClients()"
             class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
           ></textarea>
         </div>

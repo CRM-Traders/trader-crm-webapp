@@ -232,6 +232,21 @@ export class PriceManagerService {
     );
   }
 
+  // NEW: Bulk calculation for profit
+  calculateFromProfitBulk(data: {
+    userIds: string[];
+    symbol: string;
+    targetProfit: number;
+    side: number;
+    volume: number | null;
+    leverage: number;
+  }) {
+    return this.http.post(
+      `traiding/api/admin/trading/smart-pl/calculate-from-profit-bulk`,
+      data
+    );
+  }
+
   calculateFromVolume(data: {
     symbol: string;
     volume: number;
@@ -271,6 +286,22 @@ export class PriceManagerService {
     leverage: number;
   }) {
     return this.http.post(`traiding/api/admin/trading/calculate/pnl`, data);
+  }
+
+  // NEW: Bulk calculation for PnL
+  calculatePnLBulk(data: {
+    userIds: string[];
+    symbol: string;
+    side: number;
+    volume: number;
+    openPrice: number;
+    closePrice: number | null;
+    leverage: number;
+  }) {
+    return this.http.post(
+      `traiding/api/admin/trading/calculate/pnl-bulk`,
+      data
+    );
   }
 }
 
