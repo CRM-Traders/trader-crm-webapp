@@ -14,7 +14,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, catchError, finalize, tap } from 'rxjs';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ModalRef } from '../../../../shared/models/modals/modal.model';
@@ -57,7 +57,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   editForm!: FormGroup;
   reopenForm!: FormGroup;
-  isEditing = true; // Start in edit mode by default
+  isEditing = true;
   loading = false;
   loadingData = false;
   originalValues: any = {};
@@ -67,13 +67,20 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   // Chart related properties
   currentSymbol = signal<string>('');
   lastPrice = signal<number | null>(null);
+  bidPrice = signal<number | null>(null);
+  askPrice = signal<number | null>(null);
+
   // Calculation toggles and states
+  useAmount = signal<boolean>(false);
   useVolume = signal<boolean>(true);
-  useTakeProfit = signal<boolean>(true);
+  useTakeProfit = signal<boolean>(false);
   useLeverage = signal<boolean>(true);
+  calculatingFromAmount = signal<boolean>(false);
   calculatingFromProfit = signal<boolean>(false);
   calculatingFromVolume = signal<boolean>(false);
+
   private suppressCalc = false;
+  private amountCalcTimer: any = null;
   private profitCalcTimer: any = null;
   private volumeCalcTimer: any = null;
   private pnlRefreshInterval: any = null;
@@ -125,7 +132,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       positionCloseTime: [null],
       commission: [null],
       swap: [null],
-      paymentCurrency: [''],
+      paymentCurrency: ['USD'],
+      amount: [null, [Validators.min(0)]],
       reason: [''],
     });
 
@@ -184,8 +192,14 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const symbol =
       this.orderData.symbol || this.orderData.tradingPairSymbol || '';
 
-    // Set current symbol for chart
     this.currentSymbol.set(symbol);
+
+    // Check if amount exists in order data
+    const hasAmount =
+      this.orderData.amount != null && this.orderData.amount > 0;
+    if (hasAmount) {
+      this.useAmount.set(true);
+    }
 
     this.editForm.patchValue({
       symbol: symbol,
@@ -219,12 +233,12 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       ),
       commission: this.orderData.commission,
       swap: this.orderData.swap ?? this.orderData.swaps,
-      paymentCurrency: this.orderData.paymentCurrency || '',
+      paymentCurrency: this.orderData.paymentCurrency || 'USD',
+      amount: this.orderData.amount || null,
       reason: this.orderData.reason || '',
     });
 
     this.editForm.enable();
-    // Ensure symbol and orderType are always disabled
     this.editForm.get('symbol')?.disable();
     this.editForm.get('orderType')?.disable();
     this.originalValues = this.editForm.value;
@@ -232,6 +246,9 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopPnLRefresh();
+    if (this.amountCalcTimer) clearTimeout(this.amountCalcTimer);
+    if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
+    if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -240,21 +257,14 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     if (!raw) return raw;
 
     const normalized: any = {
-      // Core identifiers
       id: raw.id ?? raw.orderId,
       orderId: raw.orderId ?? raw.id,
       tradingAccountId: raw.tradingAccountId,
       userId: raw.userId,
-
-      // Instrument
       tradingPairSymbol: raw.tradingPairSymbol ?? raw.symbol,
       symbol: raw.symbol ?? raw.tradingPairSymbol,
-
-      // Type and side
       orderType: raw.orderType,
       side: raw.side,
-
-      // Pricing and quantities
       price: raw.price ?? raw.openPrice,
       openPrice: raw.openPrice ?? raw.price,
       closePrice: raw.closePrice ?? null,
@@ -262,40 +272,27 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       quantity: raw.quantity ?? raw.volume,
       filledQuantity: raw.filledQuantity ?? 0,
       remainingQuantity: raw.remainingQuantity ?? null,
-
-      // Status and leverage
       status: raw.status,
       leverage: raw.leverage ?? 1,
-
-      // Risk params
       stopLoss: raw.stopLoss ?? raw.stopPrice ?? null,
       stopPrice: raw.stopPrice ?? raw.stopLoss ?? null,
       takeProfit: raw.takeProfit ?? null,
-
-      // Client linkage
       clientOrderId: raw.clientOrderId ?? null,
       positionId: raw.positionId ?? null,
-
-      // Dates
       createdAt: raw.createdAt ?? raw.orderCreatedAt ?? null,
       lastModifiedAt: raw.lastModifiedAt ?? raw.orderModifiedAt ?? null,
       positionOpenTime: raw.positionOpenTime ?? null,
       positionCloseTime: raw.positionCloseTime ?? null,
-
-      // Financials
       requiredMargin: raw.requiredMargin ?? null,
       positionMargin: raw.positionMargin ?? null,
       realizedPnL: raw.realizedPnL ?? null,
       unrealizedPnL: raw.unrealizedPnL ?? null,
       commission: raw.commission ?? null,
       swaps: raw.swap ?? raw.swaps ?? null,
-      paymentCurrency: raw.paymentCurrency ?? null,
-
-      // Flags
+      paymentCurrency: raw.paymentCurrency ?? 'USD',
+      amount: raw.amount ?? null,
       isClosed: raw.isClosed ?? false,
       createPosition: raw.createPosition ?? null,
-
-      // Misc
       reason: raw.reason ?? null,
       metadata: raw.metadata ?? {},
       comment: raw.comment ?? null,
@@ -349,16 +346,12 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  // getRequiredMargin(): number | null {
-  //   return this.orderData.positionMargin || null;
-  // }
-
   onChartEvent(event: any): void {
     try {
       if (!event) return;
-      // Event is already parsed from the trading view chart component
-      if (event.name === 'quoteUpdate' && event.data) {
-        const data = event.data as any;
+      const json = JSON.parse(event);
+      if (json.name === 'quoteUpdate' && json.data) {
+        const data = json.data as any;
 
         if (data.original_name) {
           this.currentSymbol.set(data.original_name);
@@ -367,23 +360,365 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         if (typeof data.last_price === 'number') {
           this.lastPrice.set(data.last_price);
         }
+
+        if (typeof data.bid === 'number') {
+          this.bidPrice.set(data.bid);
+        }
+        if (typeof data.ask === 'number') {
+          this.askPrice.set(data.ask);
+        }
       }
-    } catch (error) {
-      console.error('Error parsing chart event:', error);
+    } catch {}
+  }
+
+  // ========= Amount-based calculation (same as quick-order) =========
+  onAmountInput(value: any): void {
+    const num = value ? +value : null;
+    this.editForm.get('amount')?.setValue(num, { emitEvent: false });
+    this.triggerAmountBasedCalc();
+  }
+
+  onPaymentCurrencyChange(value: string): void {
+    this.editForm
+      .get('paymentCurrency')
+      ?.setValue(value || 'USD', { emitEvent: false });
+    if (this.editForm.get('amount')?.value) {
+      this.triggerAmountBasedCalc();
     }
+  }
+
+  private triggerAmountBasedCalc(): void {
+    if (this.suppressCalc) return;
+    if (!this.useAmount()) return;
+
+    const symbol = this.currentSymbol();
+    const amount = this.editForm.get('amount')?.value;
+    const paymentCurrency = this.editForm.get('paymentCurrency')?.value;
+    const side = this.editForm.get('side')?.value;
+    const leverage = this.editForm.get('leverage')?.value || 1;
+
+    if (!symbol || !amount || !paymentCurrency || !side) return;
+
+    const requestBody = {
+      symbol,
+      paymentCurrency,
+      amount,
+      side,
+      leverage,
+      targetProfit: null,
+    };
+
+    if (this.amountCalcTimer) clearTimeout(this.amountCalcTimer);
+    this.calculatingFromAmount.set(true);
+
+    this.amountCalcTimer = setTimeout(() => {
+      this.service
+        .calculateFromAmount(requestBody)
+        .pipe(
+          tap((resp: any) => {
+            this.applyCalculationResponse(resp);
+          }),
+          catchError((err) => {
+            console.error('Error calculating from amount:', err);
+            const msg =
+              err?.error?.error ||
+              err?.error?.message ||
+              err?.message ||
+              'Failed to calculate from amount';
+            this.alertService.error(msg);
+            return [];
+          }),
+          finalize(() => this.calculatingFromAmount.set(false))
+        )
+        .subscribe();
+    }, 300);
+  }
+
+  // ========= Profit-based calculation (same as quick-order with bulk) =========
+  onTakeProfitInput(value: any): void {
+    const num = parseFloat(value);
+    if (!isFinite(num)) return;
+    if (this.useTakeProfit()) this.triggerProfitBasedCalc();
+  }
+
+  private triggerProfitBasedCalc(): void {
+    if (this.suppressCalc) return;
+    if (!this.useTakeProfit()) return;
+
+    const symbol = this.currentSymbol();
+    const targetProfit = this.editForm.get('takeProfit')?.value;
+    const side = this.editForm.get('side')?.value;
+    const leverage = this.editForm.get('leverage')?.value || 1;
+    const volume = this.editForm.get('volume')?.value || 0.01;
+
+    if (!symbol || targetProfit == null || !side || !this.orderData?.userId)
+      return;
+
+    const requestBody = {
+      userIds: [this.orderData.userId],
+      symbol,
+      targetProfit,
+      side,
+      leverage,
+      volume,
+    };
+
+    if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
+    this.calculatingFromProfit.set(true);
+
+    this.profitCalcTimer = setTimeout(() => {
+      this.service
+        .calculateFromProfitBulk(requestBody)
+        .pipe(
+          tap((resp: any) => this.applyCalculationResponse(resp)),
+          catchError((err) => {
+            const msg =
+              err?.error?.error ||
+              err?.message ||
+              'Failed to calculate from profit';
+            this.alertService.error(msg);
+            return [];
+          }),
+          finalize(() => this.calculatingFromProfit.set(false))
+        )
+        .subscribe();
+    }, 300);
+  }
+
+  // ========= Volume-based calculation (same as quick-order) =========
+  onVolumeInput(value: any): void {
+    const num = parseFloat(value);
+    if (!isFinite(num)) return;
+    if (this.useVolume()) this.triggerVolumeBasedCalc();
+  }
+
+  onOpenPriceInput(value: any): void {
+    const num = parseFloat(value);
+    if (!isFinite(num)) return;
+    if (this.useVolume() && this.editForm.get('volume')?.value)
+      this.triggerVolumeBasedCalc();
+  }
+
+  onClosePriceInput(value: any): void {
+    const num = parseFloat(value);
+    if (!isFinite(num)) return;
+    if (this.useVolume() && this.editForm.get('volume')?.value)
+      this.triggerVolumeBasedCalc();
+  }
+
+  private triggerVolumeBasedCalc(): void {
+    if (this.suppressCalc) return;
+    if (!this.useVolume()) return;
+
+    const symbol = this.currentSymbol();
+    const volume = this.editForm.get('volume')?.value;
+    const side = this.editForm.get('side')?.value;
+    const leverage = this.useLeverage()
+      ? this.editForm.get('leverage')?.value || 1
+      : null;
+    const entryPrice = this.editForm.get('openPrice')?.value;
+    const exitPrice = this.editForm.get('closePrice')?.value;
+    const targetProfit = this.editForm.get('takeProfit')?.value;
+
+    if (!symbol || !volume || !side) return;
+
+    const requestBody = {
+      symbol,
+      volume,
+      side,
+      entryPrice,
+      exitPrice,
+      leverage,
+      tradingAccountId: null,
+      targetProfit,
+    };
+
+    if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);
+    this.calculatingFromVolume.set(true);
+
+    this.volumeCalcTimer = setTimeout(() => {
+      this.service
+        .calculateFromVolume(requestBody)
+        .pipe(
+          tap((resp: any) => this.applyCalculationResponse(resp)),
+          catchError((err) => {
+            const msg =
+              err?.error?.error ||
+              err?.message ||
+              'Failed to calculate from volume';
+            this.alertService.error(msg);
+            return [];
+          }),
+          finalize(() => this.calculatingFromVolume.set(false))
+        )
+        .subscribe();
+    }, 300);
+  }
+
+  onLeverageChange(value: any): void {
+    const val = value ? +value : 1;
+    this.editForm.get('leverage')?.setValue(val, { emitEvent: false });
+    if (this.useLeverage()) {
+      if (this.useTakeProfit() && this.editForm.get('takeProfit')?.value) {
+        this.triggerProfitBasedCalc();
+      } else if (this.useVolume() && this.editForm.get('volume')?.value) {
+        this.triggerVolumeBasedCalc();
+      }
+    }
+  }
+
+  private applyCalculationResponse(resp: any): void {
+    if (!resp || typeof resp !== 'object') return;
+
+    this.suppressCalc = true;
+    try {
+      if (typeof resp.volume === 'number') {
+        this.editForm
+          .get('volume')
+          ?.setValue(resp.volume, { emitEvent: false });
+      }
+      if (typeof resp.entryPrice === 'number') {
+        this.editForm
+          .get('openPrice')
+          ?.setValue(resp.entryPrice, { emitEvent: false });
+      }
+      if (typeof resp.buyOpenPrice === 'number') {
+        this.editForm
+          .get('openPrice')
+          ?.setValue(resp.buyOpenPrice, { emitEvent: false });
+      }
+      if (typeof resp.sellOpenPrice === 'number') {
+        this.editForm
+          .get('openPrice')
+          ?.setValue(resp.sellOpenPrice, { emitEvent: false });
+      }
+      if (typeof resp.closePrice === 'number') {
+        this.editForm
+          .get('closePrice')
+          ?.setValue(resp.closePrice, { emitEvent: false });
+      }
+      if (typeof resp.expectedProfit === 'number') {
+        this.editForm
+          .get('takeProfit')
+          ?.setValue(resp.expectedProfit, { emitEvent: false });
+      }
+      if (typeof resp.profitLoss === 'number') {
+        this.editForm
+          .get('realizedPnL')
+          ?.setValue(resp.profitLoss, { emitEvent: false });
+        if (this.orderData) {
+          this.orderData.realizedPnL = resp.profitLoss;
+        }
+      }
+      if (typeof resp.requiredMargin === 'number') {
+        if (this.orderData) {
+          this.orderData.positionMargin = resp.requiredMargin;
+        }
+      }
+      if (typeof resp.margin === 'number') {
+        if (this.orderData) {
+          this.orderData.positionMargin = resp.margin;
+        }
+      }
+      if (typeof resp.commission === 'number') {
+        this.editForm
+          .get('commission')
+          ?.setValue(resp.commission, { emitEvent: false });
+      }
+      if (typeof resp.swap === 'number') {
+        this.editForm.get('swap')?.setValue(resp.swap, { emitEvent: false });
+      }
+    } finally {
+      setTimeout(() => (this.suppressCalc = false), 0);
+    }
+  }
+
+  // ========= P/L Refresh (using bulk like quick-order) =========
+  private startPnLRefresh(): void {
+    this.stopPnLRefresh();
+    this.pnlRefreshInterval = setInterval(() => this.refreshPnL(), 3000);
+  }
+
+  private stopPnLRefresh(): void {
+    if (this.pnlRefreshInterval) {
+      clearInterval(this.pnlRefreshInterval);
+      this.pnlRefreshInterval = null;
+    }
+  }
+
+  private refreshPnL(): void {
+    const symbol = this.currentSymbol();
+    const side = this.editForm.get('side')?.value;
+    const volume = this.editForm.get('volume')?.value;
+    const openPrice = this.editForm.get('openPrice')?.value;
+    const leverage = this.editForm.get('leverage')?.value || 1;
+    const closePrice = this.editForm.get('closePrice')?.value;
+    const amount = this.editForm.get('amount')?.value;
+    const paymentCurrency = this.editForm.get('paymentCurrency')?.value;
+    const targetProfit = this.editForm.get('takeProfit')?.value;
+
+    if (
+      !symbol ||
+      !side ||
+      !volume ||
+      !openPrice ||
+      volume <= 0 ||
+      openPrice <= 0 ||
+      !this.orderData?.userId
+    ) {
+      return;
+    }
+
+    const requestBody = {
+      userIds: [this.orderData.userId],
+      symbol,
+      side,
+      volume,
+      openPrice,
+      closePrice,
+      leverage,
+      amount,
+      paymentCurrency,
+      targetProfit,
+    };
+
+    this.service
+      .calculatePnLBulk(requestBody)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (resp: any) => {
+          if (resp && typeof resp === 'object') {
+            if (typeof resp.margin === 'number' && this.orderData) {
+              this.orderData.positionMargin = resp.margin;
+            }
+            if (typeof resp.profitLoss === 'number') {
+              this.editForm
+                .get('realizedPnL')
+                ?.setValue(resp.profitLoss, { emitEvent: false });
+              if (this.orderData) {
+                this.orderData.realizedPnL = resp.profitLoss;
+              }
+            }
+            if (typeof resp.closePrice === 'number') {
+              this.editForm
+                .get('closePrice')
+                ?.setValue(resp.closePrice, { emitEvent: false });
+            }
+          }
+        },
+        error: () => {},
+      });
   }
 
   startEdit(): void {
     this.isEditing = true;
     this.originalValues = this.editForm.value;
     this.editForm.enable();
-    // Keep symbol and orderType disabled even in edit mode
     this.editForm.get('symbol')?.disable();
     this.editForm.get('orderType')?.disable();
   }
 
   cancelEdit(): void {
-    // Close the modal directly instead of going to read mode
     this.modalRef.dismiss();
   }
 
@@ -393,7 +728,6 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
-    // Use getRawValue() to include disabled fields (symbol and orderType)
     const formValue = this.editForm.getRawValue();
 
     const updateData: OrderUpdateRequest = {
@@ -420,6 +754,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       commission: formValue.commission,
       swap: formValue.swap,
       paymentCurrency: formValue.paymentCurrency,
+      amount: formValue.amount,
       reason: formValue.reason,
     };
 
@@ -430,18 +765,14 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         next: (response: any) => {
           this.alertService.success('Order updated successfully');
           this.loading = false;
-          // Keep in edit mode after saving
           this.isEditing = true;
           this.editForm.enable();
-          // Keep symbol and orderType disabled
           this.editForm.get('symbol')?.disable();
           this.editForm.get('orderType')?.disable();
 
           if (response && this.orderData) {
             Object.assign(this.orderData, response);
           }
-
-          // this.modalRef.close(true);
         },
         error: (error) => {
           console.error('Error updating order:', error);
@@ -512,7 +843,6 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
 
   isOrderClosed(): boolean {
     if (!this.orderData) return false;
-    // Status 3 = Filled, 4 = Cancelled, 5 = Rejected, 6 = Liquidated
     return (
       this.orderData.status === 3 ||
       this.orderData.status === 4 ||
@@ -592,6 +922,22 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       });
   }
 
+  updatePrice(): void {
+    if (!this.lastPrice()) {
+      this.alertService.error('No price data available from chart');
+      return;
+    }
+    this.editForm.get('openPrice')?.setValue(this.lastPrice()!);
+  }
+
+  updateClosePrice(): void {
+    if (!this.lastPrice()) {
+      this.alertService.error('No price data available from chart');
+      return;
+    }
+    this.editForm.get('closePrice')?.setValue(this.lastPrice()!);
+  }
+
   preventInvalidNumberInput(event: KeyboardEvent): void {
     const invalidKeys = ['e', 'E', '+'];
     if (invalidKeys.includes(event.key)) {
@@ -616,7 +962,6 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       const date = new Date(dateTime);
       if (isNaN(date.getTime())) return null;
 
-      // Format as YYYY-MM-DDTHH:mm for datetime-local input
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -636,238 +981,10 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     try {
       const date = new Date(dateTimeString);
       if (isNaN(date.getTime())) return null;
-
-      // Return ISO string for API
       return date.toISOString();
     } catch (error) {
       console.error('Error formatting datetime for API:', error);
       return null;
     }
-  }
-
-  // ========= Calculation logic (ported from quick/bulk, adapted for edit) =========
-  onLeverageChange(value: any): void {
-    const val = value ? +value : 1;
-    this.editForm.get('leverage')?.setValue(val, { emitEvent: false });
-    if (this.useLeverage()) {
-      if (this.useTakeProfit() && this.editForm.get('takeProfit')?.value) {
-        this.triggerProfitBasedCalc();
-      } else if (this.useVolume() && this.editForm.get('volume')?.value) {
-        this.triggerVolumeBasedCalc();
-      }
-    }
-  }
-
-  onTakeProfitInput(value: any): void {
-    const num = parseFloat(value);
-    if (!isFinite(num)) return; // allow partial input like '.' without forcing
-    if (this.useTakeProfit()) this.triggerProfitBasedCalc();
-  }
-
-  onVolumeInput(value: any): void {
-    const num = parseFloat(value);
-    if (!isFinite(num)) return; // allow typing '0.' or '.'
-    if (this.useVolume()) this.triggerVolumeBasedCalc();
-  }
-
-  onOpenPriceInput(value: any): void {
-    const num = parseFloat(value);
-    if (!isFinite(num)) return;
-    if (this.useVolume() && this.editForm.get('volume')?.value)
-      this.triggerVolumeBasedCalc();
-  }
-
-  private triggerProfitBasedCalc(): void {
-    if (this.suppressCalc) return;
-    if (!this.useTakeProfit()) return;
-
-    const symbol: string | null = this.currentSymbol();
-    const targetProfit: number | null =
-      this.editForm.get('takeProfit')?.value ?? null;
-    const side: number | null = this.editForm.get('side')?.value ?? null;
-    const leverage: number | null = this.editForm.get('leverage')?.value ?? 1;
-    const volume: number | null = this.editForm.get('volume')?.value ?? 0.01;
-    if (!symbol || targetProfit == null || !side || !leverage) return;
-
-    if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
-    this.calculatingFromProfit.set(true);
-
-    this.profitCalcTimer = setTimeout(() => {
-      this.service
-        .calculateFromProfit({
-          symbol,
-          targetProfit: targetProfit!,
-          side: side!,
-          leverage: leverage!,
-          tradingAccountId: null,
-          volume: volume,
-        })
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (resp: any) => this.applyCalculationResponse(resp),
-          error: (err) => {
-            const msg =
-              err?.error?.error ||
-              err?.message ||
-              'Failed to calculate from profit';
-            this.alertService.error(msg);
-            this.calculatingFromProfit.set(false);
-          },
-          complete: () => this.calculatingFromProfit.set(false),
-        });
-    }, 300);
-  }
-
-  private triggerVolumeBasedCalc(): void {
-    if (this.suppressCalc) return;
-    if (!this.useVolume()) return;
-
-    const symbol: string | null = this.currentSymbol();
-    const volume: number | null = this.editForm.get('volume')?.value ?? null;
-    const side: number | null = this.editForm.get('side')?.value ?? null;
-    const targetProfit: number | null = this.editForm.get('targetProfit')?.value ?? null;
-    const leverage: number | null = this.useLeverage()
-      ? this.editForm.get('leverage')?.value ?? 1
-      : null;
-    const entryPrice: number | null =
-      this.editForm.get('openPrice')?.value ?? null;
-    const exitPrice: number | null =
-      this.editForm.get('takeProfit')?.value ?? null;
-
-    if (!symbol || !volume || !side) return;
-
-    if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);
-    this.calculatingFromVolume.set(true);
-
-    this.volumeCalcTimer = setTimeout(() => {
-      this.service
-        .calculateFromVolume({
-          symbol,
-          volume: volume!,
-          side: side!,
-          entryPrice,
-          exitPrice,
-          leverage,
-          tradingAccountId: null,
-          targetProfit
-        })
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (resp: any) => this.applyCalculationResponse(resp),
-          error: (err) => {
-            const msg =
-              err?.error?.error ||
-              err?.message ||
-              'Failed to calculate from volume';
-            this.alertService.error(msg);
-            this.calculatingFromVolume.set(false);
-          },
-          complete: () => this.calculatingFromVolume.set(false),
-        });
-    }, 300);
-  }
-
-  private applyCalculationResponse(resp: any): void {
-    if (!resp || typeof resp !== 'object') return;
-    this.suppressCalc = true;
-    try {
-      if (typeof resp.volume === 'number') {
-        this.editForm
-          .get('volume')
-          ?.setValue(resp.volume, { emitEvent: false });
-      }
-      if (typeof resp.entryPrice === 'number') {
-        this.editForm
-          .get('openPrice')
-          ?.setValue(resp.entryPrice, { emitEvent: false });
-      }
-      if (typeof resp.buyOpenPrice === 'number') {
-        this.editForm
-          .get('openPrice')
-          ?.setValue(resp.buyOpenPrice, { emitEvent: false });
-      }
-      if (typeof resp.sellOpenPrice === 'number') {
-        this.editForm
-          .get('openPrice')
-          ?.setValue(resp.sellOpenPrice, { emitEvent: false });
-      }
-      if (typeof resp.requiredMargin === 'number') {
-        if (this.orderData) {
-          this.orderData.positionMargin = resp.requiredMargin;
-        }
-      }
-      if (typeof resp.commission === 'number') {
-        this.editForm
-          .get('commission')
-          ?.setValue(resp.commission, { emitEvent: false });
-      }
-      if (typeof resp.swap === 'number') {
-        this.editForm.get('swap')?.setValue(resp.swap, { emitEvent: false });
-      }
-    } finally {
-      setTimeout(() => (this.suppressCalc = false), 0);
-    }
-  }
-
-  private startPnLRefresh(): void {
-    this.stopPnLRefresh();
-    this.pnlRefreshInterval = setInterval(() => this.refreshPnL(), 3000);
-  }
-
-  private stopPnLRefresh(): void {
-    if (this.pnlRefreshInterval) {
-      clearInterval(this.pnlRefreshInterval);
-      this.pnlRefreshInterval = null;
-    }
-  }
-
-  private refreshPnL(): void {
-    const symbol = this.currentSymbol();
-    const side = this.editForm.get('side')?.value;
-    const volume = this.editForm.get('volume')?.value;
-    const openPrice = this.editForm.get('openPrice')?.value;
-    const leverage = this.editForm.get('leverage')?.value;
-    const closePrice = this.editForm.get('takeProfit')?.value ?? null;
-
-    if (
-      !symbol ||
-      !side ||
-      !volume ||
-      !openPrice ||
-      !leverage ||
-      volume <= 0 ||
-      openPrice <= 0
-    ) {
-      return;
-    }
-
-    this.service
-      .calculatePnL({
-        symbol,
-        side,
-        volume,
-        openPrice,
-        closePrice,
-        leverage,
-      })
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (resp: any) => {
-          if (resp && typeof resp === 'object') {
-            if (typeof resp.margin === 'number' && this.orderData) {
-              this.orderData.positionMargin = resp.margin;
-            }
-            if (typeof resp.profitLoss === 'number') {
-              this.editForm
-                .get('realizedPnL')
-                ?.setValue(resp.profitLoss, { emitEvent: false });
-              if (this.orderData) {
-                this.orderData.realizedPnL = resp.profitLoss;
-              }
-            }
-          }
-        },
-        error: () => {},
-      });
   }
 }

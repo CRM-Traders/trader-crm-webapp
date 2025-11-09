@@ -443,6 +443,7 @@ export interface OrderUpdateRequest {
   swap?: number | null;
   paymentCurrency?: string;
   reason?: string;
+  amount: number | null;
 }
 
 export interface TransactionUpdateRequest {
