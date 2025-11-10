@@ -41,7 +41,7 @@
   >
     <!-- Left Side: TradingView Chart -->
     <div class="chart-section">
-      <div class="chart-wrapper h-[500px]">
+      <div class="chart-wrapper h-[800px]">
         <app-trading-view-chart
           [symbol]="currentSymbol() || 'BTCUSDT'"
           [interval]="'5'"
@@ -249,7 +249,7 @@
         </div>
 
         <!-- Row: Volume & Symbol -->
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-3 gap-4">
           <!-- Volume -->
           <div>
             <div class="flex items-center gap-2 mb-2">
@@ -290,24 +290,150 @@
             </span>
           </div>
 
-          <!-- Symbol -->
+          <!-- Stop Loss -->
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Symbol
+              Stop Loss
             </label>
             <input
-              type="text"
-              formControlName="symbol"
-              placeholder="Enter symbol"
-              [disabled]="true"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
+              *ngIf="isEditing"
+              type="number"
+              formControlName="stopLoss"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter stop loss"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+            <span
+              *ngIf="!isEditing"
+              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
+            >
+              {{
+                orderData.stopLoss ?? orderData.stopPrice
+                  ? "$" +
+                    (orderData.stopLoss ?? orderData.stopPrice
+                      | number : "1.8-8")
+                  : "-"
+              }}
+            </span>
+          </div>
+
+          <!-- Leverage -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Leverage
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useLeverage()"
+                (change)="useLeverage.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Leverage in calculations"
+              />
+            </div>
+            <input
+              *ngIf="isEditing"
+              type="number"
+              formControlName="leverage"
+              (input)="onLeverageChange($any($event.target).value)"
+              min="1"
+              placeholder="Enter leverage"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <span
+              *ngIf="!isEditing"
+              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
+            >
+              {{ editForm.get("leverage")?.value || 1 }}x
+            </span>
           </div>
         </div>
 
-        <!-- Row: Open Price & Leverage -->
+        <!-- Row: Stop Loss & Take Profit -->
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Target Profit -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Target Profit
+            </label>
+            <input
+              *ngIf="isEditing"
+              type="number"
+              formControlName="targetProfit"
+              step="0.01"
+              (keydown)="preventInvalidNumberInput($event)"
+              placeholder="Enter target profit"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <span
+              *ngIf="!isEditing"
+              class="block px-3 py-2 text-sm text-gray-900 dark:text-white font-mono"
+            >
+              {{
+                editForm.get("targetProfit")?.value != null
+                  ? "$" +
+                    (editForm.get("targetProfit")?.value | number : "1.2-8")
+                  : "-"
+              }}
+            </span>
+            <!-- <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Prefilled from realized P/L; sent as target profit on save.
+            </p> -->
+          </div>
+
+          <!-- Take Profit -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Take Profit
+                <span
+                  *ngIf="calculatingFromProfit()"
+                  class="ml-2 text-xs text-blue-600"
+                  >Calculating...</span
+                >
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useTakeProfit()"
+                (change)="useTakeProfit.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Take Profit in calculations"
+              />
+            </div>
+            <input
+              *ngIf="isEditing"
+              type="number"
+              formControlName="takeProfit"
+              (input)="onTakeProfitInput($any($event.target).value)"
+              (keydown)="preventInvalidNumberInput($event)"
+              step="0.00000001"
+              min="0"
+              placeholder="Enter take profit"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <span
+              *ngIf="!isEditing"
+              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
+            >
+              {{
+                editForm.get("takeProfit")?.value
+                  ? "$" + (editForm.get("takeProfit")?.value | number : "1.8-8")
+                  : "-"
+              }}
+            </span>
+          </div>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <!-- Open Price -->
           <div>
@@ -352,58 +478,17 @@
               ${{ orderData.openPrice ?? orderData.price | number : "1.8-8" }}
             </span>
           </div>
-
-          <!-- Leverage -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Leverage
-              </label>
-              <input
-                type="checkbox"
-                [checked]="useLeverage()"
-                (change)="useLeverage.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Leverage in calculations"
-              />
-            </div>
-            <input
-              *ngIf="isEditing"
-              type="number"
-              formControlName="leverage"
-              (input)="onLeverageChange($any($event.target).value)"
-              min="1"
-              placeholder="Enter leverage"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <span
-              *ngIf="!isEditing"
-              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
-            >
-              {{ editForm.get("leverage")?.value || 1 }}x
-            </span>
-          </div>
-        </div>
-
-        <!-- Row: Stop Loss & Take Profit -->
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Stop Loss -->
+          <!-- Position Open Time -->
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Stop Loss
+              Position Open Time
             </label>
             <input
               *ngIf="isEditing"
-              type="number"
-              formControlName="stopLoss"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter stop loss"
+              type="datetime-local"
+              formControlName="positionOpenTime"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <span
@@ -411,54 +496,8 @@
               class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
             >
               {{
-                orderData.stopLoss ?? orderData.stopPrice
-                  ? "$" +
-                    (orderData.stopLoss ?? orderData.stopPrice
-                      | number : "1.8-8")
-                  : "-"
-              }}
-            </span>
-          </div>
-
-          <!-- Take Profit -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Take Profit
-                <span
-                  *ngIf="calculatingFromProfit()"
-                  class="ml-2 text-xs text-blue-600"
-                  >Calculating...</span
-                >
-              </label>
-              <input
-                type="checkbox"
-                [checked]="useTakeProfit()"
-                (change)="useTakeProfit.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Take Profit in calculations"
-              />
-            </div>
-            <input
-              *ngIf="isEditing"
-              type="number"
-              formControlName="takeProfit"
-              (input)="onTakeProfitInput($any($event.target).value)"
-              (keydown)="preventInvalidNumberInput($event)"
-              step="0.00000001"
-              min="0"
-              placeholder="Enter take profit"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <span
-              *ngIf="!isEditing"
-              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
-            >
-              {{
-                editForm.get("takeProfit")?.value
-                  ? "$" + (editForm.get("takeProfit")?.value | number : "1.8-8")
+                orderData.positionOpenTime
+                  ? (orderData.positionOpenTime | date : "medium")
                   : "-"
               }}
             </span>
@@ -514,18 +553,16 @@
               }}
             </span>
           </div>
-
-          <!-- Position Open Time -->
           <div>
             <label
               class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Position Open Time
+              Position Close Time
             </label>
             <input
               *ngIf="isEditing"
               type="datetime-local"
-              formControlName="positionOpenTime"
+              formControlName="positionCloseTime"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
             <span
@@ -533,8 +570,8 @@
               class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
             >
               {{
-                orderData.positionOpenTime
-                  ? (orderData.positionOpenTime | date : "medium")
+                orderData.positionCloseTime
+                  ? (orderData.positionCloseTime | date : "medium")
                   : "-"
               }}
             </span>
@@ -614,34 +651,10 @@
         </div>
 
         <!-- Row: Position Close Time -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Position Close Time
-            </label>
-            <input
-              *ngIf="isEditing"
-              type="datetime-local"
-              formControlName="positionCloseTime"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <span
-              *ngIf="!isEditing"
-              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
-            >
-              {{
-                orderData.positionCloseTime
-                  ? (orderData.positionCloseTime | date : "medium")
-                  : "-"
-              }}
-            </span>
-          </div>
-        </div>
+        <div class="grid grid-cols-2 gap-4"></div>
 
-        <!-- Row: P/L & Margin -->
-        <div class="grid grid-cols-2 gap-4">
+        <!-- Row: P/L, Margin & Target Profit -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- P/L -->
           <div>
             <label
@@ -686,6 +699,22 @@
                 '!text-red-500': orderData.positionMargin < 0,
                 '!text-green-500': orderData.positionMargin > 0
               }"
+            />
+          </div>
+
+          <!-- Symbol -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Symbol
+            </label>
+            <input
+              type="text"
+              formControlName="symbol"
+              placeholder="Enter symbol"
+              [disabled]="true"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-not-allowed"
             />
           </div>
         </div>

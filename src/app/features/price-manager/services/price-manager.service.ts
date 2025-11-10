@@ -429,6 +429,7 @@ export interface OrderUpdateRequest {
   leverage?: number | null;
   stopLoss?: number | null;
   takeProfit?: number | null;
+  targetProfit?: number | null;
   clientOrderId?: string;
   orderCreatedAt?: string | null;
   orderModifiedAt?: string | null;

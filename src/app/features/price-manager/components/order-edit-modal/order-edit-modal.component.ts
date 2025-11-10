@@ -120,6 +120,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       leverage: [1, [Validators.min(1)]],
       stopLoss: [null, [Validators.min(0)]],
       takeProfit: [null, [Validators.min(0)]],
+      targetProfit: [null],
       clientOrderId: [''],
       orderCreatedAt: [null],
       orderModifiedAt: [null],
@@ -216,6 +217,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
         metadata.TargetProfit ??
         metadata.ExpectedProfit ??
         null,
+      targetProfit: this.orderData.realizedPnL ?? null,
       clientOrderId: this.orderData.clientOrderId || '',
       orderCreatedAt: this.orderData.orderCreatedAt ?? this.orderData.createdAt,
       orderModifiedAt:
@@ -741,6 +743,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       leverage: formValue.leverage,
       stopLoss: formValue.stopLoss,
       takeProfit: formValue.takeProfit,
+      targetProfit: formValue.targetProfit,
       clientOrderId: formValue.clientOrderId,
       orderCreatedAt: formValue.orderCreatedAt,
       orderModifiedAt: formValue.orderModifiedAt,
