@@ -327,25 +327,12 @@
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Take Profit
-                <span
-                  *ngIf="calculatingFromProfit()"
-                  class="ml-2 text-xs text-blue-600"
-                  >Calculating...</span
-                >
               </label>
-              <input
-                type="checkbox"
-                [checked]="useTakeProfit()"
-                (change)="useTakeProfit.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Take Profit in calculations"
-              />
             </div>
             <input
               *ngIf="isEditing"
               type="number"
               formControlName="takeProfit"
-              (input)="onTakeProfitInput($any($event.target).value)"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
               min="0"
@@ -375,6 +362,11 @@
               >
                 Leverage
               </label>
+              <span
+                *ngIf="calculatingFromProfit() && profitCalcSource() === 'leverage'"
+                class="ml-2 text-xs text-blue-600"
+                >Calculating...</span
+              >
               <input
                 type="checkbox"
                 [checked]="useLeverage()"
@@ -401,16 +393,31 @@
           </div>
           <!-- Target Profit -->
           <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Target Profit
-            </label>
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Target Profit
+                <span
+                  *ngIf="calculatingFromProfit() && profitCalcSource() === 'target'"
+                  class="ml-2 text-xs text-blue-600"
+                  >Calculating...</span
+                >
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useTargetProfit()"
+                (change)="useTargetProfit.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Target Profit in calculations"
+              />
+            </div>
             <input
               *ngIf="isEditing"
               type="number"
               formControlName="targetProfit"
               step="0.01"
+              (input)="onTargetProfitInput($any($event.target).value)"
               (keydown)="preventInvalidNumberInput($event)"
               placeholder="Enter target profit"
               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

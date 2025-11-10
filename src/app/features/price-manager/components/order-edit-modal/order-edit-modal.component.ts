@@ -73,11 +73,12 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   // Calculation toggles and states
   useAmount = signal<boolean>(false);
   useVolume = signal<boolean>(true);
-  useTakeProfit = signal<boolean>(false);
+  useTargetProfit = signal<boolean>(false);
   useLeverage = signal<boolean>(true);
   calculatingFromAmount = signal<boolean>(false);
   calculatingFromProfit = signal<boolean>(false);
   calculatingFromVolume = signal<boolean>(false);
+  profitCalcSource = signal<'target' | 'leverage' | null>(null);
 
   private suppressCalc = false;
   private amountCalcTimer: any = null;
@@ -354,7 +355,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       const json = JSON.parse(event);
       if (json.name === 'quoteUpdate' && json.data) {
         const data = json.data as any;
-
+        
         if (data.original_name) {
           this.currentSymbol.set(data.original_name);
         }
@@ -437,18 +438,21 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   }
 
   // ========= Profit-based calculation (same as quick-order with bulk) =========
-  onTakeProfitInput(value: any): void {
+  onTargetProfitInput(value: any): void {
     const num = parseFloat(value);
     if (!isFinite(num)) return;
-    if (this.useTakeProfit()) this.triggerProfitBasedCalc();
+    if (this.useTargetProfit()) {
+      this.profitCalcSource.set('target');
+      this.triggerProfitBasedCalc();
+    }
   }
 
   private triggerProfitBasedCalc(): void {
     if (this.suppressCalc) return;
-    if (!this.useTakeProfit()) return;
+    if (!this.useTargetProfit()) return;
 
     const symbol = this.currentSymbol();
-    const targetProfit = this.editForm.get('takeProfit')?.value;
+    const targetProfit = this.editForm.get('targetProfit')?.value;
     const side = this.editForm.get('side')?.value;
     const leverage = this.editForm.get('leverage')?.value || 1;
     const volume = this.editForm.get('volume')?.value || 0.01;
@@ -520,7 +524,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       : null;
     const entryPrice = this.editForm.get('openPrice')?.value;
     const exitPrice = this.editForm.get('closePrice')?.value;
-    const targetProfit = this.editForm.get('takeProfit')?.value;
+    const targetProfit = this.editForm.get('targetProfit')?.value;
 
     if (!symbol || !volume || !side) return;
 
@@ -561,7 +565,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const val = value ? +value : 1;
     this.editForm.get('leverage')?.setValue(val, { emitEvent: false });
     if (this.useLeverage()) {
-      if (this.useTakeProfit() && this.editForm.get('takeProfit')?.value) {
+      if (this.useTargetProfit() && this.editForm.get('targetProfit')?.value) {
+        this.profitCalcSource.set('leverage');
         this.triggerProfitBasedCalc();
       } else if (this.useVolume() && this.editForm.get('volume')?.value) {
         this.triggerVolumeBasedCalc();
@@ -599,11 +604,11 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
           .get('closePrice')
           ?.setValue(resp.closePrice, { emitEvent: false });
       }
-      if (typeof resp.expectedProfit === 'number') {
-        this.editForm
-          .get('takeProfit')
-          ?.setValue(resp.expectedProfit, { emitEvent: false });
-      }
+      // if (typeof resp.expectedProfit === 'number') {
+      //   this.editForm
+      //     .get('takeProfit')
+      //     ?.setValue(resp.expectedProfit, { emitEvent: false });
+      // }
       if (typeof resp.profitLoss === 'number') {
         this.editForm
           .get('realizedPnL')
@@ -657,7 +662,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     const closePrice = this.editForm.get('closePrice')?.value;
     const amount = this.editForm.get('amount')?.value;
     const paymentCurrency = this.editForm.get('paymentCurrency')?.value;
-    const targetProfit = this.editForm.get('takeProfit')?.value;
+    const targetProfit = this.editForm.get('targetProfit')?.value;
 
     if (
       !symbol ||
