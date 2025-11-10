@@ -320,75 +320,6 @@
               }}
             </span>
           </div>
-
-          <!-- Leverage -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <label
-                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Leverage
-              </label>
-              <input
-                type="checkbox"
-                [checked]="useLeverage()"
-                (change)="useLeverage.set($any($event.target).checked)"
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Include Leverage in calculations"
-              />
-            </div>
-            <input
-              *ngIf="isEditing"
-              type="number"
-              formControlName="leverage"
-              (input)="onLeverageChange($any($event.target).value)"
-              min="1"
-              placeholder="Enter leverage"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <span
-              *ngIf="!isEditing"
-              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
-            >
-              {{ editForm.get("leverage")?.value || 1 }}x
-            </span>
-          </div>
-        </div>
-
-        <!-- Row: Stop Loss & Take Profit -->
-        <div class="grid grid-cols-2 gap-4">
-          <!-- Target Profit -->
-          <div>
-            <label
-              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Target Profit
-            </label>
-            <input
-              *ngIf="isEditing"
-              type="number"
-              formControlName="targetProfit"
-              step="0.01"
-              (keydown)="preventInvalidNumberInput($event)"
-              placeholder="Enter target profit"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <span
-              *ngIf="!isEditing"
-              class="block px-3 py-2 text-sm text-gray-900 dark:text-white font-mono"
-            >
-              {{
-                editForm.get("targetProfit")?.value != null
-                  ? "$" +
-                    (editForm.get("targetProfit")?.value | number : "1.2-8")
-                  : "-"
-              }}
-            </span>
-            <!-- <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Prefilled from realized P/L; sent as target profit on save.
-            </p> -->
-          </div>
-
           <!-- Take Profit -->
           <div>
             <div class="flex items-center gap-2 mb-2">
@@ -431,6 +362,73 @@
                   : "-"
               }}
             </span>
+          </div>
+        </div>
+
+        <!-- Row: Stop Loss & Take Profit -->
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Leverage -->
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <label
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Leverage
+              </label>
+              <input
+                type="checkbox"
+                [checked]="useLeverage()"
+                (change)="useLeverage.set($any($event.target).checked)"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                title="Include Leverage in calculations"
+              />
+            </div>
+            <input
+              *ngIf="isEditing"
+              type="number"
+              formControlName="leverage"
+              (input)="onLeverageChange($any($event.target).value)"
+              min="1"
+              placeholder="Enter leverage"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <span
+              *ngIf="!isEditing"
+              class="block px-3 py-2 text-sm text-gray-900 dark:text-white"
+            >
+              {{ editForm.get("leverage")?.value || 1 }}x
+            </span>
+          </div>
+          <!-- Target Profit -->
+          <div>
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Target Profit
+            </label>
+            <input
+              *ngIf="isEditing"
+              type="number"
+              formControlName="targetProfit"
+              step="0.01"
+              (keydown)="preventInvalidNumberInput($event)"
+              placeholder="Enter target profit"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <span
+              *ngIf="!isEditing"
+              class="block px-3 py-2 text-sm text-gray-900 dark:text-white font-mono"
+            >
+              {{
+                editForm.get("targetProfit")?.value != null
+                  ? "$" +
+                    (editForm.get("targetProfit")?.value | number : "1.2-8")
+                  : "-"
+              }}
+            </span>
+            <!-- <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Prefilled from realized P/L; sent as target profit on save.
+            </p> -->
           </div>
         </div>
 
