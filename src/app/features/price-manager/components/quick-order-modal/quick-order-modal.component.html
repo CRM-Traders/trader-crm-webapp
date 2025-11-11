@@ -295,14 +295,14 @@
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Open Price (Entry) <span class="text-red-500">*</span>
+                Open Price (Entry)
               </label>
               <input
                 type="checkbox"
                 [checked]="useOpenPrice()"
                 (change)="useOpenPrice.set($any($event.target).checked)"
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Enable manual open price editing"
+                title="Manually set open price"
               />
             </div>
             <div class="flex gap-2 items-start">
@@ -349,14 +349,14 @@
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Close Price (Exit) <span class="text-red-500">*</span>
+                Close Price (Exit)
               </label>
               <input
                 type="checkbox"
                 [checked]="useClosePrice()"
                 (change)="useClosePrice.set($any($event.target).checked)"
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                title="Enable manual close price editing"
+                title="Manually set close price"
               />
             </div>
             <div class="flex gap-2 items-start">
@@ -393,6 +393,9 @@
                 Update
               </button>
             </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Check the box to manually set close price
+            </p>
           </div>
         </div>
 
@@ -519,13 +522,13 @@
               >
                 Volume <span class="text-red-500">*</span>
               </label>
-              <input
+              <!-- <input
                 type="checkbox"
                 [checked]="useVolume()"
                 (change)="useVolume.set($any($event.target).checked)"
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 title="Include Volume in calculations"
-              />
+              /> -->
             </div>
             <input
               type="number"
@@ -644,11 +647,20 @@
         </div>
 
         <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Open Price <span class="text-red-500">*</span>
-          </label>
+          <div class="flex items-center gap-2 mb-2">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Open Price
+            </label>
+            <input
+              type="checkbox"
+              [checked]="useOpenPrice()"
+              (change)="useOpenPrice.set($any($event.target).checked)"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              title="Manually set open price"
+            />
+          </div>
           <div class="flex gap-2 items-start">
             <div class="flex-1 relative">
               <div
@@ -660,11 +672,15 @@
                 type="number"
                 [ngModel]="openPrice()"
                 (ngModelChange)="openPrice.set($event ? +$event : null)"
-                name="openPrice"
+                name="openPriceNewOrder"
                 (keydown)="preventInvalidNumberInput($event)"
                 step="0.00000001"
                 min="0"
                 placeholder="Enter open price"
+                [disabled]="!useOpenPrice()"
+                [class.cursor-not-allowed]="!useOpenPrice()"
+                [class.bg-gray-100]="!useOpenPrice()"
+                [class.dark:bg-gray-800]="!useOpenPrice()"
                 class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -698,6 +714,9 @@
               </span>
             </button>
           </div>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Check the box to manually set open price, otherwise null will be sent
+          </p>
         </div>
 
         <div class="grid grid-cols-2 gap-4">

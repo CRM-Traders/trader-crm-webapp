@@ -248,6 +248,15 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
           ) {
             this.openPrice.set(data.last_price);
           }
+
+          // Auto-fill close price when appropriate
+          if (
+            this.autoClosePrice() ||
+            !this.closePrice() ||
+            (typeof this.closePrice() === 'number' && this.closePrice()! <= 0)
+          ) {
+            this.closePrice.set(data.last_price);
+          }
         }
 
         if (typeof data.bid === 'number') {
