@@ -655,7 +655,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       symbol: symbol,
       side: side,
       volume: volume,
-      openPrice: openPrice,
+      openPrice: null,
       closePrice: closePrice,
       leverage: leverage,
       amount: this.amount(),
