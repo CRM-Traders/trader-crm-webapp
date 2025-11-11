@@ -469,8 +469,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       symbol: this.currentSymbol(),
       volume: this.volume()!,
       side: this.smartPLSide(),
-      entryPrice: this.openPrice(),
-      exitPrice: this.closePrice(),
+      entryPrice: null,
+      exitPrice: null,
       leverage: this.smartPLLeverage(),
       tradingAccountId: null,
       targetProfit: this.targetProfit(),
@@ -591,9 +591,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
         this.loginIdsInput() &&
         this.currentSymbol() &&
         this.volume() &&
-        this.openPrice() &&
-        this.volume()! > 0 &&
-        this.openPrice()! > 0
+        this.volume()! > 0
       );
     } else {
       return !!(this.loginIdsInput() && this.currentSymbol() && this.volume());
@@ -629,24 +627,24 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
 
     const symbol = this.currentSymbol();
     const volume = this.volume();
-    const openPrice = this.openPrice();
     const leverage =
       this.activeTab() === 'newOrder'
         ? this.leverage()
         : this.smartPLLeverage();
     const side =
       this.activeTab() === 'newOrder' ? this.side() : this.smartPLSide();
-    const closePrice =
-      this.activeTab() === 'newOrder' ? null : this.closePrice();
 
-    if (
-      !symbol ||
-      !volume ||
-      !openPrice ||
-      !leverage ||
-      volume <= 0 ||
-      openPrice <= 0
-    ) {
+    // Respect the checkboxes for open and close prices
+    const openPrice =
+      this.activeTab() === 'smartPL' && this.useOpenPrice()
+        ? this.openPrice()
+        : null;
+    const closePrice =
+      this.activeTab() === 'smartPL' && this.useClosePrice()
+        ? this.closePrice()
+        : null;
+
+    if (!symbol || !volume || !leverage || volume <= 0) {
       return;
     }
 
@@ -655,7 +653,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       symbol: symbol,
       side: side,
       volume: volume,
-      openPrice: null,
+      openPrice: openPrice,
       closePrice: closePrice,
       leverage: leverage,
       amount: this.amount(),
@@ -742,10 +740,13 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       this.alertService.error('Please enter a valid volume');
       return;
     }
-    if (!this.openPrice() || this.openPrice()! <= 0) {
+
+    // Validate open price if checkbox is checked
+    if (this.useOpenPrice() && (!this.openPrice() || this.openPrice()! <= 0)) {
       this.alertService.error('Please enter a valid open price');
       return;
     }
+
     if (this.leverage() < 1) {
       this.alertService.error('Leverage must be at least 1');
       return;
@@ -758,7 +759,7 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       symbol: this.currentSymbol(),
       side: this.side(),
       volume: this.useVolume() ? this.volume()! : undefined,
-      openPrice: this.openPrice()!,
+      openPrice: this.useOpenPrice() ? this.openPrice()! : null,
       leverage: this.useLeverage() ? this.leverage() : undefined,
       stopLoss: this.stopLoss(),
       takeProfit: this.takeProfit(),
@@ -837,11 +838,14 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.openPrice() || this.openPrice()! <= 0) {
+    // Validate open price if checkbox is checked
+    if (this.useOpenPrice() && (!this.openPrice() || this.openPrice()! <= 0)) {
       this.alertService.error('Please enter a valid open price');
       return;
     }
-    if (!this.closePrice() || this.closePrice()! <= 0) {
+
+    // Validate close price if checkbox is checked
+    if (this.useClosePrice() && (!this.closePrice() || this.closePrice()! <= 0)) {
       this.alertService.error('Please enter a valid close price');
       return;
     }
@@ -855,8 +859,8 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
       closeInterval: this.closeInterval(),
       volume: this.useVolume() ? this.volume()! : undefined,
       targetProfit: this.targetProfit()!,
-      openPrice: this.openPrice()!,
-      closePrice: this.closePrice()!,
+      openPrice: this.useOpenPrice() ? this.openPrice()! : null,
+      closePrice: this.useClosePrice() ? this.closePrice()! : null,
       sellRequiredMargin: this.sellRequiredMargin(),
       buyRequiredMargin: this.buyRequiredMargin(),
       autoOpenPrice: this.autoOpenPrice(),

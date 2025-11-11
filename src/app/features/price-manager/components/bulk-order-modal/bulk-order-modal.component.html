@@ -321,7 +321,7 @@
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Open Price (Entry) <span class="text-red-500">*</span>
+                Open Price (Entry)
               </label>
               <input
                 type="checkbox"
@@ -329,7 +329,7 @@
                 (change)="useOpenPrice.set($any($event.target).checked)"
                 [disabled]="!hasValidClients()"
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Enable manual open price editing"
+                title="Manually set open price"
               />
             </div>
             <div class="flex gap-2 items-start">
@@ -371,7 +371,7 @@
               </button>
             </div>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Auto-filled when symbol changes
+              Check the box to manually set open price, otherwise null will be sent
             </p>
           </div>
 
@@ -380,7 +380,7 @@
               <label
                 class="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
-                Close Price (Exit) <span class="text-red-500">*</span>
+                Close Price (Exit)
               </label>
               <input
                 type="checkbox"
@@ -388,7 +388,7 @@
                 (change)="useClosePrice.set($any($event.target).checked)"
                 [disabled]="!hasValidClients()"
                 class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Enable manual close price editing"
+                title="Manually set close price"
               />
             </div>
             <div class="flex gap-2 items-start">
@@ -429,6 +429,9 @@
                 Update
               </button>
             </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Check the box to manually set close price, otherwise null will be sent
+            </p>
           </div>
         </div>
 
@@ -790,11 +793,21 @@
 
         <!-- Row: Open Price, Update Button, and Auto Checkbox -->
         <div>
-          <label
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Open Price <span class="text-red-500">*</span>
-          </label>
+          <div class="flex items-center gap-2 mb-2">
+            <label
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              Open Price
+            </label>
+            <input
+              type="checkbox"
+              [checked]="useOpenPrice()"
+              (change)="useOpenPrice.set($any($event.target).checked)"
+              [disabled]="!hasValidClients()"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Manually set open price"
+            />
+          </div>
           <div class="flex gap-2 items-start">
             <div class="flex-1 relative">
               <div
@@ -806,15 +819,15 @@
                 type="number"
                 [ngModel]="openPrice()"
                 (ngModelChange)="openPrice.set($event ? +$event : null)"
-                name="openPrice"
+                name="openPriceNewOrder"
                 (keydown)="preventInvalidNumberInput($event)"
                 step="0.00000001"
                 min="0"
                 placeholder="Enter open price"
-                [disabled]="!hasValidClients()"
-                [class.cursor-not-allowed]="!hasValidClients()"
-                [class.bg-gray-100]="!hasValidClients()"
-                [class.dark:bg-gray-800]="!hasValidClients()"
+                [disabled]="!hasValidClients() || !useOpenPrice()"
+                [class.cursor-not-allowed]="!hasValidClients() || !useOpenPrice()"
+                [class.bg-gray-100]="!hasValidClients() || !useOpenPrice()"
+                [class.dark:bg-gray-800]="!hasValidClients() || !useOpenPrice()"
                 class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -848,6 +861,9 @@
               </span>
             </button>
           </div>
+          <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Check the box to manually set open price, otherwise null will be sent
+          </p>
         </div>
 
         <!-- Row: Sell Required Margin and Buy Required Margin -->
