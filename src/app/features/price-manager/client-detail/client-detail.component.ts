@@ -368,6 +368,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
   refreshCurrentData(): void {
     this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
+    this.fetchUserBalance();
   }
 
   countByStatus(status: number) {
