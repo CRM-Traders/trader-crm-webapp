@@ -295,7 +295,7 @@ export class PriceManagerService {
     symbol: string;
     side: number;
     volume: number;
-    openPrice: number;
+    openPrice: null;
     closePrice: number | null;
     leverage: number;
     amount: number | null;
