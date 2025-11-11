@@ -409,7 +409,7 @@
             <input
               type="number"
               [ngModel]="sellRequiredMargin()"
-              (ngModelChange)="sellRequiredMargin.set($event ? +$event : null)"
+              (ngModelChange)="sellRequiredMargin.set($event === '' || $event == null ? null : +$event)"
               name="sellRequiredMargin"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -428,7 +428,7 @@
             <input
               type="number"
               [ngModel]="buyRequiredMargin()"
-              (ngModelChange)="buyRequiredMargin.set($event ? +$event : null)"
+              (ngModelChange)="buyRequiredMargin.set($event === '' || $event == null ? null : +$event)"
               name="buyRequiredMargin"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -533,7 +533,7 @@
             <input
               type="number"
               [ngModel]="volume()"
-              (ngModelChange)="volume.set($event ? +$event : null)"
+              (ngModelChange)="volume.set($event === '' || $event == null ? null : +$event)"
               name="volume"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -616,7 +616,7 @@
             <input
               type="number"
               [ngModel]="stopLoss()"
-              (ngModelChange)="stopLoss.set($event ? +$event : null)"
+              (ngModelChange)="stopLoss.set($event === '' || $event == null ? null : +$event)"
               name="stopLoss"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -635,7 +635,7 @@
             <input
               type="number"
               [ngModel]="takeProfit()"
-              (ngModelChange)="takeProfit.set($event ? +$event : null)"
+              (ngModelChange)="takeProfit.set($event === '' || $event == null ? null : +$event)"
               name="takeProfit"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -671,7 +671,7 @@
               <input
                 type="number"
                 [ngModel]="openPrice()"
-                (ngModelChange)="openPrice.set($event ? +$event : null)"
+                (ngModelChange)="openPrice.set($event === '' || $event == null ? null : +$event)"
                 name="openPriceNewOrder"
                 (keydown)="preventInvalidNumberInput($event)"
                 step="0.00000001"
@@ -729,7 +729,7 @@
             <input
               type="number"
               [ngModel]="sellRequiredMargin()"
-              (ngModelChange)="sellRequiredMargin.set($event ? +$event : null)"
+              (ngModelChange)="sellRequiredMargin.set($event === '' || $event == null ? null : +$event)"
               name="sellRequiredMargin"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -748,7 +748,7 @@
             <input
               type="number"
               [ngModel]="buyRequiredMargin()"
-              (ngModelChange)="buyRequiredMargin.set($event ? +$event : null)"
+              (ngModelChange)="buyRequiredMargin.set($event === '' || $event == null ? null : +$event)"
               name="buyRequiredMargin"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -793,7 +793,7 @@
             <input
               type="number"
               [ngModel]="sellPL()"
-              (ngModelChange)="sellPL.set($event ? +$event : null)"
+              (ngModelChange)="sellPL.set($event === '' || $event == null ? null : +$event)"
               name="sellPL"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"
@@ -812,7 +812,7 @@
             <input
               type="number"
               [ngModel]="buyPL()"
-              (ngModelChange)="buyPL.set($event ? +$event : null)"
+              (ngModelChange)="buyPL.set($event === '' || $event == null ? null : +$event)"
               name="buyPL"
               (keydown)="preventInvalidNumberInput($event)"
               step="0.00000001"

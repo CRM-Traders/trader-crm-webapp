@@ -213,7 +213,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   onAmountInput(value: any): void {
-    this.amount.set(value ? +value : null);
+    this.amount.set(value === '' || value == null ? null : +value);
     this.triggerAmountBasedCalc();
   }
 
@@ -270,12 +270,12 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   onTargetProfitInput(value: any): void {
-    this.targetProfit.set(value ? +value : null);
+    this.targetProfit.set(value === '' || value == null ? null : +value);
     this.triggerProfitBasedCalc();
   }
 
   onTargetProfitInputNewOrder(value: any): void {
-    this.targetProfit.set(value ? +value : null);
+    this.targetProfit.set(value === '' || value == null ? null : +value);
     this.triggerProfitBasedCalcNewOrder();
   }
 
@@ -365,29 +365,29 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
   }
 
   onVolumeInput(value: any): void {
-    this.volume.set(value ? +value : null);
+    this.volume.set(value === '' || value == null ? null : +value);
     if (this.activeTab() === 'smartPL' && this.useVolume()) {
       this.triggerVolumeBasedCalc();
     }
   }
 
   onOpenPriceInput(value: any): void {
-    this.openPrice.set(value ? +value : null);
+    this.openPrice.set(value === '' || value == null ? null : +value);
   }
 
   onClosePriceInput(value: any): void {
-    this.closePrice.set(value ? +value : null);
+    this.closePrice.set(value === '' || value == null ? null : +value);
   }
 
   onLeverageChange(value: any): void {
-    this.leverage.set(value ? +value : 1);
+    this.leverage.set(value === '' || value == null ? 1 : +value);
     if (this.useLeverage()) {
       this.triggerProfitBasedCalcNewOrder();
     }
   }
 
   onSmartPLLeverageChange(value: any): void {
-    this.smartPLLeverage.set(value ? +value : 1);
+    this.smartPLLeverage.set(value === '' || value == null ? 1 : +value);
     this.recalculateSmartPL('leverage');
   }
 
