@@ -15,7 +15,7 @@ import {
 } from './services/price-manager.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil, catchError, finalize, tap, of, interval } from 'rxjs';
+import { Subject, takeUntil, catchError, finalize, tap, of, interval, debounceTime, distinctUntilChanged } from 'rxjs';
 import { HasPermissionDirective } from '../../core/directives/has-permission.directive';
 import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
@@ -40,6 +40,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   private modalService = inject(ModalService);
   private authService = inject(AuthService);
   private destroy$ = new Subject<void>();
+  private searchSubject$ = new Subject<string>();
+  private ordersSearchSubject$ = new Subject<string>();
 
   activeClients = signal<Client[]>([]);
   orders = signal<any[]>([]);
@@ -107,11 +109,40 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadInitialData();
     this.startOrdersPolling();
+    this.setupSearchDebounce();
     
     // Load orders if the active tab is 'orders'
     if (this.activeTab() === 'orders') {
       this.loadOrders();
     }
+  }
+
+  private setupSearchDebounce(): void {
+    // Debounce client search input
+    this.searchSubject$
+      .pipe(
+        debounceTime(800), // Wait 800ms after user stops typing
+        distinctUntilChanged(), // Only emit if value is different from previous
+        takeUntil(this.destroy$)
+      )
+      .subscribe((searchTerm: string) => {
+        this.searchTerm.set(searchTerm);
+        this.currentPage.set(0);
+        this.loadInitialData();
+      });
+
+    // Debounce orders search input
+    this.ordersSearchSubject$
+      .pipe(
+        debounceTime(800), // Wait 800ms after user stops typing
+        distinctUntilChanged(), // Only emit if value is different from previous
+        takeUntil(this.destroy$)
+      )
+      .subscribe((searchTerm: string) => {
+        this.ordersSearchTerm.set(searchTerm);
+        this.ordersCurrentPage.set(0);
+        this.loadOrders();
+      });
   }
 
   ngOnDestroy(): void {
@@ -194,9 +225,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   onSearchInput(): void {
     const trimmedValue = this.searchInput?.trim() || '';
-    this.searchTerm.set(trimmedValue);
-    this.currentPage.set(0);
-    this.loadInitialData();
+    this.searchSubject$.next(trimmedValue);
   }
 
   onPageSizeChange(newSize: number): void {
@@ -478,9 +507,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   onOrdersSearchInput(): void {
     const trimmedValue = this.ordersSearchInput?.trim() || '';
-    this.ordersSearchTerm.set(trimmedValue);
-    this.ordersCurrentPage.set(0);
-    this.loadOrders();
+    this.ordersSearchSubject$.next(trimmedValue);
   }
 
   onOrdersPageSizeChange(newSize: number): void {
