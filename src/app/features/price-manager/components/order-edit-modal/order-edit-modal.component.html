@@ -439,6 +439,21 @@
           </div>
         </div>
 
+        <!-- Toggle for Prices -->
+        <div class="flex items-center gap-3 mb-4">
+          <label class="flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              [checked]="usePrices()"
+              (change)="usePrices.set($any($event.target).checked)"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              Manual Prices
+            </span>
+          </label>
+        </div>
+
         <div class="grid grid-cols-2 gap-4">
           <!-- Open Price -->
           <div>
@@ -464,13 +479,16 @@
                   step="0.00000001"
                   min="0"
                   placeholder="Enter open price"
+                  [class.cursor-not-allowed]="!usePrices()"
+                  [class.bg-gray-100]="!usePrices()"
+                  [class.dark:bg-gray-800]="!usePrices()"
                   class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <button
                 type="button"
                 (click)="updatePrice()"
-                [disabled]="!currentSymbol()"
+                [disabled]="!currentSymbol() || !usePrices()"
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
                 Update
@@ -535,13 +553,16 @@
                   step="0.00000001"
                   min="0"
                   placeholder="Enter close price"
+                  [class.cursor-not-allowed]="!usePrices()"
+                  [class.bg-gray-100]="!usePrices()"
+                  [class.dark:bg-gray-800]="!usePrices()"
                   class="block w-full !pl-7 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <button
                 type="button"
                 (click)="updateClosePrice()"
-                [disabled]="!currentSymbol()"
+                [disabled]="!currentSymbol() || !usePrices()"
                 class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
                 Update

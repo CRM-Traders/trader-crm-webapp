@@ -6,6 +6,7 @@ import {
   OnDestroy,
   ViewChild,
   signal,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -85,6 +86,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   useVolume = signal<boolean>(true);
   useTargetProfit = signal<boolean>(false);
   useLeverage = signal<boolean>(true);
+  usePrices = signal<boolean>(false);
   calculatingFromAmount = signal<boolean>(false);
   calculatingFromProfit = signal<boolean>(false);
   calculatingFromVolume = signal<boolean>(false);
@@ -124,7 +126,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       symbol: [''],
       orderType: [null],
       side: [null],
-      openPrice: [null, [Validators.min(0)]],
+      openPrice: [{ value: null, disabled: true }, [Validators.min(0)]],
       volume: [null, [Validators.min(0.00000001)]],
       filledQuantity: [null, [Validators.min(0)]],
       status: [null],
@@ -136,7 +138,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       orderCreatedAt: [null],
       orderModifiedAt: [null],
       createPosition: [true],
-      closePrice: [null, [Validators.min(0)]],
+      closePrice: [{ value: null, disabled: true }, [Validators.min(0)]],
       isClosed: [null],
       realizedPnL: [null],
       unrealizedPnL: [null],
@@ -154,6 +156,18 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       newDesiredPnL: [null, [Validators.required]],
       newClosePrice: [null, [Validators.required, Validators.min(0)]],
       reason: ['', [Validators.required]],
+    });
+
+    // Watch usePrices signal to enable/disable price controls
+    effect(() => {
+      const shouldEnable = this.usePrices();
+      if (shouldEnable) {
+        this.editForm.get('openPrice')?.enable({ emitEvent: false });
+        this.editForm.get('closePrice')?.enable({ emitEvent: false });
+      } else {
+        this.editForm.get('openPrice')?.disable({ emitEvent: false });
+        this.editForm.get('closePrice')?.disable({ emitEvent: false });
+      }
     });
   }
 
@@ -513,15 +527,13 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   onOpenPriceInput(value: any): void {
     const num = parseFloat(value);
     if (!isFinite(num)) return;
-    if (this.useVolume() && this.editForm.get('volume')?.value)
-      this.triggerVolumeBasedCalc();
+    // Don't trigger calculations when manually changing prices
   }
 
   onClosePriceInput(value: any): void {
     const num = parseFloat(value);
     if (!isFinite(num)) return;
-    if (this.useVolume() && this.editForm.get('volume')?.value)
-      this.triggerVolumeBasedCalc();
+    // Don't trigger calculations when manually changing prices
   }
 
   private triggerVolumeBasedCalc(): void {
@@ -544,8 +556,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       symbol,
       volume,
       side,
-      entryPrice,
-      exitPrice,
+      entryPrice: this.usePrices() ? entryPrice : null,
+      exitPrice: this.usePrices() ? exitPrice : null,
       leverage,
       tradingAccountId: null,
       targetProfit,
@@ -693,8 +705,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       symbol,
       side,
       volume,
-      openPrice,
-      closePrice,
+      openPrice: this.usePrices() ? openPrice : null,
+      closePrice: this.usePrices() ? closePrice : null,
       leverage,
       amount,
       paymentCurrency,
@@ -753,7 +765,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       symbol: formValue.symbol,
       orderType: formValue.orderType,
       side: formValue.side,
-      openPrice: formValue.openPrice,
+      openPrice: this.usePrices() ? formValue.openPrice : null,
       volume: formValue.volume,
       filledQuantity: formValue.filledQuantity,
       status: Number(formValue.status),
@@ -765,7 +777,7 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
       orderCreatedAt: formValue.orderCreatedAt,
       orderModifiedAt: formValue.orderModifiedAt,
       createPosition: formValue.createPosition,
-      closePrice: formValue.closePrice,
+      closePrice: this.usePrices() ? formValue.closePrice : null,
       isClosed: formValue.isClosed,
       realizedPnL: formValue.realizedPnL,
       unrealizedPnL: formValue.unrealizedPnL,
