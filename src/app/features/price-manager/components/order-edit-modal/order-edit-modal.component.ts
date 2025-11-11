@@ -70,6 +70,16 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
   bidPrice = signal<number | null>(null);
   askPrice = signal<number | null>(null);
 
+  // Helper method to extract symbol from format like "BINANCE:BTCUSDT"
+  getChartSymbol(): string {
+    if (!this.orderData?.symbol) {
+      return 'BTCUSDT';
+    }
+    const symbol = this.orderData.symbol;
+    // Split by colon and return the second part, or the whole symbol if no colon
+    return symbol.includes(':') ? symbol.split(':')[1] : symbol;
+  }
+
   // Calculation toggles and states
   useAmount = signal<boolean>(false);
   useVolume = signal<boolean>(true);

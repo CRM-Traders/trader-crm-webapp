@@ -43,7 +43,7 @@
     <div class="chart-section">
       <div class="chart-wrapper h-[800px]">
         <app-trading-view-chart
-          [symbol]="currentSymbol() || 'BTCUSDT'"
+          [symbol]="getChartSymbol()"
           [interval]="'5'"
           [hideTopToolbar]="false"
           [hideSideToolbar]="true"
