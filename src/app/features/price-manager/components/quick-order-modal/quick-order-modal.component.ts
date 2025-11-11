@@ -586,10 +586,7 @@ export class QuickOrderModalComponent implements OnInit, OnDestroy {
       this.activeTab() === 'newOrder' ? this.side() : this.smartPLSide();
 
     // Respect the checkboxes for open and close prices
-    const openPrice =
-      this.activeTab() === 'smartPL' && this.useOpenPrice()
-        ? this.openPrice()
-        : null;
+    const openPrice = this.useOpenPrice() ? this.openPrice() : null;
     const closePrice =
       this.activeTab() === 'smartPL' && this.useClosePrice()
         ? this.closePrice()
