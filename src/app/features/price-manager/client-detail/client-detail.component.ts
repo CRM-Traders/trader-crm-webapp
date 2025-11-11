@@ -66,7 +66,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = signal(false);
   error = signal<string | null>(null);
 
-  selectedTab = signal<'orders' | 'transactions'>('orders');
+  selectedTab = signal<'orders' | 'transactions'>(this.getInitialTab());
 
   // Order status filter
   selectedOrderStatus = signal<number | null>(null);
@@ -82,6 +82,9 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   cancellingOrderIds = signal<Set<string>>(new Set());
   reopeningOrderIds = signal<Set<string>>(new Set());
   closingOrderIds = signal<Set<string>>(new Set());
+
+  // Track if a modal is open to pause background refresh
+  isModalOpen = signal<boolean>(false);
 
   // Filtered orders based on selected status
   filteredOrders = computed(() => {
@@ -192,8 +195,14 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       .subscribe();
   }
 
+  private getInitialTab(): 'orders' | 'transactions' {
+    const savedTab = localStorage.getItem('clientDetailSelectedTab');
+    return (savedTab === 'orders' || savedTab === 'transactions') ? savedTab : 'orders';
+  }
+
   onTabChange(tab: 'orders' | 'transactions'): void {
     this.selectedTab.set(tab);
+    localStorage.setItem('clientDetailSelectedTab', tab);
     this.loadCurrentDataType().pipe(takeUntil(this.destroy$)).subscribe();
   }
 
@@ -473,6 +482,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   openOrderEditModal(order: Order): void {
+    this.isModalOpen.set(true);
+    
     const modalRef = this.modalService.open(
       OrderEditModalComponent,
       {
@@ -487,12 +498,14 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
     modalRef.result.then(
       (result) => {
+        this.isModalOpen.set(false);
         if (result) {
           this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
         }
       },
       () => {
         // Modal dismissed
+        this.isModalOpen.set(false);
       }
     );
   }
@@ -502,6 +515,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       this.alertService.error('Client not found');
       return;
     }
+
+    this.isModalOpen.set(true);
 
     const modalRef = this.modalService.open(
       QuickOrderModalComponent,
@@ -520,10 +535,12 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
     modalRef.result.then(
       (result) => {
+        this.isModalOpen.set(false);
         window.location.reload();
       },
       () => {
         // Modal dismissed
+        this.isModalOpen.set(false);
       }
     );
   }
@@ -1018,7 +1035,8 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         if (
           this.client() &&
           this.selectedTab() === 'orders' &&
-          !this.ordersLoading()
+          !this.ordersLoading() &&
+          !this.isModalOpen()
         ) {
           this.loadOpenOrders(true).pipe(takeUntil(this.destroy$)).subscribe();
         }

@@ -63,7 +63,7 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   ordersStatus = signal<string | null>(null);
 
   // Tab management
-  activeTab = signal<'clients' | 'orders'>('clients');
+  activeTab = signal<'clients' | 'orders'>(this.getInitialTab());
 
   // Client selection state
   selectedClients = signal<Set<string>>(new Set());
@@ -74,6 +74,9 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   reopeningOrderIds = signal<Set<string>>(new Set());
   closingOrderIds = signal<Set<string>>(new Set());
 
+  // Track if a modal is open to pause background refresh
+  isModalOpen = signal<boolean>(false);
+
   // Check if user has any of the required permissions for Actions column
   hasAnyActionPermission = computed(() => {
     return (
@@ -82,8 +85,14 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
     );
   });
 
+  private getInitialTab(): 'clients' | 'orders' {
+    const savedTab = localStorage.getItem('priceManagerActiveTab');
+    return (savedTab === 'orders' || savedTab === 'clients') ? savedTab : 'clients';
+  }
+
   setActiveTab(tab: 'clients' | 'orders'): void {
     this.activeTab.set(tab);
+    localStorage.setItem('priceManagerActiveTab', tab);
     if (tab === 'orders') {
       this.loadOrders();
     }
@@ -98,6 +107,11 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadInitialData();
     this.startOrdersPolling();
+    
+    // Load orders if the active tab is 'orders'
+    if (this.activeTab() === 'orders') {
+      this.loadOrders();
+    }
   }
 
   ngOnDestroy(): void {
@@ -260,6 +274,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   }
 
   openBulkOrderModal(): void {
+    this.isModalOpen.set(true);
+
     const modalRef = this.modalService.open(
       BulkOrderModalComponent,
       {
@@ -272,12 +288,21 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       }
     );
 
-    modalRef.result.then((result: any) => {
-      window.location.reload();
-    });
+    modalRef.result.then(
+      (result: any) => {
+        this.isModalOpen.set(false);
+        window.location.reload();
+      },
+      () => {
+        // Modal dismissed
+        this.isModalOpen.set(false);
+      }
+    );
   }
 
   openNewOrderModal(): void {
+    this.isModalOpen.set(true);
+
     const modalRef = this.modalService.open(
       BulkOrderModalComponent,
       {
@@ -290,9 +315,16 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       }
     );
 
-    modalRef.result.then((result: any) => {
-      window.location.reload();
-    });
+    modalRef.result.then(
+      (result: any) => {
+        this.isModalOpen.set(false);
+        window.location.reload();
+      },
+      () => {
+        // Modal dismissed
+        this.isModalOpen.set(false);
+      }
+    );
   }
 
   copyExternalId(externalId: string): void {
@@ -652,6 +684,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
   // Order action methods
   openOrderEditModal(order: Order): void {
+    this.isModalOpen.set(true);
+
     const modalRef = this.modalService.open(
       OrderEditModalComponent,
       {
@@ -666,12 +700,14 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
 
     modalRef.result.then(
       (result) => {
+        this.isModalOpen.set(false);
         if (result) {
           this.loadOrders();
         }
       },
       () => {
         // Modal dismissed
+        this.isModalOpen.set(false);
       }
     );
   }
@@ -910,8 +946,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
     interval(3000) // Poll every 3 seconds
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        // Only poll when orders tab is active and not currently loading
-        if (this.activeTab() === 'orders' && !this.loading()) {
+        // Only poll when orders tab is active and not currently loading and no modal is open
+        if (this.activeTab() === 'orders' && !this.loading() && !this.isModalOpen()) {
           this.loadOrders(true); // Silent refresh
         }
       });
