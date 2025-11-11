@@ -262,6 +262,8 @@ export class OrderEditModalComponent implements OnInit, OnDestroy {
     if (this.amountCalcTimer) clearTimeout(this.amountCalcTimer);
     if (this.profitCalcTimer) clearTimeout(this.profitCalcTimer);
     if (this.volumeCalcTimer) clearTimeout(this.volumeCalcTimer);
+    // Ensure the parent can detect closure and refresh, mirroring quick-order behavior
+    this.modalRef.close(true);
     this.destroy$.next();
     this.destroy$.complete();
   }

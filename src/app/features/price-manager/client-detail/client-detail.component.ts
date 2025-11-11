@@ -500,6 +500,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     modalRef.result.then(
       (result) => {
         this.isModalOpen.set(false);
+        window.location.reload();
         if (result) {
           this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
         }
