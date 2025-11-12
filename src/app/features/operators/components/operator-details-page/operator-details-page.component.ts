@@ -89,12 +89,14 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   // Data properties
   availableDepartments: any[] = [];
   availableRoles: OperatorRole[] = [];
+  availableOffices: any[] = [];
   availableBranches: any[] = [];
   assignedClients: any[] = [];
   assignedClientsTotal = 0;
   assignedClientsLoading = false;
   clientsPageIndex = 0;
   clientsPageSize = 100;
+  loadingOffices = false;
 
   // Office tabs for branches filtering
   officeNames: string[] = [];
@@ -137,6 +139,7 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
     this.branchForm = this.fb.group({
       branchType: ['', Validators.required],
+      officeId: [{ value: '', disabled: true }, Validators.required],
       branchId: [{ value: '', disabled: true }, Validators.required],
     });
   }
@@ -489,21 +492,63 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   onBranchTypeChange(): void {
     const branchType = this.branchForm.get('branchType')?.value;
-    this.branchForm.patchValue({ branchId: '' });
+    this.branchForm.patchValue({ officeId: '', branchId: '' });
+    this.availableOffices = [];
     this.availableBranches = [];
     
-    // Disable branchId while no branch type selected
+    // Disable office and branch ID while no branch type selected
+    const officeIdControl = this.branchForm.get('officeId');
     const branchIdControl = this.branchForm.get('branchId');
+    
+    if (officeIdControl) {
+      officeIdControl.disable();
+    }
     if (branchIdControl) {
       branchIdControl.disable();
     }
 
     if (branchType !== '' && branchType !== null && branchType !== undefined) {
-      this.loadBranchesForType(parseInt(branchType));
+      this.loadTargetOffices();
+      if (officeIdControl) {
+        officeIdControl.enable();
+      }
     }
   }
 
-  private loadBranchesForType(branchType: BranchType): void {
+  onOfficeChange(): void {
+    const officeId = this.branchForm.get('officeId')?.value;
+    const branchType = this.branchForm.get('branchType')?.value;
+    this.branchForm.patchValue({ branchId: '' });
+    this.availableBranches = [];
+    
+    // Disable branchId while no office selected
+    const branchIdControl = this.branchForm.get('branchId');
+    if (branchIdControl) {
+      branchIdControl.disable();
+    }
+
+    if (officeId && branchType !== '' && branchType !== null && branchType !== undefined) {
+      this.loadBranchesForOfficeAndType(officeId, parseInt(branchType));
+    }
+  }
+
+  private loadTargetOffices(): void {
+    this.loadingOffices = true;
+    this.operatorsService.getTargetOffices(0, 100).subscribe({
+      next: (response) => {
+        this.availableOffices = response.items || [];
+        this.loadingOffices = false;
+      },
+      error: (error) => {
+        this.availableOffices = [];
+        this.loadingOffices = false;
+        this.alertService.error('Failed to load offices');
+      },
+    });
+  }
+
+
+  private loadBranchesForOfficeAndType(officeId: string, branchType: number): void {
     this.loadingBranches = true;
     const branchIdControl = this.branchForm.get('branchId');
     
@@ -511,28 +556,8 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
     if (branchIdControl) {
       branchIdControl.disable();
     }
-    
-    let observable;
 
-    switch (branchType) {
-      case BranchType.Office:
-        observable = this.operatorsService.getOfficesDropdown();
-        break;
-      case BranchType.Desk:
-        observable = this.operatorsService.getDesksDropdown();
-        break;
-      case BranchType.Team:
-        observable = this.operatorsService.getTeamsDropdown();
-        break;
-      case BranchType.Brand:
-        observable = this.operatorsService.getBrandsDropdown();
-        break;
-      default:
-        this.loadingBranches = false;
-        return;
-    }
-
-    observable.subscribe({
+    this.operatorsService.getBranchesForAssignment(officeId, branchType, 0, 100).subscribe({
       next: (response) => {
         this.availableBranches = response.items || [];
         this.loadingBranches = false;
@@ -616,11 +641,17 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
             this.alertService.success('Branch added successfully');
             this.isAddingBranch = false;
             this.branchForm.reset();
-            // Re-disable branchId after reset
+            // Re-disable officeId and branchId after reset
+            const officeIdControl = this.branchForm.get('officeId');
             const branchIdControl = this.branchForm.get('branchId');
+            if (officeIdControl) {
+              officeIdControl.disable();
+            }
             if (branchIdControl) {
               branchIdControl.disable();
             }
+            this.availableOffices = [];
+            this.availableBranches = [];
             this.loadOperatorDetails(); // Refresh data
           }
         });
@@ -649,3 +680,4 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
     }
   }
 }
+

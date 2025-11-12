@@ -830,7 +830,8 @@
               Add Branch
             </h3>
             <form [formGroup]="branchForm" class="space-y-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Branch Type Dropdown -->
                 <div>
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -850,6 +851,39 @@
                   </select>
                 </div>
 
+                <!-- Office Dropdown -->
+                <div>
+                  <label
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Target Office <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    formControlName="officeId"
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    (change)="onOfficeChange()"
+                  >
+                    <option value="">
+                      {{
+                        branchForm.get('branchType')?.value
+                          ? loadingOffices
+                            ? 'Loading...'
+                            : availableOffices.length
+                            ? 'Select'
+                            : 'No offices available'
+                          : 'Select branch type first'
+                      }}
+                    </option>
+                    <option
+                      *ngFor="let office of availableOffices"
+                      [value]="office.id"
+                    >
+                      {{ office.value }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Branch Dropdown -->
                 <div>
                   <label
                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -862,48 +896,51 @@
                   >
                     <option value="">
                       {{
-                        branchForm.get('branchType')?.value
+                        branchForm.get('officeId')?.value
                           ? loadingBranches
                             ? 'Loading...'
                             : availableBranches.length
                             ? 'Select'
                             : 'No branches available'
-                          : 'Select branch type first'
+                          : 'Select office first'
                       }}
                     </option>
                     <option
                       *ngFor="let branch of availableBranches"
                       [value]="branch.id"
                     >
-                      {{ branch.value }}
+                      {{ branch.name || branch.value }}
                     </option>
                   </select>
                 </div>
+
+                <!-- Add Button -->
+                <div class="flex justify-end items-end">
+                  <button
+                    type="button"
+                    (click)="addBranch()"
+                    [disabled]="branchForm.invalid || isAddingBranch"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg
+                      class="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 4v16m8-8H4"
+                      ></path>
+                    </svg>
+                    {{ isAddingBranch ? 'Adding...' : 'Add Branch' }}
+                  </button>
+                </div>
               </div>
 
-              <div class="flex justify-end">
-                <button
-                  type="button"
-                  (click)="addBranch()"
-                  [disabled]="branchForm.invalid || isAddingBranch"
-                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <svg
-                    class="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 4v16m8-8H4"
-                    ></path>
-                  </svg>
-                  {{ isAddingBranch ? 'Adding...' : 'Add Branch' }}
-                </button>
-              </div>
+             
             </form>
           </div>
 

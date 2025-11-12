@@ -356,4 +356,26 @@ export class OperatorsService {
       request
     );
   }
+
+  // Get target offices for branch assignment
+  getTargetOffices(
+    pageIndex: number = 0,
+    pageSize: number = 100
+  ): Observable<BranchDropdownResponse> {
+    return this.httpService.get<BranchDropdownResponse>(
+      `identity/api/branch/target-offices?pageIndex=${pageIndex}&pageSize=${pageSize}`
+    );
+  }
+
+  // Get branches for assignment by office and level
+  getBranchesForAssignment(
+    officeId: string,
+    levelFilter: number,
+    pageIndex: number = 0,
+    pageSize: number = 100
+  ): Observable<BranchDropdownResponse> {
+    return this.httpService.get<BranchDropdownResponse>(
+      `identity/api/branch/for-assignment/${officeId}?LevelFilter=${levelFilter}&pageIndex=${pageIndex}&pageSize=${pageSize}`
+    );
+  }
 }
