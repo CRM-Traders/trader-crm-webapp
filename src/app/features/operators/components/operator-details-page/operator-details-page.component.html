@@ -1,4 +1,4 @@
-<div class="general-container w-full mx-auto bg-white dark:bg-gray-900">
+<div class="general-container w-full mx-auto bg-white dark:bg-gray-900" *ngIf="operator">
     <!-- Header Section -->
     <div class="relative z-10 bg-white dark:bg-gray-900">
       <div class="px-6 py-4">
@@ -425,7 +425,6 @@
                   </label>
                   <select
                     formControlName="userType"
-                    [disabled]="!isEditingProfile"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     [class.bg-gray-50]="!isEditingProfile"
                     [class.dark:bg-gray-800]="!isEditingProfile"
@@ -703,7 +702,6 @@
                   <select
                     formControlName="roleId"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    [disabled]="!availableRoles.length"
                   >
                     <option value="">
                       {{
@@ -861,9 +859,6 @@
                   <select
                     formControlName="branchId"
                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    [disabled]="
-                      !branchForm.get('branchType')?.value || loadingBranches
-                    "
                   >
                     <option value="">
                       {{

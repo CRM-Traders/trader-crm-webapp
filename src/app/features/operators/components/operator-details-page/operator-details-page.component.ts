@@ -122,17 +122,17 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phoneNumber: [''],
-      userType: ['', Validators.required],
+      userType: [{ value: '', disabled: true }, Validators.required],
     });
 
     this.departmentForm = this.fb.group({
       departmentId: ['', Validators.required],
-      roleId: ['', Validators.required],
+      roleId: [{ value: '', disabled: true }, Validators.required],
     });
 
     this.branchForm = this.fb.group({
       branchType: ['', Validators.required],
-      branchId: ['', Validators.required],
+      branchId: [{ value: '', disabled: true }, Validators.required],
     });
   }
 
@@ -320,14 +320,17 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   saveProfileInfo(): void {
     if (this.profileForm.valid) {
       this.isSavingProfile = true;
+      
+      // Use getRawValue() to include disabled controls
+      const formValues = this.profileForm.getRawValue();
 
       const personalInfoRequest: OperatorPersonalInfoUpdateRequest = {
         id: this.operator.id,
-        firstname: this.profileForm.value.firstName,
-        lastname: this.profileForm.value.lastName,
-        email: this.profileForm.value.email,
-        phoneNumber: this.profileForm.value.phoneNumber || null,
-        userType: Number(this.profileForm.value.userType),
+        firstname: formValues.firstName,
+        lastname: formValues.lastName,
+        email: formValues.email,
+        phoneNumber: formValues.phoneNumber || null,
+        userType: Number(formValues.userType),
       };
 
       this.operatorsService
@@ -354,6 +357,12 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   onDepartmentChange(departmentId: any): void {
     this.availableRoles = [];
     this.departmentForm.patchValue({ roleId: '' });
+    
+    // Disable roleId while loading or if no department selected
+    const roleIdControl = this.departmentForm.get('roleId');
+    if (roleIdControl) {
+      roleIdControl.disable();
+    }
 
     if (departmentId.value) {
       this.operatorsService
@@ -361,9 +370,14 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (roles: any) => {
             this.availableRoles = roles.items;
+            // Enable roleId if roles are available
+            if (roleIdControl && this.availableRoles.length > 0) {
+              roleIdControl.enable();
+            }
           },
           error: (error) => {
             this.availableRoles = [];
+            // Keep roleId disabled on error
           },
         });
     }
@@ -372,10 +386,13 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   addDepartment(): void {
     if (this.departmentForm.valid) {
       this.isAddingDepartment = true;
+      
+      // Use getRawValue() to include disabled controls
+      const formValues = this.departmentForm.getRawValue();
 
       const request: OperatorDepartmentRoleAssignRequest = {
         operatorId: this.operator.id,
-        operatorRoleId: this.departmentForm.value.roleId,
+        operatorRoleId: formValues.roleId,
       };
 
       this.operatorsService
@@ -393,6 +410,11 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
             this.alertService.success('Department added successfully');
             this.isAddingDepartment = false;
             this.departmentForm.reset();
+            // Re-disable roleId after reset
+            const roleIdControl = this.departmentForm.get('roleId');
+            if (roleIdControl) {
+              roleIdControl.disable();
+            }
             this.loadOperatorDetails();
           }
         });
@@ -417,6 +439,12 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
     const branchType = this.branchForm.get('branchType')?.value;
     this.branchForm.patchValue({ branchId: '' });
     this.availableBranches = [];
+    
+    // Disable branchId while no branch type selected
+    const branchIdControl = this.branchForm.get('branchId');
+    if (branchIdControl) {
+      branchIdControl.disable();
+    }
 
     if (branchType !== '' && branchType !== null && branchType !== undefined) {
       this.loadBranchesForType(parseInt(branchType));
@@ -425,6 +453,13 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
 
   private loadBranchesForType(branchType: BranchType): void {
     this.loadingBranches = true;
+    const branchIdControl = this.branchForm.get('branchId');
+    
+    // Keep branchId disabled while loading
+    if (branchIdControl) {
+      branchIdControl.disable();
+    }
+    
     let observable;
 
     switch (branchType) {
@@ -449,11 +484,17 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.availableBranches = response.items || [];
         this.loadingBranches = false;
+        
+        // Enable branchId after branches are loaded
+        if (branchIdControl && this.availableBranches.length > 0) {
+          branchIdControl.enable();
+        }
       },
       error: (error) => {
         this.availableBranches = [];
         this.loadingBranches = false;
         this.alertService.error('Failed to load branches');
+        // Keep branchId disabled on error
       },
     });
   }
@@ -498,11 +539,14 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   addBranch(): void {
     if (this.branchForm.valid) {
       this.isAddingBranch = true;
+      
+      // Use getRawValue() to include disabled controls
+      const formValues = this.branchForm.getRawValue();
 
       const request: UserOrganizationAssignRequest = {
         userId: this.operator.userId,
-        level: parseInt(this.branchForm.value.branchType),
-        entityId: this.branchForm.value.branchId,
+        level: parseInt(formValues.branchType),
+        entityId: formValues.branchId,
       };
 
       this.operatorsService
@@ -520,6 +564,11 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
             this.alertService.success('Branch added successfully');
             this.isAddingBranch = false;
             this.branchForm.reset();
+            // Re-disable branchId after reset
+            const branchIdControl = this.branchForm.get('branchId');
+            if (branchIdControl) {
+              branchIdControl.disable();
+            }
             this.loadOperatorDetails(); // Refresh data
           }
         });
