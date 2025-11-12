@@ -96,6 +96,11 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
   clientsPageIndex = 0;
   clientsPageSize = 100;
 
+  // Office tabs for branches filtering
+  officeNames: string[] = [];
+  selectedOffice: string = 'All';
+  filteredBranches: any[] = [];
+
   // Constants
   BranchType = BranchType;
   BranchTypeLabels = BranchTypeLabels;
@@ -193,7 +198,54 @@ export class OperatorDetailsPageComponent implements OnInit, OnDestroy {
       this.updateProfileEditableControls();
 
       this.loadUserDetails();
+      this.initializeOfficeTabs();
     }
+  }
+
+  private initializeOfficeTabs(): void {
+    if (this.operator.branches && this.operator.branches.length > 0) {
+      // Extract unique office names
+      const uniqueOffices = new Set<string>();
+      this.operator.branches.forEach((branch: any) => {
+        if (branch.officeName) {
+          uniqueOffices.add(branch.officeName);
+        }
+      });
+      this.officeNames = Array.from(uniqueOffices).sort();
+      
+      // Filter branches based on default selection
+      this.filterBranchesByOffice();
+    } else {
+      this.officeNames = [];
+      this.filteredBranches = [];
+    }
+  }
+
+  selectOffice(officeName: string): void {
+    this.selectedOffice = officeName;
+    this.filterBranchesByOffice();
+  }
+
+  private filterBranchesByOffice(): void {
+    if (!this.operator.branches) {
+      this.filteredBranches = [];
+      return;
+    }
+
+    if (this.selectedOffice === 'All') {
+      this.filteredBranches = [...this.operator.branches];
+    } else {
+      this.filteredBranches = this.operator.branches.filter(
+        (branch: any) => branch.officeName === this.selectedOffice
+      );
+    }
+  }
+
+  getBranchCountByOffice(officeName: string): number {
+    if (!this.operator.branches) return 0;
+    return this.operator.branches.filter(
+      (branch: any) => branch.officeName === officeName
+    ).length;
   }
 
   private loadUserDetails(): void {

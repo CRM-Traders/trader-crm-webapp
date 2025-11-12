@@ -915,13 +915,40 @@
             <div
               class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"
             >
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Assigned Branches
               </h3>
+
+              <!-- Office Tabs -->
+              <div class="flex flex-wrap gap-2" *ngIf="officeNames.length > 0">
+                <button
+                  type="button"
+                  (click)="selectOffice('All')"
+                  [class.bg-blue-600]="selectedOffice === 'All'"
+                  [class.text-white]="selectedOffice === 'All'"
+                  [class.bg-gray-100]="selectedOffice !== 'All'"
+                  [class.text-gray-700]="selectedOffice !== 'All'"
+                  class="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-80"
+                >
+                  All ({{ operator.branches?.length || 0 }})
+                </button>
+                <button
+                  type="button"
+                  *ngFor="let office of officeNames"
+                  (click)="selectOffice(office)"
+                  [class.bg-blue-600]="selectedOffice === office"
+                  [class.text-white]="selectedOffice === office"
+                  [class.bg-gray-100]="selectedOffice !== office"
+                  [class.text-gray-700]="selectedOffice !== office"
+                  class="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-80"
+                >
+                  {{ office }} ({{ getBranchCountByOffice(office) }})
+                </button>
+              </div>
             </div>
             <div class="divide-y divide-gray-200 dark:divide-gray-700">
               <div
-                *ngFor="let branch of operator.branches"
+                *ngFor="let branch of filteredBranches"
                 class="px-6 py-4 flex items-center justify-between hover:bg-gray-500/40 transition-colors"
               >
                 <div>
@@ -934,6 +961,9 @@
                     class="text-sm font-medium text-gray-900 dark:text-white"
                   >
                     Branch: {{ branch.name }}
+                  </p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Office: {{ branch.officeName }}
                   </p>
                   <p class="text-sm text-gray-500 dark:text-gray-400">
                     ID: {{ branch.id }}
@@ -962,10 +992,11 @@
                 </button>
               </div>
               <div
-                *ngIf="!operator.branches || operator.branches.length === 0"
+                *ngIf="!filteredBranches || filteredBranches.length === 0"
                 class="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
               >
-                No branches assigned yet
+                <span *ngIf="selectedOffice === 'All'">No branches assigned yet</span>
+                <span *ngIf="selectedOffice !== 'All'">No branches found for {{ selectedOffice }}</span>
               </div>
             </div>
           </div>
