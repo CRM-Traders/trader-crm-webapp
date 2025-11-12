@@ -110,7 +110,19 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
   useOpenPrice = signal<boolean>(false);
   useClosePrice = signal<boolean>(false);
 
+  minimumBalance = signal<number | null>(null);
+
   hasValidClients = computed(() => this.fetchedClients().length > 0);
+  isInsufficientBalance = computed(() => {
+    const minBalance = this.minimumBalance();
+    const buyMargin = this.buyRequiredMargin();
+    
+    if (minBalance === null || buyMargin === null) {
+      return false;
+    }
+    
+    return minBalance < buyMargin;
+  });
 
   private amountCalcTimer: any = null;
 
@@ -680,6 +692,10 @@ export class BulkOrderModalComponent implements OnInit, OnDestroy {
             }
             if (typeof resp.closePrice === 'number') {
               this.closePrice.set(resp.closePrice);
+            }
+
+            if (typeof resp.minimumBalance === 'number') {
+              this.minimumBalance.set(resp.minimumBalance);
             }
 
             if (typeof resp.margin === 'number') {
