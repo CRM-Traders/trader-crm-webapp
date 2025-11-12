@@ -62,7 +62,10 @@ export class BrandService {
       );
   }
 
-  setBrandId(selectedOfficeId: string): Observable<SetBrandResponse> {
+  setBrandId(
+    selectedOfficeId: string,
+    officeName: string
+  ): Observable<SetBrandResponse> {
     const body = { selectedOfficeId };
 
     return this.http
@@ -73,6 +76,9 @@ export class BrandService {
           if (response.accessToken && response.refreshToken) {
             this.updateAuthData(response);
           }
+
+          // Store the office name
+          this.setCurrentOfficeName(officeName);
 
           // Mark office as selected
           this.authService.markBrandAsSelected();
@@ -115,5 +121,18 @@ export class BrandService {
         response.name
       );
     }
+  }
+
+  // Office name management
+  setCurrentOfficeName(name: string): void {
+    localStorage.setItem('currentOfficeName', name);
+  }
+
+  getCurrentOfficeName(): string | null {
+    return localStorage.getItem('currentOfficeName');
+  }
+
+  clearCurrentOfficeName(): void {
+    localStorage.removeItem('currentOfficeName');
   }
 }

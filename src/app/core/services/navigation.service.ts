@@ -11,7 +11,7 @@ export class NavigationService {
   private currentPageSubject = new BehaviorSubject<string>('');
   currentPage$ = this.currentPageSubject.asObservable();
 
-  private expandedSubject = new BehaviorSubject<boolean>(false);
+  private expandedSubject = new BehaviorSubject<boolean>(true);
   expanded$ = this.expandedSubject.asObservable();
 
   private navigationItems: NavItem[] = [

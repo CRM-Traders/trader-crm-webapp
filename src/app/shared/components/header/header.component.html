@@ -24,9 +24,173 @@
         </svg>
       </button>
 
-      <h1 class="ml-4 text-lg font-semibold text-gray-800 dark:text-gray-100">
-        {{ environment.nameOfApp }}
-      </h1>
+      <!-- Office Dropdown -->
+      <div class="ml-4 relative">
+        <button
+          (click)="toggleOfficeDropdown($event)"
+          [disabled]="isSwitchingOffice() || isLoadingOffices()"
+          class="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          [class.opacity-50]="isSwitchingOffice() || isLoadingOffices()"
+          [class.cursor-not-allowed]="isSwitchingOffice() || isLoadingOffices()"
+        >
+          <div
+            class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center flex-shrink-0"
+          >
+            <svg
+              class="w-4 h-4 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+          </div>
+
+          <div class="flex flex-col items-start min-w-0">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Office</span>
+            <span
+              *ngIf="!isLoadingOffices() && currentOffice()"
+              class="text-sm font-semibold truncate max-w-[150px]"
+            >
+              {{ currentOffice()?.value }}
+            </span>
+            <span
+              *ngIf="isLoadingOffices()"
+              class="text-sm text-gray-400 dark:text-gray-500"
+            >
+              Loading...
+            </span>
+          </div>
+
+          <svg
+            *ngIf="!isSwitchingOffice()"
+            class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform"
+            [class.rotate-180]="isOfficeDropdownOpen()"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+
+          <svg
+            *ngIf="isSwitchingOffice()"
+            class="animate-spin h-4 w-4 text-blue-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div
+          *ngIf="isOfficeDropdownOpen()"
+          class="absolute left-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto"
+        >
+          <div class="py-1">
+            <div
+              class="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700"
+            >
+              Switch Office
+            </div>
+
+            <div
+              *ngIf="offices().length === 0"
+              class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
+            >
+              No offices available
+            </div>
+
+            <button
+              *ngFor="let office of offices(); trackBy: trackByOfficeId"
+              (click)="selectOffice(office, $event)"
+              class="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between group"
+              [class.bg-blue-50]="office.id === currentOffice()?.id"
+              [class.dark:bg-blue-900-20]="office.id === currentOffice()?.id"
+            >
+              <div class="flex items-center space-x-3 min-w-0 flex-1">
+                <div
+                  class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-5 h-5 text-white"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div
+                    class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                  >
+                    {{ office.value }}
+                  </div>
+                  <div
+                    class="text-xs text-gray-500 dark:text-gray-400 truncate"
+                  >
+                    ID: {{ office.id }}
+                  </div>
+                </div>
+              </div>
+
+              <svg
+                *ngIf="office.id === currentOffice()?.id"
+                class="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </button>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 mt-1">
+              <button
+                (click)="swapOfficies()"
+                class="w-full px-4 py-3 text-left text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center space-x-2"
+              >
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
+                <span>View All Offices</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div
         class="hidden md:flex items-center ml-6 text-gray-600 dark:text-gray-300"

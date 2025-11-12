@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NavigationService } from '../../../core/services/navigation.service';
@@ -12,6 +12,9 @@ import { environment } from '../../../../environments/environment';
 import { ChatService } from '../../../features/chat/services/chat.service';
 import { ChatStateService } from '../../../features/chat/services/chat-state.service';
 import { ChatSection } from '../../../features/chat/models/chat.model';
+import { BrandService } from '../../../features/brand-selection/services/brand.service';
+import { Office } from '../../../features/brand-selection/models/brand.model';
+import { catchError, finalize, of } from 'rxjs';
 
 @Component({
   selector: 'app-header',
@@ -31,6 +34,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private chatService = inject(ChatService);
   private chatStateService = inject(ChatStateService);
+  private brandService = inject(BrandService);
 
   public environment = environment;
   userRole = this.authService.userRole;
@@ -41,6 +45,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   unreadChatCount = 0;
   isLoadingChatCount = false;
 
+  // Office dropdown properties
+  readonly offices = signal<Office[]>([]);
+  readonly currentOffice = signal<Office | null>(null);
+  readonly isOfficeDropdownOpen = signal<boolean>(false);
+  readonly isLoadingOffices = signal<boolean>(false);
+  readonly isSwitchingOffice = signal<boolean>(false);
+
   private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
@@ -49,8 +60,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.updateTime());
 
-    // ✅ FIX: Initialize chat connection immediately
     this.initializeChatCount();
+    this.loadOffices();
 
     document.addEventListener('click', this.closeMenuOnClickOutside.bind(this));
   }
@@ -103,18 +114,15 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   openChat(): void {
-    // Toggle chat container visibility
     this.chatStateService.toggleChatContainer();
   }
 
   private initializeChatCount(): void {
     this.isLoadingChatCount = true;
 
-    // ✅ FIX: Initialize chat connection and load all chats
     this.chatService
       .initializeConnection()
       .then(() => {
-        // ✅ Load all chats to get unread counts
         return Promise.all([
           this.chatService.loadChats(ChatSection.Client),
           this.chatService.loadChats(ChatSection.Operator),
@@ -128,11 +136,89 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.isLoadingChatCount = false;
       });
 
-    // Subscribe to unread count updates
     this.chatService.unreadCount
       .pipe(takeUntil(this.destroy$))
       .subscribe((count) => {
         this.unreadChatCount = count;
       });
+  }
+
+  // Office dropdown methods
+  loadOffices(): void {
+    this.isLoadingOffices.set(true);
+
+    this.brandService
+      .getBrandsSwitch()
+      .pipe(
+        catchError(() => {
+          return of({
+            items: [],
+            totalCount: 0,
+            pageIndex: 0,
+            pageSize: 50,
+            totalPages: 0,
+            hasPreviousPage: false,
+            hasNextPage: false,
+          });
+        }),
+        finalize(() => this.isLoadingOffices.set(false))
+      )
+      .subscribe((response) => {
+        this.offices.set(response.items || []);
+
+        // ✅ Get current office name from service
+        const currentOfficeName = this.brandService.getCurrentOfficeName();
+
+        if (currentOfficeName && response.items) {
+          // Find office by name
+          const current = response.items.find(
+            (office) => office.value === currentOfficeName
+          );
+          this.currentOffice.set(current || response.items[0] || null);
+        } else if (response.items && response.items.length > 0) {
+          // Set first office as default
+          this.currentOffice.set(response.items[0]);
+        }
+      });
+  }
+
+  toggleOfficeDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.isOfficeDropdownOpen.set(!this.isOfficeDropdownOpen());
+  }
+
+  selectOffice(office: Office, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (this.isSwitchingOffice() || office.id === this.currentOffice()?.id) {
+      return;
+    }
+
+    this.isSwitchingOffice.set(true);
+    this.isOfficeDropdownOpen.set(false);
+
+    this.brandService
+      .setBrandId(office.id, office.value) // ✅ Pass office name to service
+      .pipe(
+        catchError(() => {
+          return of(null);
+        }),
+        finalize(() => {
+          this.isSwitchingOffice.set(false);
+        })
+      )
+      .subscribe((response: any) => {
+        if (response) {
+          this.authService.handleAuthResponse(response);
+          this.currentOffice.set(office);
+
+          // Reload the page to refresh all data with new office context
+          window.location.reload();
+        }
+      });
+  }
+
+  trackByOfficeId(index: number, office: Office): string {
+    return office.id;
   }
 }

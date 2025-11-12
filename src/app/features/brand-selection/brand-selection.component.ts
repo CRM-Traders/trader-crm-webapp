@@ -69,7 +69,7 @@ export class BrandSelectionComponent implements OnInit {
     this.selectedBrandId.set(brand.id);
 
     this.brandService
-      .setBrandId(brand.id)
+      .setBrandId(brand.id, brand.value) // ✅ Pass office name
       .pipe(
         catchError((error) => {
           this.errorMessage.set('Failed to select office. Please try again.');
