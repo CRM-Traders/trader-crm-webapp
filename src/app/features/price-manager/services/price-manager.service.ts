@@ -117,6 +117,13 @@ export class PriceManagerService {
     );
   }
 
+  closeOrderTpl(orderId: string) {
+    return this.http.post(
+      `traiding/api/admin/trading/trade/${orderId}/close-tpl`,
+      {}
+    );
+  }
+
   getTransactions(
     clientUserId: string,
     pageIndex = 0,
@@ -324,6 +331,7 @@ export interface OrderMetadata {
   PaymentCurrency?: string;
   ConversionTransactions?: string[];
   [key: string]: any; // Allow for additional metadata fields
+  TakeProfit?: number;
 }
 
 export interface Order {
