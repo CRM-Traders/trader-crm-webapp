@@ -526,11 +526,11 @@
             >
               Margin
             </th>
-            <th
+            <!-- <th
               class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
             >
               Target Profit
-            </th>
+            </th> -->
             <th
               class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
             >
@@ -651,11 +651,11 @@
                 </div>
               </td>
               <!-- Target Profit -->
-              <td class="px-4 py-3 whitespace-nowrap text-right">
+              <!-- <td class="px-4 py-3 whitespace-nowrap text-right">
                 <div
                   class="h-4 bg-gray-200 dark:bg-gray-400/30 rounded w-12 animate-pulse ml-auto"
                 ></div>
-              </td>
+              </td> -->
               <!-- Fees -->
               <td class="px-4 py-3 whitespace-nowrap text-right">
                 <div class="flex flex-col items-end gap-1">
@@ -854,7 +854,7 @@
               </td>
 
               <!-- Target Profit -->
-              <td class="px-4 py-3 whitespace-nowrap text-right">
+              <!-- <td class="px-4 py-3 whitespace-nowrap text-right">
                 <div class="flex flex-col items-end">
                   <span
                     *ngIf="order.targetProfit && order.targetProfit >= 0"
@@ -872,7 +872,7 @@
                     -
                   </span>
                 </div>
-              </td>
+              </td> -->
 
               <!-- Fees (Commission + Swap) -->
               <td class="px-4 py-3 whitespace-nowrap text-right">
@@ -990,6 +990,53 @@
                     </svg>
                   </button>
 
+                  <!-- Close Button -->
+                  <button
+                    *ngIf="order.status == 1"
+                    (click)="closeOrder(order, $event); $event.stopPropagation()"
+                    [disabled]="isClosingOrder(order.id)"
+                    class="inline-flex items-center px-2.5 py-1.5 border border-orange-300 dark:border-orange-600 rounded-md text-xs font-medium text-orange-700 dark:text-orange-400 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+                    title="Close Order"
+                    aria-label="Close Order"
+                  >
+                    <ng-container *ngIf="!isClosingOrder(order.id); else closeLoading">
+                      <svg
+                        class="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </ng-container>
+                    <ng-template #closeLoading>
+                      <svg
+                        class="w-3.5 h-3.5 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          class="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          stroke-width="4"
+                        ></circle>
+                        <path
+                          class="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </ng-template>
+                  </button>
+
                   <!-- More Actions Dropdown -->
                   <div class="relative" data-actions-menu *ngIf="shouldShowMoreActions(order)">
                     <button
@@ -1017,34 +1064,6 @@
                           <span>Cancel</span>
                           <svg
                             *ngIf="isCancellingOrder(order.id)"
-                            class="w-3.5 h-3.5 animate-spin"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              class="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              stroke-width="4"
-                            ></circle>
-                            <path
-                              class="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                        </button>
-                        <button
-                          *ngIf="order.status == 1"
-                          (click)="closeOrder(order, $event); closeActionsMenu()"
-                          [disabled]="isClosingOrder(order.id)"
-                          class="w-full flex items-center justify-between px-3 py-1.5 text-xs text-orange-700 dark:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-600/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <span>Close</span>
-                          <svg
-                            *ngIf="isClosingOrder(order.id)"
                             class="w-3.5 h-3.5 animate-spin"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -1129,7 +1148,7 @@
 
             <!-- Empty State Row -->
             <tr *ngIf="openOrders().length === 0">
-              <td colspan="16" class="px-6 py-16 text-center">
+              <td colspan="15" class="px-6 py-16 text-center">
                 <div class="flex flex-col items-center">
                   <div
                     class="w-16 h-16 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center"
