@@ -759,6 +759,7 @@ export class ClientDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         tap(() => {
           this.alertService.success('Order cancelled successfully');
           this.loadOpenOrders().pipe(takeUntil(this.destroy$)).subscribe();
+          this.fetchUserBalance(); // Add this line
         }),
         catchError((err: HttpErrorResponse) => {
           console.error('Error cancelling order:', err);

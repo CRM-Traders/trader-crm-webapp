@@ -8,10 +8,12 @@ import { NavItem } from '../models/nav-item.model';
   providedIn: 'root',
 })
 export class NavigationService {
+  private readonly SIDEBAR_STATE_KEY = 'sidebar_expanded';
+  
   private currentPageSubject = new BehaviorSubject<string>('');
   currentPage$ = this.currentPageSubject.asObservable();
 
-  private expandedSubject = new BehaviorSubject<boolean>(true);
+  private expandedSubject = new BehaviorSubject<boolean>(this.getSavedSidebarState());
   expanded$ = this.expandedSubject.asObservable();
 
   private navigationItems: NavItem[] = [
@@ -149,7 +151,18 @@ export class NavigationService {
   }
 
   toggleSidebar(): void {
-    this.expandedSubject.next(!this.expandedSubject.value);
+    const newState = !this.expandedSubject.value;
+    this.expandedSubject.next(newState);
+    this.saveSidebarState(newState);
+  }
+
+  private getSavedSidebarState(): boolean {
+    const saved = localStorage.getItem(this.SIDEBAR_STATE_KEY);
+    return saved !== null ? JSON.parse(saved) : true;
+  }
+
+  private saveSidebarState(state: boolean): void {
+    localStorage.setItem(this.SIDEBAR_STATE_KEY, JSON.stringify(state));
   }
 
   private updateCurrentPage(url: string): void {
