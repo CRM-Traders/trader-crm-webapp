@@ -5,6 +5,7 @@ import {
   OnDestroy,
   signal,
   computed,
+  HostListener,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
@@ -75,6 +76,8 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
   cancellingOrderIds = signal<Set<string>>(new Set());
   reopeningOrderIds = signal<Set<string>>(new Set());
   closingOrderIds = signal<Set<string>>(new Set());
+  // Separate loading state for TPL close
+  tplClosingOrderIds = signal<Set<string>>(new Set());
 
   // Track if a modal is open to pause background refresh
   isModalOpen = signal<boolean>(false);
@@ -86,6 +89,80 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
       this.authService.hasPermission(183) // Trading order close
     );
   });
+
+  // Actions dropdown state
+  openActionsMenuOrderId = signal<string | null>(null);
+  actionsMenuOpenUpOrderIds = signal<Set<string>>(new Set());
+
+  toggleActionsMenu(orderId: string, event: Event): void {
+    event.stopPropagation();
+    const current = this.openActionsMenuOrderId();
+    if (current === orderId) {
+      this.openActionsMenuOrderId.set(null);
+      const upSet = new Set(this.actionsMenuOpenUpOrderIds());
+      upSet.delete(orderId);
+      this.actionsMenuOpenUpOrderIds.set(upSet);
+      return;
+    }
+
+    // Determine whether to open upwards based on available viewport space
+    const targetElement =
+      (event.currentTarget as HTMLElement) ||
+      ((event.target as HTMLElement)?.closest('button') as HTMLElement | null);
+    let openUp = false;
+    if (targetElement) {
+      const rect = targetElement.getBoundingClientRect();
+      const viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+      const estimatedMenuHeight = 200; // px, conservative estimate for menu height
+      const spacing = 12; // px spacing
+      const spaceBelow = viewportHeight - rect.bottom;
+      openUp = spaceBelow < estimatedMenuHeight + spacing;
+    }
+
+    const upSet = new Set(this.actionsMenuOpenUpOrderIds());
+    if (openUp) {
+      upSet.add(orderId);
+    } else {
+      upSet.delete(orderId);
+    }
+    this.actionsMenuOpenUpOrderIds.set(upSet);
+
+    this.openActionsMenuOrderId.set(orderId);
+  }
+
+  isActionsMenuOpen(orderId: string): boolean {
+    return this.openActionsMenuOrderId() === orderId;
+  }
+
+  closeActionsMenu(): void {
+    this.openActionsMenuOrderId.set(null);
+    const upSet = new Set(this.actionsMenuOpenUpOrderIds());
+    upSet.clear();
+    this.actionsMenuOpenUpOrderIds.set(upSet);
+  }
+
+  isActionsMenuOpenUp(orderId: string): boolean {
+    return this.actionsMenuOpenUpOrderIds().has(orderId);
+  }
+
+  shouldShowMoreActions(order: Order): boolean {
+    const hasCancel = order.status != 4;
+    const hasClose = order.status == 1;
+    const hasTpl = order.status == 1 && order.metadata?.TakeProfit != null;
+    const hasReopen = order.status != 4;
+    return hasCancel || hasClose || hasTpl || hasReopen;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    const insideMenu = !!target.closest('[data-actions-menu]');
+    if (!insideMenu && this.openActionsMenuOrderId()) {
+      this.closeActionsMenu();
+    }
+  }
 
   private getInitialTab(): 'clients' | 'orders' {
     const savedTab = localStorage.getItem('priceManagerActiveTab');
@@ -584,6 +661,11 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
     );
   }
 
+  // TrackBy to prevent DOM re-creation and scroll jumps on silent refresh
+  trackByOrderId(index: number, order: Order): string {
+    return order.id;
+  }
+
   getStatusLabel(status: any): string {
     if (typeof status === 'string') {
       return status;
@@ -951,6 +1033,75 @@ export class PriceManagerComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe();
+  }
+
+  // Close via TPL
+  closeOrderTpl(order: Order, event: Event): void {
+    event.stopPropagation();
+
+    const modalRef = this.modalService.open(
+      ConfirmationDialogComponent,
+      {
+        size: 'sm',
+        centered: true,
+        closable: true,
+      },
+      {
+        title: 'Close Order via Take Profit',
+        message: `Close this ${this.getOrderSideLabel(order.side)} order for ${order.tradingPairSymbol} using TPL?`,
+        type: 'warning',
+        confirmText: 'Close via TPL',
+        cancelText: 'Keep Order',
+        details: `Order ID: ${order.id}\nSymbol: ${order.tradingPairSymbol}\nType: ${this.getOrderTypeLabel(order.orderType)}\nSide: ${this.getOrderSideLabel(order.side)}\nTake Profit: ${order.metadata?.TakeProfit ?? '-'}\nPrice: $${order.price}\nQuantity: ${order.quantity}`,
+      }
+    );
+
+    modalRef.result.then(
+      (confirmed) => {
+        if (confirmed) {
+          this.performCloseOrderTpl(order);
+        }
+      },
+      () => {
+        // Modal dismissed
+      }
+    );
+  }
+
+  private performCloseOrderTpl(order: Order): void {
+    const tplClosingIds = new Set(this.tplClosingOrderIds());
+    tplClosingIds.add(order.id);
+    this.tplClosingOrderIds.set(tplClosingIds);
+
+    this.service
+      .closeOrderTpl(order.id)
+      .pipe(
+        tap(() => {
+          this.alertService.success('Order closed via TPL successfully');
+          this.loadOrders();
+        }),
+        catchError((err: HttpErrorResponse) => {
+          console.error('Error closing order via TPL:', err);
+          let errorMessage = 'Failed to close order via TPL';
+          if (err?.error?.error) {
+            errorMessage = err.error.error;
+          } else if (err?.message) {
+            errorMessage = err.message;
+          }
+          this.alertService.error(errorMessage);
+          return of(null);
+        }),
+        finalize(() => {
+          const tplIds = new Set(this.tplClosingOrderIds());
+          tplIds.delete(order.id);
+          this.tplClosingOrderIds.set(tplIds);
+        })
+      )
+      .subscribe();
+  }
+
+  isClosingOrderTpl(orderId: string): boolean {
+    return this.tplClosingOrderIds().has(orderId);
   }
 
   getOrderSideLabel(side: number): string {
