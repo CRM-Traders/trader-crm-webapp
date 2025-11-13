@@ -1,6 +1,6 @@
 <header class="bg-white dark:bg-gray-800 shadow-sm z-10">
   <div
-    class="flex items-center justify-between px-4 py-1 border-b border-gray-200 dark:border-gray-700"
+    class="flex items-center justify-between px-4 py-[3.5px] border-b border-gray-200/20"
   >
     <div class="flex items-center">
       <button
@@ -25,19 +25,19 @@
       </button>
 
       <!-- Office Dropdown -->
-      <div class="ml-4 relative">
+      <div class="ml-2 relative">
         <button
           (click)="toggleOfficeDropdown($event)"
           [disabled]="isSwitchingOffice() || isLoadingOffices()"
-          class="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="flex items-center space-x-1.5 px-2 py-1 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/5 transition-colors focus:outline-none h-8"
           [class.opacity-50]="isSwitchingOffice() || isLoadingOffices()"
           [class.cursor-not-allowed]="isSwitchingOffice() || isLoadingOffices()"
         >
           <div
-            class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center flex-shrink-0"
+            class="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center flex-shrink-0"
           >
             <svg
-              class="w-4 h-4 text-white"
+              class="w-3.5 h-3.5 text-white"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -49,17 +49,17 @@
             </svg>
           </div>
 
-          <div class="flex flex-col items-start min-w-0">
-            <span class="text-xs text-gray-500 dark:text-gray-400">Office</span>
+          <div class="flex items-center min-w-0 gap-1">
+            <!-- <span class="text-xs text-gray-500 dark:text-gray-400">Office:</span> -->
             <span
               *ngIf="!isLoadingOffices() && currentOffice()"
-              class="text-sm font-semibold truncate max-w-[150px]"
+              class="text-sm font-medium truncate max-w-[120px]"
             >
               {{ currentOffice()?.value }}
             </span>
             <span
               *ngIf="isLoadingOffices()"
-              class="text-sm text-gray-400 dark:text-gray-500"
+              class="text-xs text-gray-400 dark:text-gray-500"
             >
               Loading...
             </span>
@@ -67,7 +67,7 @@
 
           <svg
             *ngIf="!isSwitchingOffice()"
-            class="w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform"
+            class="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform flex-shrink-0"
             [class.rotate-180]="isOfficeDropdownOpen()"
             fill="currentColor"
             viewBox="0 0 20 20"
@@ -81,7 +81,7 @@
 
           <svg
             *ngIf="isSwitchingOffice()"
-            class="animate-spin h-4 w-4 text-blue-500"
+            class="animate-spin h-3.5 w-3.5 text-blue-500 flex-shrink-0"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -124,9 +124,9 @@
             <button
               *ngFor="let office of offices(); trackBy: trackByOfficeId"
               (click)="selectOffice(office, $event)"
-              class="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-between group"
-              [class.bg-blue-50]="office.id === currentOffice()?.id"
-              [class.dark:bg-blue-900-20]="office.id === currentOffice()?.id"
+              class="w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors flex items-center justify-between group"
+              [class.bg-gray-400]="office.id === currentOffice()?.id"
+              [class.dark:bg-[#b9b9b93b]]="office.id === currentOffice()?.id"
             >
               <div class="flex items-center space-x-3 min-w-0 flex-1">
                 <div
@@ -176,7 +176,7 @@
             <div class="border-t border-gray-200 dark:border-gray-700 mt-1">
               <button
                 (click)="swapOfficies()"
-                class="w-full px-4 py-3 text-left text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors flex items-center space-x-2"
+                class="w-full px-4 py-3 text-left text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors flex items-center space-x-2"
               >
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path
