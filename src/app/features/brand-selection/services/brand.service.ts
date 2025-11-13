@@ -83,7 +83,7 @@ export class BrandService {
           // Mark office as selected
           this.authService.markBrandAsSelected();
 
-          this.alertService.success('Office selected successfully');
+          // this.alertService.success('Office selected successfully');
         }),
         catchError((error) => {
           this.alertService.error('Failed to set office. Please try again.');
