@@ -183,6 +183,14 @@ import {
     clearSelection(): void {
       this.selectedIps.clear();
     }
+
+    selectAllIps(): void {
+      if (!this.whitelist.length) {
+        return;
+      }
+
+      this.whitelist.forEach((ip) => this.selectedIps.add(ip));
+    }
   
     resetForm(): void {
       this.ipForm.reset({
@@ -212,6 +220,34 @@ import {
   
     trackByIp(_: number, ip: string): string {
       return ip;
+    }
+
+    async pasteFromClipboard(field: 'singleIp' | 'bulkIps'): Promise<void> {
+      if (typeof navigator === 'undefined' || !navigator.clipboard?.readText) {
+        this.alertService.warning('Clipboard access is not supported in this browser.');
+        return;
+      }
+
+      try {
+        const text = await navigator.clipboard.readText();
+
+        if (!text.trim()) {
+          this.alertService.warning('Clipboard is empty.');
+          return;
+        }
+
+        const control = this.ipForm.get(field);
+        if (!control) {
+          return;
+        }
+
+        control.setValue(field === 'singleIp' ? text.trim() : text);
+        this.invalidEntries = [];
+        this.apiError = null;
+      } catch (error) {
+        console.error('Clipboard paste failed', error);
+        this.alertService.error('Unable to read from clipboard. Please allow permissions and try again.');
+      }
     }
   
     private clearMessageAfterDelay(): void {
