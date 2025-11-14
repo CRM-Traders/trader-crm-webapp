@@ -1,6 +1,9 @@
-<div class="w-full">
+<div class="w-full" [@modalFade]="animationState">
   <!-- Modal Header -->
-  <div class="px-6 py-4 border-b border-gray-400/25 bg-white">
+  <div
+    class="px-6 py-4 border-b border-gray-400/25 bg-white"
+    [@sectionFade]="animationState"
+  >
     <div class="flex items-start justify-between gap-4">
       <div>
         <p class="text-xs uppercase tracking-wide text-gray-500">
@@ -19,7 +22,11 @@
   </div>
 
   <!-- Success/Error Messages -->
-  <div class="px-6 pt-4 bg-white" *ngIf="successMessage || apiError">
+  <div
+    class="px-6 pt-4 bg-white"
+    *ngIf="successMessage || apiError"
+    [@sectionFade]="animationState"
+  >
     <div
       *ngIf="successMessage"
       class="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-semibold"
@@ -64,13 +71,15 @@
   <!-- Modal Body -->
   <div
     class="px-6 py-6 bg-white max-h-[70vh] overflow-y-auto grid grid-cols-1 gap-6 md:grid-cols-2 md:items-stretch"
+    [@sectionFade]="animationState"
   >
     <!-- Left Section: Current Whitelist -->
-    <section class="flex flex-col gap-4 h-full">
+    <section class="flex flex-col gap-4 h-full" [@sectionFade]="animationState">
       <!-- Stats Cards -->
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-2 gap-4" [@staggerList]="animationState">
         <div
           class="bg-gray-50 border border-gray-400/25 rounded-lg p-4 flex items-center gap-3"
+          [@listItemFade]="animationState"
         >
           <div
             class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -99,6 +108,7 @@
 
         <div
           class="bg-gray-50 border border-gray-400/25 rounded-lg p-4 flex items-center gap-3"
+          [@listItemFade]="animationState"
         >
           <div
             class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -213,7 +223,10 @@
         class="rounded-lg border border-gray-400/25 overflow-hidden"
       >
         <div class="max-h-72 overflow-y-auto">
-          <ul class="space-y-3 p-4">
+          <ul
+            class="space-y-3 p-4"
+            [@staggerList]="animationState"
+          >
             <li
               *ngFor="let ip of whitelist; trackBy: trackByIp"
               class="rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition hover:shadow-md cursor-pointer"
@@ -223,6 +236,7 @@
               (click)="toggleSelection(ip)"
               [attr.aria-pressed]="selectedIps.has(ip)"
               role="button"
+              [@listItemFade]="animationState"
             >
               <div class="flex items-center gap-3 justify-between">
                 <div class="flex items-center gap-3 flex-1">
@@ -350,7 +364,7 @@
     </section>
 
     <!-- Right Section: Add IPs -->
-    <section class="flex flex-col gap-4 h-full">
+    <section class="flex flex-col gap-4 h-full" [@sectionFade]="animationState">
       <h1 class="text-md font-semibold text-gray-900 uppercase">
         Add IP Addresses
       </h1>

@@ -5,6 +5,15 @@ import {
     OnInit,
     inject,
   } from '@angular/core';
+  import {
+    animate,
+    animateChild,
+    query,
+    stagger,
+    style,
+    transition,
+    trigger,
+  } from '@angular/animations';
   import { CommonModule } from '@angular/common';
   import {
     FormBuilder,
@@ -25,6 +34,33 @@ import {
     standalone: true,
     imports: [CommonModule, ReactiveFormsModule],
     templateUrl: './affiliate-ip-whitelist-modal.component.html',
+    animations: [
+      trigger('modalFade', [
+        transition(':enter', [
+          style({ opacity: 0, transform: 'translateY(16px)' }),
+          animate('280ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
+        ]),
+      ]),
+      trigger('sectionFade', [
+        transition(':enter', [
+          style({ opacity: 0, transform: 'translateY(12px)' }),
+          animate('320ms 60ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
+        ]),
+      ]),
+      trigger('staggerList', [
+        transition(':enter', [
+          query('@listItemFade', stagger(60, animateChild()), {
+            optional: true,
+          }),
+        ]),
+      ]),
+      trigger('listItemFade', [
+        transition(':enter', [
+          style({ opacity: 0, transform: 'translateY(10px)' }),
+          animate('250ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
+        ]),
+      ]),
+    ],
   })
   export class AffiliateIpWhitelistModalComponent
     implements OnInit, OnDestroy
@@ -51,6 +87,7 @@ import {
     successMessage: string | null = null;
     selectedIps = new Set<string>();
     activeTab: 'single' | 'bulk' = 'single';
+    readonly animationState = 'in';
   
     ngOnInit(): void {
       if (!this.affiliate?.id) {
