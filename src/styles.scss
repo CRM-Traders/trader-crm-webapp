@@ -166,15 +166,13 @@
   --info-600: #22d3ee; // Brighter cyan
   --info-700: #67e8f9;
 
-  // Balanced Dark Surface Colors (much lighter)
-  // --surface-primary: #1e293b;      // Slate-800 - much lighter base
-  --surface-primary: #30415d; // Slate-800 - much lighter base
-  --surface-secondary: #394d6e; // Slate-700 - lighter secondary
-  // --surface-tertiary: #475569;     // Slate-600 - even lighter
-  --surface-tertiary: #1e293b; // Slate-600 - even lighter
-  --surface-elevated: #374151; // Slate-700 variant for cards
+  // Premium Dark Surface Colors (Slate Palette)
+  --surface-primary: #1e293b; // Slate-800 - solid surface to avoid transparent dropdowns
+  --surface-secondary: #334155; // Slate-700 - secondary surface
+  --surface-tertiary: #0f172a; // Slate-900 - darkest background
+  --surface-elevated: #334155; // Slate-700 - elevated cards
 
-  --bg-navbar: #30415d; // Light navbar background
+  --bg-navbar: #1e293b; // Slate-800 - navbar background
 
   // Balanced Text Colors
   --text-primary: #f1f5f9; // Slate-100 - softer white
@@ -197,11 +195,21 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4),
     0 10px 10px -5px rgba(0, 0, 0, 0.3);
 
-  // Balanced dark mode enhancements
-  --glass-bg: rgba(51, 65, 85, 0.8);
-  --glass-border: rgba(100, 116, 139, 0.3);
+  // Balanced dark mode enhancements with glass morphism (softer for better readability)
+  --glass-bg: rgba(30, 41, 59, 0.5);
+  --glass-bg-light: rgba(30, 41, 59, 0.3);
+  --glass-bg-heavy: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(100, 116, 139, 0.5);
   --glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
   --glow-accent: 0 0 20px rgba(168, 85, 247, 0.3);
+}
+
+// Light mode glass variables
+:root {
+  --glass-bg-light-mode: rgba(255, 255, 255, 0.8);
+  --glass-bg-light-light: rgba(255, 255, 255, 0.6);
+  --glass-bg-light-heavy: rgba(255, 255, 255, 0.9);
+  --glass-border-light: rgba(226, 232, 240, 0.5);
 }
 
 // === BASE STYLES ===
@@ -210,10 +218,18 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: var(--surface-primary);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   color: var(--text-primary);
   transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
     color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Dark mode gradient background
+.dark {
+  html,
+  body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  }
 }
 
 .zoom-out-layout {
@@ -285,12 +301,44 @@ body {
   background-color: var(--surface-elevated) !important;
 }
 
-// Glass effect for dark mode
+// Glass effect for dark mode with enhanced styling (softer for better readability)
 .bg-glass {
-  background-color: var(--glass-bg) !important;
+  background: var(--glass-bg) !important;
   border: 1px solid var(--glass-border) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(20px) !important; // Increased blur for better glass effect
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+// Light mode glass effect
+:not(.dark) .bg-glass {
+  background: var(--glass-bg-light-mode) !important;
+  border: 1px solid var(--glass-border-light) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important;
+}
+
+// Glass effect variants
+.bg-glass-light {
+  background: var(--glass-bg-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+:not(.dark) .bg-glass-light {
+  background: var(--glass-bg-light-light) !important;
+  border: 1px solid var(--glass-border-light) !important;
+}
+
+.bg-glass-heavy {
+  background: var(--glass-bg-heavy) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+:not(.dark) .bg-glass-heavy {
+  background: var(--glass-bg-light-heavy) !important;
+  border: 1px solid var(--glass-border-light) !important;
 }
 
 // Text Color Classes
@@ -452,6 +500,22 @@ body {
   &.glow {
     box-shadow: var(--shadow-md), var(--glow-primary);
   }
+
+  &.glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.5rem; // rounded-3xl
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+// Light mode card glass effect
+:not(.dark) .card.glass {
+  background: var(--glass-bg-light-mode);
+  border: 1px solid var(--glass-border-light);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
 }
 
 // === FORMS ===
@@ -473,6 +537,21 @@ select {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     outline: none;
   }
+
+  &.glass {
+    background: var(--glass-bg-light);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+// Light mode glass inputs
+:not(.dark) input.glass,
+:not(.dark) textarea.glass,
+:not(.dark) select.glass {
+  background: var(--glass-bg-light-light);
+  border: 1px solid var(--glass-border-light);
 }
 
 // Improve native control rendering in dark mode
@@ -589,12 +668,39 @@ select {
 .shadow-xl {
   box-shadow: var(--shadow-xl);
 }
+.shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
 
 .glow-primary {
   box-shadow: var(--glow-primary);
 }
 .glow-accent {
   box-shadow: var(--glow-accent);
+}
+
+// Glass effect utility classes
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-light {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.glass-heavy {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.border-glass {
+  border: 1px solid var(--glass-border);
+}
+
+:not(.dark) .border-glass {
+  border: 1px solid var(--glass-border-light);
 }
 
 // === SCROLLBARS ===
@@ -645,6 +751,20 @@ button {
   height: calc(100vh + 15vh);
   overflow-y: auto;
   border-radius: 10px;
+  background: transparent; // Let parent gradient show through
+}
+
+// Glass effect variant for containers
+.general-container.glass {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+:not(.dark) .general-container.glass {
+  background: var(--glass-bg-light-light);
+  border: 1px solid var(--glass-border-light);
 }
 
 .bg-navbar {

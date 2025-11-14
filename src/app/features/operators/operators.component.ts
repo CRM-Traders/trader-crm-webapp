@@ -79,6 +79,7 @@ export class OperatorsComponent implements OnInit, OnDestroy {
 
   showDeleteModal = false;
   operatorToDelete: Operator | null = null;
+  deleteMode: 'operator' | 'office' | null = null;
   statistics: OperatorStatistics | null = null;
 
   // Filter options properties
@@ -215,9 +216,16 @@ export class OperatorsComponent implements OnInit, OnDestroy {
     },
     {
       id: 'delete',
-      label: 'Delete',
+      label: 'Delete Operator',
       icon: 'delete',
       action: (item: Operator) => this.confirmDelete(item),
+      permission: -1,
+    },
+    {
+      id: 'delete-in-office',
+      label: 'Delete From Office',
+      icon: 'delete',
+      action: (item: Operator) => this.confirmDeleteFromOffice(item),
       permission: -1,
     },
   ];
@@ -457,35 +465,60 @@ export class OperatorsComponent implements OnInit, OnDestroy {
 
   confirmDelete(operator: Operator): void {
     this.operatorToDelete = operator;
+    this.deleteMode = 'operator';
+    this.showDeleteModal = true;
+  }
+
+  confirmDeleteFromOffice(operator: Operator): void {
+    this.operatorToDelete = operator;
+    this.deleteMode = 'office';
     this.showDeleteModal = true;
   }
 
   cancelDelete(): void {
     this.showDeleteModal = false;
     this.operatorToDelete = null;
+    this.deleteMode = null;
   }
 
   deleteOperator(): void {
     if (!this.operatorToDelete) return;
 
-    this.operatorsService
-      .deleteOperator(this.operatorToDelete.id)
+    const delete$ =
+      this.deleteMode === 'office'
+        ? this.operatorsService.deleteOperatorInOffice(
+            this.operatorToDelete.id
+          )
+        : this.operatorsService.deleteOperator(this.operatorToDelete.id);
+
+    delete$
       .pipe(
         takeUntil(this.destroy$),
         catchError((error) => {
-          this.alertService.error('Failed to delete operator');
+          if (this.deleteMode === 'office') {
+            this.alertService.error('Failed to delete operator in office');
+          } else {
+            this.alertService.error('Failed to delete operator');
+          }
           return of(null);
         }),
         finalize(() => {
           this.showDeleteModal = false;
           this.operatorToDelete = null;
+          this.deleteMode = null;
           this.refreshSpecificGrid();
           this.loadOperatorStatistics();
         })
       )
       .subscribe((result) => {
         if (result !== null) {
-          this.alertService.success('Operator deleted successfully');
+          if (this.deleteMode === 'office') {
+            this.alertService.success(
+              'Operator deleted from office successfully'
+            );
+          } else {
+            this.alertService.success('Operator deleted successfully');
+          }
           this.refreshSpecificGrid();
           this.loadOperatorStatistics();
         }

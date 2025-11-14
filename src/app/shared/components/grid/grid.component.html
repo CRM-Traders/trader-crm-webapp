@@ -2,7 +2,7 @@
 <div
   *hasPermission="permission"
   #gridContainer
-  class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 overflow-hidden"
+  class="bg-white dark:bg-gray-800 rounded-xl border-1 border-gray-400/25 overflow-hidden"
 >
   <!-- Grid Header -->
   <div
@@ -14,7 +14,7 @@
         <input
           type="text"
           placeholder="Search..."
-          class="w-full !ps-10 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          class="w-full !ps-10 py-2 rounded-md border-1 border-gray-400/25 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           (input)="onGlobalFilterChange($event)"
         />
         <div
@@ -86,7 +86,7 @@
       <button
         *ngIf="showFilters"
         (click)="toggleFilters()"
-        class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="px-3 py-2 rounded-md border-1 border-gray-400/25 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
         [ngClass]="{
           'bg-blue-50': isFilterVisible && !isDarkMode,
           'bg-blue-900/20': isFilterVisible && isDarkMode
@@ -129,7 +129,7 @@
           *ngIf="showColumnSelector"
           (click)="toggleColumnSelector()"
           data-column-selector-button
-          class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="px-3 py-2 rounded-md border-1 border-gray-400/25 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           [ngClass]="{
             'bg-blue-50': isColumnSelectorVisible && !isDarkMode,
             'bg-blue-900/20': isColumnSelectorVisible && isDarkMode
@@ -190,7 +190,7 @@
         <div class="relative inline-block" *hasPermission="exportPermission">
           <button
             (click)="exportData()"
-            class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-3 py-2 rounded-md border-1 border-gray-400/25 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <div class="flex items-center">
               <svg
@@ -215,7 +215,7 @@
       <!-- Refresh Button -->
       <button
         (click)="refreshGrid()"
-        class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="px-3 py-2 rounded-md border-1 border-gray-400/25 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <div class="flex items-center">
           <svg
@@ -1247,7 +1247,7 @@
   <!-- Pagination -->
   <div
     *ngIf="showPagination && !loading && pagination.totalItems > 0"
-    class="px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 sm:px-6"
+    class="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
   >
     <div class="flex-1 flex justify-between sm:hidden">
       <button

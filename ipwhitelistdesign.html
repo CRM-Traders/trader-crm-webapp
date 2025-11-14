@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Whitelist Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f1729;
+            color: #e2e8f0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .demo-trigger {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-trigger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
+        }
+
+        .demo-trigger i {
+            font-size: 24px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 1200px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            transform: scale(0.95);
+            opacity: 0;
+            animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes modalSlideIn {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 28px 36px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(139, 92, 246, 0.03);
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .title-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.35);
+        }
+
+        .title-icon i {
+            font-size: 24px;
+            color: white;
+        }
+
+        .title-text h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .title-text p {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            font-family: monospace;
+        }
+
+        .close-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: rgba(148, 163, 184, 0.08);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+
+        .close-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .close-btn i {
+            font-size: 16px;
+        }
+
+        .modal-body {
+            padding: 32px 36px 36px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 500px 1fr;
+            gap: 32px;
+        }
+
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            padding: 20px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(139, 92, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon i {
+            font-size: 20px;
+            color: #a78bfa;
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            font-size: 14px;
+            color: #a78bfa;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #a78bfa;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .ip-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 8px;
+            margin-bottom: 14px;
+        }
+
+        .ip-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .ip-list::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 3px;
+        }
+
+        .ip-list::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.4);
+            border-radius: 3px;
+        }
+
+        .ip-item {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            padding: 14px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-15px);
+            animation: slideInLeft 0.4s ease forwards;
+        }
+
+        .ip-item:nth-child(1) { animation-delay: 0.05s; }
+        .ip-item:nth-child(2) { animation-delay: 0.1s; }
+        .ip-item:nth-child(3) { animation-delay: 0.15s; }
+
+        @keyframes slideInLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .ip-item:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(139, 92, 246, 0.25);
+            transform: translateX(4px);
+        }
+
+        .ip-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .ip-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .ip-icon i {
+            font-size: 16px;
+            color: #a78bfa;
+        }
+
+        .ip-address {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #e2e8f0;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .ip-type {
+            padding: 4px 8px;
+            background: rgba(139, 92, 246, 0.15);
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #a78bfa;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .remove-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .remove-btn i {
+            font-size: 13px;
+            color: #ef4444;
+        }
+
+        .remove-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.4);
+            transform: scale(1.08);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 36px 20px;
+            color: #475569;
+        }
+
+        .empty-icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 12px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-icon i {
+            font-size: 24px;
+            color: #8b5cf6;
+            opacity: 0.4;
+        }
+
+        .empty-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .right-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .add-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-header i {
+            font-size: 16px;
+            color: #a78bfa;
+        }
+
+        .add-header h3 {
+            font-size: 12px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .toggle-mode {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .toggle-btn {
+            padding: 12px 16px;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            color: #64748b;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .toggle-btn i {
+            font-size: 14px;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+        }
+
+        .input-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-size: 13px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: rgba(30, 41, 59, 0.7);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .input-field::placeholder {
+            color: #475569;
+        }
+
+        textarea.input-field {
+            resize: none;
+            height: 160px;
+            line-height: 1.6;
+        }
+
+        .help-text {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .help-text i {
+            font-size: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .btn i {
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            color: white;
+            box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(30, 41, 59, 0.6);
+            color: #cbd5e1;
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.show {
+            display: flex;
+        }
+
+        .message i {
+            font-size: 14px;
+        }
+
+        .message-success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+
+        .message-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .modal {
+                border-radius: 16px;
+            }
+
+            .modal-header {
+                padding: 20px 24px;
+            }
+
+            .modal-body {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="demo-trigger" onclick="openModal()">
+        <i class="fas fa-shield-alt"></i>
+    </button>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="title-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="title-text">
+                        <h2>IP Whitelist Manager</h2>
+                        <p>a36fcf2a-88e2-4b85-b4d2-36cd70d715c2</p>
+                    </div>
+                </div>
+                <button class="close-btn" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div id="successMessage" class="message message-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="successText">Operation completed successfully</span>
+                </div>
+
+                <div id="errorMessage" class="message message-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorText">An error occurred</span>
+                </div>
+
+                <div class="content-grid">
+                    <div class="left-section">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-network-wired"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-value" id="totalIps">2</div>
+                                    <div class="stat-label">Total IPs</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-value">Active</div>
+                                    <div class="stat-label">Status</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-list"></i>
+                                    Current Whitelist
+                                </div>
+                                <span class="badge" id="ipCount">2 Active</span>
+                            </div>
+
+                            <div id="ipList" class="ip-list"></div>
+
+                            <button class="btn btn-secondary btn-full" onclick="refreshList()">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh List
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="right-section">
+                        <div class="add-header">
+                            <i class="fas fa-plus-circle"></i>
+                            <h3>Add IP Addresses</h3>
+                        </div>
+
+                        <div class="toggle-mode">
+                            <button class="toggle-btn" onclick="switchMode('single')">
+                                <i class="fas fa-network-wired"></i>
+                                Single IP
+                            </button>
+                            <button class="toggle-btn active" onclick="switchMode('bulk')">
+                                <i class="fas fa-layer-group"></i>
+                                Bulk Add
+                            </button>
+                        </div>
+
+                        <div id="singleMode" class="input-wrapper" style="display: none;">
+                            <label class="input-label">IP Address</label>
+                            <div class="input-group">
+                                <input 
+                                    type="text" 
+                                    class="input-field" 
+                                    id="singleIp" 
+                                    placeholder="192.168.1.100 or 10.0.0.0/24"
+                                />
+                                <button class="btn btn-primary" onclick="addSingleIp()">
+                                    <i class="fas fa-plus"></i>
+                                    Add
+                                </button>
+                            </div>
+                            <div class="help-text">
+                                <i class="fas fa-info-circle"></i>
+                                Supports individual IPs and CIDR notation
+                            </div>
+                        </div>
+
+                        <div id="bulkMode" class="input-wrapper">
+                            <label class="input-label">IP Addresses (One per line)</label>
+                            <textarea 
+                                class="input-field" 
+                                id="bulkIps" 
+                                placeholder="192.168.1.100&#10;192.168.1.101&#10;10.0.0.0/24&#10;203.0.113.45"
+                            ></textarea>
+                            <div class="help-text">
+                                <i class="fas fa-info-circle"></i>
+                                Enter multiple IPs, one per line
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-primary" onclick="addBulkIps()" style="flex: 1;">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Add All
+                                </button>
+                                <button class="btn btn-secondary" onclick="clearBulk()">
+                                    <i class="fas fa-eraser"></i>
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mockIps = [
+            { ip: '10.0.0.0/24', type: 'CIDR' },
+            { ip: '172.16.0.0/16', type: 'CIDR' }
+        ];
+
+        loadIpList();
+
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('modalOverlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.style.opacity = '';
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        function closeModalOnOverlay(event) {
+            if (event.target === event.currentTarget) {
+                closeModal();
+            }
+        }
+
+        function switchMode(mode) {
+            const singleMode = document.getElementById('singleMode');
+            const bulkMode = document.getElementById('bulkMode');
+            const buttons = document.querySelectorAll('.toggle-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            if (mode === 'single') {
+                singleMode.style.display = 'flex';
+                bulkMode.style.display = 'none';
+                buttons[0].classList.add('active');
+            } else {
+                singleMode.style.display = 'none';
+                bulkMode.style.display = 'flex';
+                buttons[1].classList.add('active');
+            }
+        }
+
+        function loadIpList() {
+            const ipList = document.getElementById('ipList');
+            const totalIps = document.getElementById('totalIps');
+            const ipCount = document.getElementById('ipCount');
+
+            if (mockIps.length > 0) {
+                ipList.innerHTML = mockIps.map(item => `
+                    <div class="ip-item">
+                        <div class="ip-info">
+                            <div class="ip-icon">
+                                <i class="fas fa-${item.type === 'CIDR' ? 'network-wired' : 'desktop'}"></i>
+                            </div>
+                            <div class="ip-address">${item.ip}</div>
+                            <span class="ip-type">${item.type}</span>
+                        </div>
+                        <button class="remove-btn" onclick="removeIp('${item.ip}')">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `).join('');
+                totalIps.textContent = mockIps.length;
+                ipCount.textContent = `${mockIps.length} Active`;
+            } else {
+                ipList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="empty-text">No IP addresses whitelisted</div>
+                    </div>
+                `;
+                totalIps.textContent = '0';
+                ipCount.textContent = '0 Active';
+            }
+        }
+
+        function addSingleIp() {
+            const input = document.getElementById('singleIp');
+            const ip = input.value.trim();
+
+            if (!ip) {
+                showError('Please enter an IP address');
+                return;
+            }
+
+            const type = ip.includes('/') ? 'CIDR' : 'IPv4';
+            mockIps.push({ ip, type });
+            loadIpList();
+            showSuccess(`Successfully added ${ip}`);
+            input.value = '';
+        }
+
+        function addBulkIps() {
+            const textarea = document.getElementById('bulkIps');
+            const ips = textarea.value
+                .split('\n')
+                .map(ip => ip.trim())
+                .filter(ip => ip.length > 0);
+
+            if (ips.length === 0) {
+                showError('Please enter at least one IP address');
+                return;
+            }
+
+            ips.forEach(ip => {
+                const type = ip.includes('/') ? 'CIDR' : 'IPv4';
+                mockIps.push({ ip, type });
+            });
+
+            loadIpList();
+            showSuccess(`Successfully added ${ips.length} IP address(es)`);
+            textarea.value = '';
+        }
+
+        function removeIp(ip) {
+            mockIps = mockIps.filter(item => item.ip !== ip);
+            loadIpList();
+            showSuccess(`Successfully removed ${ip}`);
+        }
+
+        function refreshList() {
+            loadIpList();
+            showSuccess('List refreshed');
+        }
+
+        function clearBulk() {
+            document.getElementById('bulkIps').value = '';
+        }
+
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            successText.textContent = message;
+            successMsg.classList.add('show');
+            setTimeout(() => successMsg.classList.remove('show'), 3000);
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorMsg.classList.add('show');
+            setTimeout(() => errorMsg.classList.remove('show'), 3000);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('modalOverlay').classList.contains('show')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

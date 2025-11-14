@@ -101,6 +101,10 @@ export class OperatorsService {
     return this.httpService.delete<void>(`${this.apiPath}/${id}`);
   }
 
+  deleteOperatorInOffice(id: string): Observable<void> {
+    return this.httpService.delete<void>(`${this.apiPath}/in-office/${id}`);
+  }
+
   // Get operator statistics
   getOperatorStatistics(): Observable<OperatorStatistics> {
     return this.httpService.get<OperatorStatistics>(

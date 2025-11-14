@@ -2,10 +2,10 @@
 
 // dashboard.component.scss
 
-// Custom scrollbar for tables
+// Custom scrollbar for tables - improved for dark mode
 .max-h-96 {
     scrollbar-width: thin;
-    scrollbar-color: rgb(156, 163, 175) rgb(243, 244, 246);
+    scrollbar-color: rgba(71, 85, 105, 0.5) rgba(15, 23, 42, 0.5);
   }
   
   .max-h-96::-webkit-scrollbar {
@@ -13,20 +13,32 @@
   }
   
   .max-h-96::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-700;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
   }
   
   .max-h-96::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 dark:bg-gray-500 rounded-full;
+    background: rgba(71, 85, 105, 0.5);
+    border-radius: 10px;
   }
   
   .max-h-96::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-500 dark:bg-gray-400;
+    background: rgba(100, 116, 139, 0.7);
   }
   
   // Smooth transitions for cards
   .transition-all {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  // Hover lift effect for cards
+  .hover-lift {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   }
   
   // Pulse animation for loading states
@@ -41,11 +53,6 @@
   
   .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  // Custom gradient backgrounds for dark mode
-  .dark .bg-gray-750 {
-    background-color: rgb(55, 65, 81);
   }
   
   // Enhanced shadow for cards

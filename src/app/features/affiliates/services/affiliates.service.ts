@@ -8,6 +8,7 @@ import {
   AffiliateCreateResponse, // Updated return type
   AffiliateUpdateRequest,
   AffiliateImportResponse,
+  AffiliateWhitelistResponse,
 } from '../models/affiliates.model';
 
 @Injectable({
@@ -104,6 +105,31 @@ export class AffiliatesService {
         responseType: 'blob' as 'json',
         headers,
       }
+    );
+  }
+
+  getAffiliateWhitelist(
+    affiliateId: string
+  ): Observable<AffiliateWhitelistResponse> {
+    return this.httpService.get<AffiliateWhitelistResponse>(
+      `${this.apiPath}/${affiliateId}/whitelist`
+    );
+  }
+
+  addWhitelistIps(affiliateId: string, ipAddresses: string[]): Observable<void> {
+    return this.httpService.post<void>(
+      `${this.apiPath}/${affiliateId}/whitelist`,
+      { ipAddresses }
+    );
+  }
+
+  removeWhitelistIps(
+    affiliateId: string,
+    ipAddresses: string[]
+  ): Observable<void> {
+    return this.httpService.deleteWithBody<void>(
+      `${this.apiPath}/${affiliateId}/whitelist`,
+      { ipAddresses }
     );
   }
 }

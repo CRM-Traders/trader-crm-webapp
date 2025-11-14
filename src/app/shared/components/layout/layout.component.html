@@ -1,5 +1,5 @@
 <div
-  class="dash-main-layout flex h-screen bg-gray-100 dark:bg-gray-900 transition-colors"
+  class="dash-main-layout flex h-screen transition-colors"
 >
   <app-sidebar [expanded]="sidebarExpanded"></app-sidebar>
 
@@ -9,7 +9,7 @@
     <app-alert position="top-right"></app-alert>
 
     <main
-      class="flex-1 overflow-y-auto p-3 md:p-4 bg-gray-100 dark:bg-gray-900"
+      class="flex-1 overflow-y-auto p-3 md:p-4"
     >
       <div class="h-full zoom-out-layout">
         <router-outlet></router-outlet>
