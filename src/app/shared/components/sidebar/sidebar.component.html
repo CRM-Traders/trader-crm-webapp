@@ -1,13 +1,13 @@
 <aside
   [ngClass]="expanded ? 'w-64' : 'w-16'"
-  class="bg-navbar shadow-lg transition-all duration-300 ease-in-out h-screen z-20 flex flex-col overflow-hidden"
+  class="bg-navbar dark:bg-glass border-r dark:border-slate-700/40 shadow-lg transition-all duration-300 ease-in-out h-screen z-20 flex flex-col overflow-hidden"
 >
-  <div class="h-12 flex items-center px-3 border-b border-gray-200/20">
+  <div class="h-12 flex items-center px-3 border-b border-gray-200/20 dark:border-slate-700/30">
     <div
       *ngIf="expanded"
-      class="flex items-center space-x-2 text-lg font-bold text-gray-800 dark:text-gray-100"
+      class="flex items-center space-x-2 text-lg font-bold text-white"
     >
-      <div class="text-white flex-shrink-0">
+      <div class="text-white dark:text-white flex-shrink-0">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-5 w-5"
@@ -23,9 +23,9 @@
           />
         </svg>
       </div>
-      <span class="truncate text-white">{{ environment.nameOfApp }}</span>
+      <span class="truncate text-white dark:text-white">{{ environment.nameOfApp }}</span>
     </div>
-    <div *ngIf="!expanded" class="text-white mx-auto flex-shrink-0">
+    <div *ngIf="!expanded" class="text-white dark:text-white mx-auto flex-shrink-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         class="h-5 w-5"
@@ -68,7 +68,7 @@
 
             <span
               *ngIf="expanded"
-              class="flex-1 whitespace-nowrap !text-sm !font-light text-white label"
+              class="flex-1 whitespace-nowrap !text-sm !font-light text-white dark:text-white label"
               >{{ item.label }}</span
             >
 
@@ -110,10 +110,10 @@
     </ul>
   </nav>
 
-  <div class="p-3 border-t border-gray-200/20">
+  <div class="p-3 border-t border-gray-200/20 dark:border-slate-700/30">
     <button
       (click)="toggleSidebar()"
-      class="w-full flex items-center justify-center p-1.5 text-white hover:text-gray-800 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-gray-700/20 transition-colors"
+      class="w-full flex items-center justify-center p-1.5 text-white dark:text-white hover:text-gray-800 dark:hover:text-white rounded-md hover:bg-gray-100 dark:hover:bg-slate-800/50 transition-colors"
       aria-label="Toggle sidebar"
     >
       <svg

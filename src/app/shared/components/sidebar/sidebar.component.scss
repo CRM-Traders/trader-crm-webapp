@@ -16,8 +16,7 @@ aside {
   position: relative;
 
   &:hover {
-  background-color: rgba(219, 234, 254, 0.2);
-
+    background-color: rgba(219, 234, 254, 0.2);
   }
 
   &.collapsed {
@@ -57,9 +56,8 @@ aside {
   }
 
   .dark & {
-    background-color: rgba(30, 58, 138, 0.4);
+    background-color: rgba(59, 130, 246, 0.2);
     color: #93c5fd;
-    border-color: #60a5fa;
 
     .icon-img {
       filter: invert(80%) sepia(29%) saturate(806%) hue-rotate(182deg)
@@ -156,7 +154,7 @@ aside {
     color: #e5e7eb;
 
     &:hover {
-      background-color: #374151;
+      background-color: rgba(51, 65, 85, 0.5);
     }
   }
 

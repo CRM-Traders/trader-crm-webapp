@@ -5,25 +5,26 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <!-- Monthly Deposit Income -->
       <div
-        class="bg-[#10B981]/80 text-white rounded-lg px-6 py-10 transition-all hover:shadow-md"
+        class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow px-6 py-10 transition-all hover:shadow-lg hover-lift relative overflow-hidden"
         *hasPermission="137"
       >
-        <div class="flex flex-col">
-          <span class="text-2xl font-bold mb-1">
+        <div class="flex flex-col relative z-10">
+          <span class="text-2xl font-bold mb-1 text-gray-900 dark:text-white">
             {{ monthlyDepositIncome | number : "1.2-2" }}$
           </span>
-          <span class="text-sm opacity-90">Monthly Deposit Income</span>
+          <span class="text-sm text-gray-600 dark:text-slate-300">Monthly Deposit Income</span>
         </div>
+        <div class="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full blur-2xl"></div>
       </div>
 
       <!-- Today's Income -->
       <div
-        class="bg-[#8B5CF6]/80 rounded-lg px-6 py-11 transition-all hover:shadow-md"
+        class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow px-6 py-10 transition-all hover:shadow-lg hover-lift relative overflow-hidden"
         *hasPermission="138"
       >
-        <div class="flex items-center">
+        <div class="flex items-center relative z-10">
           <div
-            class="p-3 rounded-full bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-100 mr-4"
+            class="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 mr-4 border border-blue-200 dark:border-blue-500/20"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -41,32 +42,33 @@
             </svg>
           </div>
           <div>
-            <p class="text-sm text-white">Today's Income</p>
-            <p class="text-lg font-bold text-white/70">
+            <p class="text-sm text-gray-600 dark:text-slate-300">Today's Income</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">
               {{ todayIncome | number : "1.2-2" }}$
             </p>
           </div>
         </div>
+        <div class="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl"></div>
       </div>
 
       <!-- Today's Users -->
       <div
-        class="bg-[#FF6B9D]/80 rounded-lg px-6 py-8 transition-all hover:shadow-md"
+        class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow px-6 py-10 transition-all hover:shadow-lg hover-lift relative overflow-hidden"
         *hasPermission="139"
       >
-        <div class="flex justify-between">
+        <div class="flex justify-between relative z-10">
           <div>
-            <p class="text-sm text-white mb-2">Today's Users</p>
+            <p class="text-sm text-gray-600 dark:text-slate-300 mb-2">Today's Users</p>
             <div class="flex space-x-6">
               <div>
-                <p class="text-xs text-white">New</p>
-                <p class="text-lg font-bold text-white/70">
+                <p class="text-xs text-gray-500 dark:text-slate-400">New</p>
+                <p class="text-lg font-bold text-gray-900 dark:text-white">
                   {{ dashboardData?.todayUsers || 0 }}
                 </p>
               </div>
               <div>
-                <p class="text-xs text-white">Total</p>
-                <p class="text-lg font-bold text-white/70">
+                <p class="text-xs text-gray-500 dark:text-slate-400">Total</p>
+                <p class="text-lg font-bold text-gray-900 dark:text-white">
                   {{ dashboardData?.totalUsers || 0 }}
                 </p>
               </div>
@@ -74,7 +76,7 @@
           </div>
           <!-- Fixed icon container to be exactly 48x48 -->
           <div
-            class="h-12 w-12 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+            class="h-12 w-12 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-slate-800/50 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700/50"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -92,23 +94,24 @@
             </svg>
           </div>
         </div>
+        <div class="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl"></div>
       </div>
 
       <!-- Today's Comments -->
       <div
-        class="bg-[#F59E0B]/80 rounded-lg px-6 py-10 transition-all hover:shadow-md"
+        class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow px-6 py-10 transition-all hover:shadow-lg hover-lift relative overflow-hidden"
         *hasPermission="140"
       >
-        <div class="flex justify-between">
+        <div class="flex justify-between relative z-10">
           <div>
-            <p class="text-sm text-white mb-1">Today's Comments</p>
-            <p class="text-lg font-bold text-white/70">
+            <p class="text-sm text-gray-600 dark:text-slate-300 mb-1">Today's Comments</p>
+            <p class="text-lg font-bold text-gray-900 dark:text-white">
               {{ dashboardData?.todayComments || 0 }}
             </p>
           </div>
           <!-- Fixed icon container to be exactly 48x48 -->
           <div
-            class="h-12 w-12 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-800 dark:text-emerald-100"
+            class="h-12 w-12 flex items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -126,13 +129,14 @@
             </svg>
           </div>
         </div>
+        <div class="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full blur-2xl"></div>
       </div>
     </div>
 
     <!-- LEADS SECTION -->
     <div class="mb-8">
       <h2
-        class="text-lg font-medium text-gray-700 dark:text-gray-200 mb-6"
+        class="text-lg font-medium text-gray-700 dark:text-slate-300 mb-6"
         *hasPermission="141"
       >
         Leads SECTION
@@ -141,18 +145,18 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- New Leads -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="141"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               New Clients
             </h3>
             <button
               (click)="refreshNewLeads()"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -172,38 +176,38 @@
           </div>
           <div class="overflow-x-auto max-h-64 overflow-y-auto">
             <table
-              class="min-w-full divide-y divide-gray-200 dark:divide-gray-300/30"
+              class="min-w-full divide-y divide-gray-200 dark:divide-slate-700/30"
             >
-              <thead class="bg-gray-50 dark:bg-gray-700">
+              <thead class="bg-gray-50 dark:bg-slate-900/50">
                 <tr>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     Name
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     Date
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
+                class="bg-white dark:bg-slate-900/30 divide-y divide-gray-200 dark:divide-slate-700/30"
               >
-                <tr *ngFor="let lead of dashboardData?.newLeads" class="hover:bg-gray-500/20">
+                <tr *ngFor="let lead of dashboardData?.newLeads" class="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div
-                        class="text-sm font-medium text-primary-500 dark:text-primary-400 cursor-pointer hover:underline"
+                        class="text-sm font-medium text-blue-600 dark:text-blue-400 cursor-pointer hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
                         (click)="navigateToClientDetails(lead.clientId)"
                       >
                         {{ lead.clientName }}
@@ -211,24 +215,43 @@
                     </div>
                   </td>
                   <td
-                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400"
                   >
                     {{ getRelativeDate(lead.createdAt) }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                     <button
                       (click)="navigateToClientDetails(lead.clientId)"
-                      class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors"
+                      class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
                       title="View Details"
                     >
-                     <img src="/icons/view.svg" alt="View Details" class="w-5 h-5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      </svg>
                     </button>
                   </td>
                 </tr>
                 <tr *ngIf="!dashboardData?.newLeads?.length">
                   <td
                     colspan="3"
-                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     No data available
                   </td>
@@ -240,18 +263,18 @@
 
         <!-- Leads Traffic -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="142"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               Clients Traffic
             </h3>
             <button
               (click)="refreshLeadsTraffic()"
-              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -271,54 +294,54 @@
           </div>
           <div class="overflow-x-auto max-h-64 overflow-y-auto">
             <table
-              class="min-w-full divide-y divide-gray-200 dark:divide-gray-300/30"
+              class="min-w-full divide-y divide-slate-700/30"
             >
-              <thead class="bg-gray-50 dark:bg-gray-700">
+              <thead class="bg-gray-50 dark:bg-slate-900/50">
                 <tr>
                   <th
                     scope="col"
-                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   ></th>
                   <th
                     scope="col"
-                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     DEPOSITS
                   </th>
                   <th
                     scope="col"
-                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     WITHDRAWAL
                   </th>
                   <th
                     scope="col"
-                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     NET DEPOSIT
                   </th>
                   <th
                     scope="col"
-                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     NET FTD
                   </th>
                   <th
                     scope="col"
-                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     CONV %
                   </th>
                   <th
                     scope="col"
-                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     Clients
                   </th>
                 </tr>
               </thead>
               <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
+                class="bg-white dark:bg-slate-900/30 divide-y divide-gray-200 dark:divide-slate-700/30"
               >
                 <tr *ngFor="let stat of leadsTraffic">
                   <td
@@ -373,11 +396,11 @@
 
       <!-- Productivity Tracker -->
       <div
-        class="mt-6 bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+        class="mt-6 bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
         *hasPermission="143"
       >
         <div
-          class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+          class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
         >
           <h3 class="text-gray-700 dark:text-gray-200 font-medium">
             Productivity Tracker
@@ -410,29 +433,29 @@
               <tr>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                 ></th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                 >
                   DEPOSITS COUNT
                 </th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                 >
                   DEPOSITS
                 </th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                 >
                   Client
                 </th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                 >
                   CONV %
                 </th>
@@ -485,13 +508,13 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <!-- New Deposit Opening Attempts -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="144"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               New Deposit Opening Attempts
             </h3>
             <button
@@ -516,38 +539,38 @@
           </div>
           <div class="overflow-x-auto max-h-72 overflow-y-auto">
             <table
-              class="min-w-full divide-y divide-gray-200 dark:divide-gray-300/30"
+              class="min-w-full divide-y divide-slate-700/30"
             >
-              <thead class="bg-gray-50 dark:bg-gray-700">
+              <thead class="bg-gray-50 dark:bg-slate-900/50">
                 <tr>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     METHOD
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     AMOUNT
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     CUSTOMER
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     OPENED
                   </th>
                 </tr>
               </thead>
               <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
+                class="bg-white dark:bg-slate-900/30 divide-y divide-gray-200 dark:divide-slate-700/30"
               >
                 <tr *ngFor="let attempt of depositAttempts">
                   <td
@@ -579,7 +602,7 @@
                 <tr *ngIf="!depositAttempts.length">
                   <td
                     colspan="4"
-                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     No data available
                   </td>
@@ -591,13 +614,13 @@
 
         <!-- Registration Countries -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="145"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               Registration Countries
             </h3>
             <button
@@ -629,10 +652,10 @@
               >
                 <div
                   *ngFor="let country of registrationCountries"
-                  class="bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md p-2 text-center"
+                  class="bg-gray-50 dark:bg-slate-900/50 border border-gray-200 dark:border-slate-700/50 rounded-md p-2 text-center text-gray-700 dark:text-slate-300"
                 >
                   <span
-                    class="text-gray-700 dark:text-gray-300 text-sm font-medium"
+                    class="text-gray-700 dark:text-slate-300 text-sm font-medium"
                   >
                     {{ country }}
                   </span>
@@ -676,13 +699,13 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Failed Deposits -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="146"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               Recent Failed Deposits
             </h3>
             <button
@@ -707,38 +730,38 @@
           </div>
           <div class="overflow-x-auto max-h-64 overflow-y-auto">
             <table
-              class="min-w-full divide-y divide-gray-200 dark:divide-gray-300/30"
+              class="min-w-full divide-y divide-slate-700/30"
             >
-              <thead class="bg-gray-50 dark:bg-gray-700">
+              <thead class="bg-gray-50 dark:bg-slate-900/50">
                 <tr>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     METHOD
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     AMOUNT
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     USER
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     DATE
                   </th>
                 </tr>
               </thead>
               <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
+                class="bg-white dark:bg-slate-900/30 divide-y divide-gray-200 dark:divide-slate-700/30"
               >
                 <tr *ngFor="let failed of failedDeposits">
                   <td
@@ -771,7 +794,7 @@
                 <tr *ngIf="!failedDeposits.length">
                   <td
                     colspan="4"
-                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     No data available
                   </td>
@@ -783,13 +806,13 @@
 
         <!-- Recent Tickets -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="147"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               Recent Tickets (Total:
               {{ getTotalTicketsValue() | number : "1.2-2" }}$)
             </h3>
@@ -815,44 +838,44 @@
           </div>
           <div class="overflow-x-auto max-h-64 overflow-y-auto">
             <table
-              class="min-w-full divide-y divide-gray-200 dark:divide-gray-300/30"
+              class="min-w-full divide-y divide-slate-700/30"
             >
-              <thead class="bg-gray-50 dark:bg-gray-700">
+              <thead class="bg-gray-50 dark:bg-slate-900/50">
                 <tr>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     TYPE
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     AMOUNT
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     STATUS
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     USER
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     WALLET
                   </th>
                 </tr>
               </thead>
               <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
+                class="bg-white dark:bg-slate-900/30 divide-y divide-gray-200 dark:divide-slate-700/30"
               >
                 <tr *ngFor="let ticket of recentTickets">
                   <td
@@ -894,7 +917,7 @@
                 <tr *ngIf="!recentTickets.length">
                   <td
                     colspan="5"
-                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     No data available
                   </td>
@@ -909,13 +932,13 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <!-- Bonuses -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="148"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               Bonuses
             </h3>
             <button
@@ -940,32 +963,32 @@
           </div>
           <div class="overflow-x-auto max-h-64 overflow-y-auto">
             <table
-              class="min-w-full divide-y divide-gray-200 dark:divide-gray-300/30"
+              class="min-w-full divide-y divide-slate-700/30"
             >
-              <thead class="bg-gray-50 dark:bg-gray-700">
+              <thead class="bg-gray-50 dark:bg-slate-900/50">
                 <tr>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     AMOUNT
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     USER
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     DATE
                   </th>
                 </tr>
               </thead>
               <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
+                class="bg-white dark:bg-slate-900/30 divide-y divide-gray-200 dark:divide-slate-700/30"
               >
                 <tr *ngFor="let bonus of bonuses">
                   <td
@@ -987,7 +1010,7 @@
                 <tr *ngIf="!bonuses.length">
                   <td
                     colspan="3"
-                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     No data available
                   </td>
@@ -999,13 +1022,13 @@
 
         <!-- Deposits -->
         <div
-          class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+          class="bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
           *hasPermission="149"
         >
           <div
-            class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+            class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
           >
-            <h3 class="text-gray-700 dark:text-gray-200 font-medium">
+            <h3 class="text-gray-700 dark:text-white font-medium">
               Deposits (Total:
               {{ getTotalDepositsValue() | number : "1.2-2" }}$)
             </h3>
@@ -1031,32 +1054,32 @@
           </div>
           <div class="overflow-x-auto max-h-64 overflow-y-auto">
             <table
-              class="min-w-full divide-y divide-gray-200 dark:divide-gray-300/30"
+              class="min-w-full divide-y divide-slate-700/30"
             >
-              <thead class="bg-gray-50 dark:bg-gray-700">
+              <thead class="bg-gray-50 dark:bg-slate-900/50">
                 <tr>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     AMOUNT
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     USER
                   </th>
                   <th
                     scope="col"
-                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-300 uppercase tracking-wider"
                   >
                     DATE
                   </th>
                 </tr>
               </thead>
               <tbody
-                class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-300/30"
+                class="bg-white dark:bg-slate-900/30 divide-y divide-gray-200 dark:divide-slate-700/30"
               >
                 <tr *ngFor="let deposit of deposits">
                   <td
@@ -1078,7 +1101,7 @@
                 <tr *ngIf="!deposits.length">
                   <td
                     colspan="3"
-                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                    class="px-6 py-4 text-center text-sm text-gray-500 dark:text-slate-400"
                   >
                     No data available
                   </td>
@@ -1091,11 +1114,11 @@
 
       <!-- Ticket Statistics Summary -->
       <div
-        class="mt-6 bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+        class="mt-6 bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
         *hasPermission="150"
       >
         <div
-          class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+          class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
         >
           <h3 class="text-gray-700 dark:text-gray-200 font-medium">
             Ticket Statistics Summary
@@ -1148,7 +1171,7 @@
             <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
               <div
                 *ngFor="let status of getTicketStatusBreakdown()"
-                class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                class="text-center p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg text-gray-700 dark:text-slate-300"
               >
                 <div
                   class="text-lg font-semibold text-gray-700 dark:text-gray-300"
@@ -1166,11 +1189,11 @@
 
       <!-- Deposit Statistics Summary -->
       <div
-        class="mt-6 bg-white dark:bg-gray-800 rounded-lg overflow-hidden"
+        class="mt-6 bg-white dark:bg-glass rounded-xl border border-gray-200/40 dark:border-white/10 shadow overflow-hidden"
         *hasPermission="151"
       >
         <div
-          class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-300"
+          class="flex justify-between items-center p-4 border-b border-gray-200/60 dark:border-slate-700/30"
         >
           <h3 class="text-gray-700 dark:text-gray-200 font-medium">
             Deposit Statistics Summary
@@ -1223,7 +1246,7 @@
             <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
               <div
                 *ngFor="let status of getDepositStatusBreakdown()"
-                class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                class="text-center p-3 bg-gray-50 dark:bg-slate-900/50 rounded-lg text-gray-700 dark:text-slate-300"
               >
                 <div
                   class="text-lg font-semibold text-gray-700 dark:text-gray-300"
