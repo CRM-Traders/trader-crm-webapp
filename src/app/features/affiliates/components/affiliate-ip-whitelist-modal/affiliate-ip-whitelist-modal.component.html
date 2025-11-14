@@ -1,0 +1,394 @@
+<div class="w-full">
+  <!-- Modal Header -->
+  <div class="px-6 py-4 border-b border-gray-200 bg-white">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-wide text-gray-500">
+          Affiliate IP Whitelist
+        </p>
+        <h2 class="mt-1 text-2xl font-semibold text-gray-900">
+          {{ affiliate.name || affiliate.email }}
+        </h2>
+      </div>
+    </div>
+    <p class="text-sm text-gray-600">
+      Add or remove IPv4 addresses and CIDR ranges that are allowed to access
+      this affiliate's integration. Paste multiple entries separated by commas,
+      whitespace, or new lines.
+    </p>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="px-6 pt-4 bg-white" *ngIf="successMessage || apiError">
+    <div
+      *ngIf="successMessage"
+      class="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm font-semibold"
+    >
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <div
+      *ngIf="apiError"
+      class="flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-semibold"
+    >
+      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ apiError }}</span>
+    </div>
+  </div>
+
+  <!-- Modal Body -->
+  <div class="px-6 py-6 bg-white max-h-[70vh] overflow-y-auto grid grid-cols-1 gap-6 md:grid-cols-2 md:items-stretch">
+
+    <!-- Left Section: Current Whitelist -->
+    <section class="flex flex-col gap-4 h-full">
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-gray-900">{{ whitelist.length }}</div>
+            <div class="text-xs text-gray-500 font-medium">Total IPs</div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center gap-3">
+          <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          </div>
+          <div>
+            <div class="text-2xl font-bold text-gray-900">Active</div>
+            <div class="text-xs text-gray-500 font-medium">Status</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900">Current Whitelist</h3>
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+          <span>Selected: {{ selectedIps.size }}</span>
+          <button
+            type="button"
+            class="text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+            (click)="clearSelection()"
+            [disabled]="selectedIps.size === 0"
+          >
+            Clear
+          </button>
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md border border-transparent bg-red-50 px-3 py-1 font-medium text-red-600 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            (click)="removeSelectedIps()"
+            [disabled]="selectedIps.size === 0 || removingIps"
+          >
+            <svg
+              *ngIf="removingIps"
+              class="-ml-1 mr-1 h-3.5 w-3.5 animate-spin text-red-600"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Bulk Delete
+          </button>
+        </div>
+      </div>
+
+      <div
+        *ngIf="loadingWhitelist"
+        class="flex items-center justify-center py-8"
+      >
+        <svg
+          class="h-6 w-6 animate-spin text-blue-600"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
+      </div>
+
+      <div *ngIf="!loadingWhitelist && whitelist.length === 0" class="py-8">
+        <div
+          class="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-8 text-center"
+        >
+          <p class="text-gray-500 text-sm">
+            No IP addresses have been whitelisted yet.
+          </p>
+          <p class="mt-2 text-sm text-gray-400">
+            Add the first IP or CIDR block using the form below.
+          </p>
+        </div>
+      </div>
+
+      <div
+        *ngIf="!loadingWhitelist && whitelist.length > 0"
+        class="rounded-lg border border-gray-200 overflow-hidden"
+      >
+        <div class="max-h-72 overflow-y-auto">
+          <ul class="divide-y divide-gray-200">
+          <li
+            *ngFor="let ip of whitelist; trackBy: trackByIp"
+            class="flex items-center justify-between px-4 py-3 hover:bg-gray-500/10"
+          >
+            <label class="flex items-center gap-3 text-gray-900 cursor-pointer flex-1">
+              <input
+                type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                [checked]="selectedIps.has(ip)"
+                (change)="toggleSelection(ip)"
+              />
+              <span class="font-mono text-sm">{{ ip }}</span>
+              <span class="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                {{ ip.includes('/') ? 'CIDR' : 'IPv4' }}
+              </span>
+            </label>
+            <button
+              type="button"
+              class="ml-3 text-sm text-red-600 hover:text-red-700 font-medium"
+              (click)="removeSelectedIps(ip)"
+              [disabled]="removingIps"
+            >
+              Remove
+            </button>
+          </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-auto flex flex-col gap-3">
+        <!-- <div
+          *ngIf="selectedIps.size > 0"
+          class="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900"
+        >
+          <span>
+            {{ selectedIps.size }}
+            {{ selectedIps.size === 1 ? 'address' : 'addresses' }} selected
+          </span>
+          <button
+            type="button"
+            class="inline-flex items-center rounded-md border border-red-200 bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+            (click)="removeSelectedIps()"
+            [disabled]="removingIps"
+          >
+            <svg
+              *ngIf="removingIps"
+              class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Remove Selected
+          </button>
+        </div> -->
+
+        <!-- Refresh Button -->
+        <button
+          type="button"
+          class="w-full px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-500/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          (click)="loadWhitelist()"
+          [disabled]="loadingWhitelist"
+        >
+          <svg class="w-4 h-4" [class.animate-spin]="loadingWhitelist" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh List
+        </button>
+      </div>
+    </section>
+
+    <!-- Right Section: Add IPs -->
+    <section class="flex flex-col gap-4 h-full">
+      <h1 class="text-md font-semibold text-gray-900">Add IP Addresses</h1>
+      <div class="flex gap-3">
+        <button
+          type="button"
+          class="flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors"
+          [ngClass]="
+            activeTab === 'single'
+              ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+              : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-500/10'
+          "
+          (click)="setActiveTab('single')"
+        >
+          Single IP
+        </button>
+        <button
+          type="button"
+          class="flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-colors"
+          [ngClass]="
+            activeTab === 'bulk'
+              ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+              : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-500/10'
+          "
+          (click)="setActiveTab('bulk')"
+        >
+          Bulk Add
+        </button>
+      </div>
+
+      <form [formGroup]="ipForm" class="flex-1 flex flex-col space-y-4">
+        <div *ngIf="activeTab === 'single'" class="space-y-3">
+          <label class="block text-sm font-medium text-gray-700"
+            >Single IP / CIDR</label
+          >
+          <div class="flex gap-3">
+            <input
+              type="text"
+              formControlName="singleIp"
+              placeholder="e.g. 192.168.1.100 or 10.0.0.0/24"
+              class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              class="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+              (click)="addIpAddresses()"
+              [disabled]="addingIps"
+            >
+              <svg
+                *ngIf="addingIps"
+                class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              {{ addingIps ? 'Adding...' : 'Add' }}
+            </button>
+          </div>
+          <p class="text-xs text-gray-500">
+            Add one IP address or CIDR range at a time.
+          </p>
+        </div>
+
+        <div *ngIf="activeTab === 'bulk'" class="space-y-3">
+          <label class="block text-sm font-medium text-gray-700"
+            >Bulk Input (One IP per line)</label
+          >
+          <textarea
+            rows="4"
+            formControlName="bulkIps"
+            placeholder="192.168.1.100&#10;192.168.1.101&#10;10.0.0.0/24&#10;203.0.113.45"
+            class="w-full h-40 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-900 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 resize-none"
+          ></textarea>
+        </div>
+
+        <div
+          *ngIf="invalidEntries.length"
+          class="rounded-md bg-red-50 p-4"
+        >
+          <p class="text-sm font-semibold text-red-700">
+            Invalid entries detected:
+          </p>
+          <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-red-600">
+            <li *ngFor="let invalid of invalidEntries">{{ invalid }}</li>
+          </ul>
+        </div>
+
+        <div class="mt-auto grid grid-cols-2 gap-3" *ngIf="activeTab === 'bulk'">
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            (click)="addIpAddresses()"
+            [disabled]="addingIps"
+          >
+            <svg
+              *ngIf="addingIps"
+              class="-ml-1 mr-2 h-4 w-4 animate-spin text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            {{ addingIps ? 'Adding...' : 'Add Addresses' }}
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-500/10"
+            (click)="resetForm()"
+            [disabled]="addingIps"
+          >
+            Reset
+          </button>
+        </div>
+
+      </form>
+    </section>
+  </div>
+</div>

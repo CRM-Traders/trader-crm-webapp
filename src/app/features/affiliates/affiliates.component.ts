@@ -15,6 +15,7 @@ import { AlertService } from '../../core/services/alert.service';
 import { ModalService } from '../../shared/services/modals/modal.service';
 import { AffiliateRegistrationModalComponent } from './components/affiliate-registration-modal/affiliate-registration-modal.component';
 import { AffiliateDetailsModalComponent } from './components/affiliate-details-modal/affiliate-details-modal.component';
+import { AffiliateIpWhitelistModalComponent } from './components/affiliate-ip-whitelist-modal/affiliate-ip-whitelist-modal.component';
 import {
   GridColumn,
   GridAction,
@@ -122,6 +123,14 @@ export class AffiliatesComponent implements OnInit {
       permission: 117,
     },
     {
+      id: 'whitelist',
+      label: 'Manage IP Whitelist',
+      icon: 'ip-whitelist',
+      type: 'secondary',
+      action: (item: Affiliate) => this.openWhitelistModal(item),
+      permission: 117,
+    },
+    {
       id: 'delete',
       label: 'Delete',
       icon: 'delete',
@@ -190,6 +199,20 @@ export class AffiliatesComponent implements OnInit {
         // Modal dismissed
         this.refreshSpecificGrid();
         this.loadAffiliates();
+      }
+    );
+  }
+
+  openWhitelistModal(affiliate: Affiliate): void {
+    this.modalService.open(
+      AffiliateIpWhitelistModalComponent,
+      {
+        size: 'xl',
+        centered: true,
+        closable: true,
+      },
+      {
+        affiliate: affiliate,
       }
     );
   }

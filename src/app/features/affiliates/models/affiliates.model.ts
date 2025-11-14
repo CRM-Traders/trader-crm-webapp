@@ -60,3 +60,8 @@ export interface AffiliateImportResponse {
   failureCount: number;
   affiliateResults: AffiliateImportResult[];
 }
+
+export interface AffiliateWhitelistResponse {
+  affiliateId: string;
+  ipAddresses: string[];
+}
